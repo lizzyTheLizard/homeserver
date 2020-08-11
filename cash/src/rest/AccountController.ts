@@ -57,14 +57,23 @@ export class AccountController implements Controller {
 
   async create(req: Request, res: Response): Promise<void> {
     req.log.debug('Create new Account');
-    const newAccount = await this.createAccount.create(
-                req.body.id as string,
-                req.body.owner as string,
-                req.body.name as string,
-                req.body.status as AccountStatus,
-                req.body.type as AccountType);
-    const response = AccountController.toResponseBody(newAccount);
-    res.status(200).json(response).send();
+    try {
+      const newAccount = await this.createAccount.create(
+        req.body.id,
+        req.body.owner,
+        req.body.name,
+        AccountStatus[req.body.status as AccountStatus],
+        AccountType[req.body.type as AccountType]);
+      const response = AccountController.toResponseBody(newAccount);
+      res.status(200).json(response).send();
+    } catch (error) {
+      if (error instanceof InvalidInputException) {
+        req.log.info('Invalid input %s', error.message);
+        res.status(400).json({ 'error': error.message });
+        return;
+      }
+      throw error;
+    }
   }
 
   async update(req: Request, res: Response): Promise<void> {
@@ -98,8 +107,7 @@ export class AccountController implements Controller {
     res.sendStatus(200);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static toResponseBody(account: Account) : any {
+  private static toResponseBody(account: Account) : unknown {
     return { id: account.id, name: account.name, status: account.status, type: account.type };
   }
 }
