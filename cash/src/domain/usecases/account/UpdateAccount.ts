@@ -10,7 +10,7 @@ export class UpdateAccount {
     private readonly logger: Logger,
     private readonly accountRepositry: AccountRepository) {}
 
-  update(oldAccount: Account, name: string, status: AccountStatus, type: AccountType) : Promise<Account> {
+  update(oldAccount: Account, name?: string, status?: AccountStatus, type?: AccountType) : Promise<Account> {
     if (!name || name.length <= 3) {
       throw new InvalidInputException('name must be at least 3 chars');
     }
