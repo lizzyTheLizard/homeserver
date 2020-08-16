@@ -36,17 +36,11 @@ export class ManageBookings {
     const newBooking = new Booking(
       oldBooking.id,
       oldBooking.owner,
-      await ManageBookings.defaultOrNew(
-        Promise.resolve(oldBooking.from),
-        (accountId) => this.getAccounts.getAccount(accountId, owner),
-        newFromAccountId),
-      await ManageBookings.defaultOrNew(
-        Promise.resolve(oldBooking.to),
-        (accountId) => this.getAccounts.getAccount(accountId, owner),
-        newToAccountId),
-      ManageBookings.defaultOrNew(oldBooking.date, (date) => date, newDate),
-      ManageBookings.defaultOrNew(oldBooking.amount, (amount) => new Big(amount), newAmount),
-      ManageBookings.defaultOrNew(oldBooking.comment, (comment) => comment, newComment),
+      await this.getAccountOptional(newFromAccountId, owner, oldBooking.from),
+      await this.getAccountOptional(newToAccountId, owner, oldBooking.to),
+      newDate ?? oldBooking.date,
+      new Big(newAmount ?? oldBooking.amount),
+      newComment ?? oldBooking.comment,
     );
     this.logger.info(newBooking, 'Update booking');
     return this.bookingRepository.update(newBooking);
@@ -75,10 +69,10 @@ export class ManageBookings {
     return this.bookingRepository.findAllForOwner(owner);
   }
 
-  private static defaultOrNew<T, R>(def: R, transform: (t: T) => R, value?: T) : R {
-    if (typeof value === 'undefined') {
-      return def;
+  private getAccountOptional(id: string | undefined, owner: string, def: Account) : Promise<Account> {
+    if (typeof id === 'undefined') {
+      return Promise.resolve(def);
     }
-    return transform(value);
+    return this.getAccounts.getAccount(id, owner);
   }
 }

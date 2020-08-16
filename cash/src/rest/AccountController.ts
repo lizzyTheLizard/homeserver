@@ -7,6 +7,7 @@ import { AccountStatus } from '../domain/model/AccountStatus';
 import { AccountType } from '../domain/model/AccountType';
 import { Controller } from './Controller';
 import { getRequiredField } from './getRequiredField';
+import { InvalidInputException } from '../domain/exceptions/InvalidInputException';
 
 export class AccountController implements Controller {
   // TODO Check if correct owner
@@ -49,8 +50,8 @@ export class AccountController implements Controller {
       getRequiredField(req, 'id'),
       this.owner,
       getRequiredField(req, 'name'),
-      getRequiredField(req, 'status'),
-      getRequiredField(req, 'type'));
+      AccountController.toAccountStatus(getRequiredField(req, 'status')),
+      AccountController.toAccountType(getRequiredField(req, 'type')));
     const response = AccountController.toResponseBody(newAccount);
     res.status(200).json(response).send();
   }
@@ -60,8 +61,9 @@ export class AccountController implements Controller {
     req.log.debug('Update Account %s', id);
     const newAccount = await this.manageAccounts.update(id, this.owner,
       req.body.name as string,
-      req.body.status as AccountStatus,
-      req.body.type as AccountType);
+      req.body.status ? AccountController.toAccountStatus(req.body.status) : req.body.status,
+      req.body.type ? AccountController.toAccountType(req.body.type) : req.body.status,
+    );
     const response = AccountController.toResponseBody(newAccount);
     res.status(200).json(response).send();
   }
@@ -74,6 +76,25 @@ export class AccountController implements Controller {
   }
 
   private static toResponseBody(account: Account) : unknown {
-    return { id: account.id, name: account.name, status: account.status, type: account.type };
+    return {
+      id: account.id,
+      name: account.name,
+      status: AccountStatus[account.status],
+      type: AccountType[account.type],
+    };
+  }
+
+  private static toAccountType(input: string): AccountType {
+    if (!(input in AccountType)) {
+      throw new InvalidInputException(`${ input } is not a valid account type`);
+    }
+    return AccountType[input as keyof typeof AccountType];
+  }
+
+  private static toAccountStatus(input: string): AccountStatus {
+    if (!(input in AccountStatus)) {
+      throw new InvalidInputException(`${ input } is not a valid account status`);
+    }
+    return AccountStatus[input as keyof typeof AccountStatus];
   }
 }

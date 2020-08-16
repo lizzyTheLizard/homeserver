@@ -1,27 +1,28 @@
 import { AccountRepository } from '../../domain/port/persistance/AccountRepository';
 import { Account } from '../../domain/model/Account';
+import { InMemoryDB } from './InMemoryDB';
 
 export class InMemoryAccountRepository implements AccountRepository {
-  private accounts: Map<string, Account> = new Map<string, Account>();
+  constructor(private readonly db: InMemoryDB) {}
 
   create(account: Account): Promise<Account> {
-    this.accounts.set(account.id, account);
+    this.db.accounts.set(account.id, account);
     return Promise.resolve(account);
   }
 
   update(account: Account): Promise<Account> {
-    this.accounts.set(account.id, account);
+    this.db.accounts.set(account.id, account);
     return Promise.resolve(account);
   }
 
   delete(id: string): Promise<void> {
-    this.accounts.delete(id);
+    this.db.accounts.delete(id);
     return Promise.resolve();
   }
 
   findAllForOwner(owner: string): Promise<Account[]> {
     const result: Account[] = [];
-    this.accounts.forEach((account) => {
+    this.db.accounts.forEach((account) => {
       if (account.owner === owner) {
         result.push(account);
       }
@@ -30,6 +31,16 @@ export class InMemoryAccountRepository implements AccountRepository {
   }
 
   find(id: string): Promise<Account | undefined> {
-    return Promise.resolve(this.accounts.get(id));
+    return Promise.resolve(this.db.accounts.get(id));
+  }
+
+  hasBookingsInAccount(id: string): Promise<boolean> {
+    let found = false;
+    this.db.bookings.forEach((booking) => {
+      if (booking.from.id === id || booking.to.id === id) {
+        found = true;
+      }
+    });
+    return Promise.resolve(found);
   }
 }

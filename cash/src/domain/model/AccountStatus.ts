@@ -1,4 +1,4 @@
 export enum AccountStatus {
-    CLOSED = 'CLOSED',
-    OPEN = 'OPEN'
+    CLOSED,
+    OPEN
 }

@@ -6,12 +6,14 @@ import { ManageAccounts } from './domain/usecases/ManageAccounts';
 import { ManageBookings } from './domain/usecases/ManageBookings';
 import { BookingController } from './rest/BookingController';
 import { InMemoryBookingRepository } from './persistence/inmemory/InMemoryBookingRepository';
+import { InMemoryDB } from './persistence/inmemory/InMemoryDB';
 
 const logger = pino({ level: 'debug' });
-const accountRepository = new InMemoryAccountRepository();
+const imMemoryDB = new InMemoryDB();
+const accountRepository = new InMemoryAccountRepository(imMemoryDB);
 const manageAccounts = new ManageAccounts(logger, accountRepository);
 const accountController = new AccountController(logger, manageAccounts);
-const bookingRepository = new InMemoryBookingRepository();
+const bookingRepository = new InMemoryBookingRepository(imMemoryDB);
 const manageBookings = new ManageBookings(logger, manageAccounts, bookingRepository);
 const bookingController = new BookingController(logger, manageBookings);
 const engine = new Engine(8080, logger, [ accountController, bookingController ]);

@@ -26,9 +26,9 @@ export class ManageAccounts {
     const newAccount = new Account(
       oldAccount.id,
       oldAccount.owner,
-      ManageAccounts.defaultOrNew(oldAccount.name, name),
-      ManageAccounts.defaultOrNew(oldAccount.type, type),
-      ManageAccounts.defaultOrNew(oldAccount.status, status),
+      name ?? oldAccount.name,
+      type ?? oldAccount.type,
+      status ?? oldAccount.status,
     );
     this.logger.info(newAccount, 'Update existing account');
     return this.accountRepository.update(newAccount);
@@ -57,12 +57,5 @@ export class ManageAccounts {
 
   getAll(owner: string): Promise<Account[]> {
     return this.accountRepository.findAllForOwner(owner);
-  }
-
-  private static defaultOrNew<T>(def: T, value?: T) : T {
-    if (typeof value === 'undefined') {
-      return def;
-    }
-    return value;
   }
 }

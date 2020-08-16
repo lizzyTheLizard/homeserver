@@ -1,27 +1,28 @@
 import { BookingRepository } from '../../domain/port/persistance/BookingRepository';
 import { Booking } from '../../domain/model/Booking';
+import { InMemoryDB } from './InMemoryDB';
 
 export class InMemoryBookingRepository implements BookingRepository {
-  private bookings: Map<string, Booking> = new Map<string, Booking>();
+  constructor(private readonly db: InMemoryDB) {}
 
   create(booking: Booking): Promise<Booking> {
-    this.bookings.set(booking.id, booking);
+    this.db.bookings.set(booking.id, booking);
     return Promise.resolve(booking);
   }
 
   update(booking: Booking): Promise<Booking> {
-    this.bookings.set(booking.id, booking);
+    this.db.bookings.set(booking.id, booking);
     return Promise.resolve(booking);
   }
 
   delete(id: string): Promise<void> {
-    this.bookings.delete(id);
+    this.db.bookings.delete(id);
     return Promise.resolve();
   }
 
   findAllForOwner(owner: string): Promise<Booking[]> {
     const result: Booking[] = [];
-    this.bookings.forEach((booking) => {
+    this.db.bookings.forEach((booking) => {
       if (booking.owner === owner) {
         result.push(booking);
       }
@@ -30,6 +31,6 @@ export class InMemoryBookingRepository implements BookingRepository {
   }
 
   find(id: string): Promise<Booking | undefined> {
-    return Promise.resolve(this.bookings.get(id));
+    return Promise.resolve(this.db.bookings.get(id));
   }
 }
