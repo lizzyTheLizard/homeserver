@@ -2,27 +2,20 @@ import { Request, Response, Router as ExpressRouter } from 'express';
 import { Logger } from 'pino';
 import { Router } from '@awaitjs/express';
 import { Account } from '../domain/model/Account';
-import { AccountQueryRepository } from '../domain/port/persistance/AccountQueryRepository';
-import { CreateAccount } from '../domain/usecases/account/CreateAccount';
-import { UpdateAccount } from '../domain/usecases/account/UpdateAccount';
-import { DeleteAccount } from '../domain/usecases/account/DeleteAccount';
+import { ManageAccounts } from '../domain/usecases/ManageAccounts';
 import { AccountStatus } from '../domain/model/AccountStatus';
 import { AccountType } from '../domain/model/AccountType';
-import { InvalidInputException } from '../domain/usecases/InvalidInputException';
 import { Controller } from './Controller';
+import { getRequiredField } from './getRequiredField';
 
-
-// TODO Check if correct owner
 export class AccountController implements Controller {
+  // TODO Check if correct owner
+  private readonly owner: string = 'testuser';
   readonly basePath: string = '/accounts';
 
   constructor(
         private readonly logger: Logger,
-        private readonly accountRepository: AccountQueryRepository,
-        private readonly createAccount: CreateAccount,
-        private readonly updateAccount: UpdateAccount,
-        private readonly deleteAccount: DeleteAccount) {
-  }
+        private readonly manageAccounts: ManageAccounts) {}
 
   getRouter(): ExpressRouter {
     this.logger.info('Setup AccountController');
@@ -37,7 +30,7 @@ export class AccountController implements Controller {
 
   async getAll(req: Request, res: Response): Promise<void> {
     req.log.debug('Get All Accounts');
-    const accounts = await this.accountRepository.findAll();
+    const accounts = await this.manageAccounts.getAll(this.owner);
     const response = accounts.map((account) => AccountController.toResponseBody(account));
     res.status(200).json(response).send();
   }
@@ -45,65 +38,38 @@ export class AccountController implements Controller {
   async getSingle(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     req.log.debug('Get Account %s', id);
-    const account = await this.accountRepository.find(id);
-    if (!account) {
-      req.log.info('Cannot find account %s', id);
-      res.status(404).json({ 'error': 'Account not found' });
-      return;
-    }
+    const account = await this.manageAccounts.getAccount(id, this.owner);
     const response = AccountController.toResponseBody(account);
     res.status(200).json(response).send();
   }
 
   async create(req: Request, res: Response): Promise<void> {
     req.log.debug('Create new Account');
-    try {
-      const newAccount = await this.createAccount.create(
-        req.body.id,
-        req.body.owner,
-        req.body.name,
-        AccountStatus[req.body.status as AccountStatus],
-        AccountType[req.body.type as AccountType]);
-      const response = AccountController.toResponseBody(newAccount);
-      res.status(200).json(response).send();
-    } catch (error) {
-      if (error instanceof InvalidInputException) {
-        req.log.info('Invalid input %s', error.message);
-        res.status(400).json({ 'error': error.message });
-        return;
-      }
-      throw error;
-    }
+    const newAccount = await this.manageAccounts.create(
+      getRequiredField(req, 'id'),
+      this.owner,
+      getRequiredField(req, 'name'),
+      getRequiredField(req, 'status'),
+      getRequiredField(req, 'type'));
+    const response = AccountController.toResponseBody(newAccount);
+    res.status(200).json(response).send();
   }
 
   async update(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     req.log.debug('Update Account %s', id);
-    const oldAccount = await this.accountRepository.find(id);
-    if (!oldAccount) {
-      return this.create(req, res);
-    }
-    const newAccount = await this.updateAccount.update(oldAccount,
+    const newAccount = await this.manageAccounts.update(id, this.owner,
       req.body.name as string,
       req.body.status as AccountStatus,
       req.body.type as AccountType);
-    try {
-      const response = AccountController.toResponseBody(newAccount);
-      res.status(200).json(response).send();
-    } catch (error) {
-      if (error instanceof InvalidInputException) {
-        req.log.info('Invalid input %s', error.message);
-        res.status(400).json({ 'error': error.message });
-        return;
-      }
-      throw error;
-    }
+    const response = AccountController.toResponseBody(newAccount);
+    res.status(200).json(response).send();
   }
 
   async delete(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     req.log.debug('Delete Account %s', id);
-    await this.deleteAccount.delete(id);
+    await this.manageAccounts.delete(id, this.owner);
     res.sendStatus(200);
   }
 

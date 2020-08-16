@@ -2,6 +2,9 @@ import pino from 'pino';
 import express from 'express';
 import expressPino from 'express-pino-logger';
 import { Controller } from './Controller';
+import { NotFoundException } from '../domain/exceptions/NotFoundException';
+import { NotAllowedException } from '../domain/exceptions/NotAllowedException';
+import { InvalidInputException } from '../domain/exceptions/InvalidInputException';
 
 
 export class Engine {
@@ -33,6 +36,14 @@ export class Engine {
 
   private static errorHandler(err: Error, req: express.Request, res:express.Response, ignored: express.NextFunction) {
     res.err = err;
-    res.status(500).json({ 'error': 'Something broke!' }).send();
+    if (err instanceof NotFoundException) {
+      res.status(404).json({ 'error': err.message }).send();
+    } else if (err instanceof NotAllowedException) {
+      res.status(403).json({ 'error': err.message }).send();
+    } else if (err instanceof InvalidInputException) {
+      res.status(400).json({ 'error': err.message }).send();
+    } else {
+      res.status(500).json({ 'error': 'Something broke!' }).send();
+    }
   }
 }

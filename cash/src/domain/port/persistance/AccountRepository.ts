@@ -1,6 +1,7 @@
 import { Account } from '../../model/Account';
+import { AccountQueryRepository } from './AccountQueryRepository';
 
-export interface AccountRepository{
+export interface AccountRepository extends AccountQueryRepository {
     create(account: Account): Promise<Account>
 
     update(account: Account): Promise<Account>
