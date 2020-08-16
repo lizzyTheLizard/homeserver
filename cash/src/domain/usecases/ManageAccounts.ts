@@ -5,6 +5,7 @@ import { AccountRepository } from '../port/persistance/AccountRepository';
 import { Logger } from 'pino';
 import { NotFoundException } from '../exceptions/NotFoundException';
 import { NotAllowedException } from '../exceptions/NotAllowedException';
+import { InvalidInputException } from '../exceptions/InvalidInputException';
 
 export class ManageAccounts {
   constructor(
@@ -34,8 +35,12 @@ export class ManageAccounts {
   }
 
   async delete(id: string, owner: string) : Promise<void> {
+    // Just to check if this account is there and accessible
     await this.getAccount(id, owner);
-    this.logger.info('Delete account', id);
+    if (await this.accountRepository.hasBookingsInAccount(id)) {
+      throw new InvalidInputException(`Cannot delete account ${ id } as there are bookings`);
+    }
+    this.logger.info('Delete account %s', id);
     return this.accountRepository.delete(id);
   }
 

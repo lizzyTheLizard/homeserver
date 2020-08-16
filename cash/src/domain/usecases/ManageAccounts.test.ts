@@ -12,13 +12,15 @@ const id = '123e4567-e89b-12d3-a456-426614174000';
 const testAccount = new Account(id, 'owner', 'name', AccountType.CASH, AccountStatus.OPEN);
 const logger = pino({ level: 'debug' });
 
-const AccountRepositoryMock = jest.fn<AccountRepository, [Account?]>((account?: Account) => ({
-  find: jest.fn((ignored: string) => Promise.resolve(account)),
-  findAllForOwner: jest.fn((ignored: string) => Promise.resolve((account ? [ account ] : []))),
-  create: jest.fn((newAccount: Account) => Promise.resolve(newAccount)),
-  update: jest.fn((newAccount: Account) => Promise.resolve(newAccount)),
-  delete: jest.fn((ignored: string) => Promise.resolve()),
-}));
+const AccountRepositoryMock = jest.fn<AccountRepository, [Account?, boolean?]>(
+  (account?: Account, hasBookings = false) => ({
+    find: jest.fn((ignored: string) => Promise.resolve(account)),
+    findAllForOwner: jest.fn((ignored: string) => Promise.resolve((account ? [ account ] : []))),
+    create: jest.fn((newAccount: Account) => Promise.resolve(newAccount)),
+    update: jest.fn((newAccount: Account) => Promise.resolve(newAccount)),
+    delete: jest.fn((ignored: string) => Promise.resolve()),
+    hasBookingsInAccount: jest.fn((ignored: string) => Promise.resolve(hasBookings)),
+  }));
 
 describe('ManageAccounts', () => {
   it('can construct', () => {
@@ -146,6 +148,15 @@ describe('ManageAccounts', () => {
     const accountRepository = new AccountRepositoryMock(testAccount);
     const target = new ManageAccounts(logger, accountRepository);
     await expect(target.delete(id, 'else')).rejects.toBeInstanceOf(NotAllowedException);
+    expect(accountRepository.create).not.toHaveBeenCalled();
+    expect(accountRepository.update).not.toHaveBeenCalled();
+    expect(accountRepository.delete).not.toHaveBeenCalled();
+  });
+
+  it('delete with bookings', async () => {
+    const accountRepository = new AccountRepositoryMock(testAccount, true);
+    const target = new ManageAccounts(logger, accountRepository);
+    await expect(target.delete(id, 'owner')).rejects.toBeInstanceOf(InvalidInputException);
     expect(accountRepository.create).not.toHaveBeenCalled();
     expect(accountRepository.update).not.toHaveBeenCalled();
     expect(accountRepository.delete).not.toHaveBeenCalled();
