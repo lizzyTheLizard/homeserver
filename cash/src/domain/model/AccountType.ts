@@ -1,12 +1,13 @@
 export enum AccountType {
-    CASH,
-    ASSET,
-    EQUITY,
-    DEBT,
-    REVENUE,
-    EXTRA_REVENUE,
-    SPENDING,
-    EXTRA_SPENDING
+  CASH,
+  ASSET,
+  EQUITY,
+  DEBT,
+  REVENUE,
+  EXTRA_REVENUE,
+  SPENDING,
+  EXTRA_SPENDING,
+  isIncome
 }
 
 export function mustSwitchSign(type: AccountType): boolean {

@@ -7,22 +7,19 @@ import { NotFoundException } from '../exceptions/NotFoundException';
 import { NotAllowedException } from '../exceptions/NotAllowedException';
 import { Account } from '../model/Account';
 import Big from 'big.js';
+import { Accounts } from './Accounts';
 
-export interface GetAccounts {
-  getAccount(fromAccountId: string, owner: string) : Promise<Account>;
-}
-
-export class ManageBookings {
+export class Bookings {
   constructor(
     private readonly logger: Logger,
-    private readonly getAccounts: GetAccounts,
+    private readonly accounts: Accounts,
     private readonly bookingRepository: BookingRepository) { }
 
   // eslint-disable-next-line max-params
   public async create(id: string, owner: string, fromAccountId: string, toAccountId: string,
     date: Date, amount: number, comment: string): Promise<Booking> {
-    const fromAccount = await this.getAccounts.getAccount(fromAccountId, owner);
-    const toAccount = await this.getAccounts.getAccount(toAccountId, owner);
+    const fromAccount = await this.accounts.getAccount(fromAccountId, owner);
+    const toAccount = await this.accounts.getAccount(toAccountId, owner);
     const bigAmount = new Big(amount);
     const newBooking = new Booking(id, owner, fromAccount, toAccount, date, bigAmount, comment);
     this.logger.info(newBooking, 'Create new booking');
@@ -65,14 +62,10 @@ export class ManageBookings {
     return booking;
   }
 
-  getAll(owner: string): Promise<Booking[]> {
-    return this.bookingRepository.findAllForOwner(owner);
-  }
-
   private getAccountOptional(id: string | undefined, owner: string, def: Account) : Promise<Account> {
     if (typeof id === 'undefined') {
       return Promise.resolve(def);
     }
-    return this.getAccounts.getAccount(id, owner);
+    return this.accounts.getAccount(id, owner);
   }
 }

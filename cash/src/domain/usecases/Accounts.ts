@@ -7,7 +7,7 @@ import { NotFoundException } from '../exceptions/NotFoundException';
 import { NotAllowedException } from '../exceptions/NotAllowedException';
 import { InvalidInputException } from '../exceptions/InvalidInputException';
 
-export class ManageAccounts {
+export class Accounts {
   constructor(
     private readonly logger: Logger,
     private readonly accountRepository: AccountRepository) {}

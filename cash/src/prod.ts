@@ -1,7 +1,7 @@
 import { AccountController } from './rest/AccountController';
 import { Engine } from './rest/Engine';
 import { InMemoryAccountRepository } from './persistence/inmemory/InMemoryAccountRepository';
-import { CreateAccount } from './domain/usecases/ManageAccounts';
+import { CreateAccount } from './domain/usecases/Accounts';
 import { UpdateAccount } from './domain/usecases/account/UpdateAccount';
 import { DeleteAccount } from './domain/usecases/account/DeleteAccount';
 import pino from 'pino';

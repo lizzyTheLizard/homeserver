@@ -3,7 +3,7 @@ import { Logger } from 'pino';
 import { Router } from '@awaitjs/express';
 import { Controller } from './Controller';
 import { getRequiredField } from './getRequiredField';
-import { ManageBookings } from '../domain/usecases/ManageBookings';
+import { Bookings } from '../domain/usecases/Bookings';
 import { Booking } from '../domain/model/Booking';
 
 export class BookingController implements Controller {
@@ -13,7 +13,7 @@ export class BookingController implements Controller {
 
   constructor(
         private readonly logger: Logger,
-        private readonly manageBookings: ManageBookings) {}
+        private readonly manageBookings: Bookings) {}
 
   getRouter(): ExpressRouter {
     this.logger.info('Setup BookingController');

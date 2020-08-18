@@ -2,7 +2,7 @@ import { Request, Response, Router as ExpressRouter } from 'express';
 import { Logger } from 'pino';
 import { Router } from '@awaitjs/express';
 import { Account } from '../domain/model/Account';
-import { ManageAccounts } from '../domain/usecases/ManageAccounts';
+import { Accounts } from '../domain/usecases/Accounts';
 import { AccountStatus } from '../domain/model/AccountStatus';
 import { AccountType } from '../domain/model/AccountType';
 import { Controller } from './Controller';
@@ -16,7 +16,7 @@ export class AccountController implements Controller {
 
   constructor(
         private readonly logger: Logger,
-        private readonly manageAccounts: ManageAccounts) {}
+        private readonly manageAccounts: Accounts) {}
 
   getRouter(): ExpressRouter {
     this.logger.info('Setup AccountController');

@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@awaitjs/express": "^0.6.1",
-    "@types/big.js": "^4.0.5",
     "big.js": "^5.2.2",
     "express": "^4.17.1",
     "express-pino-logger": "^5.0.0",
@@ -20,6 +19,7 @@
     "uuidv4": "^6.2.0"
   },
   "devDependencies": {
+    "@types/big.js": "^4.0.5",
     "@types/express": "^4.17.7",
     "@types/express-pino-logger": "^4.0.2",
     "@types/jest": "^26.0.9",
