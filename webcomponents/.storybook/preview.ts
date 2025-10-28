@@ -1,2 +1,2 @@
-import '../src/main.scss';
-import '../src/table.scss';
+import "../src/main.scss";
+import "../src/table.scss";
