@@ -1,6 +1,6 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
-import {Colors, Spacing, border} from './defaults';
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { Colors, Spacing, border } from './defaults'
 
 @customElement('gs-collapse')
 export class GsCollapse extends LitElement {
@@ -29,7 +29,7 @@ export class GsCollapse extends LitElement {
       left: ${Spacing.SmallGap};
       padding-right: ${Spacing.SmallGap};
       top: -${Spacing.SmallGap};
-      font-size: small; 
+      font-size: small;
       color: ${Colors.Default.TransparentText};
       background-color: ${Colors.Default.Background};
     }
@@ -41,13 +41,13 @@ export class GsCollapse extends LitElement {
     .content {
       width: 100%;
     }
-  `;
+  `
 
-  @property({type: String})
-  public header = '';
+  @property({ type: String })
+  public header = ''
 
   @state()
-  private collapsed = true;
+  private collapsed = true
 
   override render() {
     const header = html`
@@ -55,22 +55,36 @@ export class GsCollapse extends LitElement {
         <gs-icon name="${this.collapsed ? 'caretRight' : 'caretDown'}"></gs-icon>
         ${this.header}
       </span>
-    `;
+    `
     if (this.collapsed) {
-      return html` <div class="box" @click="${this.toggleCollapse}">${header}</div> `;
-    } else {
       return html`
-        <div class="box" @click="${this.toggleCollapse}">
+        <div
+          class="box"
+          @click="${() => { this.toggleCollapse() }}"
+        >
           ${header}
-          <div class="content" @click="${(e: MouseEvent) => e.stopPropagation()}">
+        </div>
+      `
+    }
+    else {
+      return html`
+        <div
+          class="box"
+          @click="${() => { this.toggleCollapse() }}"
+        >
+          ${header}
+          <div
+            class="content"
+              @click="${(e: MouseEvent) => { e.stopPropagation() }}"
+          >
             <slot></slot>
           </div>
         </div>
-      `;
+      `
     }
   }
 
   private toggleCollapse() {
-    this.collapsed = !this.collapsed;
+    this.collapsed = !this.collapsed
   }
 }

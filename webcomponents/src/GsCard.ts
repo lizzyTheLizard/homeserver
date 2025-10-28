@@ -1,6 +1,6 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {Colors, Spacing, border} from './defaults';
+import { LitElement, html, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { Colors, Spacing, border } from './defaults'
 
 @customElement('gs-card')
 export class GsCard extends LitElement {
@@ -52,13 +52,13 @@ export class GsCard extends LitElement {
         page-break-inside: avoid;
       }
     }
-  `;
+  `
 
   @property()
-  public header = '';
+  public header = ''
 
   @property()
-  public href: string | undefined;
+  public href: string | undefined
 
   override render() {
     if (this.href) {
@@ -70,15 +70,16 @@ export class GsCard extends LitElement {
           <div class="spacer"></div>
           <slot name="footer"></slot>
         </a>
-      `;
-    } else {
+      `
+    }
+    else {
       return html`
         <slot name="icon"></slot>
         <h3 class="card-title">${this.header}</h3>
         <slot></slot>
         <div class="spacer"></div>
         <slot name="footer"></slot>
-      `;
+      `
     }
   }
 }

@@ -10,10 +10,9 @@
     "build:compile": "tsc",
     "build:pack": "rollup -c",
     "build:storybook": "storybook build -o ./dist/storybook",
-    "lint": "pnpm lint:lit-analyzer && pnpm lint:eslint && pnpm lint:format",
+    "lint": "pnpm lint:lit-analyzer && pnpm lint:eslint",
     "lint:eslint": "eslint **/*.{ts,js}",
-    "lint:lit-analyzer": "lit-analyzer",
-    "lint:format": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --write"
+    "lint:lit-analyzer": "lit-analyzer"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
@@ -21,6 +20,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@storybook/addon-docs": "^10.0.0",
     "@storybook/web-components-vite": "^10.0.0",
+    "@stylistic/eslint-plugin": "^5.5.0",
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
     "lit": "^3.3.1",

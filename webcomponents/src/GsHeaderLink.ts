@@ -1,7 +1,7 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {Colors, Spacing} from './defaults';
-import {classMap} from 'lit/directives/class-map.js';
+import { LitElement, html, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { Colors, Spacing } from './defaults'
+import { classMap } from 'lit/directives/class-map.js'
 
 @customElement('gs-header-link')
 export class GsHeaderLink extends LitElement {
@@ -27,20 +27,20 @@ export class GsHeaderLink extends LitElement {
       padding-top: 0.4rem;
       padding-bottom: 0.2rem;
     }
-  `;
+  `
 
   @property()
-  public href = '';
+  public href = ''
 
   override render() {
     const classes = {
       active: this.href === document.location.pathname,
-    };
+    }
     return html`
       <a href=${this.href} class="${classMap(classes)}"
         ><div>
           <span><slot></slot></span></div
       ></a>
-    `;
+    `
   }
 }

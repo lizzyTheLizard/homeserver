@@ -1,4 +1,4 @@
-import type {StorybookConfig} from '@storybook/web-components-vite';
+import type { StorybookConfig } from '@storybook/web-components-vite'
 const config: StorybookConfig = {
   framework: '@storybook/web-components-vite',
   stories: ['../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
@@ -6,6 +6,6 @@ const config: StorybookConfig = {
   docs: {
     docsMode: true,
   },
-};
+}
 
-export default config;
+export default config

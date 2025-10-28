@@ -1,18 +1,18 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, state} from 'lit/decorators.js';
-import {Colors, Spacing, border} from './defaults';
+import { LitElement, html, css } from 'lit'
+import { customElement, state } from 'lit/decorators.js'
+import { Colors, Spacing, border } from './defaults'
 
 declare global {
   interface Window {
-    showMessage: typeof showMessage;
+    showMessage: typeof showMessage
   }
 }
 
-export type MessageType = 'danger' | 'info' | 'success';
+export type MessageType = 'danger' | 'info' | 'success'
 
 export let showMessage: (type: MessageType, message: string, timeToShow: number) => void = () => {
-  console.warn('No GsInfo registered');
-};
+  console.warn('No GsInfo registered')
+}
 
 @customElement('gs-info')
 export class GsInfo extends LitElement {
@@ -73,44 +73,46 @@ export class GsInfo extends LitElement {
         left: ${Spacing.Gap};
         bottom: ${Spacing.Gap};
     }
-  `;
+  `
 
   constructor() {
-    super();
-    this.messages = JSON.parse(localStorage.getItem('gs-info') ?? '[]') as Message[];
-    showMessage = (t, m, s) => this.show(t, m, s);
-    window.showMessage = showMessage;
+    super()
+    this.messages = JSON.parse(localStorage.getItem('gs-info') ?? '[]') as Message[]
+    showMessage = (t, m, s) => { this.show(t, m, s) }
+    window.showMessage = showMessage
   }
 
   public show(type: MessageType, message: string, timeToShow: number) {
-    const newMessage: Message = {type: type, message: message, untill: Date.now() + timeToShow};
-    this.messages = [...this.messages, newMessage];
+    const newMessage: Message = { type: type, message: message, untill: Date.now() + timeToShow }
+    this.messages = [...this.messages, newMessage]
   }
 
   @state()
-  private messages: Message[] = [];
+  private messages: Message[] = []
 
   override render() {
-    const now = Date.now();
-    const messages = this.messages.filter((m) => m.untill > now + 10);
-    localStorage.setItem('gs-info', JSON.stringify(messages));
-    const nextUpdate = Math.min(...messages.map((m) => m.untill));
-    setTimeout(() => this.requestUpdate(), nextUpdate - now);
+    const now = Date.now()
+    const messages = this.messages.filter(m => m.untill > now + 10)
+    localStorage.setItem('gs-info', JSON.stringify(messages))
+    const nextUpdate = Math.min(...messages.map(m => m.untill))
+    setTimeout(() => {
+      this.requestUpdate()
+    }, nextUpdate - now)
     return html`
       ${messages.map(
-        (m) => html`
+        m => html`
           <div class="container ${m.type}">
             <gs-icon name="${m.type}"></gs-icon>
             <div class="content">${m.message}</div>
           </div>
-        `
+        `,
       )}
-    `;
+    `
   }
 }
 
 interface Message {
-  type: MessageType;
-  message: string;
-  untill: number;
+  type: MessageType
+  message: string
+  untill: number
 }
