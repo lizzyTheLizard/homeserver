@@ -11,28 +11,27 @@
     "build:pack": "rollup -c",
     "build:storybook": "storybook build -o ./dist/storybook",
     "lint": "pnpm lint:lit-analyzer && pnpm lint:eslint && pnpm lint:format",
-    "lint:eslint": "eslint src/**/*.{ts,js} --fix",
+    "lint:eslint": "eslint **/*.{ts,js}",
     "lint:lit-analyzer": "lit-analyzer",
-    "lint:format": "prettier \"src/**/*.{cjs,html,js,json,md,ts}\" --write"
+    "lint:format": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --write"
   },
-  "dependencies": {
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "@storybook/addon-styling-webpack": "^2.0.0",
-    "@storybook/web-components-vite": "^9.1.15",
+    "@storybook/addon-docs": "^10.0.0",
+    "@storybook/web-components-vite": "^10.0.0",
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0",
     "lit": "^3.3.1",
     "lit-analyzer": "^2.0.3",
     "rimraf": "^6.0.1",
     "rollup": "^4.52.5",
     "rollup-plugin-sass": "^1.15.3",
     "sass": "^1.93.2",
-    "storybook": "9.1.15"
-  },
-  "packageManager": "pnpm@10.19.0",
-  "devDependencies": {
-    "@eslint/js": "^9.38.0",
-    "eslint": "^9.38.0",
+    "storybook": "^10.0.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

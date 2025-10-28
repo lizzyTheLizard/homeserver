@@ -47,8 +47,7 @@ export class GsInput extends FormelementBase<string> {
       list="list"
     />`;
     const nodes: HTMLOptionElement[] = [];
-    for (let i = 0; i < this.children.length; i++) {
-      const node = this.children[i];
+    for (const node of this.children) {
       if (!('tagName' in node)) continue;
       if (node.tagName !== 'OPTION') continue;
       nodes.push(node as HTMLOptionElement);

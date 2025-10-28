@@ -16,7 +16,7 @@ export default [
     },
     plugins: [
       nodeResolve(),
-      sass({output: './dist/style.css', api: 'modern' }),
+      sass({output: './dist/style.css', api: 'modern'}),
       terser({
         ecma: 2021,
         module: true,
