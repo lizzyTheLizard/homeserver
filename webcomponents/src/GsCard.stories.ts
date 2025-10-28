@@ -37,7 +37,7 @@ export const Normal: StoryObj<Args> = {
       </gs-card>
       <gs-card .href=${args.href} header=${args.header}>
             <p>${args.content}</p>
-            <gs-button slot="footer">Info Details</gs-button>
+            <gs-button slot="footer" onclick="alert('Button clicked!')">Info Details</gs-button>
           </gs-card>
       </gs-card>
       <gs-card .href=${args.href} header=${args.header}>
