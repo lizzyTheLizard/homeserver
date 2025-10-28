@@ -27,11 +27,11 @@ export class GsCollapse extends LitElement {
     .header {
       position: absolute;
       left: ${Spacing.SmallGap};
+      padding-right: ${Spacing.SmallGap};
       top: -${Spacing.SmallGap};
-      font-size: small;
+      font-size: small; 
       color: ${Colors.Default.TransparentText};
       background-color: ${Colors.Default.Background};
-      width: 70px;
     }
 
     gs-icon {
