@@ -1,0 +1,26 @@
+{
+  "name": "homeserver-webcomponents",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf build dist",
+    "webcomponents": "tsc && rollup -c",
+    "webcomponents:watch": "tsc-watch --project src/main/webcomponents/tsconfig.json --onSuccess \"rollup -c src/main/webcomponents/rollup.config.js\"",
+    "lint": "pnpm lint:lit-analyzer && pnpm lint:eslint && pnpm lint:format",
+    "lint:eslint": "eslint 'src/**/*.ts'",
+    "lint:lit-analyzer": "lit-analyzer",
+    "lint:format": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --ignore-path ./.eslintignore --write"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "lit": "^3.3.1",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.52.5",
+    "rollup-plugin-sass": "^1.15.3",
+    "sass": "^1.93.2",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.19.0"
+}
