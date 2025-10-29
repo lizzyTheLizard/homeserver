@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { Colors, Spacing, border } from './defaults'
+import './GsIcon'
 
 @customElement('gs-collapse')
 export class GsCollapse extends LitElement {

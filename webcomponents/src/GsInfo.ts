@@ -2,6 +2,8 @@ import { LitElement, html, css } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { Colors, Spacing, border } from './defaults'
 
+import './GsIcon'
+
 declare global {
   interface Window {
     showMessage: typeof showMessage

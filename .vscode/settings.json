@@ -4,7 +4,9 @@
   },
   "eslint.validate": [
     "javascript",
-    "typescript"
+    "typescript",
+    "javascriptreact",
+  	"typescriptreact"
   ],
   "eslint.format.enable": true
  }

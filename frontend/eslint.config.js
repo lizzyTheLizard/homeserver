@@ -1,8 +1,9 @@
 import eslint from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import tseslint from 'typescript-eslint'
-import globals from 'globals'
 import stylistic from '@stylistic/eslint-plugin'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTs from 'eslint-config-next/typescript'
 
 export default defineConfig(
   eslint.configs.recommended,
@@ -10,22 +11,17 @@ export default defineConfig(
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   stylistic.configs.recommended,
-  globalIgnores(['build/**/*'], 'Ignore Build Directory'),
-  globalIgnores(['dist/**/*'], 'Ignore Dist Directory'),
-  globalIgnores(['vitest.*'], 'Ignore Vitest config'),
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores(['.next/**/*'], 'Ignore Next Directory'),
+  globalIgnores(['out/**/*'], 'Ignore Out Directory'),
+  globalIgnores(['next-env.d.ts'], 'Ignore Next Env File'),
   {
     languageOptions: {
-      globals: {
-        ...globals.node,
-      },
       parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.storybook.json'],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
-    },
-    rules: {
-      '@typescript-eslint/no-extraneous-class': ['off'],
-      '@stylistic/max-statements-per-line': ['error', { max: 2 }],
     },
   },
   {

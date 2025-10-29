@@ -9,8 +9,9 @@
     "build:pack": "rollup -c",
     "build:storybook": "storybook build -o ./dist/storybook",
     "lint": "pnpm lint:lit-analyzer && pnpm lint:eslint",
-    "lint:eslint": "eslint **/*.{ts,js}",
+    "lint:eslint": "eslint",
     "lint:lit-analyzer": "lit-analyzer",
+    "lint:fix": "eslint --fix",
     "test": "vitest",
     "chromatic": "npx chromatic --build-script-name build:storybook"
   },

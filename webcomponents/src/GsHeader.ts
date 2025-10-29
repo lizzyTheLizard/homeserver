@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { Colors, Spacing } from './defaults'
 import { unsafeCSS } from 'lit'
 import './GsHeaderLink'
+import './GsIcon'
 
 const headerHeight = unsafeCSS('2rem')
 const headerFontSize = unsafeCSS('1.5rem')
