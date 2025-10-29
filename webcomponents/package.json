@@ -12,7 +12,7 @@
     "lint:eslint": "eslint **/*.{ts,js}",
     "lint:lit-analyzer": "lit-analyzer",
     "test": "vitest",
-    "chromatic": "npx chromatic --project-token=chpt_d0f266f6e083f7d --build-script-name build:storybook"
+    "chromatic": "npx chromatic --build-script-name build:storybook"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "4.1.2",
