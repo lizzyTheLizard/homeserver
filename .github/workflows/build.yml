@@ -20,7 +20,7 @@ jobs:
           version: 10
       - name: Install dependencies
         working-directory: ./webcomponents
-        run: pnpm ci
+        run: pnpm i
       - name: Lint
         working-directory: ./webcomponents
         run: pnpm lint
