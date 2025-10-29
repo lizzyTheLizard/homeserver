@@ -13,10 +13,13 @@ jobs:
       - name: Read nvmrc file
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
+    steps:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Install dependencies
         run: pnpm ci
       - name: Lint
