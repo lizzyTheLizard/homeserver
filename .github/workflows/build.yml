@@ -2,7 +2,7 @@ name: "Build and Test"
 on: push
 jobs:
   webcomponents:
-    name: Run Web Components Tests
+    name: Build and Test Webcomponents
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,20 +19,16 @@ jobs:
         with:
           version: 10
       - name: Install dependencies
-        working-directory: ./webcomponents
         run: pnpm i
       - name: Build
-        working-directory: ./webcomponents
-        run: pnpm build
+        run: pnpm -F homeserver-webcomponents run build
       - name: Lint
-        working-directory: ./webcomponents
-        run: pnpm lint
+        run: pnpm -F homeserver-webcomponents lint
       - name: Install Playwright Browsers
-        working-directory: ./webcomponents
         run: npx playwright install chromium --with-deps 
-      - name: Run tests
-        working-directory: ./webcomponents
-        run: pnpm test
       - name: Run Chromatic
-        working-directory: ./webcomponents
-        run: pnpm chromatic
+        run: pnpm -F homeserver-webcomponents chromatic
+      - name: Run tests
+        run: pnpm -F homeserver-webcomponents test
+      - name: Run Chromatic
+        run: pnpm -F homeserver-webcomponents chromatic
