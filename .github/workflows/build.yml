@@ -7,6 +7,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Read nvmrc file
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
@@ -18,13 +20,13 @@ jobs:
         uses: pnpm/action-setup@v4
       - name: Install dependencies
         run: pnpm i
-      - name: Build
+      - name: Build Webcomponents
         run: pnpm -F homeserver-webcomponents run build
-      - name: Lint
+      - name: Lint Webcomponents
         run: pnpm -F homeserver-webcomponents run lint
       - name: Install Playwright Browsers
         run: pnpm dlx  playwright install chromium --with-deps 
-      - name: Run tests
+      - name: Run Webcomponents tests
         run: pnpm -F homeserver-webcomponents test
-      - name: Run Chromatic
+      - name: Run WebComponents Chromatic
         run: pnpm -F homeserver-webcomponents chromatic
