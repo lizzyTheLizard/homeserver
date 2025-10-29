@@ -23,7 +23,7 @@ jobs:
       - name: Lint
         run: pnpm -F homeserver-webcomponents run lint
       - name: Install Playwright Browsers
-        run: npx playwright install chromium --with-deps 
+        run: pnpm dlx  playwright install chromium --with-deps 
       - name: Run tests
         run: pnpm -F homeserver-webcomponents test
       - name: Run Chromatic
