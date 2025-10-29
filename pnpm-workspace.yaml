@@ -1,5 +1,6 @@
 packages:
   - webcomponents
+  - frontend
 
 onlyBuiltDependencies:
   - '@parcel/watcher'
