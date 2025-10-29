@@ -31,7 +31,7 @@ jobs:
       - name: Build Webcomponents
         run: pnpm -F homeserver-webcomponents run build
       - name: Lint Webcomponents
-        if: steps.changes.outputs.src == 'true'
+        if: steps.changes.outputs.webcomponents == 'true'
         run: pnpm -F homeserver-webcomponents run lint
       - name: Cache Playwright Browsers
         uses: actions/cache@v3
@@ -40,15 +40,15 @@ jobs:
           path: |
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-        if: steps.changes.outputs.src == 'true'
+        if: steps.changes.outputs.webcomponents == 'true'
       - name: Install Playwright Browsers
         run: pnpm dlx  playwright install chromium --with-deps 
-        if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.changes.outputs.src == 'true'
+        if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.changes.outputs.webcomponents == 'true'
       - name: Run Webcomponents tests
         run: pnpm -F homeserver-webcomponents test
-        if: steps.changes.outputs.src == 'true'
+        if: steps.changes.outputs.webcomponents == 'true'
       - name: Run WebComponents Chromatic
         run: pnpm -F homeserver-webcomponents chromatic
-        if: steps.changes.outputs.src == 'true'
+        if: steps.changes.outputs.webcomponents == 'true'
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
