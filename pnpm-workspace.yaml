@@ -1,2 +1,6 @@
 packages:
-  - 'webcomponents'
+  - webcomponents
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - esbuild
