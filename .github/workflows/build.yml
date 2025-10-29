@@ -4,9 +4,6 @@ jobs:
   webcomponents:
     name: Run Web Components Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./webcomponents
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,12 +17,16 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
       - name: Install dependencies
+        working-directory: ./webcomponents
         run: pnpm ci
       - name: Lint
+        working-directory: ./webcomponents
         run: pnpm lint
       - name: Run tests
+        working-directory: ./webcomponents
         run: pnpm test
       - name: Run Chromatic
+        working-directory: ./webcomponents
         uses: chromaui/action@latest
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
