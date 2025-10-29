@@ -2,9 +2,8 @@ name: "Build and Test"
 on: push
 jobs:
   webcomponents:
-    name: Build and Test Webcomponents
+    name: Webcomponents
     runs-on: ubuntu-latest
-    if: 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,10 +27,8 @@ jobs:
         uses: pnpm/action-setup@v4
       - name: Install dependencies
         run: pnpm i
-      - name: Build Webcomponents
-        run: pnpm -F homeserver-webcomponents run build
-      - name: Lint Webcomponents
-        if: steps.changes.outputs.webcomponents == 'true'
+      - name: Lint
+        if: steps.changes.outputs.src == 'true'
         run: pnpm -F homeserver-webcomponents run lint
       - name: Cache Playwright Browsers
         uses: actions/cache@v3
@@ -40,15 +37,47 @@ jobs:
           path: |
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-        if: steps.changes.outputs.webcomponents == 'true'
+        if: steps.changes.outputs.src == 'true'
       - name: Install Playwright Browsers
-        run: pnpm dlx  playwright install chromium --with-deps 
-        if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.changes.outputs.webcomponents == 'true'
-      - name: Run Webcomponents tests
+        run: pnpm dlx  playwright install chromium --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.changes.outputs.src == 'true'
+      - name: Run Tests
         run: pnpm -F homeserver-webcomponents test
-        if: steps.changes.outputs.webcomponents == 'true'
-      - name: Run WebComponents Chromatic
+        if: steps.changes.outputs.src == 'true'
+      - name: Run Chromatic
         run: pnpm -F homeserver-webcomponents chromatic
-        if: steps.changes.outputs.webcomponents == 'true'
+        if: steps.changes.outputs.src == 'true'
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if changed
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'frontend/**'
+      - name: Read nvmrc file
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        run: pnpm i
+      - name: Lint
+        if: steps.changes.outputs.src == 'true'
+        run: pnpm -F homeserver-frontend run lint
+      - name: Run Tests
+        run: pnpm -F homeserver-frontend test
+        if: steps.changes.outputs.src == 'true'
