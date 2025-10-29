@@ -14,8 +14,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -29,6 +27,9 @@ jobs:
       - name: Lint
         working-directory: ./webcomponents
         run: pnpm lint
+      - name: Install Playwright Browsers
+        working-directory: ./webcomponents
+        run: npx playwright install chromium --with-deps 
       - name: Run tests
         working-directory: ./webcomponents
         run: pnpm test
