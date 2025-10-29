@@ -40,7 +40,7 @@ const meta: Meta<Args> = {
     onClick: fn(),
   },
   render: (args: Args) => html`
-    <gs-button role="button" .href=${args.href} .name=${args.name} type=${args.type} ?submit=${args.submit} ?disabled=${args.disabled} @onclick="${args.onClick ?? nothing}">
+    <gs-button role="button" .href=${args.href} .name=${args.name} type=${args.type} ?submit=${args.submit} ?disabled=${args.disabled} @click="${args.onClick ?? nothing}">
     This is the content of the button
     </gs-button>
   `,

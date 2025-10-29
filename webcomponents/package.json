@@ -12,7 +12,8 @@
     "build:storybook": "storybook build -o ./dist/storybook",
     "lint": "pnpm lint:lit-analyzer && pnpm lint:eslint",
     "lint:eslint": "eslint **/*.{ts,js}",
-    "lint:lit-analyzer": "lit-analyzer"
+    "lint:lit-analyzer": "lit-analyzer",
+    "test": "vitest"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
