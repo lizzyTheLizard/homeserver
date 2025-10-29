@@ -9,8 +9,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Read nvmrc file
-          run: echo ::set-output name=NVMRC::$(cat .nvmrc)
-          id: nvm
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
       - name: Setup node
         uses: actions/setup-node@v1
         with:
