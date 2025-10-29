@@ -5,8 +5,8 @@ jobs:
     name: Run Web Components Tests
     runs-on: ubuntu-latest
     defaults:
-    run:
-      working-directory: ./webcomponents
+      run:
+        working-directory: ./webcomponents
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
