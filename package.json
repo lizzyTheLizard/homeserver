@@ -1,0 +1,9 @@
+{
+  "name": "homeserver",
+  "version": "0.1.0",
+  "private": true,
+  "modules": {
+    "webcomponents": "webcomponents"
+  },
+  "packageManager": "pnpm@10.19.0"
+}
