@@ -5,7 +5,7 @@ const config: StorybookConfig = {
   addons: [
     '@storybook/addon-docs',
     '@storybook/addon-vitest',
-    '@chromatic-com/storybook'
+    '@chromatic-com/storybook',
   ],
   docs: { },
 }
