@@ -1,11 +1,11 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {Colors, Spacing} from './defaults';
-import {unsafeCSS} from 'lit';
-import './GsHeaderLink';
+import { LitElement, html, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { Colors, Spacing } from './defaults'
+import { unsafeCSS } from 'lit'
+import './GsHeaderLink'
 
-const headerHeight = unsafeCSS('2rem');
-const headerFontSize = unsafeCSS('1.5rem');
+const headerHeight = unsafeCSS('2rem')
+const headerFontSize = unsafeCSS('1.5rem')
 
 @customElement('gs-header')
 export class GsHeader extends LitElement {
@@ -75,21 +75,25 @@ export class GsHeader extends LitElement {
         width: 100%;
       }
     }
-  `;
-  #showMenu = false;
+  `
+
+  #showMenu = false
 
   @property()
-  public applicationName = '';
+  public applicationName = ''
 
   @property()
-  public user = '';
+  public user = ''
 
-  @property({type: Boolean})
-  public portalAccess = false;
+  @property({ type: Boolean })
+  public portalAccess = false
 
   override render() {
     return html`
-      <gs-icon @click="${this.toggle}" name="menu"></gs-icon>
+      <gs-icon
+        @click="${() => { this.toggle() }}"
+        name="menu"
+      ></gs-icon>
       <span id="applicationName">${this.applicationName ? this.applicationName : 'Homeserver'}</span>
       <slot id="list" class="mobileHidden"></slot>
       <div id="spacer"></div>
@@ -97,24 +101,24 @@ export class GsHeader extends LitElement {
         ? html`<gs-header-link id="portalLink" class="mobileHidden" href="/">All Application</gs-header-link>`
         : ''}
       <gs-header-link id="logoutLink" class="mobileHidden" href="/logout">Logout ${this.user}</gs-header-link>
-    `;
+    `
   }
 
   private toggle() {
-    this.#showMenu = !this.#showMenu;
-    const list = this.shadowRoot?.getElementById('list');
+    this.#showMenu = !this.#showMenu
+    const list = this.shadowRoot?.getElementById('list')
     if (!list) {
-      throw new Error('List element not found');
+      throw new Error('List element not found')
     }
-    list.className = this.#showMenu ? '' : 'mobileHidden';
-    const logoutLink = this.shadowRoot?.getElementById('logoutLink');
+    list.className = this.#showMenu ? '' : 'mobileHidden'
+    const logoutLink = this.shadowRoot?.getElementById('logoutLink')
     if (!logoutLink) {
-      throw new Error('LogoutLink element not found');
+      throw new Error('LogoutLink element not found')
     }
-    logoutLink.className = this.#showMenu ? '' : 'mobileHidden';
-    const portalLink = this.shadowRoot?.getElementById('portalLink');
+    logoutLink.className = this.#showMenu ? '' : 'mobileHidden'
+    const portalLink = this.shadowRoot?.getElementById('portalLink')
     if (portalLink) {
-      portalLink.className = this.#showMenu ? '' : 'mobileHidden';
+      portalLink.className = this.#showMenu ? '' : 'mobileHidden'
     }
   }
 }

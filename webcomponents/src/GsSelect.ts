@@ -1,9 +1,9 @@
-import {classMap} from 'lit/directives/class-map.js';
-import {unsafeStatic, html} from 'lit/static-html.js';
-import {customElement, property} from 'lit/decorators.js';
-import {FormelementBase} from './FormelementBase.js';
-import {TemplateResult, css} from 'lit';
-import {Spacing} from './defaults.js';
+import { classMap } from 'lit/directives/class-map.js'
+import { unsafeStatic, html } from 'lit/static-html.js'
+import { customElement, property } from 'lit/decorators.js'
+import { FormelementBase } from './FormelementBase.js'
+import { TemplateResult, css } from 'lit'
+import { Spacing } from './defaults.js'
 
 @customElement('gs-select')
 export class GsSelect extends FormelementBase<string> {
@@ -16,19 +16,19 @@ export class GsSelect extends FormelementBase<string> {
         height: ${Spacing.InputHeight};
       }
     `,
-  ];
+  ]
 
   @property()
-  public emptyLabel = 'No Value Selected';
+  public emptyLabel = 'No Value Selected'
 
   @property()
-  public emptyValue = 'empty_' + Math.random().toString();
+  public emptyValue = 'empty_' + Math.random().toString()
 
   @property()
-  public value: string | undefined = undefined;
+  public value: string | undefined = undefined
 
   protected override setValue(value: string | undefined): void {
-    this.value = value;
+    this.value = value
   }
 
   protected override renderInputFieldOnly(): TemplateResult {
@@ -36,19 +36,19 @@ export class GsSelect extends FormelementBase<string> {
       formElement: true,
       disabled: this.disabled,
       noLabel: !this.label,
-    };
-    const nodes: HTMLOptionElement[] = [];
+    }
+    const nodes: HTMLOptionElement[] = []
     for (const node of this.children) {
-      if (!('tagName' in node)) continue;
-      if (node.tagName !== 'OPTION') continue;
-      nodes.push(node as HTMLOptionElement);
+      if (!('tagName' in node)) continue
+      if (node.tagName !== 'OPTION') continue
+      nodes.push(node as HTMLOptionElement)
     }
     return html`
       <select
         id="${this.name}"
         name="${this.name}"
         ?disabled="${this.disabled}"
-        @change=${() => this.onChange()}
+        @change=${() => { this.onChange() }}
         class="${classMap(classes)}"
       >
         ${this.required
@@ -57,19 +57,19 @@ export class GsSelect extends FormelementBase<string> {
             </option>`
           : html`<option value="${this.emptyValue}" .selected="${!this.value}">${this.emptyLabel}</option>`}
         ${nodes.map(
-          (node) =>
+          node =>
             html`<option value="${node.value}" .disabled="${node.disabled}" .selected="${node.value == this.value}">
-              ${unsafeStatic(node.innerHTML.toString())}
-            </option>`
+              ${unsafeStatic(node.innerHTML)}
+            </option>`,
         )};
       </select>
-    `;
+    `
   }
 
   protected override getValue(target: HTMLFormElement): string | undefined {
     if (target.value === this.emptyValue) {
-      return undefined;
+      return undefined
     }
-    return super.getValue(target);
+    return super.getValue(target)
   }
 }

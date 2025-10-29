@@ -1,13 +1,13 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
-import {Colors, Spacing, border} from './defaults';
-import {GsLoadingSpinner} from './GsLoadingSpinner';
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { classMap } from 'lit/directives/class-map.js'
+import { Colors, Spacing, border } from './defaults'
+import { GsLoadingSpinner } from './GsLoadingSpinner'
 
 @customElement('gs-button')
 export class GsButton extends LitElement {
-  protected internals: ElementInternals;
-  protected static readonly formAssociated = true;
+  protected internals: ElementInternals
+  protected static readonly formAssociated = true
   static override styles = css`
     :host {
       display: block;
@@ -65,91 +65,93 @@ export class GsButton extends LitElement {
       border: ${border(Colors.Disabled.Border)};
       cursor: not-allowed;
     }
-  `;
+  `
 
   constructor() {
-    super();
-    this.internals = this.attachInternals();
+    super()
+    this.internals = this.attachInternals()
   }
 
-  @property({type: Boolean})
-  public disabled = false;
+  @property({ type: Boolean })
+  public disabled = false
 
   @state()
-  private formDisabled = false;
+  private formDisabled = false
 
-  @property({type: Boolean})
-  public submit = false;
-
-  @property()
-  public href: string | undefined = undefined;
+  @property({ type: Boolean })
+  public submit = false
 
   @property()
-  public type: 'primary' | 'secondary' | 'danger' = 'primary';
+  public href: string | undefined = undefined
 
   @property()
-  public name: string | undefined = undefined;
+  public type: 'primary' | 'secondary' | 'danger' = 'primary'
+
+  @property()
+  public name: string | undefined = undefined
 
   override render() {
     // Just after the render, we need to check if the form is valid
     setTimeout(() => {
-      this.internals.form?.addEventListener('change', () => this.updateFormDisabled());
-      this.updateFormDisabled();
-    }, 10);
+      this.internals.form?.addEventListener('change', () => {
+        this.updateFormDisabled()
+      })
+      this.updateFormDisabled()
+    }, 10)
 
-    const disabled = this.disabled || this.formDisabled;
+    const disabled = this.disabled || this.formDisabled
     const classes = {
       button: true,
       disabled: disabled,
       primary: !disabled && this.type === 'primary',
       secondary: !disabled && this.type === 'secondary',
       danger: !disabled && this.type === 'danger',
-    };
+    }
     if (this.submit) {
       return html`
-        <button type="button" @click="${this.buttonClick}" class="${classMap(classes)}">
+        <button type="button" @click="${(e: Event) => this.buttonClick(e)}" class="${classMap(classes)}">
           <slot></slot>
         </button>
         <gs-loading-spinner id="spinner"></gs-loading-spinner>
-      `;
+      `
     }
     if (this.href) {
       return html`
         <a href=${this.href} class="${classMap(classes)}">
           <slot></slot>
         </a>
-      `;
+      `
     }
     return html`
-      <button type="button" @click="${this.buttonClick}" class="${classMap(classes)}">
+      <button type="button" @click="${(e: Event) => this.buttonClick(e)}" class="${classMap(classes)}">
         <slot></slot>
       </button>
-    `;
+    `
   }
 
   private buttonClick(e: Event): boolean {
     if (this.disabled || this.formDisabled) {
-      e.preventDefault();
-      return false;
+      e.preventDefault()
+      return false
     }
     if (this.submit && this.internals.form) {
-      (this.shadowRoot?.getElementById('spinner') as GsLoadingSpinner)?.show();
-      e.preventDefault();
-      this.internals.setFormValue('');
-      this.internals.form.requestSubmit();
-      return false;
+      (this.shadowRoot?.getElementById('spinner') as GsLoadingSpinner | undefined)?.show()
+      e.preventDefault()
+      this.internals.setFormValue('')
+      this.internals.form.requestSubmit()
+      return false
     }
-    return true;
+    return true
   }
 
   public updateFormDisabled() {
     if (!this.submit) {
-      return;
+      return
     }
-    const form = this.internals.form;
+    const form = this.internals.form
     if (!form) {
-      return;
+      return
     }
-    this.formDisabled = !form.checkValidity();
+    this.formDisabled = !form.checkValidity()
   }
 }

@@ -1,7 +1,7 @@
-import {LitElement, css} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {html} from 'lit';
-import {unsafeSVG} from 'lit/directives/unsafe-svg.js';
+import { LitElement, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { html } from 'lit'
+import { unsafeSVG } from 'lit/directives/unsafe-svg.js'
 
 @customElement('gs-icon')
 export class GsIcon extends LitElement {
@@ -13,17 +13,17 @@ export class GsIcon extends LitElement {
       width: 100%;
       height: 100%;
     }
-  `;
+  `
 
   @property()
-  public name: keyof typeof Icons = '';
+  public name: keyof typeof Icons = ''
 
   override render() {
     return html`
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
         ${unsafeSVG(Icons[this.name])}
       </svg>
-    `;
+    `
   }
 }
 
@@ -46,4 +46,4 @@ const Icons: Record<string, string> = {
     '<path d="M6 12.796V3.204L11.481 8zm.659.753 5.48-4.796a1 1 0 0 0 0-1.506L6.66 2.451C6.011 1.885 5 2.345 5 3.204v9.592a1 1 0 0 0 1.659.753"/>',
   caretDown:
     '<path d="M3.204 5h9.592L8 10.481zm-.753.659 4.796 5.48a1 1 0 0 0 1.506 0l4.796-5.48c.566-.647.106-1.659-.753-1.659H3.204a1 1 0 0 0-.753 1.659"/>',
-};
+}

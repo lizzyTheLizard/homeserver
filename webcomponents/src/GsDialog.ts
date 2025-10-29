@@ -1,6 +1,6 @@
-import {LitElement, html, css} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {Colors, Spacing, border} from './defaults';
+import { LitElement, html, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { Colors, Spacing, border } from './defaults'
 
 @customElement('gs-dialog')
 export class GsDialog extends LitElement {
@@ -92,23 +92,23 @@ export class GsDialog extends LitElement {
     gs-icon {
       cursor: pointer;
     }
-  `;
+  `
 
   @property()
-  public header: string | undefined;
+  public header: string | undefined
 
   public show() {
-    this.shadowRoot?.getElementById('overlay')?.classList.remove('hidden');
+    this.shadowRoot?.getElementById('overlay')?.classList.remove('hidden')
   }
 
   public close() {
-    this.shadowRoot?.getElementById('overlay')?.classList.add('hidden');
+    this.shadowRoot?.getElementById('overlay')?.classList.add('hidden')
   }
 
   private closeButtonClick(e: Event) {
-    e.stopPropagation();
-    this.dispatchEvent(new CustomEvent('close'));
-    this.close();
+    e.stopPropagation()
+    this.dispatchEvent(new CustomEvent('close'))
+    this.close()
   }
 
   override render() {
@@ -117,7 +117,10 @@ export class GsDialog extends LitElement {
         <div class="dialog">
           <div id="head">
             <h2>${this.header}</h2>
-            <gs-icon name="close" @click="${this.closeButtonClick}"></gs-icon>
+            <gs-icon
+              name="close"
+              @click="${(e: Event) => { this.closeButtonClick(e) }}"
+            ></gs-icon>
           </div>
           <div id="body">
             <slot></slot>
@@ -127,6 +130,6 @@ export class GsDialog extends LitElement {
           </div>
         </div>
       </div>
-    `;
+    `
   }
 }
