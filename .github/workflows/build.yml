@@ -26,7 +26,7 @@ jobs:
         working-directory: ./webcomponents
         run: pnpm test
       - name: Run Chromatic
-        working-directory: ./webcomponents
         uses: chromaui/action@latest
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        working-directory: ./webcomponents
