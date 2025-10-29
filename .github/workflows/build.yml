@@ -4,12 +4,11 @@ jobs:
   webcomponents:
     name: Run Web Components Tests
     runs-on: ubuntu-latest
+    working-directory: ./webcomponents
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Read .nvmrc
+      - name: Read nvmrc file
           run: echo ::set-output name=NVMRC::$(cat .nvmrc)
           id: nvm
       - name: Setup node
