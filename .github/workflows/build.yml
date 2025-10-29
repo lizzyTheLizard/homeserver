@@ -15,8 +15,8 @@ jobs:
         id: changes
         with:
           filters: |
-            src:
-              - 'src/**'
+            webcomponents:
+              - 'webcomponents/**'
       - name: Read nvmrc file
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
