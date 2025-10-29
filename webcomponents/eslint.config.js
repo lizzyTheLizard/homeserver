@@ -12,6 +12,7 @@ export default defineConfig(
   stylistic.configs.recommended,
   globalIgnores(['build/**/*'], 'Ignore Build Directory'),
   globalIgnores(['dist/**/*'], 'Ignore Dist Directory'),
+  globalIgnores(['vitest.*'], 'Ignore Vitest config'),
   {
     languageOptions: {
       globals: {
