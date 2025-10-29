@@ -24,8 +24,16 @@ jobs:
         run: pnpm -F homeserver-webcomponents run build
       - name: Lint Webcomponents
         run: pnpm -F homeserver-webcomponents run lint
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
       - name: Install Playwright Browsers
         run: pnpm dlx  playwright install chromium --with-deps 
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
       - name: Run Webcomponents tests
         run: pnpm -F homeserver-webcomponents test
       - name: Run WebComponents Chromatic
