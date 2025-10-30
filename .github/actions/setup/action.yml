@@ -4,6 +4,7 @@ runs:
   steps:
   - name: Read nvmrc file
     run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+    shell: bash
     id: nvm
   - name: Setup node
     uses: actions/setup-node@v1
@@ -13,3 +14,4 @@ runs:
     uses: pnpm/action-setup@v4
   - name: Install dependencies
     run: pnpm i
+    shell: bash
