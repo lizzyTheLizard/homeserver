@@ -1,7 +1,7 @@
 import { TemplateResult, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
-import { FormelementBase } from './FormelementBase.js'
+import { FormelementBase } from './FormelementBase'
 
 @customElement('gs-textarea')
 export class GsTextarea extends FormelementBase<string> {

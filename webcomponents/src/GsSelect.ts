@@ -1,9 +1,9 @@
 import { classMap } from 'lit/directives/class-map.js'
 import { unsafeStatic, html } from 'lit/static-html.js'
 import { customElement, property } from 'lit/decorators.js'
-import { FormelementBase } from './FormelementBase.js'
+import { FormelementBase } from './FormelementBase'
 import { TemplateResult, css } from 'lit'
-import { Spacing } from './defaults.js'
+import { Spacing } from './defaults'
 
 @customElement('gs-select')
 export class GsSelect extends FormelementBase<string> {

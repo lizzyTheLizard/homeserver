@@ -1,8 +1,8 @@
 import { TemplateResult, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
-import { FormelementBase } from './FormelementBase.js'
-import { Spacing, Colors } from './defaults.js'
+import { FormelementBase } from './FormelementBase'
+import { Spacing, Colors } from './defaults'
 
 @customElement('gs-file-input')
 export class GsFileInput extends FormelementBase<File> {

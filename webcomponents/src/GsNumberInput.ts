@@ -2,9 +2,9 @@ import { TemplateResult, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { property } from 'lit/decorators.js'
-import { FormelementBase } from './FormelementBase.js'
+import { FormelementBase } from './FormelementBase'
 import { ifDefined } from 'lit/directives/if-defined.js'
-import { Spacing } from './defaults.js'
+import { Spacing } from './defaults'
 
 @customElement('gs-number-input')
 export class GsNumberInput extends FormelementBase<number> {
