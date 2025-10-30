@@ -1,5 +1,4 @@
 name: "Webcomponents"
-run-name: "Webcomponents (${{(github.event.head_commit && github.event.head_commit.message) || (github.event.pull_request && format('Pull Request {0}', github.event.pull_request.title)) || github.sha }})"
 on: 
   push:
     paths:
