@@ -8,13 +8,8 @@
             "name": "Debug Frontend in Edge",
             "type": "msedge",
             "request": "launch",
-            "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}",
-            "resolveSourceMapLocations": [
-                "**",
-                "!**/node_modules/**",
-                "!**/_next/**"
-            ]
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/frontend",
         },
         {
             "name": "Debug Storybook in Edge",
