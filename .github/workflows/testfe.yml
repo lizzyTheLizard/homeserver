@@ -1,0 +1,20 @@
+name: "Test Frontend"
+on: 
+  push:
+    paths:
+    - 'frontend/**'
+    - '.github/**'
+  pull_request:
+jobs:
+  test:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup.yml
+      - name: Build
+        run: pnpm -F homeserver-frontend run build
+      - name: Lint
+        run: pnpm -F homeserver-frontend run lint
+      - name: Run Tests
+        run: pnpm -F homeserver-frontend run test
