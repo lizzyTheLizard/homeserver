@@ -1,31 +1,48 @@
 import eslint from '@eslint/js'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
 import stylistic from '@stylistic/eslint-plugin'
-import nextVitals from 'eslint-config-next/core-web-vitals'
-import nextTs from 'eslint-config-next/typescript'
 
-export default defineConfig(
+export default defineConfig([
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   stylistic.configs.recommended,
-  ...nextVitals,
-  ...nextTs,
-  globalIgnores(['.next/**/*'], 'Ignore Next Directory'),
-  globalIgnores(['out/**/*'], 'Ignore Out Directory'),
-  globalIgnores(['next-env.d.ts'], 'Ignore Next Env File'),
+  globalIgnores(['dist']),
   {
     languageOptions: {
+      globals: {
+        ...globals.node,
+      },
       parserOptions: {
-        projectService: true,
+        project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json', './tsconfig.storybook.json'],
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    rules: {
+      '@typescript-eslint/no-extraneous-class': ['off'],
+      '@stylistic/max-statements-per-line': ['error', { max: 2 }],
     },
   },
   {
     files: ['**/*.js'],
     extends: [tseslint.configs.disableTypeChecked],
   },
-)
+  {
+    files: ['**/*.{tsx}'],
+    extends: [
+      eslint.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
