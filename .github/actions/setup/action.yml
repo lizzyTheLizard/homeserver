@@ -1,5 +1,4 @@
 description: Setup
-inputs:
 runs:
   using: "composite"
   steps:
