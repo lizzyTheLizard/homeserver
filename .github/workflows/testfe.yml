@@ -1,5 +1,5 @@
 name: "Test Frontend"
-run-name: "Test Frontend (${{ github.event.head_commit.message || github.event.workflow_run.head_commit.message || github.event.pull_request.title || github.sha }})"
+run-name: "Test Frontend (${{ github.event.head_commit.message.id || github.event.pull_request.title || github.sha }})"
 on: 
   push:
     paths:
