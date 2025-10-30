@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Frontend in Edge",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "resolveSourceMapLocations": [
+                "**",
+                "!**/node_modules/**",
+                "!**/_next/**"
+            ]
+        },
+        {
+            "name": "Debug Storybook in Edge",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:6006",
+            "webRoot": "${workspaceFolder}/webcomponents",
+        }
+
+    ]
+}

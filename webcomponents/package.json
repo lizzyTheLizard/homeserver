@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf build dist",
-    "storybook": "storybook dev -p 6006",
+    "dev": "storybook dev -p 6006",
     "build": " pnpm build:compile && pnpm build:pack && pnpm build:storybook",
     "build:compile": "tsc",
     "build:pack": "rollup -c",
