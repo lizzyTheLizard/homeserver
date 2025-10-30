@@ -1,0 +1,41 @@
+name: "Frontend"
+run-name: "Frontend (${{ github.event.head_commit.message.id || github.event.pull_request.title || github.sha }})"
+on: 
+  push:
+    paths:
+    - 'frontend/**'
+    - '.github/**'
+  pull_request:
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm -F homeserver-frontend run lint
+      - name: Run Tests
+        run: pnpm -F homeserver-frontend run test
+  build:
+    name: Build
+    needs: test
+    if: success() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Build
+        run: pnpm -F homeserver-frontend run build
+  deploy:
+    name: Deploy
+    needs: build
+    if: success() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        run: echo "Not implemented yet"
