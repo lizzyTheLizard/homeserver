@@ -18,16 +18,13 @@ const meta: Meta = {
     <gs-info></gs-info>
   </div>
   `,
-  play: () => {
-    showMessage('info', 'This is an initial message', 3000)
-  },
 }
 export default meta
 
 export const Normal: StoryObj = {
   play: () => {
-    showMessage('info', 'This is an initial message', 1000)
-    showMessage('danger', 'This is a danger message', 1000)
-    showMessage('success', 'This is a success message', 1000)
+    showMessage('info', 'This is an initial info message', 3000)
+    showMessage('danger', 'This is an initial danger message', 3000)
+    showMessage('success', 'This is an initial success message', 3000)
   },
 }

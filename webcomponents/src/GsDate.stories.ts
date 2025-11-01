@@ -9,7 +9,7 @@ import './GsDate'
 const meta: Meta = {
   title: 'GsDate',
   render: () => html`
-    <gs-date>${new Date()}</gs-date>
+    <gs-date>2025-10-11T13:20:00.000Z</gs-date>
   `,
 
 }
@@ -20,7 +20,7 @@ export const Normal: StoryObj = {
 
 export const DateTime: StoryObj = {
   render: () => html`
-    <gs-date>${new Date().toDateString()}</gs-date>
+    <gs-date>2025-10-11</gs-date>
   `,
 }
 

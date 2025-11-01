@@ -8,7 +8,6 @@ const config: StorybookConfig = {
     '@chromatic-com/storybook',
   ],
   docs: {
-    docsMode: true,
   },
 }
 
