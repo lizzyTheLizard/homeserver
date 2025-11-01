@@ -89,19 +89,25 @@ export class GsHeader extends LitElement {
   @property({ type: Boolean })
   public portalAccess = false
 
+  @property()
+  public portalLink = '/'
+
+  @property()
+  public logoutLink = '/logout'
+
   override render() {
     return html`
       <gs-icon
         @click="${() => { this.toggle() }}"
-        name="menu"
+        name="menu" 
       ></gs-icon>
       <span id="applicationName">${this.applicationName ? this.applicationName : 'Homeserver'}</span>
       <slot id="list" class="mobileHidden"></slot>
       <div id="spacer"></div>
       ${this.portalAccess
-        ? html`<gs-header-link id="portalLink" class="mobileHidden" href="/">All Application</gs-header-link>`
+        ? html`<gs-header-link id="portalLink" class="mobileHidden" href="${this.portalLink}">All Application</gs-header-link>`
         : ''}
-      <gs-header-link id="logoutLink" class="mobileHidden" href="/logout">Logout ${this.user}</gs-header-link>
+      <gs-header-link id="logoutLink" class="mobileHidden" href="${this.logoutLink}">Logout ${this.user}</gs-header-link>
     `
   }
 

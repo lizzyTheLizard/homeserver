@@ -37,10 +37,7 @@ export class GsHeaderLink extends LitElement {
       active: this.href === document.location.pathname,
     }
     return html`
-      <a href=${this.href} class="${classMap(classes)}"
-        ><div>
-          <span><slot></slot></span></div
-      ></a>
+      <a href=${this.href} class="${classMap(classes)}"><div><span><slot></slot></span></div></a>
     `
   }
 }

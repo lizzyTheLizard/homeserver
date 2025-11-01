@@ -10,7 +10,7 @@ export class GsDate extends LitElement {
       // If the first child does not have text content, return empty
       return html``
     }
-    if (date.length < 12) {
+    if (date.length < 20) {
       // If the date is too short, we assume its wihtout time
       return html`${new Date(date).toLocaleDateString()}`
     }

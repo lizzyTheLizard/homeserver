@@ -1,5 +1,5 @@
 import { TemplateResult, css, html } from 'lit'
-import { customElement } from 'lit/decorators.js'
+import { customElement, property } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { FormelementBase } from './FormelementBase'
 import { Spacing, Colors } from './defaults'
@@ -29,10 +29,11 @@ export class GsFileInput extends FormelementBase<File> {
     `,
   ]
 
-  #value: File | undefined = undefined
+  @property({ attribute: false })
+  public value: File | undefined = undefined
 
-  public get value(): File | undefined {
-    return this.#value
+  protected override setValue(value: File | undefined): void {
+    this.value = value
   }
 
   protected override renderInputFieldOnly(): TemplateResult {
@@ -41,6 +42,11 @@ export class GsFileInput extends FormelementBase<File> {
       disabled: this.disabled,
       noLabel: !this.label,
     }
+    // Create a DataTransfer object and add the file
+    const dataTransfer = new DataTransfer()
+    if (this.value) {
+      dataTransfer.items.add(this.value)
+    }
     return html`<input
       type="file"
       name="${this.name}"
@@ -48,11 +54,12 @@ export class GsFileInput extends FormelementBase<File> {
       ?disabled="${this.disabled}"
       @change=${() => { this.onChange() }}
       class="${classMap(classes)}"
+      .files=${dataTransfer.files}
     />`
   }
 
-  protected override getFormValue(target: HTMLFormElement): string | File | FormData | null {
-    return this.getValue(target) ?? null
+  protected override getFormValue(): string | File | FormData | null {
+    return this.value ?? null
   }
 
   protected override getValue(target: HTMLFormElement): File | undefined {
@@ -61,9 +68,5 @@ export class GsFileInput extends FormelementBase<File> {
       return undefined
     }
     return files[0]
-  }
-
-  protected override setValue(value: File | undefined): void {
-    this.#value = value
   }
 }

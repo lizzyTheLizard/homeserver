@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit'
-import { customElement, property, state } from 'lit/decorators.js'
+import { customElement, property } from 'lit/decorators.js'
 import { Colors, Spacing, border } from './defaults'
 import './GsIcon'
 
@@ -47,17 +47,17 @@ export class GsCollapse extends LitElement {
   @property({ type: String })
   public header = ''
 
-  @state()
-  private collapsed = true
+  @property({ type: Boolean })
+  public expanded = false
 
   override render() {
     const header = html`
       <span class="header">
-        <gs-icon name="${this.collapsed ? 'caretRight' : 'caretDown'}"></gs-icon>
+        <gs-icon name="${!this.expanded ? 'caretRight' : 'caretDown'}"></gs-icon>
         ${this.header}
       </span>
     `
-    if (this.collapsed) {
+    if (!this.expanded) {
       return html`
         <div
           class="box"
@@ -86,6 +86,6 @@ export class GsCollapse extends LitElement {
   }
 
   private toggleCollapse() {
-    this.collapsed = !this.collapsed
+    this.expanded = !this.expanded
   }
 }

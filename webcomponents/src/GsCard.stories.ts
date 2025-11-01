@@ -1,24 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite'
 import { html } from 'lit'
+import { ifDefined } from 'lit/directives/if-defined.js'
 
 import './GsCard'
 import './GsButton'
 import './GsIcon'
 
-interface Args {
-  header: string
-  content: string
-  href?: string
-}
+interface Args { header: string, href: string | undefined }
 
 /**
- * A GsCard is a container element that can hold content and actions about a single subject.
+ * A single card in a multi-card layout. Can contain any HTML content as well as an action button and an icon.
  */
 const meta: Meta<Args> = {
   title: 'GsCard',
   argTypes: {
     header: { control: 'text', defaultValue: 'Header' },
-    content: { control: 'text', defaultValue: 'Body', description: 'The content of the card' },
     href: { control: 'text', description: 'If provided, the card acts as a link' },
   },
 }
@@ -27,22 +23,21 @@ export default meta
 export const Normal: StoryObj<Args> = {
   args: {
     header: 'Card Header',
-    content: 'This is the body of the card.',
   },
   render: (args: Args) => html`
     <div class="row">
-      <gs-card .href=${args.href} header=${args.header}>
-            <p>${args.content}</p>
+      <gs-card href=${ifDefined(args.href)} header=${args.header}>
+            <p>The body of the card.</p>
           </gs-card>
       </gs-card>
-      <gs-card .href=${args.href} header=${args.header}>
-            <p>${args.content}</p>
+      <gs-card href=${ifDefined(args.href)} header=${args.header}>
+            <p>The body of the card.</p>
             <gs-button slot="footer" onclick="alert('Button clicked!')">Info Details</gs-button>
           </gs-card>
       </gs-card>
-      <gs-card .href=${args.href} header=${args.header}>
+      <gs-card href=${ifDefined(args.href)} header=${args.header}>
             <gs-icon name="cash" slot="icon" style="height: 5rem"></gs-icon>
-            <p>${args.content}</p>
+            <p>The body of the card.</p>
           </gs-card>
       </gs-card>
     </div>

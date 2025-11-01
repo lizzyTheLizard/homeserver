@@ -7,7 +7,9 @@ const config: StorybookConfig = {
     '@storybook/addon-vitest',
     '@chromatic-com/storybook',
   ],
-  docs: { },
+  docs: {
+    docsMode: true,
+  },
 }
 
 export default config
