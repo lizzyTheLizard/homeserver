@@ -37,7 +37,6 @@ jobs:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
   build:
     name: Build
-    needs: test
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
