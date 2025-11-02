@@ -70,7 +70,7 @@ jobs:
         run: pnpm -F homeserver-frontend run build
   deploy:
     name: Deploy
-    needs: build
+    needs: [build, test, lint]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
