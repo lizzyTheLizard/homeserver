@@ -20,7 +20,7 @@ jobs:
         id: cache-webcomponents
         uses: actions/cache@v4
         with:
-          path: webcomponents/build
+          path: webcomponents
           key: npm-${{ hashFiles('webcomponents/**') }}
       - name: Build
         if: steps.cache-webcomponents.outputs.cache-hit != 'true'
@@ -47,7 +47,7 @@ jobs:
       - name: Cache Webcomponents
         uses: actions/cache@v4
         with:
-          path: webcomponents/build
+          path: webcomponents
           key: npm-${{ hashFiles('webcomponents/**') }}
       - name: Run Tests
         run: pnpm -F homeserver-frontend run test
@@ -64,7 +64,7 @@ jobs:
       - name: Cache Webcomponents
         uses: actions/cache@v4
         with:
-          path: webcomponents/build
+          path: webcomponents
           key: npm-${{ hashFiles('webcomponents/**') }}
       - name: Build
         run: pnpm -F homeserver-frontend run build
