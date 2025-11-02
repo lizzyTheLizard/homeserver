@@ -25,6 +25,16 @@ jobs:
       - name: Build
         if: steps.cache-webcomponents.outputs.cache-hit != 'true'
         run: pnpm -F homeserver-webcomponents run build
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm -F homeserver-frontend run lint
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -39,8 +49,6 @@ jobs:
         with:
           path: webcomponents/build
           key: npm-${{ hashFiles('webcomponents/**') }}
-      - name: Lint
-        run: pnpm -F homeserver-frontend run lint
       - name: Run Tests
         run: pnpm -F homeserver-frontend run test
   build:
