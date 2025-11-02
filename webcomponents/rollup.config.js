@@ -6,7 +6,7 @@ export default [
   {
     input: './build/index.js',
     output: {
-      file: './dist/homeserver.bundled.js',
+      file: './dist/homeserver.bundle.js',
       sourcemap: true,
     },
     onwarn(warning) {
