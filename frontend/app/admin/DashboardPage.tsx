@@ -1,4 +1,4 @@
-import type { Application } from '../Application'
+import type { Application } from '../application'
 
 export default function DashboardPage() {
   return (

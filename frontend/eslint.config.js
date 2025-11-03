@@ -12,7 +12,9 @@ export default defineConfig([
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   stylistic.configs.recommended,
-  globalIgnores(['dist']),
+  reactHooks.configs.flat.recommended,
+  reactRefresh.configs.vite,
+  globalIgnores(['dist', 'build', '.react-router']),
   {
     languageOptions: {
       globals: {
@@ -26,23 +28,13 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-extraneous-class': ['off'],
       '@stylistic/max-statements-per-line': ['error', { max: 2 }],
+      'react-refresh/only-export-components': ['error', { allowExportNames: ['meta', 'links', 'headers', 'loader', 'action', 'handle'] }],
+      // Disable due to bug https://github.com/typescript-eslint/typescript-eslint/issues/11732
+      '@typescript-eslint/unified-signatures': ['off'],
     },
   },
   {
     files: ['**/*.js'],
     extends: [tseslint.configs.disableTypeChecked],
-  },
-  {
-    files: ['**/*.{tsx}'],
-    extends: [
-      eslint.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
   },
 ])
