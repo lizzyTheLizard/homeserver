@@ -10,6 +10,9 @@
             "request": "launch",
             "url": "http://localhost:5173",
             "webRoot": "${workspaceFolder}/frontend",
+            "sourceMapPathOverrides": {
+                "../src/*": "${workspaceFolder}/webcomponents/src/*"
+            }
         },
         {
             "name": "Debug Storybook in Edge",
