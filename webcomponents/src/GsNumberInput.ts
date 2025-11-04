@@ -51,8 +51,8 @@ export class GsNumberInput extends FormelementBase<number> {
       step="${ifDefined(this.step)}"
       min="${ifDefined(this.min)}"
       max="${ifDefined(this.max)}"
-      @keyup=${() => { this.onKeyup() }}
-      @change=${() => { this.onChange() }}
+      @keyup=${(e: Event) => { this.handleKeyUp(e) }}
+      @change=${(e: Event) => { this.handleChange(e) }}
       class="${classMap(classes)}"
     />`
   }

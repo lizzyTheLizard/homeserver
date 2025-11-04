@@ -52,7 +52,7 @@ export class GsFileInput extends FormelementBase<File> {
       name="${this.name}"
       id="${this.name}"
       ?disabled="${this.disabled}"
-      @change=${() => { this.onChange() }}
+      @change=${(e: Event) => { this.handleChange(e) }}
       class="${classMap(classes)}"
       .files=${dataTransfer.files}
     />`

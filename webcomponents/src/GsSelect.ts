@@ -48,7 +48,7 @@ export class GsSelect extends FormelementBase<string> {
         id="${this.name}"
         name="${this.name}"
         ?disabled="${this.disabled}"
-        @change=${() => { this.onChange() }}
+      @change=${(e: Event) => { this.handleChange(e) }}
         class="${classMap(classes)}"
       >
         ${this.required

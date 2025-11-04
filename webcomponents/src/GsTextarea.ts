@@ -29,8 +29,8 @@ export class GsTextarea extends FormelementBase<string> {
       id="${this.name}"
       ?disabled="${this.disabled}"
       placeholder=" "
-      @keyup=${() => { this.onKeyup() }}
-      @change=${() => { this.onChange() }}
+      @keyup=${(e: Event) => { this.handleKeyUp(e) }}
+      @change=${(e: Event) => { this.handleChange(e) }}
       class="${classMap(classes)}"
       .value="${this.value ?? ''}"
     ></textarea>`

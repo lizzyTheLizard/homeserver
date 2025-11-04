@@ -124,11 +124,13 @@ export abstract class FormelementBase<T extends { toString: () => string }> exte
 
   protected abstract renderInputFieldOnly(): TemplateResult
 
-  protected onKeyup() {
-    this.onChange(!this.changeOnKeyup)
+  protected handleKeyUp(originalEvent: Event) {
+    this.handleChange(originalEvent, !this.changeOnKeyup)
   }
 
-  protected onChange(noChangeEvent?: boolean) {
+  protected handleChange(originalEvent: Event, noChangeEvent?: boolean) {
+    originalEvent.preventDefault()
+    originalEvent.stopPropagation()
     const target = this.shadowRoot?.querySelector('.formElement') as HTMLFormElement | undefined
     if (!target) throw new Error('No form element found in shadow root')
     const value = this.getValue(target)

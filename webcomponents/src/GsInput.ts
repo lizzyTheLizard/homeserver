@@ -41,8 +41,8 @@ export class GsInput extends FormelementBase<string> {
       ?disabled="${this.disabled}"
       placeholder=" "
       .value="${this.value ?? ''}"
-      @keyup=${() => { this.onKeyup() }}
-      @change=${() => { this.onChange() }}
+      @keyup=${(e: Event) => { this.handleKeyUp(e) }}
+      @change=${(e: Event) => { this.handleChange(e) }}
       class="${classMap(classes)}"
       list="list"
     />`
