@@ -2,7 +2,7 @@ import 'homeserver-webcomponents/style.css'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useMatches } from 'react-router'
 import type { Route } from './+types/root'
 import { GsHeader, GsHeaderLink, GsInfo } from 'homeserver-webcomponents/react'
-import { getApplicationFromMatches } from './application'
+import { defaultApplication, getApplicationFromMatches } from './Application'
 import ErrorPage from './general/ErrorPage'
 
 export const links: Route.LinksFunction = () => []
@@ -21,7 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <GsHeader applicationName={application.name} user={user.email} portalAccess={user.portalAccess}>
+        <GsHeader applicationName={application.name} user={user.email} portalAccess={user.portalAccess && application !== defaultApplication}>
           {application.links.map(link =>
             <GsHeaderLink key={link.href} href={link.href}>{link.text}</GsHeaderLink>,
           )}

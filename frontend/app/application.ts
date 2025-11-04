@@ -5,8 +5,8 @@ export interface Application {
   links: { text: string, href: string }[]
 }
 
-const defaultApplication: Application = {
-  name: 'Home Server',
+export const defaultApplication: Application = {
+  name: 'Homeserver',
   links: [],
 }
 
