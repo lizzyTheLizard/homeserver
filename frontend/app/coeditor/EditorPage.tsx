@@ -1,11 +1,14 @@
 import { GsButton, GsInput, GsTextarea } from 'homeserver-webcomponents/react'
 import type { Application } from '../Application'
 import EditorContext from './EditorContext'
-import { useReducer, useState, type FormEvent } from 'react'
+import { useContext, useReducer, useState, type FormEvent } from 'react'
 import { editorStateReducer, initialEditorState } from './EditorState'
 import { EditorServer } from './EditorServer'
+import { AuthContext } from '../general/auth/AuthContext'
 
 export default function EditorPage() {
+  const user = useContext(AuthContext)
+  user.ensureApplicationAccess('coeditor')
   const [editorState, dispatch] = useReducer(editorStateReducer, initialEditorState)
   const [customCommand, setCustomCommand] = useState('')
 

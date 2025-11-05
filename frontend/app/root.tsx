@@ -1,17 +1,20 @@
 import 'homeserver-webcomponents/style.css'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useMatches } from 'react-router'
 import type { Route } from './+types/root'
-import { GsHeader, GsHeaderLink, GsInfo } from 'homeserver-webcomponents/react'
-import { defaultApplication, getApplicationFromMatches } from './Application'
 import ErrorPage from './general/ErrorPage'
+import { AuthProvider } from './general/auth/AuthProvider'
+import type { UserManagerSettings } from 'oidc-client-ts'
+import { Header } from './general/Header'
 
-export const links: Route.LinksFunction = () => []
+const authSettings: UserManagerSettings = {
+  authority: 'https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0',
+  client_id: 'f79682fe-0761-4361-aa2e-317957284c3a',
+  redirect_uri: 'http://localhost:5173/',
+  response_type: 'code',
+  scope: 'openid profile email',
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const matches = useMatches()
-  const application = getApplicationFromMatches(matches)
-  // TODO: Login
-  const user = { email: 'john@example.com', portalAccess: true }
   return (
     <html lang="en">
       <head>
@@ -21,12 +24,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <GsHeader applicationName={application.name} user={user.email} portalAccess={user.portalAccess && application !== defaultApplication}>
-          {application.links.map(link =>
-            <GsHeaderLink key={link.href} href={link.href}>{link.text}</GsHeaderLink>,
-          )}
-        </GsHeader>
-        <GsInfo />
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -36,12 +33,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />
+  return (
+    <AuthProvider authSettings={authSettings}>
+      <Header />
+      <Outlet />
+    </AuthProvider>
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error) && error.status === 404) {
     return <ErrorPage title="404 Not Found" message="The requested page could not be found" />
+  }
+  if (isRouteErrorResponse(error) && error.status === 403) {
+    return <ErrorPage title="403 Forbidden" message="You do not have permission to access this page" />
   }
   if (isRouteErrorResponse(error)) {
     return <ErrorPage errorResponse={error} />
