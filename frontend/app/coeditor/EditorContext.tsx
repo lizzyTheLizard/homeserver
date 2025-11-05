@@ -6,6 +6,7 @@ interface Props {
 
 // TODO: Implement context editing
 export default function EditorContext({ onContextChange }: Props) {
+  onContextChange('')
   return (
     <GsCollapse header="Context">
       Context
