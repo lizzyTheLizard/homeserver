@@ -1,5 +1,5 @@
 import { GsButton, GsInput, GsTextarea } from 'homeserver-webcomponents/react'
-import type { Application } from '../Application'
+import type { Application } from '../Application.ts.test'
 import EditorContext from './EditorContext'
 import { useContext, useReducer, useState, type FormEvent } from 'react'
 import { editorStateReducer, initialEditorState } from './EditorState'

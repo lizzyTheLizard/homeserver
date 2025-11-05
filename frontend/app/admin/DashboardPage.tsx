@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import type { Application } from '../Application'
+import type { Application } from '../Application.ts.test'
 import { AuthContext } from '../general/auth/AuthContext'
 
 export default function DashboardPage() {
