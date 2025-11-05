@@ -1,4 +1,4 @@
-import type { Application } from '../Application.ts.test'
+import type { Application } from '../Application.ts'
 
 export default function ProjectPage() {
   return (

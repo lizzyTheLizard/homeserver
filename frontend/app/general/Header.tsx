@@ -1,6 +1,6 @@
 import { use } from 'react'
 import { useMatches } from 'react-router'
-import { defaultApplication, getApplicationFromMatches } from '../Application.ts.test'
+import { defaultApplication, getApplicationFromMatches } from '../Application.ts'
 import { AuthContext } from './auth/AuthContext'
 import { GsHeader, GsHeaderLink, GsInfo } from 'homeserver-webcomponents/react'
 

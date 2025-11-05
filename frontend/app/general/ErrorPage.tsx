@@ -1,5 +1,5 @@
 import type { ErrorResponse } from 'react-router'
-import { defaultApplication } from '../Application.ts.test'
+import { defaultApplication } from '../Application.ts'
 import { GsHeader, GsInfo } from 'homeserver-webcomponents/react'
 import { useContext } from 'react'
 import { AuthContext } from './auth/AuthContext'
