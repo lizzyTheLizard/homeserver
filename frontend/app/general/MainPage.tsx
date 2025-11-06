@@ -10,13 +10,14 @@ const applications = [
 
 export default function MainPage() {
   const user = useContext(AuthContext)
-  const content = applications.filter(app => user.applications.includes(app.key)).map(app => (
-    <GsCard header={app.name} href={app.link} key={app.key}>
-      <GsIcon name={app.icon} slot="icon" style={{ height: '5rem' }}></GsIcon>
-      <p>{app.description}</p>
-    </GsCard>
-  ))
-
+  const content = user
+    ? applications.filter(app => user.applications.includes(app.key)).map(app => (
+        <GsCard header={app.name} href={app.link} key={app.key}>
+          <GsIcon name={app.icon} slot="icon" style={{ height: '5rem' }}></GsIcon>
+          <p>{app.description}</p>
+        </GsCard>
+      ))
+    : (<p>You need to be logged in to see your applications.</p>)
   return (
     <main>
       <div className="row">

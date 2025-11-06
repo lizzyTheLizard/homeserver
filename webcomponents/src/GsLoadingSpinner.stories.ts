@@ -1,23 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite'
 import { html } from 'lit'
-import { GsLoadingSpinner } from './GsLoadingSpinner'
 
 import './GsLoadingSpinner'
+
+interface Args {
+  initial?: boolean
+}
 
 /**
  * A simple loading spinner.
  */
-const meta: Meta = {
+const meta: Meta<Args> = {
   title: 'GsLoadingSpinner',
-  render: () => html`
-    <gs-loading-spinner role="status"></gs-loading-spinner>
-  `,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  play: ({ canvas }: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const spinner = canvas.getByRole('status') as GsLoadingSpinner
-    spinner.show()
+  argTypes: {
+    initial: { control: 'boolean', description: 'Whether the spinner is initially visible' },
   },
+  args: {
+    initial: true,
+  },
+  render: (args: Args) => html`
+    <gs-loading-spinner ?initial=${args.initial}></gs-loading-spinner>
+  `,
 }
 export default meta
 

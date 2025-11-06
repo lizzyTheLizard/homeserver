@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit'
-import { customElement } from 'lit/decorators.js'
+import { customElement, property } from 'lit/decorators.js'
 
 @customElement('gs-loading-spinner')
 export class GsLoadingSpinner extends LitElement {
@@ -74,6 +74,9 @@ export class GsLoadingSpinner extends LitElement {
     }
   `
 
+  @property({ type: Boolean })
+  initial = false
+
   public show() {
     this.shadowRoot?.getElementById('overlay')?.classList.remove('hidden')
   }
@@ -91,5 +94,9 @@ export class GsLoadingSpinner extends LitElement {
         </div>
       </div>
     `
+  }
+
+  firstUpdated() {
+    if (this.initial) this.show()
   }
 }

@@ -14,23 +14,20 @@ class ForbiddenResponse extends Error implements ErrorResponse {
   }
 }
 
-export class User {
+export interface User {
   email: string
   applications: string[]
   accessToken: string
+}
 
-  constructor(email: string, applications: string[], accessToken: string) {
-    this.email = email
-    this.applications = applications
-    this.accessToken = accessToken
+export function ensureApplicationAccess(user: User | undefined, application: string) {
+  if (user === undefined) {
+    throw new ForbiddenResponse('You are not logged in')
   }
-
-  ensureApplicationAccess(application: string) {
-    if (!this.applications.includes(application)) {
-      throw new ForbiddenResponse('You do not have access to ' + application)
-    }
+  if (!user.applications.includes(application)) {
+    throw new ForbiddenResponse('You do not have access to ' + application)
   }
 }
 
-export const AuthContext = createContext<User>(new User('', [], ''))
+export const AuthContext = createContext<User | undefined>(undefined)
 AuthContext.displayName = 'AuthContext'

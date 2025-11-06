@@ -4,11 +4,11 @@ import EditorContext from './EditorContext'
 import { useContext, useReducer, useState, type FormEvent } from 'react'
 import { editorStateReducer, initialEditorState } from './EditorState'
 import { EditorServer } from './EditorServer'
-import { AuthContext } from '../general/auth/AuthContext'
+import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 
 export default function EditorPage() {
   const user = useContext(AuthContext)
-  user.ensureApplicationAccess('coeditor')
+  ensureApplicationAccess(user, 'coeditor')
   const [editorState, dispatch] = useReducer(editorStateReducer, initialEditorState)
   const [customCommand, setCustomCommand] = useState('')
 

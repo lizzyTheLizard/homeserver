@@ -3,8 +3,9 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import type { Route } from './+types/root'
 import ErrorPage from './general/ErrorPage'
 import { AuthProvider } from './general/auth/AuthProvider'
-import type { UserManagerSettings } from 'oidc-client-ts'
 import { Header } from './general/Header'
+import { GsLoadingSpinner } from 'homeserver-webcomponents/react'
+import type { UserManagerSettings } from 'oidc-client-ts'
 
 const authSettings: UserManagerSettings = {
   authority: 'https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0',
@@ -32,7 +33,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
+export function HydrateFallback() {
+  return <GsLoadingSpinner initial={true} />
+}
+
 export default function App() {
+  console.log('Starting application on URL ', window.location.href)
   return (
     <AuthProvider authSettings={authSettings}>
       <Header />

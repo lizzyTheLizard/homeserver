@@ -1,10 +1,10 @@
 import { useContext } from 'react'
 import type { Application } from '../Application.ts'
-import { AuthContext } from '../general/auth/AuthContext'
+import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 
 export default function DashboardPage() {
   const user = useContext(AuthContext)
-  user.ensureApplicationAccess('admin')
+  ensureApplicationAccess(user, 'admin')
   return (
     <main>
       <h1>Admin Dashboard</h1>
