@@ -12,6 +12,15 @@ jobs:
     name: Build WebComponents
     runs-on: ubuntu-latest
     steps:
+      - name: Minio Deploy
+        uses: lovellfelix/minio-deploy-action@v1
+        with:
+          endpoint: https://s3.fr-par.scw.cloud
+          access_key: ${{ secrets.MINIO_ACCESS_KEY }}
+          secret_key: ${{ secrets.MINIO_SECRET_KEY }}
+          bucket: 'homeserver-frontend'
+          source_dir: 'frontend/app/'
+          target_dir: '/'
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
@@ -21,7 +30,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: webcomponents
-          key: npm-${{ hashFiles('webcomponents/**') }}
+          key: wc-${{ hashFiles('webcomponents/**') }}
       - name: Build
         if: steps.cache-webcomponents.outputs.cache-hit != 'true'
         run: pnpm -F homeserver-webcomponents run build
@@ -38,7 +47,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: webcomponents
-          key: npm-${{ hashFiles('webcomponents/**') }}
+          key: wc-${{ hashFiles('webcomponents/**') }}
       - name: Lint
         run: pnpm -F homeserver-frontend run lint
   test:
@@ -54,7 +63,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: webcomponents
-          key: npm-${{ hashFiles('webcomponents/**') }}
+          key: wc-${{ hashFiles('webcomponents/**') }}
       - name: Run Tests
         run: pnpm -F homeserver-frontend run test
   build:
@@ -71,7 +80,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: webcomponents
-          key: npm-${{ hashFiles('webcomponents/**') }}
+          key: wc-${{ hashFiles('webcomponents/**') }}
+      - name: Cache Build Output
+        uses: actions/cache@v4
+        with:
+          path: frontend/build/client
+          key: fe-${{ hashFiles('frontend/**') }}
       - name: Build
         run: pnpm -F homeserver-frontend run build
   deploy:
@@ -80,5 +94,8 @@ jobs:
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy
-        run: echo "Not implemented yet"
+      - name: Cache Build Output
+        uses: actions/cache@v4
+        with:
+          path: frontend/build/client
+          key: fe-${{ hashFiles('frontend/**') }}
