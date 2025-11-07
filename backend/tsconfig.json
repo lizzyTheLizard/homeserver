@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "es2020",
+    "lib": ["es2021", "DOM", "DOM.Iterable"],
+    "outDir": "./build",
+    "rootDir": "./src",
+    "declaration": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
+  },
+ "include": ["./src/**/*.ts"],
+}
