@@ -14,15 +14,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Minio Deploy
-        uses: lovellfelix/minio-deploy-action@v1
-        with:
-          endpoint: https://s3.fr-par.scw.cloud
-          access_key: ${{ secrets.MINIO_ACCESS_KEY }}
-          secret_key: ${{ secrets.MINIO_SECRET_KEY }}
-          bucket: 'homeserver-frontend'
-          source_dir: 'frontend/app/'
-          target_dir: '/'
       - name: Setup
         uses: ./.github/actions/setup
       - name: Cache Webcomponents
@@ -99,3 +90,12 @@ jobs:
         with:
           path: frontend/build/client
           key: fe-${{ hashFiles('frontend/**') }}
+      - name: Minio Deploy
+        uses: lovellfelix/minio-deploy-action@v1
+        with:
+          endpoint: https://s3.fr-par.scw.cloud
+          access_key: ${{ secrets.MINIO_ACCESS_KEY }}
+          secret_key: ${{ secrets.MINIO_SECRET_KEY }}
+          bucket: 'homeserver-frontend'
+          source_dir: 'frontend/build/client'
+          target_dir: '/'
