@@ -16,15 +16,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Cache Webcomponents
-        id: cache-webcomponents
-        uses: actions/cache@v4
-        with:
-          path: webcomponents
-          key: wc-${{ hashFiles('webcomponents/**') }}
       - name: Build
-        if: steps.cache-webcomponents.outputs.cache-hit != 'true'
         run: pnpm -F homeserver-webcomponents run build
+      - name: Upload Webcomponents Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webcomponents
+          path: webcomponents
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -34,11 +32,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Cache Webcomponents
-        uses: actions/cache@v4
+      - name: Download Webcomponents Artifact
+        uses: actions/download-artifact@v4
         with:
-          path: webcomponents
-          key: wc-${{ hashFiles('webcomponents/**') }}
+          name: webcomponents
       - name: Lint
         run: pnpm -F homeserver-frontend run lint
   test:
@@ -50,11 +47,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Cache Webcomponents
-        uses: actions/cache@v4
+      - name: Download Webcomponents Artifact
+        uses: actions/download-artifact@v4
         with:
-          path: webcomponents
-          key: wc-${{ hashFiles('webcomponents/**') }}
+          name: webcomponents
       - name: Run Tests
         run: pnpm -F homeserver-frontend run test
   build:
@@ -67,29 +63,27 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Cache Webcomponents
-        uses: actions/cache@v4
+      - name: Download Webcomponents Artifact
+        uses: actions/download-artifact@v4
         with:
-          path: webcomponents
-          key: wc-${{ hashFiles('webcomponents/**') }}
-      - name: Cache Build Output
-        uses: actions/cache@v4
-        with:
-          path: frontend/build/client
-          key: fe-${{ hashFiles('frontend/**') }}
+          name: webcomponents
       - name: Build
         run: pnpm -F homeserver-frontend run build
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: frontend/build/client
   deploy:
     name: Deploy
     needs: [build, test, lint]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Cache Build Output
-        uses: actions/cache@v4
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
         with:
-          path: frontend/build/client
-          key: fe-${{ hashFiles('frontend/**') }}
+          name: frontend
       - name: Minio Deploy
         uses: lovellfelix/minio-deploy-action@v1
         with:
