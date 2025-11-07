@@ -1,5 +1,5 @@
 import 'homeserver-webcomponents/style.css'
-import { isRouteErrorResponse, Links, Meta, Outlet, redirect, Scripts, ScrollRestoration } from 'react-router'
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import type { Route } from './+types/root'
 import ErrorPage from './general/ErrorPage'
 import { AuthProvider } from './general/auth/AuthProvider'
