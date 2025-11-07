@@ -1,5 +1,5 @@
 import 'homeserver-webcomponents/style.css'
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import { isRouteErrorResponse, Links, Meta, Outlet, redirect, Scripts, ScrollRestoration } from 'react-router'
 import type { Route } from './+types/root'
 import ErrorPage from './general/ErrorPage'
 import { AuthProvider } from './general/auth/AuthProvider'
@@ -10,7 +10,7 @@ import type { UserManagerSettings } from 'oidc-client-ts'
 const authSettings: UserManagerSettings = {
   authority: 'https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0',
   client_id: 'f79682fe-0761-4361-aa2e-317957284c3a',
-  redirect_uri: process.env.NODE_ENV === 'production' ? 'https://homeserver-frontend.s3-website.fr-par.scw.cloud/' : 'http://localhost:5173/',
+  redirect_uri: process.env.NODE_ENV === 'development' ? 'http://localhost:5173/' : 'https://homeserver-frontend.s3-website.fr-par.scw.cloud/',
   response_type: 'code',
   scope: 'openid profile email',
 }
@@ -39,6 +39,7 @@ export function HydrateFallback() {
 
 export default function App() {
   console.log('Starting application on URL ', window.location.href)
+  console.log('redirect uri is ', authSettings.redirect_uri)
   return (
     <AuthProvider authSettings={authSettings}>
       <Header />

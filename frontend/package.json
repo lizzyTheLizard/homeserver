@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_ENV=production react-router build",
-    "dev": "react-router dev",
+    "dev": "cross-env NODE_ENV=development react-router dev",
     "lint": "eslint . --fix",
     "clean": "rimraf build .react-router",
     "test": "echo 'No test specified'"
