@@ -2,6 +2,7 @@
     "recommendations": [
         "hossaini.bootstrap-intellisense",
         "dbaeumer.vscode-eslint",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "hashicorp.terraform"
     ]
 }

@@ -89,12 +89,12 @@ jobs:
         with:
           name: frontend
           path: frontend/build/client
-      - name: Minio Deploy
-        uses: lovellfelix/minio-deploy-action@v1
-        with:
-          endpoint: https://s3.fr-par.scw.cloud
-          access_key: ${{ secrets.MINIO_ACCESS_KEY }}
-          secret_key: ${{ secrets.MINIO_SECRET_KEY }}
-          bucket: 'homeserver-frontend'
-          source_dir: 'frontend/build/client'
-          target_dir: '/'
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Terraform
+        run: terraform init && terraform plan -out=tfplan && terraform apply tfplan
+        env:
+          access_key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret_key: ${{ secrets.SCW_SECRET_KEY  }}
+          organization_id: ${{ vars.SCW_ORGANIZATION_ID }}
+          project_id: ${{ vars.SCW_PROJECT_ID }}

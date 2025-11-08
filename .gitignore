@@ -2,3 +2,8 @@ build
 dist
 node_modules
 .env
+*.tfstate
+*.tfstate.backup
+tfplan
+scaleway.auto.tfvars
+.terraform
