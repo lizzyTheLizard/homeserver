@@ -92,8 +92,8 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
       - name: Terraform
-        working-directory: ./frontend
         run: terraform init && terraform plan -out=tfplan && terraform apply tfplan
+        working-directory: ./frontend
         env:
           access_key: ${{ secrets.SCW_ACCESS_KEY }}
           secret_key: ${{ secrets.SCW_SECRET_KEY  }}
