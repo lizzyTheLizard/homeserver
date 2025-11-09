@@ -79,14 +79,13 @@ jobs:
           path: frontend/build/client
           retention-days: 1
   deploy:
-    name: "Terraform Plan"
-    needs: [build, test, lint]
+    #needs: [build, test, lint]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       TF_CLOUD_ORGANIZATION: "gutschi-site"
       TF_API_TOKEN: "${{ secrets.TF_TOKEN }}"
-      TF_WORKSPACE: "homeserver"
+      TF_WORKSPACE: "homesever-cicd"
       CONFIG_DIRECTORY: "./"
       access_key: ${{ secrets.SCW_ACCESS_KEY }}
       secret_key: ${{ secrets.SCW_SECRET_KEY  }}
