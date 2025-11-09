@@ -14,6 +14,10 @@ variable "project_id" {
   type = string
   sensitive = true
 }
+variable "tf_token" {
+  type = string
+  sensitive = true
+}
 
 terraform {
   cloud { 
@@ -21,6 +25,7 @@ terraform {
     workspaces { 
       name = "homesever" 
     } 
+    token = var.tf_token
   }
   required_providers {
     scaleway = {
