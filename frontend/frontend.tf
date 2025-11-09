@@ -15,8 +15,6 @@ variable "project_id" {
   sensitive = true
 }
 
-
-
 terraform {
   cloud { 
     organization = "gutschi-site" 
