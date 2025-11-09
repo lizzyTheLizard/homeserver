@@ -79,7 +79,7 @@ jobs:
           path: frontend/build/client
           retention-days: 1
   deploy:
-    #needs: [build, test, lint]
+    needs: [build, test, lint]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
