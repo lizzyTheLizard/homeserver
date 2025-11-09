@@ -93,7 +93,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
       - name: Terraform
         run:  |
-          cd backend
+          cd frontend
           terraform init
           terraform plan -out=tfplan
           terraform apply tfplan
