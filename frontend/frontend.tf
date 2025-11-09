@@ -15,7 +15,15 @@ variable "project_id" {
   sensitive = true
 }
 
+
+
 terraform {
+  cloud { 
+    organization = "gutschi-site" 
+    workspaces { 
+      name = "homesever" 
+    } 
+  }
   required_providers {
     scaleway = {
       source = "scaleway/scaleway"
