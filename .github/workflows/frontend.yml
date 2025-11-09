@@ -104,3 +104,4 @@ jobs:
           secret_key: ${{ secrets.SCW_SECRET_KEY  }}
           organization_id: ${{ vars.SCW_ORGANIZATION_ID }}
           project_id: ${{ vars.SCW_PROJECT_ID }}
+          tf_token: ${{ secrets.TF_TOKEN }}
