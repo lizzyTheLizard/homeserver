@@ -25,7 +25,6 @@ terraform {
     workspaces { 
       name = "homesever" 
     } 
-    token = var.tf_token
   }
   required_providers {
     scaleway = {
