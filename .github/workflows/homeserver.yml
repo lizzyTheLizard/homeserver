@@ -241,7 +241,7 @@ jobs:
           - frontend_test
           - backend_build
           - backend_test
-        if: github.ref == 'refs/heads/main' && always()
+        if: github.ref == 'refs/heads/main' && (!failure() && !cancelled())
         runs-on: ubuntu-latest
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
