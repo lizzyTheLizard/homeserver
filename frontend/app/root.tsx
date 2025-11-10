@@ -10,7 +10,7 @@ import type { UserManagerSettings } from 'oidc-client-ts'
 const authSettings: UserManagerSettings = {
   authority: 'https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0',
   client_id: 'f79682fe-0761-4361-aa2e-317957284c3a',
-  redirect_uri: process.env.NODE_ENV === 'development' ? 'http://localhost:5173/' : 'https://homeserver-frontend.s3-website.fr-par.scw.cloud/',
+  redirect_uri: process.env.NODE_ENV === 'development' ? 'http://localhost:5173/' : 'https://gutschi-site-fe-storage.s3-website.fr-par.scw.cloud/',
   response_type: 'code',
   scope: 'openid profile email',
 }
