@@ -73,6 +73,6 @@ resource "scaleway_object_bucket_website_configuration" "frontend" {
     suffix = "index.html"
   }
   error_document {
-    key = "error.html"
+    key = "index.html"
   }
 }
