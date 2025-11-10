@@ -87,10 +87,6 @@ jobs:
       TF_API_TOKEN: "${{ secrets.TF_TOKEN }}"
       TF_WORKSPACE: "homesever-cicd"
       CONFIG_DIRECTORY: "./"
-      access_key: ${{ secrets.SCW_ACCESS_KEY }}
-      secret_key: ${{ secrets.SCW_SECRET_KEY  }}
-      organization_id: ${{ vars.SCW_ORGANIZATION_ID }}
-      project_id: ${{ vars.SCW_PROJECT_ID }}
 
 
     steps:

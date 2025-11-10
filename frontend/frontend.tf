@@ -14,10 +14,6 @@ variable "project_id" {
   type = string
   sensitive = true
 }
-variable "tf_token" {
-  type = string
-  sensitive = true
-}
 
 terraform {
   cloud { 
