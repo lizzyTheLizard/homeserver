@@ -119,6 +119,8 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
+            with:
+               fetch-depth: 0
           - name: Setup
             uses: ./.github/actions/setup
           - name: Lint
@@ -190,7 +192,6 @@ jobs:
             run: pnpm -F homeserver-frontend run test
     backend_build:
         name: Build Backend
-        needs: webcomponents_build
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
