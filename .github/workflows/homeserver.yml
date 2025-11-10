@@ -230,6 +230,7 @@ jobs:
     deploy:
         name: Deploy
         needs:
+          - change_detection
           - backend_build
           - frontend_build
           - backend_test
@@ -237,15 +238,6 @@ jobs:
           - webcomponents_test
         if: github.ref == 'refs/heads/main' && (needs.change_detection.outputs.backend == 'true' || needs.change_detection.outputs.frontend == 'true')
         runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Download Backend Build
-            uses: actions/download-artifact@v4
-            with:
-                name: backend-build
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
             TF_API_TOKEN: "${{ secrets.TF_TOKEN }}"
@@ -268,6 +260,7 @@ jobs:
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
             id: apply-upload
             with:
+                directory: "./"
                 workspace: ${{ env.TF_WORKSPACE }}
           - name: Create Apply Run
             uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
