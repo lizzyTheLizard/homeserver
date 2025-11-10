@@ -16,10 +16,7 @@
     "chromatic": "npx chromatic --build-script-name build:storybook"
   },
   "exports": {
-    "./react": {
-      "types": "./build/react.d.ts",
-      "default": "./build/react.js"
-    },
+    "./react": { "types": "./build/react.d.ts", "default": "./build/react.js" },
     "./webcomponents": "./dist/homeserver.bundle.js",
     "./style.css": "./dist/style.css"
   },

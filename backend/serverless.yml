@@ -13,6 +13,7 @@ package:
     - "!.gitignore"
     - "!.git/**"
 
+
 functions:
   hello-world:
     handler: handler.handle

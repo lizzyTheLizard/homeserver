@@ -95,8 +95,8 @@ jobs:
             id: webcomponents-cache
             with:
                 path: |
-                    ~/webcomponents/build
-                    ~/webcomponents/dist
+                    webcomponents/build
+                    webcomponents/dist
                 key: ${{ runner.os }}-webcomponents-${{ hashFiles('webcomponents/**') }}
           - name: Build
             if: ${{ steps.webcomponents-cache.outputs.cache-hit != 'true' }}
@@ -158,8 +158,7 @@ jobs:
             uses: actions/cache@v3
             id: frontend-cache
             with:
-                path: |
-                        ~/frontend/build
+                path: frontend/build
                 key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/**') }}
           - name: Download Webcomponents Build
             uses: actions/download-artifact@v4
@@ -208,8 +207,7 @@ jobs:
             uses: actions/cache@v3
             id: backend-cache
             with:
-                path: |
-                        ~/backend/build
+                path: backend/build
                 key: ${{ runner.os }}-backend-${{ hashFiles('backend/**') }}
           - name: Build
             if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
