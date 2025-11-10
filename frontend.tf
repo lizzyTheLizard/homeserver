@@ -53,8 +53,6 @@ resource "scaleway_object" "frontend_upload" {
   bucket   = scaleway_object_bucket.frontend.name
   key      = each.key
   file   = "${path.module}/frontend/build/client/${each.value}"
-  content_type = "text/html"
-  metadata = { "cache-control" = endswith(each.key, ".html") ? "no-cache, no-store" : "public, max-age=31536000, immutable" }
   visibility = "public-read"
 }
 
