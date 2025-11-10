@@ -238,12 +238,18 @@ jobs:
         name: Deploy
         needs:
           - change_detection
-          - backend_build
-          - frontend_build
-          - backend_test
-          - frontend_test
           - webcomponents_test
-        if: github.ref == 'refs/heads/main' && (needs.change_detection.outputs.backend == 'true' || needs.change_detection.outputs.frontend == 'true')
+          - frontend_build
+          - frontend_test
+          - backend_build
+          - backend_test
+        if: | 
+          github.ref == 'refs/heads/main' && 
+          (needs.webcomponents_test.result == 'success' || needs.webcomponents_test.result == 'skipped') &&
+          (needs.frontend_build.result == 'success' || needs.frontend_test.result == 'skipped') &&
+          (needs.frontend_test.result == 'success' || needs.frontend_test.result == 'skipped') &&
+          (needs.backend_build.result == 'success' || needs.backend_test.result == 'skipped') &&
+          (needs.backend_test.result == 'success' || needs.backend_test.result == 'skipped')
         runs-on: ubuntu-latest
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
