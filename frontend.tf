@@ -53,6 +53,17 @@ resource "scaleway_object" "frontend_upload" {
   bucket   = scaleway_object_bucket.frontend.name
   key      = each.key
   file   = "${path.module}/frontend/build/client/${each.value}"
+  content_type = lookup({
+    html = "text/html"
+    css  = "text/css"
+    js   = "application/javascript"
+    png  = "image/png"
+    jpg  = "image/jpeg"
+    jpeg = "image/jpeg"
+    svg  = "image/svg+xml"
+    ico  = "image/x-icon"
+    json = "application/json"
+  }, split(".", each.value)[length(split(".", each.value)) - 1], "application/octet-stream")
   visibility = "public-read"
 }
 
