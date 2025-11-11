@@ -212,11 +212,17 @@ jobs:
                 path: backend/homeserver-backend.zip
                 key: ${{ runner.os }}-backend-${{ hashFiles('backend/**') }}
           - name: Setup
-            # Must be executed as we need the dependencies to create the ZIP file
+            if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
             uses: ./.github/actions/setup
           - name: Build
             if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
             run: pnpm -F homeserver-backend run build
+          - name: Remove non prod dependencies
+            if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
+            run: pnpm i --prod -F homeserver-backend
+          - name: Zip Folder
+            if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
+            run: zip -r backend/homeserver-backend.zip backend"
           - name: Upload Backend Build
             uses: actions/upload-artifact@v4
             with:
