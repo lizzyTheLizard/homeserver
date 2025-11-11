@@ -3,7 +3,7 @@ runs:
   using: "composite"
   steps:
   - name: Read nvmrc file
-    run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+    run: echo "{name}={$(cat .nvmrc)}" >> $GITHUB_OUTPUT
     shell: bash
     id: nvm
   - name: Setup node
