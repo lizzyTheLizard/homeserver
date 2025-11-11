@@ -21,7 +21,7 @@ jobs:
                 filters: |
                             general:
                                 - 'package.json'
-                                - '.github/**'
+                                - 'pnpm-lock.yaml'
                             backend:
                                 - 'backend/**'
                             frontend:
@@ -222,7 +222,7 @@ jobs:
             run: pnpm i --prod -F homeserver-backend
           - name: Zip Folder
             if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
-            run: zip -r backend/homeserver-backend.zip backend
+            run: zip -r backend/homeserver-backend.zip backend/*
           - name: Upload Backend Build
             uses: actions/upload-artifact@v4
             with:
