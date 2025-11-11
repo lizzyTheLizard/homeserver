@@ -86,8 +86,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
           - name: Create Build Directory
             run: mkdir -p ~/webcomponents/build && mkdir -p ~/webcomponents/dist
           - name: Cache Build
@@ -98,6 +96,9 @@ jobs:
                     webcomponents/build
                     webcomponents/dist
                 key: ${{ runner.os }}-webcomponents-${{ hashFiles('webcomponents/**') }}
+          - name: Setup
+            if: ${{ steps.webcomponents-cache.outputs.cache-hit != 'true' }}
+            uses: ./.github/actions/setup
           - name: Build
             if: ${{ steps.webcomponents-cache.outputs.cache-hit != 'true' }}
             run: pnpm -F homeserver-webcomponents run build
@@ -150,8 +151,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
           - name: Create Build Directory
             run: mkdir -p ~/frontend/build
           - name: Cache Build
@@ -160,12 +159,17 @@ jobs:
             with:
                 path: frontend/build
                 key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/**') }}
+          - name: Setup
+            if: ${{ steps.frontend-cache.outputs.cache-hit != 'true' }}
+            uses: ./.github/actions/setup
           - name: Download Webcomponents Build
+            if: ${{ steps.frontend-cache.outputs.cache-hit != 'true' }}
             uses: actions/download-artifact@v4
             with:
                 name: webcomponents-build
                 path: webcomponents/build
           - name: Download Webcomponents Dist
+            if: ${{ steps.frontend-cache.outputs.cache-hit != 'true' }}
             uses: actions/download-artifact@v4
             with:
                 name: webcomponents-dist
@@ -199,8 +203,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
           - name: Create Build Directory
             run: mkdir -p ~/backend/build
           - name: Cache Build
@@ -209,6 +211,9 @@ jobs:
             with:
                 path: backend/build
                 key: ${{ runner.os }}-backend-${{ hashFiles('backend/**') }}
+          - name: Setup
+            if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
+            uses: ./.github/actions/setup
           - name: Build
             if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
             run: pnpm -F homeserver-backend run build
