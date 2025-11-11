@@ -221,7 +221,7 @@ jobs:
             uses: actions/upload-artifact@v4
             with:
                 name: backend-build
-                path: backend/build
+                path: backend/homeserver-backend.zip
                 retention-days: 1
     backend_test:
         name: Test Backend
@@ -265,7 +265,7 @@ jobs:
             uses: actions/download-artifact@v4
             with:
                 name: backend-build
-                path: backend/build
+                path: backend/homeserver-backend.zip
           - name: Upload Configuration
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
             id: apply-upload
