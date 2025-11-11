@@ -1,5 +1,3 @@
-import { serveHandler } from '@scaleway/serverless-functions'
-
 export function handler(event: Record<string, unknown>, context: Record<string, unknown>, cb: unknown) {
   console.log('Function invoked with event:', event, 'and context:', context, 'and callback:', cb)
   return {
@@ -11,5 +9,7 @@ export function handler(event: Record<string, unknown>, context: Record<string, 
 
 /* This is used to test locally and will not be executed on Scaleway Functions */
 if (process.env.NODE_ENV === 'test') {
-  serveHandler(handler, 8080)
+  import('@scaleway/serverless-functions')
+    .then((scw_fnc_node) => { scw_fnc_node.serveHandler(handler, 8080) })
+    .catch((err: unknown) => { console.error('Error starting server:', err) })
 }
