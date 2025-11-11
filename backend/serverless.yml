@@ -15,5 +15,5 @@ package:
 
 
 functions:
-  hello-world:
-    handler: handler.handle
+  coeditor:
+    handler: src.coeditor.coeditor
