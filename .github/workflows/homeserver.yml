@@ -209,7 +209,7 @@ jobs:
             uses: actions/cache@v3
             id: backend-cache
             with:
-                path: backend/build
+                path: backend/homeserver-backend.zip
                 key: ${{ runner.os }}-backend-${{ hashFiles('backend/**') }}
           - name: Setup
             if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
