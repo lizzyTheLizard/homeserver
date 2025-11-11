@@ -265,7 +265,7 @@ jobs:
             uses: actions/download-artifact@v4
             with:
                 name: backend-build
-                path: backend/homeserver-backend.zip
+                path: backend
           - name: Upload Configuration
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
             id: apply-upload
