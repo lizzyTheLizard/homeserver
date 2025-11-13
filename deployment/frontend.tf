@@ -11,7 +11,8 @@ resource "scaleway_object" "frontend_upload" {
   for_each = fileset("${path.module}/dist/frontend/", "**/*")
   bucket   = scaleway_object_bucket.frontend.name
   key      = each.key
-  file   = "${path.module}/build/frontend/${each.value}"
+  file     = "${path.module}/dist/frontend/${each.value}"
+  hash     = filesha256("${path.module}/dist/frontend/${each.value}")
   content_type = lookup({
     html = "text/html"
     css  = "text/css"

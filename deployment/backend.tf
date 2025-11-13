@@ -12,6 +12,7 @@ resource "scaleway_function" "backend" {
   handler = "build/handler.handler"
   privacy = "public"
   zip_file = "${path.module}/dist/backend/homeserver-backend.zip"
+  zip_hash  = filesha256("${path.module}/dist/backend/homeserver-backend.zip")
   environment_variables = {
   }
   deploy = true

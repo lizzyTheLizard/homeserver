@@ -1,9 +1,16 @@
 export function handler(event: Record<string, unknown>, context: Record<string, unknown>, cb: unknown) {
-  console.log('Function invoked with event:', event, 'and context:', context, 'and callback:', cb)
+  if (event.method === 'POST' && event.path === '/coeditor/discussions') {
+    console.log('Creating new discussion', event.body)
+    return {
+      body: { id: 'discussion123', text: 'Initial Text from backend' },
+      headers: { 'Content-Type': ['application/json'] },
+      statusCode: 201,
+    }
+  }
   return {
-    body: 'Hello World!!!!!',
+    body: { message: 'Not Found' },
     headers: { 'Content-Type': ['application/json'] },
-    statusCode: 200,
+    statusCode: 404,
   }
 };
 
