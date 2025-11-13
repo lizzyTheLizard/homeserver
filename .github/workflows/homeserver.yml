@@ -19,15 +19,15 @@ jobs:
             id: check_files
             with:
                 filters: |
-                            general:
-                                - 'package.json'
-                                - 'pnpm-lock.yaml'
-                            backend:
-                                - 'backend/**'
-                            frontend:
-                                - 'frontend/**'
-                            webcomponents:
-                                - 'webcomponents/**'
+                    general:
+                        - 'package.json'
+                        - 'pnpm-lock.yaml'
+                    backend:
+                        - 'backend/**'
+                    frontend:
+                        - 'frontend/**'
+                    webcomponents:
+                        - 'webcomponents/**'
           - name: Compute change flags
             id: compute_changes
             run: |
@@ -269,6 +269,8 @@ jobs:
             with:
                 name: frontend-build
                 path: deployment/dist/frontend
+          - name: Debug Step TO BE REMOVED
+            run: ls -laR deployment/dist/frontend
           - name: Download Backend Artifact
             uses: actions/download-artifact@v4
             with:
