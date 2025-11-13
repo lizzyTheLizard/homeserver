@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "cross-env NODE_ENV=test tsx --watch src/coeditor.ts",
+    "dev": "cross-env NODE_ENV=test tsx --watch src/handler.ts",
     "lint": "eslint .",
     "clean": "rimraf build homeserver-backend.zip",
     "test": "echo 'No test specified'"

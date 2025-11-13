@@ -268,17 +268,17 @@ jobs:
             uses: actions/download-artifact@v4
             with:
                 name: frontend-build
-                path: frontend/build/client
+                path: deployment/dist/frontend
           - name: Download Backend Artifact
             uses: actions/download-artifact@v4
             with:
                 name: backend-build
-                path: backend
+                path: deployment/dist/backend
           - name: Upload Configuration
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
             id: apply-upload
             with:
-                directory: "./"
+                directory: "./deployment"
                 workspace: ${{ env.TF_WORKSPACE }}
           - name: Create Apply Run
             uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
@@ -294,4 +294,3 @@ jobs:
                 run: ${{ steps.apply-run.outputs.run_id }}
                 comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
 
-                    
