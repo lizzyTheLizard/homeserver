@@ -1,4 +1,4 @@
-export function handler(event: Record<string, unknown>, context: Record<string, unknown>, cb: ((error: unknown, result: unknown) => void)) {
+export function handler(event: Record<string, unknown>, context: Record<string, unknown>, cb: ((error: Error | undefined, result: unknown) => void)) {
   if (event.method === 'POST' && event.path === '/coeditor/discussions') {
     console.log('Creating new discussion', event.body)
     cb(undefined, {
