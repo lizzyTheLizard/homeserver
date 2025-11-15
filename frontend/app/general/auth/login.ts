@@ -15,12 +15,12 @@ function toUser(user: OidcUser): User {
 }
 
 async function checkIfLoggedIn(userManager: UserManager): Promise<User | undefined> {
-  console.log('Checking if user is already logged in')
   try {
     const oidcUser = await userManager.getUser()
     if (oidcUser) {
-      console.log('User is already logged in:', oidcUser)
-      return toUser(oidcUser)
+      const user = toUser(oidcUser)
+      console.log('User is already logged in:', user.email)
+      return user
     }
     console.log('No user is currently logged in')
     return undefined
@@ -32,16 +32,12 @@ async function checkIfLoggedIn(userManager: UserManager): Promise<User | undefin
 }
 
 async function triggerLogin(userManager: UserManager): Promise<User> {
-  console.log('Triggering interactive login')
   const state = { from: window.location.href }
-  console.log('State to be passed to login redirect:', state)
   await userManager.signinRedirect({ state })
-  throw new Error('Redirecting to login, should not reach this point')
 }
 
 async function handleCallback(userManager: UserManager): Promise<User | undefined> {
   if (!isAuthCallback()) return
-  console.log('Handling signin callback')
   const oidcUser = await userManager.signinCallback()
   if (!oidcUser) {
     console.error('Login failed during signinCallback')
@@ -52,12 +48,10 @@ async function handleCallback(userManager: UserManager): Promise<User | undefine
     console.error('Redirecting to original page, should not reach this point')
     return undefined
   }
-  console.log('Signin callback handled, no redirect URL found')
   return toUser(oidcUser)
 }
 
 export async function login(userManager: UserManager): Promise<User> {
-  console.log('Starting login process on URL ', window.location.href)
   let user = await handleCallback(userManager)
   if (user) return user
   user = await checkIfLoggedIn(userManager)

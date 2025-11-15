@@ -1,6 +1,39 @@
 // TODO: Implement server calls
 
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import type { EditorState } from './EditorState'
+import { BACKEND_URL } from '../config'
+
+export function useTemplateQuery(): UseQueryResult<Template[], unknown> {
+  return useQuery({ queryKey: ['template'], queryFn: async () => {
+    const response = await fetch(`${BACKEND_URL}api/coeditor/templates/mine`)
+    if (!response.ok)
+      throw new Error(`Error fetching templates: ${response.status.toString()} ${response.statusText}`)
+    return await response.json() as Template[]
+  },
+  })
+}
+
+export interface Template {
+  id: string
+  name: string
+  language: string
+  parameters: TemplateParameter[]
+}
+
+export interface TemplateParameter {
+  name: string
+  type: 'STRING' | 'SELECT' | 'TEXT'
+  values?: string[]
+  startPosition: number
+  endPosition: number
+}
+
+export interface Context {
+  language: string
+  templateId: string | undefined
+  parameters: Record<string, string>
+}
 
 export class EditorServer {
   static async executeCommand(editorState: EditorState, command: string): Promise<string> {
