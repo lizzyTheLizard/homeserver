@@ -1,6 +1,6 @@
 import { GsCollapse, GsInput, GsLoadingSpinner, GsSelect, GsTextarea } from 'homeserver-webcomponents/react'
 import { useTemplateQuery, type Context } from './EditorServer'
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import style from './EditorContext.module.css'
 
 interface Props {
@@ -32,26 +32,41 @@ export default function EditorContext({ onContextChange }: Props) {
     )
   }
 
-  function setParameterValue(event: FormEvent, paramName: string): void {
-    const newValue = (event.target as HTMLInputElement).value
+  function getValue(event: unknown): string {
+    if (!event) throw new Error('Invalid event')
+    if (typeof event !== 'object') throw new Error('Invalid event')
+    if (!('target' in event)) throw new Error('Invalid event')
+    const target = event.target
+
+    if (!target) throw new Error('Invalid event target')
+    if (typeof target !== 'object') throw new Error('Invalid event target')
+    if (!('value' in target)) throw new Error('Invalid event target')
+    const value = target.value
+
+    if (typeof value !== 'string') throw new Error('Invalid event target value')
+    return value
+  }
+
+  function setParameterValue(event: unknown, paramName: string): void {
+    const newValue = getValue(event)
     const newParameters = { ...parameterValues, [paramName]: newValue }
     setParameterValues(newParameters)
     onContextChange({ language, templateId, parameters: newParameters })
   }
 
-  function setLanguageAndResetContext(event: FormEvent): void {
-    const lang = (event.target as HTMLSelectElement).value
+  function setLanguageAndResetContext(event: unknown): void {
+    const newValue = getValue(event)
     setTemplateId(undefined)
-    setLanguage(lang)
-    onContextChange({ language: lang, templateId: undefined, parameters: {} })
+    setLanguage(newValue)
+    onContextChange({ language: newValue, templateId: undefined, parameters: {} })
   }
 
-  function setTemplateIdAndResetContext(event: FormEvent): void {
-    const id = (event.target as HTMLSelectElement).value
+  function setTemplateIdAndResetContext(event: unknown): void {
+    const newValue = getValue(event)
     const newParameters = {} as Record<string, string>
     setParameterValues(newParameters)
-    setTemplateId(id)
-    onContextChange({ language, templateId: id, parameters: newParameters })
+    setTemplateId(newValue)
+    onContextChange({ language, templateId: newValue, parameters: newParameters })
   }
 
   if (isLoading) return showLoading()
