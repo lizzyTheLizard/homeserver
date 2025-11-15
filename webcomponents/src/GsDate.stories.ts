@@ -23,5 +23,3 @@ export const DateTime: StoryObj = {
     <gs-date>2025-10-11</gs-date>
   `,
 }
-
-console.log(new Date().toDateString())

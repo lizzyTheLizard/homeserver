@@ -5,6 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import stylistic from '@stylistic/eslint-plugin'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 
 export default defineConfig([
   eslint.configs.recommended,
@@ -14,6 +15,7 @@ export default defineConfig([
   stylistic.configs.recommended,
   reactHooks.configs.flat.recommended,
   reactRefresh.configs.vite,
+  ...pluginQuery.configs['flat/recommended'],
   globalIgnores(['dist', 'build', '.react-router']),
   {
     languageOptions: {
