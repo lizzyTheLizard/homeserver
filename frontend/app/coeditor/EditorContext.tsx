@@ -26,7 +26,7 @@ export default function EditorContext({ onContextChange }: Props) {
     return (
       <GsCollapse header="Context">
         <span>
-          Error: {error.message}
+          {`Error: ${error.message}`}
         </span>
       </GsCollapse>
     )
