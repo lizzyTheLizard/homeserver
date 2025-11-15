@@ -9,7 +9,7 @@ resource "scaleway_function" "backend" {
   name        = "backend"
   description = "Backend function"
   runtime = "node22"
-  handler = "build/handler.handler"
+  handler = "build/handler.handle"
   privacy = "public"
   zip_file = "${path.module}/dist/backend/homeserver-backend.zip"
   zip_hash  = filesha256("${path.module}/dist/backend/homeserver-backend.zip")
