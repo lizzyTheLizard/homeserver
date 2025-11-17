@@ -1,33 +1,51 @@
-export function handler(event: Record<string, unknown>, context: Record<string, unknown>, cb: ((error: Error | undefined, result: unknown) => void)) {
-  if (event.httpMethod === 'POST' && event.path === '/coeditor/discussions') {
-    console.log('Creating new discussion', event.body)
-    cb(undefined, {
-      body: JSON.stringify({ id: 'discussion123', text: 'Initial Text from backend' }),
-      headers: { 'Content-Type': ['application/json'] },
-      statusCode: 201,
-    })
-  }
+import { getMyTemplates } from './coeditor/Template'
+import { BackendError } from './BackendError'
 
-  if (event.httpMethod === 'GET' && event.path === '/api/coeditor/templates/mine') {
-    console.log('Fetching user templates')
-    cb(undefined, {
-      body: JSON.stringify([
-        { id: 'template123', name: 'Template 1', language: 'en', parameters: [] },
-        { id: 'template456', name: 'Template 2', language: 'de', parameters: [{ name: 'param1', type: 'STRING', startPosition: 0, endPosition: 8 }] },
-      ]),
-      headers: { 'Content-Type': ['application/json'] },
-      statusCode: 200,
-    })
+export async function handler(event: Event): Promise<Reponse> {
+  try {
+    if (event.httpMethod === 'GET' && event.path === '/api/coeditor/templates/mine') {
+      const templates = await getMyTemplates()
+      return ok(templates)
+    }
+    throw new BackendError(event.httpMethod + ' ' + event.path + ' not Found', 'Not Found', 404, false)
   }
-
-  console.log('Unhandled request', event.httpMethod, event.path)
-  console.log('Event details:', JSON.stringify(event))
-  cb(undefined, {
-    body: JSON.stringify({ message: 'Not Found' }),
-    headers: { 'Content-Type': ['application/json'] },
-    statusCode: 404,
-  })
+  catch (err: unknown) {
+    return error(err)
+  }
 };
+
+interface Reponse {
+  statusCode: number
+  headers: Record<string, string | string[]>
+  body: string
+}
+
+interface Event {
+  httpMethod: string
+  path: string
+}
+
+function ok(body: unknown): Reponse {
+  return {
+    statusCode: 200,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }
+}
+
+function error(error: unknown): Reponse {
+  const message = error instanceof Error ? error.message : String(error)
+  const userMessage = error instanceof BackendError ? error.userMessage : 'Unknown error'
+  const statusCode = error instanceof BackendError ? error.statusCode : 500
+  const showStack = error instanceof BackendError ? error.showStack : true
+  if (showStack) console.error('Handler error:', error)
+  else console.log('Handler error:', message)
+  return {
+    statusCode: statusCode,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ error: userMessage }),
+  }
+}
 
 /* This is used to test locally and will not be executed on Scaleway Functions */
 if (process.env.NODE_ENV === 'test') {

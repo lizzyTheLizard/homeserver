@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "cross-env NODE_ENV=test tsx --watch src/handler.ts",
+    "dev": "tsx --env-file=.env --watch src/handler.ts",
     "lint": "eslint .",
     "clean": "rimraf build homeserver-backend.zip",
     "test": "echo 'No test specified'"
@@ -15,12 +15,15 @@
     "@scaleway/serverless-functions": "^1.1.2",
     "@stylistic/eslint-plugin": "^5.5.0",
     "@types/node": "^24.10.0",
-    "cross-env": "^10.1.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "rimraf": "^6.1.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3"
+  },
+  "dependencies": {
+    "@databases/pg": "^5.5.0",
+    "@databases/pg-migrations": "^5.0.3"
   }
 }

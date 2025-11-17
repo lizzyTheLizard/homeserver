@@ -1,8 +1,7 @@
-// TODO: Implement server calls
-
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import type { EditorState } from './EditorState'
 import { BACKEND_URL } from '../config'
+import type { Template } from 'homeserver-backend/src/coeditor/Template'
 
 export function useTemplateQuery(): UseQueryResult<Template[], unknown> {
   return useQuery({ queryKey: ['template'], queryFn: async () => {
@@ -12,21 +11,6 @@ export function useTemplateQuery(): UseQueryResult<Template[], unknown> {
     return await response.json() as Template[]
   },
   })
-}
-
-export interface Template {
-  id: string
-  name: string
-  language: string
-  parameters: TemplateParameter[]
-}
-
-export interface TemplateParameter {
-  name: string
-  type: 'STRING' | 'SELECT' | 'TEXT'
-  values?: string[]
-  startPosition: number
-  endPosition: number
 }
 
 export interface Context {
