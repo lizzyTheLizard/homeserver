@@ -1,5 +1,5 @@
-import { getMyTemplates } from './coeditor/Template'
-import { BackendError } from './BackendError'
+import { getMyTemplates } from './coeditor/Template.js'
+import { BackendError } from './BackendError.js'
 
 export async function handler(event: Event): Promise<Reponse> {
   try {

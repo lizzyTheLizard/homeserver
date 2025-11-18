@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "target": "es2021",
-    "module": "es2020",
+    "module": "nodenext",
     "lib": ["es2021", "DOM", "DOM.Iterable"],
     "outDir": "./build",
     "rootDir": "./src",
     "declaration": true,
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "allowSyntheticDefaultImports": true
   },
  "include": ["./src/**/*.ts"],

@@ -3,11 +3,11 @@ import mig from '@databases/pg-migrations'
 
 const poolPromise: Promise<ConnectionPool> = setup()
 
-async function setup() {
+async function setup(): Promise<ConnectionPool> {
   console.debug('Setting up database connection...')
   const connectionString = process.env.DB_CONNECTION_STRING
   if (!connectionString) throw new Error('Missing required database configuration: DB_CONNECTION_STRING must be defined')
-  const pool = createConnectionPool({ connectionString, bigIntMode: 'bigint' })
+  const pool = createConnectionPool.default({ connectionString, bigIntMode: 'bigint' })
   await testConnection(pool)
   await migrate(pool)
   console.log('Connectied to database')

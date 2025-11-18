@@ -1,5 +1,5 @@
 import { sql } from '@databases/pg'
-import { getTransaction } from '../getTransaction'
+import { getTransaction } from '../getTransaction.js'
 
 export interface Template {
   id: string
