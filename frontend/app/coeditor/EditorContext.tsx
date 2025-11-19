@@ -1,14 +1,16 @@
 import { GsCollapse, GsInput, GsLoadingSpinner, GsSelect, GsTextarea } from 'homeserver-webcomponents/react'
 import { useTemplateQuery, type Context } from './EditorServer'
-import { useState } from 'react'
+import { use, useState } from 'react'
 import style from './EditorContext.module.css'
+import { AuthContext } from '../general/auth/AuthContext'
 
 interface Props {
   onContextChange: (context: Context) => void
 }
 
 export default function EditorContext({ onContextChange }: Props) {
-  const { isLoading, isError, data, error } = useTemplateQuery()
+  const user = use(AuthContext)
+  const { isLoading, isError, data, error } = useTemplateQuery(user)
   const [language, setLanguage] = useState('en')
   const [templateId, setTemplateId] = useState(undefined as string | undefined)
   const [parameterValues, setParameterValues] = useState({} as Record<string, string>)

@@ -1,13 +1,22 @@
 import { getMyTemplates } from './coeditor/Template.js'
-import { BackendError } from './BackendError.js'
+import { expectedError, isBackendError } from './BackendError.js'
+import { getDatabaseHandle } from './getDatabaseHandle.js'
+import { getUser } from './getUser.js'
+import { getCorsHeaders } from './getCorsHeaders.js'
+import { type Event } from './Context.js'
+
+const db = await getDatabaseHandle()
 
 export async function handler(event: Event): Promise<Reponse> {
+  if (event.httpMethod === 'OPTIONS') return ok(undefined)
+  const user = await getUser(event)
+  const context = { event, user, db }
   try {
     if (event.httpMethod === 'GET' && event.path === '/api/coeditor/templates/mine') {
-      const templates = await getMyTemplates()
+      const templates = await getMyTemplates(context)
       return ok(templates)
     }
-    throw new BackendError(event.httpMethod + ' ' + event.path + ' not Found', 'Not Found', 404, false)
+    throw expectedError(event.httpMethod + ' ' + event.path + ' not Found', 404, 'Not Found')
   }
   catch (err: unknown) {
     return error(err)
@@ -20,30 +29,31 @@ interface Reponse {
   body: string
 }
 
-interface Event {
-  httpMethod: string
-  path: string
-}
-
 function ok(body: unknown): Reponse {
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getCorsHeaders(),
+    },
+    body: body === undefined ? '' : JSON.stringify(body),
   }
 }
 
 function error(error: unknown): Reponse {
-  const message = error instanceof Error ? error.message : String(error)
-  const userMessage = error instanceof BackendError ? error.userMessage : 'Unknown error'
-  const statusCode = error instanceof BackendError ? error.statusCode : 500
-  const showStack = error instanceof BackendError ? error.showStack : true
-  if (showStack) console.error('Handler error:', error)
-  else console.log('Handler error:', message)
+  if (isBackendError(error)) {
+    console.error('Handle Backend Error:', error.showStack ? error : error.message)
+    return {
+      statusCode: error.statusCode,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: error.userMessage }),
+    }
+  }
+  console.error('Handle Unexpected Error:', error)
   return {
-    statusCode: statusCode,
+    statusCode: 500,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ error: userMessage }),
+    body: JSON.stringify({ error: 'Unexpected error' }),
   }
 }
 

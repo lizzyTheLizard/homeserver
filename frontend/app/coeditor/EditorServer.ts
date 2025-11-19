@@ -2,10 +2,16 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import type { EditorState } from './EditorState'
 import { BACKEND_URL } from '../config'
 import type { Template } from 'homeserver-backend/src/coeditor/Template'
+import type { User } from '../general/auth/AuthContext'
 
-export function useTemplateQuery(): UseQueryResult<Template[], unknown> {
-  return useQuery({ queryKey: ['template'], queryFn: async () => {
-    const response = await fetch(`${BACKEND_URL}api/coeditor/templates/mine`)
+export function useTemplateQuery(user: User | undefined): UseQueryResult<Template[], unknown> {
+  return useQuery({ queryKey: ['template', user?.accessToken], queryFn: async () => {
+    const url = `${BACKEND_URL}api/coeditor/templates/mine`
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Authorization: 'Bearer ' + (user?.accessToken ?? '') },
+    })
     if (!response.ok)
       throw new Error(`Error fetching templates: ${response.status.toString()} ${response.statusText}`)
     return await response.json() as Template[]

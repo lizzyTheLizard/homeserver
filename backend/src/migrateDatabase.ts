@@ -1,7 +1,6 @@
-import { Pool, PoolClient } from 'pg'
+import { Pool, type PoolClient } from 'pg'
 import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
-import { inTransaction } from './DatabasePool.js'
 import { dirname } from 'path'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -18,32 +17,25 @@ interface PlannedDatabaseMigration {
   hash: string
 }
 
-export async function migrate(pool: Pool): Promise<void> {
-  console.log('Running database migrations...')
-  const planned = await getAllPlannedMigrations()
-  await inTransaction(async (client) => {
-    // Check if there is a problem with the existing migrations
+export async function migrateDatabase(pool: Pool): Promise<void> {
+  console.log('Starting Database Migrations...')
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
-    for (const e of existing) {
-      const p = planned.find(m => m.name === e.name)
-      if (!p) throw new Error(`Migration ${e.name} has been executed but the file does not exist any more, aborting!`)
-      if (p.hash !== e.hash) throw new Error(`Migration ${e.name} has been executed but the file has changed, aborting!`)
-    }
-
-    // Execute the new migrations
-    let lastMigrationToRun: string | undefined = undefined
-    for (const p of planned) {
-      const e = existing.find(m => m.name === p.name)
-      if (e && lastMigrationToRun) throw new Error(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
-      if (e) {
-        console.debug(`Migration ${p.name} has already run on ${e.run_on.toISOString()}`)
-        continue
-      }
-      await runMigration(client, p)
-      lastMigrationToRun = p.name
-    }
-    console.log('All database migrations complete')
-  }, pool)
+    validateExistingMigrations(existing, planned)
+    await executeNewMigrations(client, existing, planned)
+    await client.query('COMMIT')
+  }
+  catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  }
+  finally {
+    client.release()
+  }
+  console.log('Database migrations successful')
 }
 
 async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMigration[]> {
@@ -79,4 +71,28 @@ async function runMigration(client: PoolClient, migration: PlannedDatabaseMigrat
   await client.query(migration.content)
   await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
   console.log(`Migration ${migration.name} complete`)
+}
+
+function validateExistingMigrations(existing: DatabaseMigration[], planned: PlannedDatabaseMigration[]) {
+  // Check if there is a problem with the existing migrations
+  for (const e of existing) {
+    const p = planned.find(m => m.name === e.name)
+    if (!p) throw new Error(`Migration ${e.name} has been executed but the file does not exist any more, aborting!`)
+    if (p.hash !== e.hash) throw new Error(`Migration ${e.name} has been executed but the file has changed, aborting!`)
+  }
+}
+
+async function executeNewMigrations(client: PoolClient, existing: DatabaseMigration[], planned: PlannedDatabaseMigration[]) {
+  // Execute the new migrations
+  let lastMigrationToRun: string | undefined = undefined
+  for (const p of planned) {
+    const e = existing.find(m => m.name === p.name)
+    if (e && lastMigrationToRun) throw new Error(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
+    if (e) {
+      console.debug(`Migration ${p.name} has already run on ${e.run_on.toISOString()}`)
+      continue
+    }
+    await runMigration(client, p)
+    lastMigrationToRun = p.name
+  }
 }
