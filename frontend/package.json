@@ -6,6 +6,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production react-router build",
     "dev": "cross-env NODE_ENV=development react-router dev",
+    "deploy": "copyfiles -u 2 \"build/client/**/*\" ../deployment/dist/frontend",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "clean": "rimraf build .react-router",
@@ -30,6 +31,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
+    "copyfiles": "^2.4.1",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",

@@ -1,15 +1,37 @@
-Set-Location ..
-pnpm -F * install  --config.confirmModulesPurge=false 
-pnpm -F * run clean 
-pnpm -F * build
-pnpm -F * i --prod --config.confirmModulesPurge=false
-Set-Location .\deployment
-Remove-Item -Recurse -Force 'dist'
-New-Item -ItemType Directory -Path 'dist\frontend'
-Copy-Item -Path '..\frontend\build\client\*'  -Recurse -Destination 'dist\frontend\'
-New-Item -ItemType Directory -Path 'dist\backend'
-Compress-Archive -Path '..\backend\*' -DestinationPath 'dist\backend\homeserver-backend.zip'
-pnpm -F * install  --config.confirmModulesPurge=false 
-terraform plan -out='tfplan'
-Read-Host "Press Enter to continue or Ctrl+C to cancel." 
-terraform apply 'tfplan'
+param(
+    [Parameter(Mandatory=$false, HelpMessage="Rebuild the backend.")]
+    [switch]$Backend = $false,
+    [Parameter(Mandatory=$false, HelpMessage="Rebuild the frontend.")]
+    [switch] $Frontend = $false,
+    [Parameter(Mandatory=$false, HelpMessage="Set to true to deploy the application.")]
+    [switch] $Deploy = $false
+)
+
+$ErrorActionPreference = 'Stop'
+
+if($Backend) {
+    if (Test-Path '.\dist\backend') { Remove-Item -Recurse -Force '.\dist\backend' }
+    Set-Location ..\
+    pnpm i 
+    pnpm -F homeserver-backend run clean 
+    pnpm -F homeserver-backend run build
+    pnpm -F homeserver-backend run deploy
+    Set-Location .\deployment
+}
+
+if($Frontend) {
+    if (Test-Path '.\dist\frontend') { Remove-Item -Recurse -Force '.\dist\frontend' }
+    Set-Location ..\
+    pnpm i 
+    pnpm -F homeserver-frontend run clean 
+    pnpm -F homeserver-frontend run build
+    pnpm -F homeserver-frontend run deploy
+    Set-Location .\deployment
+}
+
+if($Deploy) {
+    terraform plan -out='tfplan'
+    Read-Host "Press Enter to continue or Ctrl+C to cancel." 
+    terraform apply 'tfplan'
+}
+

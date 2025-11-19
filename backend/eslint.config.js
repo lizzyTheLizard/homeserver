@@ -10,7 +10,7 @@ export default defineConfig(
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   stylistic.configs.recommended,
-  globalIgnores(['build/**/*'], 'Ignore Build Directory'),
+  globalIgnores(['build/**/*', 'dist/**/*'], 'Ignore Build and Dist Directories'),
   {
     languageOptions: {
       globals: {

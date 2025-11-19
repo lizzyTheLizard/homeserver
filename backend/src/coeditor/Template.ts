@@ -1,5 +1,5 @@
-import { sql } from '@databases/pg'
-import { getTransaction } from '../getTransaction.js'
+import { inTransaction } from '../DatabasePool.js'
+import { v4 as uuid } from 'uuid'
 
 export interface Template {
   id: string
@@ -18,20 +18,20 @@ export interface TemplateParameter {
 }
 
 export async function getMyTemplates(): Promise<Template[]> {
-  return getTransaction<Template[]>(async (tx) => {
+  return inTransaction<Template[]>(async (client) => {
     console.log('Fetching user templates')
-    const templates = await tx.query(sql`SELECT * FROM template LIMIT 10`) as Template[]
+    const templates = await client.query<Template>('SELECT * FROM template LIMIT 10')
     console.log(JSON.stringify(templates))
-    if (templates.length === 0) {
+    if (templates.rows.length === 0) {
       // Create dummy templates
-      await tx.query(sql`INSERT INTO template (id, name, language, text, parameters, owner_id) VALUES
-      (1, 'Template 1', 'en', '', '[]', 'user1'),
-      (2, 'Template 2', 'de', 'Über {param1:STRING}', '[{"name":"param1","type":"STRING","startPosition":5,"endPosition":13}]', 'user1')`)
-      const templates2 = await tx.query(sql`SELECT * FROM template LIMIT 10`) as Template[]
-      return templates2
+      await client.query(`INSERT INTO template (id, name, language, text, parameters, owner_id) VALUES
+      ('${uuid()}', 'Template 1', 'en', '', '[]', 'user1'),
+      ('${uuid()}', 'Template 2', 'de', 'Über {param1:STRING}', '[{"name":"param1","type":"STRING","startPosition":5,"endPosition":13}]', 'user1')`)
+      const templates2 = await client.query<Template>('SELECT * FROM template LIMIT 10')
+      return templates2.rows
     }
     else {
-      return templates
+      return templates.rows
     }
   })
 }

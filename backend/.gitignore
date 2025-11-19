@@ -2,5 +2,4 @@
 build
 dist
 node_modules
-homeserver-backend.zip
 .env
