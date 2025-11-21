@@ -14,8 +14,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "clean": "rimraf build dist",
-    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node --disable-warning=ExperimentalWarning --experimental-vm-modules node_modules/jest/bin/jest.js --watch"    
+    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules node_modules/jest/bin/jest.js --silent",
+    "test:watch": "node --disable-warning=ExperimentalWarning --experimental-vm-modules node_modules/jest/bin/jest.js --watch --silent"
   },
   "files": [
     "build/**/*",
@@ -23,6 +23,7 @@
   ],
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@jest/globals": "^30.2.0",
     "@scaleway/serverless-functions": "^1.1.2",
     "@stylistic/eslint-plugin": "^5.5.0",
     "@types/jest": "^30.0.0",
