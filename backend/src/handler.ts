@@ -1,4 +1,4 @@
-import { getMyTemplates } from './coeditor/Template.js'
+import { getMyTemplates, updateTemplate, type Template } from './coeditor/Template.js'
 import { expectedError, isBackendError } from './BackendError.js'
 import { getDatabaseHandle } from './getDatabaseHandle.js'
 import { getUser } from './getUser.js'
@@ -12,9 +12,12 @@ export async function handler(event: Event): Promise<Reponse> {
   const user = await getUser(event)
   const context = { event, user, db }
   try {
-    if (event.httpMethod === 'GET' && event.path === '/api/coeditor/templates/mine') {
-      const templates = await getMyTemplates(context)
-      return ok(templates)
+    if (event.httpMethod === 'GET' && event.path === '/api/coeditor/templates')
+      return ok(await getMyTemplates(context))
+    if (event.httpMethod === 'PUT' && event.path === '/api/coeditor/templates') {
+      if (!event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
+      const template = JSON.parse(event.body) as Template
+      return ok(await updateTemplate(context, template))
     }
     throw expectedError(event.httpMethod + ' ' + event.path + ' not Found', 404, 'Not Found')
   }
