@@ -1,79 +1,113 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { type PoolClient } from 'pg'
-import type { Context } from '../Context.js'
-import { getMyTemplates, updateTemplate, type Template } from './Template.js'
-import { jest } from '@jest/globals'
+import { beforeAll, describe, expect, test } from 'vitest'
+import type { Context, DatabaseHandle } from '../Context.js'
+import { extractParameters, getMyTemplates, updateTemplate, type TemplateInput } from './Template.js'
+import { Pool, type PoolClient } from 'pg'
+import { migrateDatabase } from '../migrateDatabase.js'
+import { PostgresMock } from 'pgmock'
+import { v4 as uuid } from 'uuid'
 
-function fromClientQueryMock(clientQueryMock: jest.Mock): Context {
-  const inTransactionMock = async <T>(cb: (client: PoolClient) => Promise<T>): Promise<T> => {
-    const client = { query: clientQueryMock } as unknown as PoolClient
-    return await cb(client)
-  }
-  return { user: { email: 'test@example.com' }, db: { inTransaction: inTransactionMock } } as Context
-}
+const mock = await PostgresMock.create()
+const connectionString = await mock.listen(5432)
 
-describe('getMyTemplates', () => {
-  test('Correct Query', async () => {
-    const clientQueryMock = jest.fn<() => Promise<{ rows: Template[] }>>().mockResolvedValue({ rows: [] })
-    const context = fromClientQueryMock(clientQueryMock)
-    await getMyTemplates(context)
-    expect(clientQueryMock).toHaveBeenCalledTimes(1)
-    expect(clientQueryMock).toHaveBeenCalledWith('SELECT * FROM template WHERE owner_id = $1', ['test@example.com'])
+describe('Templates', () => {
+  let db: DatabaseHandle | undefined = undefined
+
+  beforeAll(async () => {
+    const pool = new Pool({ connectionString })
+    const client = await pool.connect()
+    await migrateDatabase(client)
+    client.release()
+    db = {
+      inTransaction: async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
+        const client = await pool.connect()
+        const result = await fn(client)
+        client.release()
+        return result
+      },
+    }
+  }, 100000)
+
+  test('No Templates', async () => {
+    const context = { user: { email: 'notemplates@example.com' }, db } as Context
+    const result = await getMyTemplates(context)
+    expect(result).toEqual([])
   })
 
-  test('No templates', async () => {
-    const clientQueryMock = jest.fn<() => Promise<{ rows: Template[] }>>().mockResolvedValue({ rows: [] })
-    const context = fromClientQueryMock(clientQueryMock)
+  test('Insert and Return', async () => {
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
+    const context = { user: { email: 'addandreturn@example.com' }, db } as Context
+    await updateTemplate(context, input)
     const templates = await getMyTemplates(context)
-    expect(templates).toEqual([])
+    expect(templates.length).toBe(1)
+    expect(templates[0]?.id).toBe(input.id)
+    expect(templates[0]?.name).toBe(input.name)
+    expect(templates[0]?.language).toBe(input.language)
+    expect(templates[0]?.text).toBe(input.text)
+    expect(templates[0]?.owner_id).toBe(context.user.email)
+    expect(templates[0]?.parameters).toEqual([])
   })
 
-  test('Some templates', async () => {
-    const template = { id: '1', name: 'Template 1', language: 'en', text: 'Sample text', parameters: [], owner_id: 'test@example.com', created_at: new Date(), updated_at: new Date() }
-    const clientQueryMock = jest.fn<() => Promise<{ rows: Template[] }>>().mockResolvedValue({ rows: [template] })
-    const context = fromClientQueryMock(clientQueryMock)
-    const templates = await getMyTemplates(context)
-    expect(templates).toEqual([template])
-  })
-})
-
-const template = { id: '550e8400-e29b-41d4-a716-446655440000', name: 'Valid Template', language: 'en', text: 'Sample text' }
-
-describe('updateTemplate', () => {
   test('Invalid Input', async () => {
-    const clientQueryMock = jest.fn<() => Promise<{ rows: Template[] }>>().mockResolvedValue({ rows: [] })
-    const context = fromClientQueryMock(clientQueryMock)
-    await expect(updateTemplate(context, { ...template, id: undefined } as any)).rejects.toThrow('Invalid template ID')
-    await expect(updateTemplate(context, { ...template, id: '1' })).rejects.toThrow('Invalid template ID')
-    await expect(updateTemplate(context, { ...template, name: undefined } as any)).rejects.toThrow('Template name is required')
-    await expect(updateTemplate(context, { ...template, name: '' })).rejects.toThrow('Template name is required')
-    await expect(updateTemplate(context, { ...template, language: undefined } as any)).rejects.toThrow('Template language is required')
-    await expect(updateTemplate(context, { ...template, language: '' })).rejects.toThrow('Template language is required')
-    await expect(updateTemplate(context, { ...template, text: undefined } as any)).rejects.toThrow('Template text is required')
-    await expect(updateTemplate(context, { ...template, text: '' })).rejects.toThrow('Template text is required')
-    await updateTemplate(context, template)
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
+    const context = { user: { email: 'invalidInput@example.com' }, db } as Context
+    await expect(updateTemplate(context, { ...input, id: undefined } as unknown as TemplateInput)).rejects.toThrow('Invalid template ID')
+    await expect(updateTemplate(context, { ...input, id: '1' })).rejects.toThrow('Invalid template ID')
+    await expect(updateTemplate(context, { ...input, name: undefined } as unknown as TemplateInput)).rejects.toThrow('Template name is required')
+    await expect(updateTemplate(context, { ...input, name: '' })).rejects.toThrow('Template name is required')
+    await expect(updateTemplate(context, { ...input, language: undefined } as unknown as TemplateInput)).rejects.toThrow('Template language is required')
+    await expect(updateTemplate(context, { ...input, language: '' })).rejects.toThrow('Template language is required')
+    await expect(updateTemplate(context, { ...input, text: undefined } as unknown as TemplateInput)).rejects.toThrow('Template text is required')
+    await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Template text is required')
+    const result = await getMyTemplates(context)
+    expect(result).toEqual([])
   })
 
-  test('Other User', async () => {
-    const existingTemplate = { ...template, owner_id: 'other@example.com', parameters: [], created_at: new Date(), updated_at: new Date() }
-    const clientQueryMock = jest.fn<() => Promise<{ rows: Template[] }>>().mockResolvedValue({ rows: [existingTemplate] })
-    const context = fromClientQueryMock(clientQueryMock)
-    await expect(updateTemplate(context, { ...template })).rejects.toThrow('You do not have permission to modify this template')
+  test('Update from other User', async () => {
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
+    const context1 = { user: { email: 'updatefromotheruser1@example.com' }, db } as Context
+    await updateTemplate(context1, input)
+    const context2 = { user: { email: 'updatefromotheruser2@example.com' }, db } as Context
+    await expect(updateTemplate(context2, { ...input, name: 'Modified Name' })).rejects.toThrow('You do not have permission to modify this template')
   })
 
-  // eslint-disable-next-line jest/no-commented-out-tests
-  /*
-  //TODO
-
-  test('Update', async () => {
+  test('Update from self', async () => {
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
+    const context = { user: { email: 'updatefromself@example.com' }, db } as Context
+    await updateTemplate(context, input)
+    await updateTemplate(context, { ...input, name: 'Modified Name' })
+    const templates = await getMyTemplates(context)
+    expect(templates.length).toBe(1)
+    expect(templates[0]?.id).toBe(input.id)
+    expect(templates[0]?.name).toBe('Modified Name')
+    expect(templates[0]?.language).toBe(input.language)
+    expect(templates[0]?.text).toBe(input.text)
+    expect(templates[0]?.owner_id).toBe(context.user.email)
+    expect(templates[0]?.parameters).toEqual([])
   })
-
-  test('Insert', async () => {
-  })
-  */
 })
 
 describe('extractParameters', () => {
-  // TODO: Tests for extractParameters are now in TemplateUtils.test.ts
+  test('Empty Text', () => {
+    const result = extractParameters('')
+    expect(result).toEqual([])
+  })
+
+  test('Only Param', () => {
+    const result = extractParameters('{param1:STRING}')
+    expect(result).toEqual([{ name: 'param1', type: 'STRING', startPosition: 0, endPosition: 15, values: undefined }])
+  })
+
+  test('Single Param', () => {
+    const result = extractParameters('This is a {param1:STRING} in a text')
+    expect(result).toEqual([{ name: 'param1', type: 'STRING', startPosition: 10, endPosition: 25, values: undefined }])
+  })
+
+  test('Multiple Parameters', () => {
+    const result = extractParameters('Params: {p1:STRING}, {p2:SELECT:val1,val2}, and {p3:TEXT}')
+    expect(result).toEqual([
+      { name: 'p1', type: 'STRING', startPosition: 8, endPosition: 19, values: undefined },
+      { name: 'p2', type: 'SELECT', startPosition: 21, endPosition: 42, values: ['val1', 'val2'] },
+      { name: 'p3', type: 'TEXT', startPosition: 48, endPosition: 57, values: undefined },
+    ])
+  })
 })

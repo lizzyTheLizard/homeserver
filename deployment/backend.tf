@@ -46,7 +46,7 @@ resource "scaleway_function" "backend" {
 }
 
 resource scaleway_sdb_sql_database "database" {
-  name    = "database"
+  name    = "homeserver-db"
   min_cpu = 0
   max_cpu = 1
 }

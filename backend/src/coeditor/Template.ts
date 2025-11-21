@@ -19,6 +19,14 @@ export interface TemplateInput {
   text: string
 }
 
+interface TemplateDBRow {
+  id: string
+  name: string
+  language: string
+  text: string
+  owner_id: string
+}
+
 export interface TemplateParameter {
   name: string
   type: 'STRING' | 'SELECT' | 'TEXT'
@@ -30,8 +38,8 @@ export interface TemplateParameter {
 export async function getMyTemplates(context: Context): Promise<Template[]> {
   return context.db.inTransaction<Template[]>(async (client) => {
     console.debug('Fetching user templates')
-    const templates = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1', [context.user.email])
-    return templates.rows
+    const templates = await client.query<TemplateDBRow>('SELECT * FROM template WHERE owner_id = $1', [context.user.email])
+    return templates.rows.map(row => ({ ...row, parameters: extractParameters(row.text) }))
   })
 }
 
@@ -58,30 +66,30 @@ function validateInput(template: TemplateInput) {
 }
 
 async function getTemplate(client: PoolClient, templateId: string): Promise<Template | undefined> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE id = $1', [templateId])
+  const result = await client.query<TemplateDBRow>('SELECT * FROM template WHERE id = $1', [templateId])
   if (result.rowCount === 0) return undefined
-  return result.rows[0]
+  return result.rows.map(row => ({ ...row, parameters: extractParameters(row.text) }))[0]
 }
 
 async function createTemplate(client: PoolClient, user: UserInfo, template: TemplateInput): Promise<Template> {
-  const parameters: TemplateParameter[] = extractParameters(template.text)
   await client.query(
-    'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6)',
-    [template.id, template.name, template.language, template.text, user.email, parameters],
+    'INSERT INTO template (id, name, language, text, owner_id) VALUES ($1, $2, $3, $4, $5)',
+    [template.id, template.name, template.language, template.text, user.email],
   )
+  const parameters = extractParameters(template.text)
   return { ...template, owner_id: user.email, parameters }
 }
 
 async function modifyTemplate(client: PoolClient, user: UserInfo, template: TemplateInput): Promise<Template> {
-  const parameters: TemplateParameter[] = extractParameters(template.text)
   await client.query(
-    'UPDATE template SET name = $1, language = $2, text = $3, parameters = $4 WHERE id = $5',
-    [template.name, template.language, template.text, parameters, template.id],
+    'UPDATE template SET name = $1, language = $2, text = $3 WHERE id = $4',
+    [template.name, template.language, template.text, template.id],
   )
+  const parameters = extractParameters(template.text)
   return { ...template, owner_id: user.email, parameters }
 }
 
-function extractParameters(text: string): TemplateParameter[] {
+export function extractParameters(text: string): TemplateParameter[] {
   const result: TemplateParameter[] = []
   for (const match of text.matchAll((/\{([^}]+)\}/g))) {
     const matchedString = match[1] ?? ''
@@ -98,7 +106,8 @@ function extractParameters(text: string): TemplateParameter[] {
       throw expectedError(message, 400, 'Invalid parameter format')
     }
     const values = parts.length > 2 ? parts[2]?.split(',') : undefined
-    const parameter: TemplateParameter = { name, type, values, startPosition: match.index, endPosition: match.index + match.length }
+    const matchedLength = matchedString.length + 2 // +2 for the curly braces
+    const parameter: TemplateParameter = { name, type, values, startPosition: match.index, endPosition: match.index + matchedLength }
     result.push(parameter)
   }
   return result

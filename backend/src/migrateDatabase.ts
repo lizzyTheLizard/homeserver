@@ -1,4 +1,4 @@
-import { Pool, type PoolClient } from 'pg'
+import { type PoolClient } from 'pg'
 import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
 import { dirname } from 'path'
@@ -17,24 +17,12 @@ interface PlannedDatabaseMigration {
   hash: string
 }
 
-export async function migrateDatabase(pool: Pool): Promise<void> {
+export async function migrateDatabase(client: PoolClient): Promise<void> {
   console.log('Starting Database Migrations...')
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const planned = await getAllPlannedMigrations()
-    const existing = await getAllExistingMigrations(client)
-    validateExistingMigrations(existing, planned)
-    await executeNewMigrations(client, existing, planned)
-    await client.query('COMMIT')
-  }
-  catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  }
-  finally {
-    client.release()
-  }
+  const planned = await getAllPlannedMigrations()
+  const existing = await getAllExistingMigrations(client)
+  validateExistingMigrations(existing, planned)
+  await executeNewMigrations(client, existing, planned)
   console.log('Database migrations successful')
 }
 
