@@ -3,8 +3,8 @@ export interface Discussion {
   text: string
   title: string
   owner_id: string
-  templateId: string
-  startTime: Date
+  template_id: string
+  start_time: Date
   context: string
   parameters: Record<string, string>
 }

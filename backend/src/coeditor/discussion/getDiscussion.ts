@@ -8,7 +8,7 @@ export async function getDiscussion(context: Context, discussionId: string): Pro
     const discussion = await client.query<Discussion>('SELECT * FROM discussion WHERE id = $1', [discussionId])
     if (discussion.rowCount === 0)
       throw expectedError(`Discussion ${discussionId} not found`, 404, 'Discussion not found')
-    if (discussion.rows[0]?.owner_d !== context.user.email)
+    if (discussion.rows[0]?.owner_id !== context.user.email)
       throw expectedError('You do not have permission to get this discussion', 403)
     return discussion.rows[0]
   })

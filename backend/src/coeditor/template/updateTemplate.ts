@@ -38,8 +38,8 @@ function validateInput(input: unknown): input is TemplateInput {
   return true
 }
 
-async function getTemplateOwner(client: PoolClient, templateId: string): Promise<string | undefined> {
-  const result = await client.query<{ owner_id: string }>('SELECT owner_id FROM template WHERE id = $1', [templateId])
+async function getTemplateOwner(client: PoolClient, template_id: string): Promise<string | undefined> {
+  const result = await client.query<{ owner_id: string }>('SELECT owner_id FROM template WHERE id = $1', [template_id])
   if (result.rowCount === 0) return undefined
   return result.rows[0]?.owner_id
 }

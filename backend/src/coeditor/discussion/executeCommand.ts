@@ -21,7 +21,7 @@ export async function executeCommand(context: Context, input: unknown): Promise<
   return context.db.inTransaction<Discussion>(async (client) => {
     if (!validateInput(input)) throw expectedError('Invalid command input', 400, 'Bad Request')
     const existingDiscussion = await getDiscussion(client, input.discussionId)
-    const template = await getTemplate(client, context.user, existingDiscussion.templateId)
+    const template = await getTemplate(client, context.user, existingDiscussion.template_id)
     const contextString = createContextString(template.text, template.parameters, input.parameters)
     const newText = await getNewText(input, contextString)
     const discussion: Discussion = {
@@ -82,8 +82,8 @@ function getNewText(input: CommandInput, _context: string): Promise<string> {
   return Promise.resolve(input.currentText)
 }
 
-async function getTemplate(client: PoolClient, user: UserInfo, templateId: string): Promise<Template> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE id = $1 AND owner_id = $2', [templateId, user.email])
+async function getTemplate(client: PoolClient, user: UserInfo, template_id: string): Promise<Template> {
+  const result = await client.query<Template>('SELECT * FROM template WHERE id = $1 AND owner_id = $2', [template_id, user.email])
   if (!result.rows[0]) throw expectedError('Template not found', 404, 'Template Not Found')
   return result.rows[0]
 }
