@@ -20,6 +20,9 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.3.14
+        version: 0.3.14
       '@eslint/js':
         specifier: ^9.39.1
         version: 9.39.1
@@ -44,9 +47,6 @@ importers:
       globals:
         specifier: ^16.5.0
         version: 16.5.0
-      pgmock:
-        specifier: ^1.0.3
-        version: 1.0.3
       rimraf:
         specifier: ^6.1.0
         version: 6.1.0
@@ -386,6 +386,9 @@ packages:
     engines: {node: '>=20.0.0', yarn: '>=1.22.18'}
     peerDependencies:
       storybook: ^0.0.0-0 || ^9.0.0 || ^9.1.0-0 || ^9.2.0-0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0
+
+  '@electric-sql/pglite@0.3.14':
+    resolution: {integrity: sha512-3DB258dhqdsArOI1fIt7cb9RpUOgcDg5hXWVgVHAeqVQ/qxtFy605QKs4gx6mFq3jWsSPqDN8TgSEsqC3OfV9Q==}
 
   '@epic-web/invariant@1.0.0':
     resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
@@ -2965,9 +2968,6 @@ packages:
       pg-native:
         optional: true
 
-  pgmock@1.0.3:
-    resolution: {integrity: sha512-5Lo17esUvwOq9TvAZMeFZRB69+QiSCpLrdwbsxDqGoj6yVZi+6umMiJvFiWwgo+YlNfWe1kY9Djw360T/J0AWg==}
-
   pgpass@1.0.5:
     resolution: {integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==}
 
@@ -3977,6 +3977,8 @@ snapshots:
     transitivePeerDependencies:
       - '@chromatic-com/cypress'
       - '@chromatic-com/playwright'
+
+  '@electric-sql/pglite@0.3.14': {}
 
   '@epic-web/invariant@1.0.0': {}
 
@@ -6608,8 +6610,6 @@ snapshots:
       pgpass: 1.0.5
     optionalDependencies:
       pg-cloudflare: 1.2.7
-
-  pgmock@1.0.3: {}
 
   pgpass@1.0.5:
     dependencies:

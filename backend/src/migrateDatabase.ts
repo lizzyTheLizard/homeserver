@@ -55,8 +55,10 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {
-  console.debug(`Running migration ${migration.name}`)
-  await client.query(migration.content)
+  const commands = migration.content.split(';').map(c => c.trim()).filter(c => c.length > 0)
+  for (const command of commands) {
+    await client.query(command)
+  }
   await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
   console.log(`Migration ${migration.name} complete`)
 }

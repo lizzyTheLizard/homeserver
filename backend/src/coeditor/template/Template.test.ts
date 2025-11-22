@@ -1,27 +1,22 @@
 import { beforeAll, describe, expect, test } from 'vitest'
-import type { Context, DatabaseHandle } from '../Context.js'
-import { extractParameters, getMyTemplates, updateTemplate, type TemplateInput } from './Template.js'
-import { Pool, type PoolClient } from 'pg'
-import { migrateDatabase } from '../migrateDatabase.js'
-import { PostgresMock } from 'pgmock'
+import type { Context, DatabaseHandle } from '../../Context.js'
+import { type PoolClient } from 'pg'
+import { migrateDatabase } from '../../migrateDatabase.js'
 import { v4 as uuid } from 'uuid'
+import { getMyTemplates } from './getMyTemplates.js'
+import { updateTemplate } from './updateTemplate.js'
+import { extractParameters } from './extractParameters.js'
+import { PGlite } from '@electric-sql/pglite'
 
-const mock = await PostgresMock.create()
-const connectionString = await mock.listen(5432)
-
-describe('Templates', () => {
+describe('Template Integration Tests', () => {
   let db: DatabaseHandle | undefined = undefined
 
   beforeAll(async () => {
-    const pool = new Pool({ connectionString })
-    const client = await pool.connect()
-    await migrateDatabase(client)
-    client.release()
+    const pglite = new PGlite() as unknown as PoolClient
+    await migrateDatabase(pglite)
     db = {
       inTransaction: async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
-        const client = await pool.connect()
-        const result = await fn(client)
-        client.release()
+        const result = await fn(pglite)
         return result
       },
     }
@@ -47,17 +42,30 @@ describe('Templates', () => {
     expect(templates[0]?.parameters).toEqual([])
   })
 
+  test('Parameters', async () => {
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text with {param:SELECT:val1,val2}' }
+    const context = { user: { email: 'parametersf@example.com' }, db } as Context
+    await updateTemplate(context, input)
+    const templates = await getMyTemplates(context)
+    expect(templates.length).toBe(1)
+    expect(templates[0]?.parameters).toEqual([{ name: 'param', type: 'SELECT', values: ['val1', 'val2'], startPosition: 17, endPosition: 41 }])
+    await updateTemplate(context, { ...input, text: '{test:String}' })
+    const templates2 = await getMyTemplates(context)
+    expect(templates2.length).toBe(1)
+    expect(templates2[0]?.parameters).toEqual([{ name: 'test', type: 'STRING', startPosition: 0, endPosition: 13 }])
+  })
+
   test('Invalid Input', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
     const context = { user: { email: 'invalidInput@example.com' }, db } as Context
-    await expect(updateTemplate(context, { ...input, id: undefined } as unknown as TemplateInput)).rejects.toThrow('Invalid template ID')
-    await expect(updateTemplate(context, { ...input, id: '1' })).rejects.toThrow('Invalid template ID')
-    await expect(updateTemplate(context, { ...input, name: undefined } as unknown as TemplateInput)).rejects.toThrow('Template name is required')
-    await expect(updateTemplate(context, { ...input, name: '' })).rejects.toThrow('Template name is required')
-    await expect(updateTemplate(context, { ...input, language: undefined } as unknown as TemplateInput)).rejects.toThrow('Template language is required')
-    await expect(updateTemplate(context, { ...input, language: '' })).rejects.toThrow('Template language is required')
-    await expect(updateTemplate(context, { ...input, text: undefined } as unknown as TemplateInput)).rejects.toThrow('Template text is required')
-    await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Template text is required')
+    await expect(updateTemplate(context, { ...input, id: undefined })).rejects.toThrow('ID is required')
+    await expect(updateTemplate(context, { ...input, id: '1' })).rejects.toThrow('Invalid ID \'1\'')
+    await expect(updateTemplate(context, { ...input, name: undefined })).rejects.toThrow('Name is required')
+    await expect(updateTemplate(context, { ...input, name: '' })).rejects.toThrow('Name is required')
+    await expect(updateTemplate(context, { ...input, language: undefined })).rejects.toThrow('Language is required')
+    await expect(updateTemplate(context, { ...input, language: '' })).rejects.toThrow('Language is required')
+    await expect(updateTemplate(context, { ...input, text: undefined })).rejects.toThrow('Text is required')
+    await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Text is required')
     const result = await getMyTemplates(context)
     expect(result).toEqual([])
   })
@@ -111,3 +119,5 @@ describe('extractParameters', () => {
     ])
   })
 })
+
+describe.todo('createContextString')
