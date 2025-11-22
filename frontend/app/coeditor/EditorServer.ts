@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import type { EditorState } from './EditorState'
 import { BACKEND_URL } from '../config'
-import type { Template } from 'homeserver-backend/src/coeditor/Template'
+import type { Template } from 'homeserver-backend/src/coeditor/template/Template.js'
 import type { User } from '../general/auth/AuthContext'
 
 export function useTemplateQuery(user: User | undefined): UseQueryResult<Template[], unknown> {
