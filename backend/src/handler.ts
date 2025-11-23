@@ -6,7 +6,7 @@ import { type Context, type Event } from './Context.js'
 import { getMyTemplates } from './coeditor/template/getMyTemplates.js'
 import { updateTemplate } from './coeditor/template/updateTemplate.js'
 import { getDiscussion, getMyDiscussions } from './coeditor/discussion/getDiscussion.js'
-import { executeCommand } from './coeditor/discussion/executeCommand.js'
+import { executeCommand } from './coeditor/command/executeCommand.js'
 import { startDiscussion } from './coeditor/discussion/startDiscussion.js'
 
 const db = await getDatabaseHandle()

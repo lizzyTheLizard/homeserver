@@ -35,7 +35,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
     );
   `)
   const result = await client.query<DatabaseMigration>(`SELECT name, hash, run_on FROM migrations;`)
-  console.debug(`Found ${result.rowCount?.toString() ?? '0'} existing migrations`)
+  console.debug(`Found ${result.rows.length.toString()} existing migrations`)
   return result.rows
 }
 

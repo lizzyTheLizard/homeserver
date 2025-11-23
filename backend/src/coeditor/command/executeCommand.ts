@@ -1,6 +1,6 @@
 import type { PoolClient } from 'pg'
 import type { Context, UserInfo } from '../../Context.js'
-import type { Discussion } from './Discussion.js'
+import type { Discussion } from '../discussion/Discussion.js'
 import { expectedError } from '../../BackendError.js'
 import { createContextString } from '../template/extractParameters.js'
 import { validate } from 'uuid'

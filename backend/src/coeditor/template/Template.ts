@@ -4,6 +4,8 @@ export interface Template {
   language: string
   text: string
   owner_id: string
+  created_at: Date
+  updated_at: Date
   parameters: TemplateParameter[]
 }
 

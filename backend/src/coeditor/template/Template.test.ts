@@ -20,44 +20,37 @@ describe('Template Integration Tests', () => {
         return result
       },
     }
-  }, 100000)
+  })
 
   test('No Templates', async () => {
-    const context = { user: { email: 'notemplates@example.com' }, db } as Context
+    const context = { user: { email: 'notemplates@template.com' }, db } as Context
     const result = await getMyTemplates(context)
     expect(result).toEqual([])
   })
 
   test('Insert and Return', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
-    const context = { user: { email: 'addandreturn@example.com' }, db } as Context
+    const context = { user: { email: 'addandreturn@template.com' }, db } as Context
     await updateTemplate(context, input)
     const templates = await getMyTemplates(context)
-    expect(templates.length).toBe(1)
-    expect(templates[0]?.id).toBe(input.id)
-    expect(templates[0]?.name).toBe(input.name)
-    expect(templates[0]?.language).toBe(input.language)
-    expect(templates[0]?.text).toBe(input.text)
-    expect(templates[0]?.owner_id).toBe(context.user.email)
-    expect(templates[0]?.parameters).toEqual([])
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    expect(templates).toEqual([{ ...input, created_at: expect.any(Date), updated_at: expect.any(Date), owner_id: context.user.email, parameters: [] }])
   })
 
   test('Parameters', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text with {param:SELECT:val1,val2}' }
-    const context = { user: { email: 'parametersf@example.com' }, db } as Context
+    const context = { user: { email: 'parametersf@template.com' }, db } as Context
     await updateTemplate(context, input)
     const templates = await getMyTemplates(context)
-    expect(templates.length).toBe(1)
     expect(templates[0]?.parameters).toEqual([{ name: 'param', type: 'SELECT', values: ['val1', 'val2'], startPosition: 17, endPosition: 41 }])
     await updateTemplate(context, { ...input, text: '{test:String}' })
     const templates2 = await getMyTemplates(context)
-    expect(templates2.length).toBe(1)
-    expect(templates2[0]?.parameters).toEqual([{ name: 'test', type: 'STRING', startPosition: 0, endPosition: 13 }])
+    expect(templates2[0]?.parameters).toEqual([{ name: 'test', type: 'STRING', startPosition: 0, endPosition: 13, values: [] }])
   })
 
   test('Invalid Input', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
-    const context = { user: { email: 'invalidInput@example.com' }, db } as Context
+    const context = { user: { email: 'invalidInput@template.com' }, db } as Context
     await expect(updateTemplate(context, { ...input, id: undefined })).rejects.toThrow('ID is required')
     await expect(updateTemplate(context, { ...input, id: '1' })).rejects.toThrow('Invalid ID \'1\'')
     await expect(updateTemplate(context, { ...input, name: undefined })).rejects.toThrow('Name is required')
@@ -72,25 +65,20 @@ describe('Template Integration Tests', () => {
 
   test('Update from other User', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
-    const context1 = { user: { email: 'updatefromotheruser1@example.com' }, db } as Context
+    const context1 = { user: { email: 'updatefromotheruser1@template.com' }, db } as Context
     await updateTemplate(context1, input)
-    const context2 = { user: { email: 'updatefromotheruser2@example.com' }, db } as Context
+    const context2 = { user: { email: 'updatefromotheruser2@template.com' }, db } as Context
     await expect(updateTemplate(context2, { ...input, name: 'Modified Name' })).rejects.toThrow('You do not have permission to modify this template')
   })
 
   test('Update from self', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
-    const context = { user: { email: 'updatefromself@example.com' }, db } as Context
+    const context = { user: { email: 'updatefromself@template.com' }, db } as Context
     await updateTemplate(context, input)
     await updateTemplate(context, { ...input, name: 'Modified Name' })
     const templates = await getMyTemplates(context)
-    expect(templates.length).toBe(1)
-    expect(templates[0]?.id).toBe(input.id)
-    expect(templates[0]?.name).toBe('Modified Name')
-    expect(templates[0]?.language).toBe(input.language)
-    expect(templates[0]?.text).toBe(input.text)
-    expect(templates[0]?.owner_id).toBe(context.user.email)
-    expect(templates[0]?.parameters).toEqual([])
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    expect(templates).toEqual([{ ...input, created_at: expect.any(Date), updated_at: expect.any(Date), name: 'Modified Name', owner_id: context.user.email, parameters: [] }])
   })
 })
 
@@ -102,20 +90,20 @@ describe('extractParameters', () => {
 
   test('Only Param', () => {
     const result = extractParameters('{param1:STRING}')
-    expect(result).toEqual([{ name: 'param1', type: 'STRING', startPosition: 0, endPosition: 15, values: undefined }])
+    expect(result).toEqual([{ name: 'param1', type: 'STRING', startPosition: 0, endPosition: 15, values: [] }])
   })
 
   test('Single Param', () => {
     const result = extractParameters('This is a {param1:STRING} in a text')
-    expect(result).toEqual([{ name: 'param1', type: 'STRING', startPosition: 10, endPosition: 25, values: undefined }])
+    expect(result).toEqual([{ name: 'param1', type: 'STRING', startPosition: 10, endPosition: 25, values: [] }])
   })
 
   test('Multiple Parameters', () => {
     const result = extractParameters('Params: {p1:STRING}, {p2:SELECT:val1,val2}, and {p3:TEXT}')
     expect(result).toEqual([
-      { name: 'p1', type: 'STRING', startPosition: 8, endPosition: 19, values: undefined },
+      { name: 'p1', type: 'STRING', startPosition: 8, endPosition: 19, values: [] },
       { name: 'p2', type: 'SELECT', startPosition: 21, endPosition: 42, values: ['val1', 'val2'] },
-      { name: 'p3', type: 'TEXT', startPosition: 48, endPosition: 57, values: undefined },
+      { name: 'p3', type: 'TEXT', startPosition: 48, endPosition: 57, values: [] },
     ])
   })
 })
