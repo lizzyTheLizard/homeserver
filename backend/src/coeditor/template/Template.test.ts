@@ -51,14 +51,14 @@ describe('Template Integration Tests', () => {
   test('Invalid Input', async () => {
     const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
     const context = { user: { email: 'invalidInput@template.com' }, db } as Context
-    await expect(updateTemplate(context, { ...input, id: undefined })).rejects.toThrow('ID is required')
-    await expect(updateTemplate(context, { ...input, id: '1' })).rejects.toThrow('Invalid ID \'1\'')
-    await expect(updateTemplate(context, { ...input, name: undefined })).rejects.toThrow('Name is required')
-    await expect(updateTemplate(context, { ...input, name: '' })).rejects.toThrow('Name is required')
-    await expect(updateTemplate(context, { ...input, language: undefined })).rejects.toThrow('Language is required')
-    await expect(updateTemplate(context, { ...input, language: '' })).rejects.toThrow('Language is required')
-    await expect(updateTemplate(context, { ...input, text: undefined })).rejects.toThrow('Text is required')
-    await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Text is required')
+    await expect(updateTemplate(context, { ...input, id: undefined })).rejects.toThrow('Id can\'t be blank')
+    await expect(updateTemplate(context, { ...input, id: '1' })).rejects.toThrow('Id must be a valid UUID')
+    await expect(updateTemplate(context, { ...input, name: undefined })).rejects.toThrow('Name can\'t be blank')
+    await expect(updateTemplate(context, { ...input, name: '' })).rejects.toThrow('Name can\'t be blank')
+    await expect(updateTemplate(context, { ...input, language: undefined })).rejects.toThrow('Language can\'t be blank')
+    await expect(updateTemplate(context, { ...input, language: '' })).rejects.toThrow('Language can\'t be blank')
+    await expect(updateTemplate(context, { ...input, text: undefined })).rejects.toThrow('Text can\'t be blank')
+    await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Text can\'t be blank')
     const result = await getMyTemplates(context)
     expect(result).toEqual([])
   })

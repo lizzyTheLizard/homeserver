@@ -19,6 +19,9 @@ importers:
       validate-azure-ad-token:
         specifier: ^2.2.0
         version: 2.2.0
+      validate.js:
+        specifier: ^0.13.1
+        version: 0.13.1
     devDependencies:
       '@electric-sql/pglite':
         specifier: ^0.3.14
@@ -3722,6 +3725,9 @@ packages:
   validate-npm-package-name@5.0.1:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  validate.js@0.13.1:
+    resolution: {integrity: sha512-PnFM3xiZ+kYmLyTiMgTYmU7ZHkjBZz2/+F0DaALc/uUtVzdCt1wAosvYJ5hFQi/hz8O4zb52FQhHZRC+uVkJ+g==}
 
   vite-node@3.2.4:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
@@ -7576,6 +7582,8 @@ snapshots:
       spdx-expression-parse: 3.0.1
 
   validate-npm-package-name@5.0.1: {}
+
+  validate.js@0.13.1: {}
 
   vite-node@3.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass@1.93.2)(terser@5.44.0)(tsx@4.20.6):
     dependencies:

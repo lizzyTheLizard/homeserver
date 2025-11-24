@@ -2,16 +2,10 @@ import type { PoolClient } from 'pg'
 import type { Context } from '../../Context.js'
 import type { Discussion } from './Discussion.js'
 import { expectedError } from '../../BackendError.js'
-import { validate } from 'uuid'
 import { createContextString } from '../template/extractParameters.js'
 import type { Template } from '../template/Template.js'
-
-interface DiscussionInput {
-  id: string
-  text: string
-  template_id: string
-  parameters: Record<string, string>
-}
+import { validate } from 'validate.js'
+import { DiscussionInputConstraints, type DiscussionInput } from './DicsussionInput.js'
 
 export async function startDiscussion(context: Context, input: unknown): Promise<Discussion> {
   console.debug(`Starting discussion for ${context.user.email}`)
@@ -37,22 +31,9 @@ export async function startDiscussion(context: Context, input: unknown): Promise
 }
 
 function validateInput(input: unknown): input is DiscussionInput {
-  if (typeof input !== 'object' || input === null) return false
-  if (!('id' in input) || typeof input.id !== 'string')
-    throw expectedError('ID is required', 400)
-  if (!validate(input.id))
-    throw expectedError('Invalid ID \'' + input.id + '\'', 400, 'Invalid ID')
-  if (!('text' in input) || !input.text)
-    throw expectedError('Text is required', 400)
-  if (typeof input.text !== 'string')
-    throw expectedError('Invalid text \'' + JSON.stringify(input.text) + '\'', 400, 'Invalid Text')
-  if (!('template_id' in input) || typeof input.template_id !== 'string')
-    throw expectedError('Template ID is required', 400)
-  if (!validate(input.template_id))
-    throw expectedError('Invalid Template ID \'' + input.template_id + '\'', 400, 'Invalid Template ID')
-  if (!('parameters' in input) || typeof input.parameters !== 'object' || input.parameters === null)
-    throw expectedError('Parameters are required', 400)
-  return true
+  const result = validate(input, DiscussionInputConstraints, { format: 'flat' }) as string[] | undefined
+  if (!result?.[0]) return true
+  throw expectedError(result[0], 400)
 }
 
 async function findTemplateById(client: PoolClient, id: string): Promise<Template | undefined> {

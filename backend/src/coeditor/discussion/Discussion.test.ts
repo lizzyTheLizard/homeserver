@@ -105,15 +105,15 @@ describe('Discussion Integration Tests', () => {
     const template = await createTemplate(context)
     const input = { id: uuid(), text: 'Initial discussion text', template_id: template.id, parameters: { param: 'test value' } }
 
-    await expect(startDiscussion(context, { ...input, id: undefined })).rejects.toThrow('ID is required')
-    await expect(startDiscussion(context, { ...input, id: '1' })).rejects.toThrow('Invalid ID \'1\'')
-    await expect(startDiscussion(context, { ...input, text: undefined })).rejects.toThrow('Text is required')
-    await expect(startDiscussion(context, { ...input, text: '' })).rejects.toThrow('Text is required')
-    await expect(startDiscussion(context, { ...input, template_id: undefined })).rejects.toThrow('Template ID is required')
-    await expect(startDiscussion(context, { ...input, template_id: '1' })).rejects.toThrow('Invalid Template ID \'1\'')
+    await expect(startDiscussion(context, { ...input, id: undefined })).rejects.toThrow('Id can\'t be blank')
+    await expect(startDiscussion(context, { ...input, id: '1' })).rejects.toThrow('Id must be a valid UUID')
+    await expect(startDiscussion(context, { ...input, text: undefined })).rejects.toThrow('Text can\'t be blank')
+    await expect(startDiscussion(context, { ...input, text: '' })).rejects.toThrow('Text can\'t be blank')
+    await expect(startDiscussion(context, { ...input, template_id: undefined })).rejects.toThrow('Template id can\'t be blank')
+    await expect(startDiscussion(context, { ...input, template_id: '1' })).rejects.toThrow('Template id must be a valid UUID')
     await expect(startDiscussion(context, { ...input, template_id: uuid() })).rejects.toThrow('Template not found')
     await expect(startDiscussion(context, { ...input, template_id: templateOther.id })).rejects.toThrow('You do not have permission to use this template')
-    await expect(startDiscussion(context, { ...input, parameters: undefined })).rejects.toThrow('Parameters are required')
+    await expect(startDiscussion(context, { ...input, parameters: undefined })).rejects.toThrow('Parameters can\'t be blank')
     await expect(startDiscussion(context, { ...input, parameters: {} })).rejects.toThrow('Missing parameter \'param\'')
 
     await startDiscussion(context, input)

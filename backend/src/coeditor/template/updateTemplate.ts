@@ -3,14 +3,8 @@ import { extractParameters } from './extractParameters.js'
 import type { Context, UserInfo } from '../../Context.js'
 import type { Template } from './Template.js'
 import { expectedError } from '../../BackendError.js'
-import { validate } from 'uuid'
-
-interface TemplateInput {
-  id: string
-  name: string
-  language: string
-  text: string
-}
+import { validate } from 'validate.js'
+import { TemplateInputConstraints, type TemplateInput } from './TemplateInput.js'
 
 export async function updateTemplate(context: Context, body: unknown): Promise<Template> {
   console.debug(`Updating template for ${context.user.email}`)
@@ -26,18 +20,9 @@ export async function updateTemplate(context: Context, body: unknown): Promise<T
 }
 
 function validateInput(input: unknown): input is TemplateInput {
-  if (typeof input !== 'object' || input === null) return false
-  if (!('id' in input) || typeof input.id !== 'string')
-    throw expectedError('ID is required', 400)
-  if (!validate(input.id))
-    throw expectedError('Invalid ID \'' + input.id + '\'', 400, 'Invalid ID')
-  if (!('name' in input) || typeof input.name !== 'string' || input.name.trim().length === 0)
-    throw expectedError('Name is required', 400)
-  if (!('language' in input) || typeof input.language !== 'string' || input.language.trim().length === 0)
-    throw expectedError('Language is required', 400)
-  if (!('text' in input) || typeof input.text !== 'string' || input.text.trim().length === 0)
-    throw expectedError('Text is required', 400)
-  return true
+  const result = validate(input, TemplateInputConstraints, { format: 'flat' }) as string[] | undefined
+  if (!result?.[0]) return true
+  throw expectedError(result[0], 400)
 }
 
 async function getTemplateOwner(client: PoolClient, template_id: string): Promise<string | undefined> {
