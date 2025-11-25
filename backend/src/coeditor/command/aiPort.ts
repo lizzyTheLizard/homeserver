@@ -8,7 +8,7 @@ export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command
   const nextMessage = createNextMessage(input)
   const start = performance.now()
   const response = await client.responses.create({
-    model: 'gpt-4o',
+    model: 'gpt-oss-120b',
     input: [systemMessage, ...messagesSoFar, nextMessage],
   })
   const end = performance.now()
@@ -16,8 +16,6 @@ export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command
   if (output.error) throw new Error(`AI Port Error: ${output.error}`)
   return { ...output, durationMs: end - start }
 }
-
-// TODO: Set process.env.OPENAI_API_KEY,
 
 const client = new OpenAI({ baseURL: 'https://api.scaleway.ai/v1' })
 
@@ -34,7 +32,7 @@ You can answer questions about the text, execute commands and replace text. You 
 You will answer with a JSON object with the following fields:
 - newText: The text as changed by the command. If a selection has been send, this only has to be the replacement of the selected text.
 - newTitle: The new title of the document. The title must be max 256 characters long. For short texts, the title can be the text itself, for longer texts, it should be a summary of the text. If the old title still fits you can keep it
-- error: If an error occurred, this field contains the error message. If no error occurred, this field is empty.
+- error: If an error occurred, this field contains the error message. If no error occurred, this field is not present.
 You will never change the profile or context of the discussion, only the text. Do not response any other text that this JSON object.` }
 
 function mapCommandsSoFar(command: Command): ResponseInputItem[] {

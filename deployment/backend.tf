@@ -4,20 +4,20 @@ resource "scaleway_iam_application" "backend" {
 
 resource "scaleway_iam_api_key" "backend" {
   application_id = scaleway_iam_application.backend.id
-  description    = "API key for the backend to access the database"
+  description    = "API key for the backend to access other services"
 }
 
-data scaleway_account_project "homeserver" {
+data "scaleway_account_project" "homeserver" {
   name = "Homeserver"
 }
 
-resource scaleway_iam_policy "db_access" {
-  name           = "my policy"
-  description    = "gives app access to serverless database in project"
+resource "scaleway_iam_policy" "backend_service_access" {
+  name           = "Backend Service Access Policy"
+  description    = "gives backend app access to other services project"
   application_id = scaleway_iam_application.backend.id
   rule {
     project_ids          = [data.scaleway_account_project.homeserver.id]
-    permission_set_names = ["ServerlessSQLDatabaseReadWrite"]
+    permission_set_names = ["ServerlessSQLDatabaseReadWrite", "GenerativeApisModelAccess"]
   }
 }
 
@@ -40,12 +40,13 @@ resource "scaleway_function" "backend" {
       scaleway_iam_application.backend.id,
       scaleway_iam_api_key.backend.secret_key,
       trimprefix(scaleway_sdb_sql_database.database.endpoint, "postgres://"),
-    )
+    ),
+    OPENAI_API_KEY = scaleway_iam_api_key.backend.secret_key
   }
   deploy = true
 }
 
-resource scaleway_sdb_sql_database "database" {
+resource "scaleway_sdb_sql_database" "database" {
   name    = "homeserver-db"
   min_cpu = 0
   max_cpu = 1

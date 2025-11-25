@@ -4,11 +4,12 @@ import { type PoolClient } from 'pg'
 import { migrateDatabase } from '../../migrateDatabase.js'
 import { v4 as uuid } from 'uuid'
 import { updateTemplate } from './updateTemplate.js'
-import { extractParameters } from './extractParameters.js'
+import { extractParameters, createContextString } from './extractParameters.js'
 import { PGlite } from '@electric-sql/pglite'
 import { getMyTemplates } from './getTemplates.js'
+import type { Template } from './Template.js'
 
-describe('Template Integration Tests', () => {
+describe.concurrent('Template Integration Tests', () => {
   let db: DatabaseHandle | undefined = undefined
 
   beforeAll(async () => {
@@ -82,7 +83,7 @@ describe('Template Integration Tests', () => {
   })
 })
 
-describe('extractParameters', () => {
+describe.concurrent('extractParameters', () => {
   test('Empty Text', () => {
     const result = extractParameters('')
     expect(result).toEqual([])
@@ -108,4 +109,143 @@ describe('extractParameters', () => {
   })
 })
 
-describe.todo('createContextString')
+describe.concurrent('createContextString', () => {
+  test('Empty Template', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: '',
+      parameters: [],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, {})
+    expect(result).toBe('')
+  })
+
+  test('Template Without Parameters', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Simple text without parameters',
+      parameters: [],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, {})
+    expect(result).toBe('Simple text without parameters')
+  })
+
+  test('Single Parameter Replacement', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Hello {name:STRING}',
+      parameters: [{ name: 'name', type: 'STRING', startPosition: 6, endPosition: 19, values: [] }],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, { name: 'World' })
+    expect(result).toBe('Hello World')
+  })
+
+  test('Multiple Parameters Replacement', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Hello {name:STRING}, you are {age:STRING} years old',
+      parameters: [
+        { name: 'name', type: 'STRING', startPosition: 6, endPosition: 19, values: [] },
+        { name: 'age', type: 'STRING', startPosition: 29, endPosition: 41, values: [] },
+      ],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, { name: 'John', age: '25' })
+    expect(result).toBe('Hello John, you are 25 years old')
+  })
+
+  test('SELECT Parameter Type', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Your choice: {option:SELECT:val1,val2}',
+      parameters: [{ name: 'option', type: 'SELECT', startPosition: 13, endPosition: 38, values: ['val1', 'val2'] }],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, { option: 'val1' })
+    expect(result).toBe('Your choice: val1')
+  })
+
+  test('TEXT Parameter Type', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Description: {desc:TEXT}',
+      parameters: [{ name: 'desc', type: 'TEXT', startPosition: 13, endPosition: 24, values: [] }],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, { desc: 'Long text description' })
+    expect(result).toBe('Description: Long text description')
+  })
+
+  test('Missing Parameter Throws Error', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Hello {name:STRING}',
+      parameters: [{ name: 'name', type: 'STRING', startPosition: 6, endPosition: 19, values: [] }],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    expect(() => createContextString(template, {})).toThrow('Missing parameter \'name\'')
+  })
+
+  test('Missing One of Multiple Parameters', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Hello {name:STRING}, you are {age:STRING} years old',
+      parameters: [
+        { name: 'name', type: 'STRING', startPosition: 6, endPosition: 19, values: [] },
+        { name: 'age', type: 'STRING', startPosition: 30, endPosition: 42, values: [] },
+      ],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    expect(() => createContextString(template, { name: 'John' })).toThrow('Missing parameter \'age\'')
+  })
+
+  test('Extra Values Are Ignored', () => {
+    const template: Template = {
+      id: uuid(),
+      name: 'Test',
+      language: 'en',
+      text: 'Hello {name:STRING}',
+      parameters: [{ name: 'name', type: 'STRING', startPosition: 6, endPosition: 19, values: [] }],
+      owner_id: 'test@test.com',
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    const result = createContextString(template, { name: 'World', extra: 'ignored' })
+    expect(result).toBe('Hello World')
+  })
+})

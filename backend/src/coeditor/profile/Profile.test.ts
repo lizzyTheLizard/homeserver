@@ -6,7 +6,7 @@ import { updateProfile } from './updateProfile.js'
 import { PGlite } from '@electric-sql/pglite'
 import { getMyProfiles } from './getProfiles.js'
 
-describe('Profile Integration Tests', () => {
+describe.concurrent('Profile Integration Tests', () => {
   let db: DatabaseHandle | undefined = undefined
 
   beforeAll(async () => {

@@ -31,11 +31,13 @@ function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SE
 
 export function createContextString(template: Template, values: Record<string, string>): string {
   let result = template.text
+  let offset = 0
   for (const param of template.parameters) {
     const value = values[param.name]
     if (value === undefined)
       throw expectedError(`Missing parameter '${param.name}'`, 400, 'Missing parameter')
-    result = result.substring(0, param.startPosition) + value + result.substring(param.endPosition)
+    result = result.substring(0, param.startPosition + offset) + value + result.substring(param.endPosition + offset)
+    offset += value.length - (param.endPosition - param.startPosition)
   }
   return result
 }

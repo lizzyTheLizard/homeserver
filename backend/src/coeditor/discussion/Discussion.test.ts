@@ -19,7 +19,7 @@ async function createTemplate(context: Context): Promise<Template> {
   return await updateTemplate(context, templateInput)
 }
 
-describe('Discussion Integration Tests', () => {
+describe.concurrent('Discussion Integration Tests', () => {
   let db: DatabaseHandle | undefined = undefined
 
   beforeAll(async () => {
