@@ -209,6 +209,9 @@ jobs:
             run: pnpm -F homeserver-backend run lint
           - name: Tests
             run: pnpm -F homeserver-backend run test
+            env:
+              OPENAI_API_KEY: ${{ secrets.SCW_SECRET_KEY }}
+                
     deploy:
         name: Deploy
         needs:
