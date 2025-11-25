@@ -124,6 +124,7 @@ jobs:
                 key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
           - name: Install Playwright Browsers
             run: pnpm exec playwright install --with-deps
+            working-directory: ./webcomponents
             if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Tests
             run: pnpm -F homeserver-webcomponents run test
