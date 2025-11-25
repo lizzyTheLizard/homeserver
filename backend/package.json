@@ -39,6 +39,7 @@
     "zip-build": "^1.8.0"
   },
   "dependencies": {
+    "openai": "^6.9.1",
     "pg": "^8.16.3",
     "uuid": "^13.0.0",
     "validate-azure-ad-token": "^2.2.0",

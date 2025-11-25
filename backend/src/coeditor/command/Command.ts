@@ -1,17 +1,24 @@
-export type Command = CustomCommand | PredefinedCommand
-
-export interface CommandBase {
+export interface Command {
   id: string
-  text: string
+  discussion_id: string
+  text?: string
+  title?: string
   context: string
-  selectionStart?: number
-  selectionEnd?: number
+  language: string
+  profile?: string
+  selection_start?: number
+  selection_end?: number
+  result: CommandResult
+  custom_command?: string
+  predefined_command?: PredefinedCommandType
 }
 
-export interface CustomCommand extends CommandBase {
-  command: string
+export type PredefinedCommandType = 'INITIALIZE' | 'IMPROVE' | 'REFORMULATE' | 'SUMMARIZE' | 'EXTEND'
+
+export interface CommandResult {
+  newText: string
+  newTitle: string
+  durationMs: number
 }
 
-export interface PredefinedCommand extends CommandBase {
-  predefinedCommand: 'INITIALIZE' | 'IMPROVE' | 'REFORMULATE' | 'SUMMARIZE' | 'EXTEND'
-}
+export type CommandWithoutResult = Omit<Command, 'result'>

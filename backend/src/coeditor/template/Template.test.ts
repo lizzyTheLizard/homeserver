@@ -3,10 +3,10 @@ import type { Context, DatabaseHandle } from '../../Context.js'
 import { type PoolClient } from 'pg'
 import { migrateDatabase } from '../../migrateDatabase.js'
 import { v4 as uuid } from 'uuid'
-import { getMyTemplates } from './getMyTemplates.js'
 import { updateTemplate } from './updateTemplate.js'
 import { extractParameters } from './extractParameters.js'
 import { PGlite } from '@electric-sql/pglite'
+import { getMyTemplates } from './getTemplates.js'
 
 describe('Template Integration Tests', () => {
   let db: DatabaseHandle | undefined = undefined

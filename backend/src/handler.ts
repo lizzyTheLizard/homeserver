@@ -3,11 +3,13 @@ import { getDatabaseHandle } from './getDatabaseHandle.js'
 import { getUser } from './getUser.js'
 import { getCorsHeaders } from './getCorsHeaders.js'
 import { type Context, type Event } from './Context.js'
-import { getMyTemplates } from './coeditor/template/getMyTemplates.js'
+import { getMyTemplates } from './coeditor/template/getTemplates.js'
 import { updateTemplate } from './coeditor/template/updateTemplate.js'
 import { getDiscussion, getMyDiscussions } from './coeditor/discussion/getDiscussion.js'
 import { executeCommand } from './coeditor/command/executeCommand.js'
 import { startDiscussion } from './coeditor/discussion/startDiscussion.js'
+import { getMyProfiles } from './coeditor/profile/getProfiles.js'
+import { updateProfile } from './coeditor/profile/updateProfile.js'
 
 const db = await getDatabaseHandle()
 
@@ -25,6 +27,13 @@ export async function handler(event: Event): Promise<Reponse> {
 }
 
 async function handleCoeditorRequest(context: Context): Promise<Reponse> {
+  if (context.event.path === '/api/coeditor/profiles') {
+    if (context.event.httpMethod === 'GET') return ok(await getMyProfiles(context))
+    if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)
+    if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
+    const profiles = JSON.parse(context.event.body) as unknown
+    return ok(await updateProfile(context, profiles))
+  }
   if (context.event.path === '/api/coeditor/templates') {
     if (context.event.httpMethod === 'GET') return ok(await getMyTemplates(context))
     if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)

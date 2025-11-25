@@ -9,7 +9,12 @@ export async function getMyTemplates(context: Context): Promise<Template[]> {
   })
 }
 
-async function findTemplateByOwner(client: PoolClient, owner: string): Promise<Template[]> {
+export async function findTemplateByOwner(client: PoolClient, owner: string): Promise<Template[]> {
   const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1', [owner])
   return result.rows
+}
+
+export async function findTemplateById(client: PoolClient, template_id: string): Promise<Template | undefined> {
+  const result = await client.query<Template>('SELECT * FROM template WHERE id = $1', [template_id])
+  return result.rows[0] ?? undefined
 }

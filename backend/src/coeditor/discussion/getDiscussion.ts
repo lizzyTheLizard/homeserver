@@ -22,14 +22,14 @@ export async function getMyDiscussions(context: Context): Promise<Discussion[]> 
   })
 }
 
-async function findDiscussionById(client: PoolClient, discussionId: string): Promise<Discussion | undefined> {
+export async function findDiscussionById(client: PoolClient, discussionId: string): Promise<Discussion | undefined> {
   const discussion = await client.query<Discussion>('SELECT * FROM discussion WHERE id = $1', [discussionId])
   if (!discussion.rows[0])
     return undefined
   return discussion.rows[0]
 }
 
-async function findDiscussionByOwner(client: PoolClient, owner: string): Promise<Discussion[]> {
+export async function findDiscussionByOwner(client: PoolClient, owner: string): Promise<Discussion[]> {
   const discussion = await client.query<Discussion>('SELECT * FROM discussion WHERE owner_id = $1', [owner])
   return discussion.rows
 }

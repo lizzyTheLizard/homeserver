@@ -29,17 +29,30 @@ CREATE INDEX idx_discussion_owner_id ON discussion(owner_id);
 CREATE TABLE command (
     id UUID PRIMARY KEY,
     discussion_id UUID NOT NULL,
-    text TEXT NOT NULL,
+    text TEXT DEFAULT NULL,
+    title TEXT DEFAULT NULL,
     context TEXT NOT NULL,
+    language TEXT NOT NULL,
+    profile TEXT DEFAULT NULL,
     selection_start INT DEFAULT NULL,
     selection_end INT DEFAULT NULL,
-    custom_command TEXT,
-    predefined_command TEXT,
-    result TEXT NOT NULL,
-    owner_id TEXT NOT NULL,
+    custom_command TEXT DEFAULT NULL,
+    predefined_command TEXT DEFAULT NULL,
+    result JSONB NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    time_duration_ms INT,
     FOREIGN KEY (discussion_id) REFERENCES discussion(id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_command_discussion_id ON command(discussion_id);
+
+CREATE TABLE profile (
+    language TEXT NOT NULL,
+    text TEXT NOT NULL,
+    owner_id TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (owner_id, language)
+);
+
+CREATE INDEX idx_profile_owner_id ON profile(owner_id);
+

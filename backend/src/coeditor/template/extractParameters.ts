@@ -1,5 +1,5 @@
 import { expectedError } from '../../BackendError.js'
-import type { TemplateParameter } from './Template.js'
+import type { Template, TemplateParameter } from './Template.js'
 
 const PARAMETER_REGEX = /\{([^}]+)\}/g
 
@@ -29,9 +29,9 @@ function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SE
   return { name, type, values }
 }
 
-export function createContextString(text: string, parameters: TemplateParameter[], values: Record<string, string>): string {
-  let result = text
-  for (const param of parameters) {
+export function createContextString(template: Template, values: Record<string, string>): string {
+  let result = template.text
+  for (const param of template.parameters) {
     const value = values[param.name]
     if (value === undefined)
       throw expectedError(`Missing parameter '${param.name}'`, 400, 'Missing parameter')

@@ -3,9 +3,10 @@ import type { Context } from '../../Context.js'
 import type { Discussion } from './Discussion.js'
 import { expectedError } from '../../BackendError.js'
 import { createContextString } from '../template/extractParameters.js'
-import type { Template } from '../template/Template.js'
 import { validate } from 'validate.js'
 import { DiscussionInputConstraints, type DiscussionInput } from './DicsussionInput.js'
+import { findTemplateById } from '../template/getTemplates.js'
+import { findDiscussionById } from './getDiscussion.js'
 
 export async function startDiscussion(context: Context, input: unknown): Promise<Discussion> {
   console.debug(`Starting discussion for ${context.user.email}`)
@@ -18,7 +19,7 @@ export async function startDiscussion(context: Context, input: unknown): Promise
       throw expectedError('Template not found', 404, 'Template Not Found')
     if (template.owner_id !== context.user.email)
       throw expectedError('You do not have permission to use this template', 403)
-    const contextString = createContextString(template.text, template.parameters, input.parameters)
+    const contextString = createContextString(template, input.parameters)
 
     // Update or create the discussion
     const existingDiscussion = await findDiscussionById(client, input.id)
@@ -34,20 +35,6 @@ function validateInput(input: unknown): input is DiscussionInput {
   const result = validate(input, DiscussionInputConstraints, { format: 'flat' }) as string[] | undefined
   if (!result?.[0]) return true
   throw expectedError(result[0], 400)
-}
-
-async function findTemplateById(client: PoolClient, id: string): Promise<Template | undefined> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE id = $1', [id])
-  if (!result.rows[0])
-    return undefined
-  return result.rows[0]
-}
-
-async function findDiscussionById(client: PoolClient, id: string): Promise<Discussion | undefined> {
-  const result = await client.query<Discussion>('SELECT * FROM discussion WHERE id = $1', [id])
-  if (!result.rows[0])
-    return undefined
-  return result.rows[0]
 }
 
 async function updateDiscussion(client: PoolClient, input: DiscussionInput, contextString: string, owner: string): Promise<Discussion> {
