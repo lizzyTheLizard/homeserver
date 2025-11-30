@@ -19,7 +19,7 @@ async function checkIfLoggedIn(userManager: UserManager): Promise<User | undefin
     const oidcUser = await userManager.getUser()
     if (oidcUser) {
       const user = toUser(oidcUser)
-      console.log('User is already logged in:', user.email)
+      console.log('Logged in as', user.email)
       return user
     }
     console.log('No user is currently logged in')

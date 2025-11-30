@@ -4,8 +4,9 @@ import type { Route } from './+types/root'
 import ErrorPage from './general/ErrorPage'
 import { AuthProvider } from './general/auth/AuthProvider'
 import { Header } from './general/Header'
-import { GsLoadingSpinner } from 'homeserver-webcomponents/react'
+import { GsInfo, GsLoadingSpinner } from 'homeserver-webcomponents/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Suspense } from 'react'
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -36,8 +37,11 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Header />
-        <Outlet />
+        <Suspense fallback={<GsLoadingSpinner initial={true} />}>
+          <Outlet />
+        </Suspense>
       </AuthProvider>
+      <GsInfo></GsInfo>
     </QueryClientProvider>
   )
 }

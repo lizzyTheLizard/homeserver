@@ -62,6 +62,8 @@ export const GsInfo = createComponent({
     onchange: 'change',
   },
 })
+export { showMessage } from './GsInfo'
+
 export const GsInput = createComponent({
   tagName: 'gs-input',
   elementClass: GsInputLit,

@@ -107,7 +107,7 @@ export class GsHeader extends LitElement {
       ${this.portalAccess
         ? html`<gs-header-link id="portalLink" class="mobileHidden" href="${this.portalLink}">All Application</gs-header-link>`
         : ''}
-      <gs-header-link id="logoutLink" class="mobileHidden" href="${this.logoutLink}">Logout ${this.user}</gs-header-link>
+      <gs-header-link id="logoutLink" class="mobileHidden" href="${this.logoutLink}">Logout</gs-header-link>
     `
   }
 
