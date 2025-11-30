@@ -11,15 +11,19 @@ export interface EditorState {
   contextValid: boolean
 }
 
-export function initialState(templates: Template[]): EditorState {
+export function initialState(templates: Template[], discussion: Discussion | null): EditorState {
+  const template = discussion
+    ? templates.find(t => t.id === discussion.template_id) ?? templates[0]
+    : templates[0]
+  const parameters = discussion?.parameters ?? {}
   return {
-    discussion_id: undefined,
-    template: templates[0],
-    parameters: {},
-    text: '',
+    discussion_id: discussion?.id ?? undefined,
+    template: template,
+    parameters: parameters,
+    text: discussion?.text ?? '',
     undoStack: [],
     redoStack: [],
-    contextValid: isValid(templates[0], {}),
+    contextValid: isValid(template, parameters),
   }
 }
 

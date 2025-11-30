@@ -1,4 +1,4 @@
-import { QueryClient, useMutation, useSuspenseQuery, type DefaultError, type UseMutationOptions, type UseMutationResult, type UseSuspenseQueryResult } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQueryClient, useSuspenseQuery, type DefaultError, type UseMutationOptions, type UseMutationResult, type UseSuspenseQueryResult } from '@tanstack/react-query'
 import type { EditorState } from './EditorState'
 import { BACKEND_URL } from '../config'
 import type { Template } from 'homeserver-backend/src/coeditor/template/Template.js'
@@ -26,13 +26,15 @@ export function useTemplateQuery(user: User | undefined): UseSuspenseQueryResult
   return useSuspenseQuery({
     queryKey: ['template', user?.accessToken],
     queryFn: async () => getTemplates(user?.accessToken),
+    staleTime: Infinity,
   })
 }
 
-export function useDiscussionQuery(user: User | undefined, discussion_id: string): UseSuspenseQueryResult<Discussion> {
+export function useDiscussionQuery(user: User | undefined, discussion_id: string | null): UseSuspenseQueryResult<Discussion | null> {
   return useSuspenseQuery({
     queryKey: ['discussion', discussion_id, user?.accessToken],
-    queryFn: async () => getDiscussion(user?.accessToken, discussion_id),
+    queryFn: async () => getDiscussion(user?.accessToken, discussion_id ?? undefined),
+    staleTime: Infinity,
   })
 }
 
@@ -43,8 +45,10 @@ export function useStartDiscussionMutation(user: User | undefined): UseMutationR
 }
 
 export function useExecuteCommandMutation(user: User | undefined): UseMutationResult<Discussion, Error, CommandParams> {
+  const queryClient = useQueryClient()
   return useSuspenseMutation({
     mutationFn: async (commandParams: CommandParams) => executeCommand(user?.accessToken, commandParams),
+    onSettled: discussion => queryClient.setQueryData(['discussion', discussion?.id, user?.accessToken], discussion),
   })
 }
 
@@ -79,7 +83,10 @@ async function getTemplates(accessToken: string | undefined): Promise<Template[]
   return await response.json() as Template[]
 }
 
-async function getDiscussion(accessToken: string | undefined, discussion_id: string): Promise<Discussion> {
+async function getDiscussion(accessToken: string | undefined, discussion_id?: string): Promise<Discussion | null>
+async function getDiscussion(accessToken: string | undefined, discussion_id: string): Promise<Discussion>
+async function getDiscussion(accessToken: string | undefined, discussion_id: string | undefined): Promise<Discussion | null> {
+  if (!discussion_id) return null
   const url = `${BACKEND_URL}api/coeditor/discussions/${discussion_id}`
   const response = await fetch(url, {
     method: 'GET',
@@ -117,7 +124,9 @@ async function startDiscussion(accessToken: string | undefined, commandParams: C
 async function executeCommand(accessToken: string | undefined, commandParams: CommandParams): Promise<Discussion> {
   const discussion_id = commandParams.discussion_id
     ?? (await startDiscussion(accessToken, commandParams)).id
-  const input = { ...commandParams, id: uuid(), discussion_id: discussion_id }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { template: _unused, ...rest } = commandParams
+  const input = { ...rest, id: uuid(), discussion_id: discussion_id, template_id: commandParams.template?.id }
   const url = `${BACKEND_URL}api/coeditor/commands`
   const response = await fetch(url, {
     method: 'POST',

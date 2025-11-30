@@ -3,7 +3,7 @@ import type { User } from './AuthContext'
 
 function isAuthCallback(location = window.location): boolean {
   const searchParams = new URLSearchParams(location.search)
-  // TODO: Might not be the bast way to check for auth params
+  // Might not be the best way to check for auth params but seems to work
   return (searchParams.has('code') || searchParams.has('error')) && searchParams.has('state')
 }
 

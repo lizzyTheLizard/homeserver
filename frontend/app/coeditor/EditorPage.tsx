@@ -2,7 +2,7 @@ import { GsButton, showMessage, GsInput, GsTextarea } from 'homeserver-webcompon
 import EditorContext from './EditorContext'
 import { useCallback, useContext, useEffect, useReducer, useState, type FormEvent } from 'react'
 import { editorStateReducer, initialState } from './EditorState'
-import { useExecuteCommandMutation, useStartDiscussionMutation, useTemplateQuery } from './EditorQueries'
+import { useDiscussionQuery, useExecuteCommandMutation, useStartDiscussionMutation, useTemplateQuery } from './EditorQueries'
 import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 import style from './EditorPage.module.css'
 import type { Application } from '../Application'
@@ -10,25 +10,38 @@ import { useNavigate } from 'react-router'
 import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion'
 import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
 
-// TODO: Load existing discussion if discussion_id is provided in URL
 export default function EditorPage() {
   const user = useContext(AuthContext)
   ensureApplicationAccess(user, 'coeditor')
-  const { isError, data: templates, error } = useTemplateQuery(user)
-  if (isError) throw new Error('Failed to load templates', error)
-  const [state, dispatch] = useReducer(editorStateReducer, initialState(templates))
+  const navigate = useNavigate()
+
+  // Mutations
   const startDiscussion = useStartDiscussionMutation(user)
   const executeCommand = useExecuteCommandMutation(user)
+
+  // Get templates
+  const templatesQuery = useTemplateQuery(user)
+  if (templatesQuery.isError) throw new Error('Failed to load templates', templatesQuery.error)
+
+  // Get existing discussion if any
+  const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
+  const existingDiscussionQuery = useDiscussionQuery(user, existingDiscussionId)
+  if (existingDiscussionQuery.isError) throw new Error('Failed to load discussion', existingDiscussionQuery.error)
+
+  // State management
+  const [state, dispatch] = useReducer(editorStateReducer, initialState(templatesQuery.data, existingDiscussionQuery.data))
   const [customCommand, setCustomCommand] = useState('')
-  const navigate = useNavigate()
 
   function onCommandSuccess(result: Discussion) {
     dispatch({ type: 'COMMAND_EXECUTED', discussion: result })
-    // Navigate to the new discussion if needed
-    if (result.id !== state.discussion_id) void navigate(`/coeditor?id=${result.id}`)
+    if (result.id !== state.discussion_id) {
+      console.log('Navigating to newly created discussion', result.id)
+      void navigate(`/coeditor?id=${result.id}`)
+    }
   }
 
   function execute(command?: PredefinedCommandType) {
+    // TODO: Handle selectionStart and selectionEnd
     executeCommand.mutate(
       command
         ? { ...state, predefinedCommand: command }
@@ -64,7 +77,7 @@ export default function EditorPage() {
     <main className={style.main}>
       <h1>CoEditor</h1>
       <EditorContext
-        templates={templates}
+        templates={templatesQuery.data}
         template={state.template}
         parameters={state.parameters}
         onTemplateChange={useCallback((template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
@@ -112,6 +125,7 @@ function getValue(e: InputEvent): string {
 }
 
 function onCommandError(error: unknown) {
+  // TODO: Better error handling
   console.error('Command execution failed:', error)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   showMessage('danger', 'Error executing command', 5000)

@@ -49,11 +49,13 @@ export default function EditorContext({ templates, template, parameters, onParam
 
 function getTemplate(e: InputEvent, templates: Template[]): Template {
   const result = templates.find(t => t.id === e.currentTarget.value)
+  // TODO: Better error handling
   if (result === undefined) throw new Error('Template must be defined')
   return result
 }
 function getFirstTemplate(e: InputEvent, templates: Template[]): Template {
   const language = e.currentTarget.value
+  // TODO: Better error handling
   if (language === undefined) throw new Error('Language must be defined')
   const result = templates.find(t => t.language === language)
   if (result === undefined) throw new Error('Template must be defined')
