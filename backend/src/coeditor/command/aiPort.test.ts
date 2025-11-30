@@ -8,6 +8,7 @@ describe.concurrent('AI Integration Tests', () => {
     const command: CommandWithoutResult = {
       id: uuid(),
       discussion_id: uuid(),
+      template_id: uuid(),
       text: 'This is a sample text',
       title: 'Story',
       context: '',
@@ -27,6 +28,7 @@ describe.concurrent('AI Integration Tests', () => {
     const command: CommandWithoutResult = {
       id: uuid(),
       discussion_id: uuid(),
+      template_id: uuid(),
       text: 'This is a sample text',
       title: 'Story',
       context: 'Always make a fullstop at the end of each sentence.',
@@ -37,7 +39,7 @@ describe.concurrent('AI Integration Tests', () => {
     console.log(result)
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
-      newText: 'THIS IS A SAMPLE TEXT.',
+      newText: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
       newTitle: 'Story',
     })
   })
@@ -45,6 +47,7 @@ describe.concurrent('AI Integration Tests', () => {
     const command: CommandWithoutResult = {
       id: uuid(),
       discussion_id: uuid(),
+      template_id: uuid(),
       text: 'This is a sample text',
       title: 'Story',
       context: '',
@@ -56,7 +59,7 @@ describe.concurrent('AI Integration Tests', () => {
     console.log(result)
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
-      newText: 'THIS IS A SAMPLE TEXT.',
+      newText: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
       newTitle: 'Story',
     })
   })

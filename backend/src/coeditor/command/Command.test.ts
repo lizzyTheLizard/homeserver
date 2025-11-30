@@ -202,6 +202,7 @@ describe('Command Integration Tests', () => {
     expect(insertedCommand).toEqual({
       id: input.id,
       discussion_id: input.discussion_id,
+      template_id: input.template_id,
       text: input.text,
       title: discussion.title,
       context: 'This is a template with value2 parameter',

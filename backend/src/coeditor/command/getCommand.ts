@@ -18,6 +18,7 @@ function dbToObject(row: CommandDbRow): Command {
   const result = {
     id: row.id,
     discussion_id: row.discussion_id,
+    template_id: row.template_id,
     text: row.text ?? undefined,
     title: row.title ?? undefined,
     context: row.context,
@@ -38,6 +39,7 @@ function dbToObject(row: CommandDbRow): Command {
 interface CommandDbRow {
   id: string
   discussion_id: string
+  template_id: string
   text: string | null
   title: string | null
   context: string

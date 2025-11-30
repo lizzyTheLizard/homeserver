@@ -72,13 +72,13 @@ export default function EditorPage() {
       />
       <GsTextarea
         value={state.text}
-        onChange={(e) => { dispatch({ type: 'TEXT_CHANGE', text: getValue(e) }) }}
+        onChange={(e: InputEvent) => { dispatch({ type: 'TEXT_CHANGE', text: getValue(e) }) }}
         className={style.textarea}
         disabled={!state.contextValid}
       >
       </GsTextarea>
       <div className={style.chat}>
-        <GsInput value={customCommand} onChange={(e) => { setCustomCommand(getValue(e)) }} className={style['chat-input']} disabled={!state.contextValid}></GsInput>
+        <GsInput value={customCommand} onChange={(e: InputEvent) => { setCustomCommand(getValue(e)) }} className={style['chat-input']} disabled={!state.contextValid}></GsInput>
         <GsButton onClick={() => { execute() }} disabled={!state.contextValid}>Send</GsButton>
       </div>
       <div className="row buttons">
@@ -105,7 +105,7 @@ export const handle: { application: Application } = {
   },
 }
 
-function getValue(e: FormEvent<{ value: string | undefined }>): string {
+function getValue(e: InputEvent): string {
   const result = e.currentTarget.value
   if (result === undefined) throw new Error('Value must be defined')
   return result
@@ -113,5 +113,8 @@ function getValue(e: FormEvent<{ value: string | undefined }>): string {
 
 function onCommandError(error: unknown) {
   console.error('Command execution failed:', error)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   showMessage('danger', 'Error executing command', 5000)
 }
+
+type InputEvent = FormEvent<{ value: string | undefined }>
