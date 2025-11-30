@@ -15,9 +15,9 @@ const db = await getDatabaseHandle()
 
 export async function handler(event: Event): Promise<Reponse> {
   if (event.httpMethod === 'OPTIONS') return ok(undefined)
-  const user = await getUser(event)
-  const context = { event, user, db }
   try {
+    const user = await getUser(event)
+    const context = { event, user, db }
     if (event.path.startsWith('/api/coeditor/')) return await handleCoeditorRequest(context)
     throw pathNotFound(context)
   }
@@ -42,7 +42,7 @@ async function handleCoeditorRequest(context: Context): Promise<Reponse> {
     return ok(await updateTemplate(context, template))
   }
   if (context.event.path === '/api/coeditor/commands') {
-    if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)
+    if (context.event.httpMethod !== 'POST') throw methodNotAllowed(context)
     if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
     const command = JSON.parse(context.event.body) as unknown
     return ok(await executeCommand(context, command))
@@ -75,10 +75,7 @@ interface Reponse {
 function ok(body: unknown): Reponse {
   return {
     statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getCorsHeaders(),
-    },
+    headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },
     body: body === undefined ? '' : JSON.stringify(body),
   }
 }
@@ -88,14 +85,14 @@ function error(error: unknown): Reponse {
     console.error('Handle Backend Error:', error.showStack ? error : error.message)
     return {
       statusCode: error.statusCode,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },
       body: JSON.stringify({ error: error.userMessage }),
     }
   }
   console.error('Handle Unexpected Error:', error)
   return {
     statusCode: 500,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },
     body: JSON.stringify({ error: 'Unexpected error' }),
   }
 }

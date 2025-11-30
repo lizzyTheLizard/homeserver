@@ -2,8 +2,9 @@ import type { PredefinedCommandType } from './Command.js'
 
 export interface CommandInput {
   id: string
-  discussionId: string
-  text?: string
+  discussion_id: string
+  template_id: string
+  text: string
   parameters: Record<string, string>
   selectionStart?: number
   selectionEnd?: number
@@ -20,7 +21,15 @@ export const CommandInputConstraints = {
       message: 'must be a valid UUID',
     },
   },
-  discussionId: {
+  discussion_id: {
+    presence: { allowEmpty: false },
+    type: 'string',
+    format: {
+      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      message: 'must be a valid UUID',
+    },
+  },
+  template_id: {
     presence: { allowEmpty: false },
     type: 'string',
     format: {
@@ -29,6 +38,7 @@ export const CommandInputConstraints = {
     },
   },
   text: {
+    presence: { allowEmpty: true },
     type: 'string',
   },
   parameters: {

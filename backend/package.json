@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx --env-file=.env --watch src/handler.ts",
+    "dev": "tsx --env-file=.env --watch --inspect src/handler.ts",
     "deploy": "pnpm deploy:clean && pnpm deploy:collect && pnpm deploy:zip && pnpm deploy:copy",
     "deploy:clean": "rimraf dist",
     "deploy:collect": "pnpm -F homeserver-backend deploy --prod -node-linker=hoisted --legacy ./dist/",

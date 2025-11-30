@@ -26,11 +26,11 @@ function validateInput(input: unknown): input is TemplateInput {
   throw expectedError(result[0], 400)
 }
 
-async function createTemplate(client: PoolClient, user: UserInfo, input: TemplateInput): Promise<Template> {
+export async function createTemplate(client: PoolClient, user: UserInfo, input: TemplateInput): Promise<Template> {
   const parameters = extractParameters(input.text)
   const result = await client.query<Template>(
     'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [input.id, input.name, input.language, input.text, user.email, parameters],
+    [input.id, input.name, input.language, input.text, user.email, JSON.stringify(parameters)],
   )
   if (!result.rows[0]) throw expectedError('Failed to create template', 500, 'Internal Server Error')
   return result.rows[0]

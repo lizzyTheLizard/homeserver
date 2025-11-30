@@ -15,7 +15,7 @@ export const DiscussionInputConstraints = {
     },
   },
   text: {
-    presence: { allowEmpty: false },
+    presence: { allowEmpty: true },
     type: 'string',
   },
   template_id: {

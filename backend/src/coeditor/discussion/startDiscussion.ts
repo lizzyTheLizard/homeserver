@@ -4,7 +4,7 @@ import type { Discussion } from './Discussion.js'
 import { expectedError } from '../../BackendError.js'
 import { createContextString } from '../template/extractParameters.js'
 import { validate } from 'validate.js'
-import { DiscussionInputConstraints, type DiscussionInput } from './DicsussionInput.js'
+import { DiscussionInputConstraints, type DiscussionInput } from './DiscussionInput.js'
 import { findTemplateById } from '../template/getTemplates.js'
 import { findDiscussionById } from './getDiscussion.js'
 

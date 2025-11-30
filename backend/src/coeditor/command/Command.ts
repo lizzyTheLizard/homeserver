@@ -1,6 +1,7 @@
 export interface Command {
   id: string
   discussion_id: string
+  template_id: string
   text?: string
   title?: string
   context: string

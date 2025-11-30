@@ -88,8 +88,8 @@ describe.concurrent('Discussion Integration Tests', () => {
 
   test('Get invalid Discussion', async () => {
     const context = { user: { email: 'getfromother1@discussion.com' }, db } as Context
-    const notFoundDiscussionId = uuid()
-    await expect(getDiscussion(context, notFoundDiscussionId)).rejects.toThrow(`Discussion '${notFoundDiscussionId}' not found`)
+    const notFounddiscussion_id = uuid()
+    await expect(getDiscussion(context, notFounddiscussion_id)).rejects.toThrow(`Discussion '${notFounddiscussion_id}' not found`)
     const template = await createTemplate(context)
     const input = { id: uuid(), text: 'Initial discussion text', template_id: template.id, parameters: { param: 'test value' } }
     await startDiscussion(context, input)
@@ -108,7 +108,6 @@ describe.concurrent('Discussion Integration Tests', () => {
     await expect(startDiscussion(context, { ...input, id: undefined })).rejects.toThrow('Id can\'t be blank')
     await expect(startDiscussion(context, { ...input, id: '1' })).rejects.toThrow('Id must be a valid UUID')
     await expect(startDiscussion(context, { ...input, text: undefined })).rejects.toThrow('Text can\'t be blank')
-    await expect(startDiscussion(context, { ...input, text: '' })).rejects.toThrow('Text can\'t be blank')
     await expect(startDiscussion(context, { ...input, template_id: undefined })).rejects.toThrow('Template id can\'t be blank')
     await expect(startDiscussion(context, { ...input, template_id: '1' })).rejects.toThrow('Template id must be a valid UUID')
     await expect(startDiscussion(context, { ...input, template_id: uuid() })).rejects.toThrow('Template not found')

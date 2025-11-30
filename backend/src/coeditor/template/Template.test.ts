@@ -9,6 +9,29 @@ import { PGlite } from '@electric-sql/pglite'
 import { getMyTemplates } from './getTemplates.js'
 import type { Template } from './Template.js'
 
+const defaultTemplates: Template[] = [
+  {
+    id: expect.any(String) as string,
+    name: 'No Context',
+    language: 'English',
+    text: '',
+    parameters: [],
+    created_at: expect.any(Date) as Date,
+    updated_at: expect.any(Date) as Date,
+    owner_id: expect.any(String) as string,
+  },
+  {
+    id: expect.any(String) as string,
+    name: 'With Context',
+    language: 'English',
+    text: '{context:TEXT}',
+    parameters: [{ name: 'context', type: 'TEXT', startPosition: 0, endPosition: 14, values: [] }],
+    created_at: expect.any(Date) as Date,
+    updated_at: expect.any(Date) as Date,
+    owner_id: expect.any(String) as string,
+  },
+]
+
 describe.concurrent('Template Integration Tests', () => {
   let db: DatabaseHandle | undefined = undefined
 
@@ -26,7 +49,7 @@ describe.concurrent('Template Integration Tests', () => {
   test('No Templates', async () => {
     const context = { user: { email: 'notemplates@template.com' }, db } as Context
     const result = await getMyTemplates(context)
-    expect(result).toEqual([])
+    expect(result).toEqual(defaultTemplates)
   })
 
   test('Insert and Return', async () => {
@@ -61,7 +84,7 @@ describe.concurrent('Template Integration Tests', () => {
     await expect(updateTemplate(context, { ...input, text: undefined })).rejects.toThrow('Text can\'t be blank')
     await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Text can\'t be blank')
     const result = await getMyTemplates(context)
-    expect(result).toEqual([])
+    expect(result).toEqual(defaultTemplates)
   })
 
   test('Update from other User', async () => {

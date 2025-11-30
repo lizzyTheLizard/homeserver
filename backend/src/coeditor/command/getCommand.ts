@@ -2,8 +2,8 @@ import type { PoolClient } from 'pg'
 import type { Command, CommandResult, PredefinedCommandType } from './Command.js'
 import { unexpectedError } from '../../BackendError.js'
 
-export async function findCommandsByDiscussionId(client: PoolClient, discussionId: string): Promise<Command[]> {
-  const result = await client.query<CommandDbRow> ('SELECT * FROM command WHERE discussion_id = $1 ORDER BY created_at ASC', [discussionId])
+export async function findCommandsBydiscussion_id(client: PoolClient, discussion_id: string): Promise<Command[]> {
+  const result = await client.query<CommandDbRow> ('SELECT * FROM command WHERE discussion_id = $1 ORDER BY created_at ASC', [discussion_id])
   return result.rows.map(row => dbToObject(row))
 }
 

@@ -79,12 +79,14 @@ describe('Command Integration Tests', () => {
     const context = { user: { email: 'invalidInput@command.com' }, db } as Context
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
     await expect(executeCommand(context, { ...input, predefinedCommand: undefined })).rejects.toThrow('No command given')
     await expect(executeCommand(context, { ...input, id: undefined })).rejects.toThrow('Id can\'t be blank')
     await expect(executeCommand(context, { ...input, id: '1' })).rejects.toThrow('Id must be a valid UUID')
-    await expect(executeCommand(context, { ...input, discussionId: undefined })).rejects.toThrow('Discussion id can\'t be blank')
-    await expect(executeCommand(context, { ...input, discussionId: '1' })).rejects.toThrow('Discussion id must be a valid UUID')
+    await expect(executeCommand(context, { ...input, discussion_id: undefined })).rejects.toThrow('Discussion id can\'t be blank')
+    await expect(executeCommand(context, { ...input, discussion_id: '1' })).rejects.toThrow('Discussion id must be a valid UUID')
+    await expect(executeCommand(context, { ...input, template_id: undefined })).rejects.toThrow('Template id can\'t be blank')
+    await expect(executeCommand(context, { ...input, template_id: '1' })).rejects.toThrow('Template id must be a valid UUID')
     await expect(executeCommand(context, { ...input, parameters: undefined })).rejects.toThrow('Parameters can\'t be blank')
     await expect(executeCommand(context, { ...input, parameters: {} })).rejects.toThrow('Missing parameter \'param\'')
     await expect(executeCommand(context, input)).resolves.toBeDefined()
@@ -92,17 +94,25 @@ describe('Command Integration Tests', () => {
 
   test('Missing Discussion', async () => {
     const context = { user: { email: 'missingDiscussion@command.com' }, db } as Context
-    const input = { id: uuid(), discussionId: uuid(), text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
-    await expect(executeCommand(context, input)).rejects.toThrow(`Discussion '${input.discussionId}' Not Found`)
+    const input = { id: uuid(), discussion_id: uuid(), template_id: uuid(), text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
+    await expect(executeCommand(context, input)).rejects.toThrow(`Discussion '${input.discussion_id}' Not Found`)
+  })
+
+  test('Missing Template', async () => {
+    const context = { user: { email: 'missingTemplate@command.com' }, db } as Context
+    const template = await createTemplate(context)
+    const discussion = await createDiscussion(context, template)
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: uuid(), text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
+    await expect(executeCommand(context, input)).rejects.toThrow(`Template '${input.template_id}' Not Found`)
   })
 
   test('Discussion from other user', async () => {
     const context1 = { user: { email: 'discussionfromother@command.com' }, db } as Context
     const template = await createTemplate(context1)
     const discussion = await createDiscussion(context1, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
     const context2 = { user: { email: 'discussionfromother2@command.com' }, db } as Context
-    await expect(executeCommand(context2, input)).rejects.toThrow(`You do not have permission to modify discussion '${input.discussionId}'`)
+    await expect(executeCommand(context2, input)).rejects.toThrow(`You do not have permission to modify discussion '${input.discussion_id}'`)
   })
 
   test('Custom Command', async () => {
@@ -110,7 +120,7 @@ describe('Command Integration Tests', () => {
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
     const profile = await createProfile(context, 'en')
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
     const result = await executeCommand(context, input)
     expect(result).toEqual({
       ...discussion,
@@ -124,6 +134,7 @@ describe('Command Integration Tests', () => {
       id: input.id,
       text: input.text,
       discussion_id: discussion.id,
+      template_id: template.id,
       custom_command: 'This is a test',
       title: discussion.title,
       language: template.language,
@@ -136,7 +147,7 @@ describe('Command Integration Tests', () => {
     const context = { user: { email: 'selection@command.com' }, db } as Context
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test', selectionStart: 3, selectionEnd: 7 }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test', selectionStart: 3, selectionEnd: 7 }
     await executeCommand(context, input)
     expect(aiPortMock).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       selection_start: input.selectionStart,
@@ -148,7 +159,7 @@ describe('Command Integration Tests', () => {
     const context = { user: { email: 'noprofile@command.com' }, db } as Context
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test', selection_start: 3, selection_end: 7 }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test', selection_start: 3, selection_end: 7 }
     await executeCommand(context, input)
     expect(aiPortMock).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       profile: undefined,
@@ -159,7 +170,7 @@ describe('Command Integration Tests', () => {
     const context = { user: { email: 'predefined@command.com' }, db } as Context
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
     await executeCommand(context, input)
     expect(aiPortMock).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       predefined_command: 'IMPROVE',
@@ -170,8 +181,9 @@ describe('Command Integration Tests', () => {
   test('Updated Discussion', async () => {
     const context = { user: { email: 'updated@command.com' }, db } as Context
     const template = await createTemplate(context)
+    const template2 = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template2.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
     const result = await executeCommand(context, input)
 
     const receivedDiscussions = await getMyDiscussions(context)
@@ -183,13 +195,13 @@ describe('Command Integration Tests', () => {
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
     const profile = await createProfile(context, 'en')
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, predefinedCommand: 'IMPROVE' }
     await executeCommand(context, input)
 
     const insertedCommand = await db?.inTransaction(async client => findCommandById(client, input.id))
     expect(insertedCommand).toEqual({
       id: input.id,
-      discussion_id: input.discussionId,
+      discussion_id: input.discussion_id,
       text: input.text,
       title: discussion.title,
       context: 'This is a template with value2 parameter',
@@ -206,7 +218,7 @@ describe('Command Integration Tests', () => {
     const context = { user: { email: 'commandsSoFar@command.com' }, db } as Context
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussionId: discussion.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test' }
     const oldInput = { ...input, id: uuid() }
     await executeCommand(context, oldInput)
     const oldCommand = await db?.inTransaction(c => findCommandById(c, oldInput.id))
