@@ -58,6 +58,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
       }
     }
     case 'PARAMETERS_CHANGE':{
+      if (state.parameters[action.name] === action.value) return state
       const newParameters = updateParameter(state.parameters, action.name, action.value)
       return {
         ...state,
@@ -66,6 +67,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
       }
     }
     case 'TEXT_CHANGE':{
+      if (action.text === state.text) return state
       return {
         ...state,
         text: action.text,
