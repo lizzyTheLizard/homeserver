@@ -1,4 +1,4 @@
-import { GsButton, showMessage, GsInput, GsTextarea } from 'homeserver-webcomponents/react'
+import { GsButton, showMessage, GsInput } from 'homeserver-webcomponents/react'
 import EditorContext from './EditorContext'
 import { useCallback, useContext, useEffect, useReducer, useState, type FormEvent } from 'react'
 import { editorStateReducer, initialState } from './EditorState'
@@ -9,6 +9,7 @@ import type { Application } from '../Application'
 import { useNavigate } from 'react-router'
 import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion'
 import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
+import GsTextarea2, { type Selection } from './GsTextarea2'
 
 export default function EditorPage() {
   const user = useContext(AuthContext)
@@ -21,16 +22,19 @@ export default function EditorPage() {
 
   // Get templates
   const templatesQuery = useTemplateQuery(user)
+  // TODO: Better error handling
   if (templatesQuery.isError) throw new Error('Failed to load templates', templatesQuery.error)
 
   // Get existing discussion if any
   const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
   const existingDiscussionQuery = useDiscussionQuery(user, existingDiscussionId)
+  // TODO: Better error handling
   if (existingDiscussionQuery.isError) throw new Error('Failed to load discussion', existingDiscussionQuery.error)
 
   // State management
   const [state, dispatch] = useReducer(editorStateReducer, initialState(templatesQuery.data, existingDiscussionQuery.data))
   const [customCommand, setCustomCommand] = useState('')
+  const [selection, setSelection] = useState<Selection | undefined>(undefined)
 
   function onCommandSuccess(result: Discussion) {
     dispatch({ type: 'COMMAND_EXECUTED', discussion: result })
@@ -38,14 +42,14 @@ export default function EditorPage() {
       console.log('Navigating to newly created discussion', result.id)
       void navigate(`/coeditor?id=${result.id}`)
     }
+    setCustomCommand('')
   }
 
   function execute(command?: PredefinedCommandType) {
-    // TODO: Handle selectionStart and selectionEnd
     executeCommand.mutate(
       command
-        ? { ...state, predefinedCommand: command }
-        : { ...state, customCommand: customCommand },
+        ? { ...state, selection_start: selection?.start, selection_end: selection?.end, predefinedCommand: command }
+        : { ...state, selection_start: selection?.start, selection_end: selection?.end, customCommand: customCommand },
       { onSuccess: onCommandSuccess, onError: onCommandError },
     )
   }
@@ -83,13 +87,14 @@ export default function EditorPage() {
         onTemplateChange={useCallback((template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
         onParametersChange={useCallback((name, value) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
       />
-      <GsTextarea
-        value={state.text}
-        onChange={(e: InputEvent) => { dispatch({ type: 'TEXT_CHANGE', text: getValue(e) }) }}
+      <GsTextarea2
         className={style.textarea}
+        value={state.text}
+        onChange={(text) => { dispatch({ type: 'TEXT_CHANGE', text }) }}
         disabled={!state.contextValid}
+        onSelectionChange={setSelection}
       >
-      </GsTextarea>
+      </GsTextarea2>
       <div className={style.chat}>
         <GsInput value={customCommand} onChange={(e: InputEvent) => { setCustomCommand(getValue(e)) }} className={style['chat-input']} disabled={!state.contextValid}></GsInput>
         <GsButton onClick={() => { execute() }} disabled={!state.contextValid}>Send</GsButton>
@@ -120,6 +125,7 @@ export const handle: { application: Application } = {
 
 function getValue(e: InputEvent): string {
   const result = e.currentTarget.value
+  // TODO: Better error handling
   if (result === undefined) throw new Error('Value must be defined')
   return result
 }
@@ -127,7 +133,6 @@ function getValue(e: InputEvent): string {
 function onCommandError(error: unknown) {
   // TODO: Better error handling
   console.error('Command execution failed:', error)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   showMessage('danger', 'Error executing command', 5000)
 }
 

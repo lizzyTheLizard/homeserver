@@ -6,8 +6,8 @@ export interface CommandInput {
   template_id: string
   text: string
   parameters: Record<string, string>
-  selectionStart?: number
-  selectionEnd?: number
+  selection_start?: number
+  selection_end?: number
   customCommand?: string
   predefinedCommand?: PredefinedCommandType
 }
@@ -45,11 +45,11 @@ export const CommandInputConstraints = {
     presence: true,
     type: 'object',
   },
-  selectionStart: {
+  selection_start: {
     presence: false,
     type: 'number',
   },
-  selectionEnd: {
+  selection_end: {
     presence: false,
     type: 'number',
   },

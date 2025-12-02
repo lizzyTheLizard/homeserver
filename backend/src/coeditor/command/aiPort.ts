@@ -14,7 +14,8 @@ export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command
   const end = performance.now()
   const output = JSON.parse(response.output_text) as { newText: string, newTitle: string, error?: string }
   if (output.error) throw new Error(`AI Port Error: ${output.error}`)
-  return { ...output, durationMs: end - start }
+  const newText = getFullNewText(input, output.newText)
+  return { ...output, newText, durationMs: end - start }
 }
 
 const client = new OpenAI({ baseURL: 'https://api.scaleway.ai/v1' })
@@ -77,6 +78,17 @@ function getSelection(input: CommandWithoutResult): unknown {
     end: input.selection_end,
     text: input.text.substring(input.selection_start, input.selection_end),
   }
+}
+
+function getFullNewText(input: CommandWithoutResult, newText: string): string {
+  if (input.selection_end === undefined)
+    return newText
+  if (input.selection_start === undefined)
+    return newText
+  if (input.text === undefined)
+    return newText
+
+  return input.text.substring(0, input.selection_start) + newText + input.text.substring(input.selection_end)
 }
 
 const commands: Record<PredefinedCommandType, string> = {

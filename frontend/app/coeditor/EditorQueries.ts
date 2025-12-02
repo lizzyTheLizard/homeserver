@@ -15,9 +15,11 @@ export interface CommandParams extends Omit<CommandInput, 'discussion_id' | 'id'
   template: Template | undefined
 }
 
+// TODO: Handle session terminatin (401)
+
 export interface ExecuteCommandParams extends EditorState {
-  selectionStart?: number
-  selectionEnd?: number
+  selection_start?: number
+  selection_end?: number
   customCommand?: string
   predefinedCommand?: PredefinedCommandType
 }

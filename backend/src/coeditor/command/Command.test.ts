@@ -147,11 +147,11 @@ describe('Command Integration Tests', () => {
     const context = { user: { email: 'selection@command.com' }, db } as Context
     const template = await createTemplate(context)
     const discussion = await createDiscussion(context, template)
-    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test', selectionStart: 3, selectionEnd: 7 }
+    const input = { id: uuid(), discussion_id: discussion.id, template_id: template.id, text: 'Some text', parameters: { param: 'value2' }, customCommand: 'This is a test', selection_start: 3, selection_end: 7 }
     await executeCommand(context, input)
     expect(aiPortMock).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-      selection_start: input.selectionStart,
-      selection_end: input.selectionEnd,
+      selection_start: input.selection_start,
+      selection_end: input.selection_end,
     }), [])
   })
 

@@ -43,6 +43,7 @@ describe.concurrent('AI Integration Tests', () => {
       newTitle: 'Story',
     })
   })
+
   test('Profile', async () => {
     const command: CommandWithoutResult = {
       id: uuid(),
@@ -60,6 +61,28 @@ describe.concurrent('AI Integration Tests', () => {
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       newText: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
+      newTitle: 'Story',
+    })
+  })
+
+  test('Selection', async () => {
+    const command: CommandWithoutResult = {
+      id: uuid(),
+      discussion_id: uuid(),
+      template_id: uuid(),
+      text: 'This is a sample text',
+      title: 'Story',
+      context: '',
+      language: 'en',
+      custom_command: 'Transform everything to uppercase',
+      selection_end: 21,
+      selection_start: 10,
+    }
+    const result: CommandResult = await aiPort(command, [])
+    console.log(result)
+    expect(result).toEqual({
+      durationMs: expect.any(Number) as number,
+      newText: expect.stringContaining('This is a SAMPLE TEXT') as string,
       newTitle: 'Story',
     })
   })
