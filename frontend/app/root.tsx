@@ -1,12 +1,13 @@
 import 'homeserver-webcomponents/style.css'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import type { Route } from './+types/root'
-import ErrorPage from './general/ErrorPage'
 import { AuthProvider } from './general/auth/AuthProvider'
 import { Header } from './general/Header'
-import { GsInfo, GsLoadingSpinner } from 'homeserver-webcomponents/react'
+import { GsLoadingSpinner } from 'homeserver-webcomponents/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Suspense } from 'react'
+import { InfoProvider } from './general/info/InfoProvider'
+import ErrorPage from './general/info/ErrorPage'
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -36,12 +37,13 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Header />
-        <Suspense fallback={<GsLoadingSpinner initial={true} />}>
-          <Outlet />
-        </Suspense>
+        <InfoProvider>
+          <Header />
+          <Suspense fallback={<GsLoadingSpinner initial={true} />}>
+            <Outlet />
+          </Suspense>
+        </InfoProvider>
       </AuthProvider>
-      <GsInfo></GsInfo>
     </QueryClientProvider>
   )
 }

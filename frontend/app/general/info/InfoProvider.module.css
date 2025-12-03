@@ -1,0 +1,60 @@
+.container {
+    position: fixed;
+    z-index: 300;
+    border-radius: 6px;
+    border: 1px solid black;
+    display: flex;
+    margin-top: 0.5rem;
+    align-items: center;
+}
+
+.danger {
+    background-color: rgba(200,0,0,1);
+    border: rgba(0, 0, 0, 0.175);
+    color: rgba(256, 256, 256, 1);
+}
+
+.info {
+    background-color: rgba(0, 0, 256, 1);
+    border:rgba(0, 0, 0, 0.175);
+    color: rgba(256, 256, 256, 1);
+}
+
+.success {
+    background-color: rgba(50, 200, 50, 1);
+    border: rgba(0, 0, 0, 0.175);
+    color: rgba(256, 256, 256, 1);
+}
+
+.icon {
+    height: 16px;
+    min-width: 1rem;
+    padding: 0.5rem;
+}
+
+.content {
+    padding: 0.5rem;
+    flex-grow: 1;
+}
+
+.link {
+    padding: 0.5rem;
+    color: rgba(256, 256, 256, 1);
+    min-height: 1rem;
+}
+
+@media (min-width: 600px) {
+    .container {
+        left: 25%;
+        width: 50%;
+        bottom: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: calc(100% - 1rem - 1rem);
+        left: 1rem;
+        bottom: 1rem;
+    }
+}

@@ -2,7 +2,7 @@ import { use } from 'react'
 import { useMatches } from 'react-router'
 import { defaultApplication, getApplicationFromMatches, type Application } from '../Application.ts'
 import { AuthContext, type User } from './auth/AuthContext'
-import { GsHeader, GsHeaderLink, GsInfo } from 'homeserver-webcomponents/react'
+import { GsHeader, GsHeaderLink } from 'homeserver-webcomponents/react'
 
 function showPortalAccess(user: User | undefined, application: Application) {
   if (!user) return false
@@ -22,7 +22,6 @@ export function Header() {
           <GsHeaderLink key={link.href} href={link.href}>{link.text}</GsHeaderLink>,
         )}
       </GsHeader>
-      <GsInfo />
     </>
   )
 }

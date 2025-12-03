@@ -1,7 +1,9 @@
 import { GsCollapse, GsInput, GsSelect, GsTextarea } from 'homeserver-webcomponents/react'
-import { type FormEvent } from 'react'
+import { useContext, type FormEvent } from 'react'
 import style from './EditorContext.module.css'
 import type { Template } from 'homeserver-backend/src/coeditor/template/Template'
+import { InfoContext } from '../general/info/InfoContext'
+import { info } from 'console'
 
 interface Props {
   templates: Template[]
@@ -12,6 +14,36 @@ interface Props {
 }
 
 export default function EditorContext({ templates, template, parameters, onParametersChange, onTemplateChange }: Props) {
+  const infoHandler = useContext(InfoContext)
+
+  function getTemplate(e: InputEvent, templates: Template[]): Template {
+    const id = e.currentTarget.value
+    if (id === undefined) {
+      infoHandler('danger', `Selected template id undefined.`, undefined, 5000)
+      return template
+    }
+    const result = templates.find(t => t.id === id)
+    if (result === undefined) {
+      infoHandler('danger', `Template with id "${id}" not found.`, undefined, 5000)
+      return template
+    }
+    return result
+  }
+
+  function getFirstTemplate(e: InputEvent, templates: Template[]): Template {
+    const language = e.currentTarget.value
+    if (language === undefined) {
+      infoHandler('danger', `Selected language undefined.`, undefined, 5000)
+      return template
+    }
+    const result = templates.find(t => t.language === language)
+    if (result === undefined) {
+      infoHandler('danger', `No template found for language "${language}".`, undefined, 5000)
+      return template
+    }
+    return result
+  }
+
   return (
     <GsCollapse header="Context" className={style.collapse}>
       <div className={`row ${style.row}`}>
@@ -45,21 +77,6 @@ export default function EditorContext({ templates, template, parameters, onParam
       ))}
     </GsCollapse>
   )
-}
-
-function getTemplate(e: InputEvent, templates: Template[]): Template {
-  const result = templates.find(t => t.id === e.currentTarget.value)
-  // TODO: Better error handling
-  if (result === undefined) throw new Error('Template must be defined')
-  return result
-}
-function getFirstTemplate(e: InputEvent, templates: Template[]): Template {
-  const language = e.currentTarget.value
-  // TODO: Better error handling
-  if (language === undefined) throw new Error('Language must be defined')
-  const result = templates.find(t => t.language === language)
-  if (result === undefined) throw new Error('Template must be defined')
-  return result
 }
 
 type InputEvent = FormEvent<{ value: string | undefined }>

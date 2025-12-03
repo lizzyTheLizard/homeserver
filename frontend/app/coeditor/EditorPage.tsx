@@ -1,4 +1,4 @@
-import { GsButton, showMessage, GsInput } from 'homeserver-webcomponents/react'
+import { GsButton, GsInput } from 'homeserver-webcomponents/react'
 import EditorContext from './EditorContext'
 import { useCallback, useContext, useEffect, useReducer, useState, type FormEvent } from 'react'
 import { editorStateReducer, initialState } from './EditorState'
@@ -10,9 +10,11 @@ import { useNavigate } from 'react-router'
 import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion'
 import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
 import GsTextarea2, { type Selection } from './GsTextarea2'
+import { InfoContext } from '../general/info/InfoContext'
 
 export default function EditorPage() {
   const user = useContext(AuthContext)
+  const infoHandler = useContext(InfoContext)
   ensureApplicationAccess(user, 'coeditor')
   const navigate = useNavigate()
 
@@ -22,13 +24,11 @@ export default function EditorPage() {
 
   // Get templates
   const templatesQuery = useTemplateQuery(user)
-  // TODO: Better error handling
   if (templatesQuery.isError) throw new Error('Failed to load templates', templatesQuery.error)
 
   // Get existing discussion if any
   const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
   const existingDiscussionQuery = useDiscussionQuery(user, existingDiscussionId)
-  // TODO: Better error handling
   if (existingDiscussionQuery.isError) throw new Error('Failed to load discussion', existingDiscussionQuery.error)
 
   // State management
@@ -45,6 +45,11 @@ export default function EditorPage() {
     setCustomCommand('')
   }
 
+  function onCommandError(error: unknown) {
+    console.error('Command execution failed:', error)
+    infoHandler('danger', 'Error executing command', undefined, 5000)
+  }
+
   function execute(command?: PredefinedCommandType) {
     executeCommand.mutate(
       command
@@ -59,6 +64,13 @@ export default function EditorPage() {
       { ...state, discussion_id: undefined, text: '' },
       { onSuccess: onCommandSuccess, onError: onCommandError },
     )
+  }
+
+  function getValue(e: InputEvent): string {
+    const result = e.currentTarget.value
+    if (result === undefined)
+      infoHandler('danger', 'Value must be defined', undefined, 5000)
+    return result ?? ''
   }
 
   useEffect(() => {
@@ -122,19 +134,6 @@ export const handle: { application: Application } = {
       { href: '/coeditor/history', text: 'History' },
     ],
   },
-}
-
-function getValue(e: InputEvent): string {
-  const result = e.currentTarget.value
-  // TODO: Better error handling
-  if (result === undefined) throw new Error('Value must be defined')
-  return result
-}
-
-function onCommandError(error: unknown) {
-  // TODO: Better error handling
-  console.error('Command execution failed:', error)
-  showMessage('danger', 'Error executing command', 5000)
 }
 
 type InputEvent = FormEvent<{ value: string | undefined }>
