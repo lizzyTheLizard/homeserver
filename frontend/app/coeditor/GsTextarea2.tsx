@@ -14,12 +14,18 @@ export interface GsTextarea2Props {
   disabled?: boolean
   label?: string
   value?: string
+  keepSelection?: boolean
   className?: string
   required?: boolean
   onChange?: (e: string) => void
   onSelectionChange?: (selection?: Selection) => void
 }
 
+/** A textarea component with the following additional features
+ * It tracks selected text and notifies the parent component via onSelectionChange. It can track selection even when the textarea is not focused (if keepSelection is true).
+ * It informs the parent component of changes via onChange only when the textarea loses focus (onBlur).
+ * It displays a floating label when a label prop is provided.
+ */
 export default function GsTextarea2(props: GsTextarea2Props) {
   const [value, setValue] = useState<string>(props.value ?? '')
   const [changed, setChanged] = useState(false)
@@ -46,7 +52,11 @@ export default function GsTextarea2(props: GsTextarea2Props) {
     if (props.value !== actualValue) props.onChange?.(actualValue)
     setChanged(false)
     setFocused(false)
-    updateSelection(e)
+    if (props.keepSelection) updateSelection(e)
+    else {
+      setSelection(undefined)
+      props.onSelectionChange?.(undefined)
+    }
   }
 
   function handleFocus(e: React.FocusEvent<HTMLTextAreaElement>) {
@@ -54,7 +64,7 @@ export default function GsTextarea2(props: GsTextarea2Props) {
     updateSelection(e)
   }
 
-  function handleMouseUp(e: React.MouseEvent<HTMLTextAreaElement>) {
+  function handleMouse(e: React.MouseEvent<HTMLTextAreaElement>) {
     setTimeout(() => { updateSelection(e) }, 10)
   }
 
@@ -107,8 +117,8 @@ export default function GsTextarea2(props: GsTextarea2Props) {
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseUp={handleMouse}
+        onMouseLeave={handleMouse}
         onScroll={handleScroll}
         value={actualValue}
         required={props.required}
@@ -116,15 +126,13 @@ export default function GsTextarea2(props: GsTextarea2Props) {
       >
       </textarea>
       { props.label && <label className={style.label} htmlFor={id}>{props.label}</label>}
-      {selection?.text}
-      { selection && !focused
-        && (
-          <div className={style.holder} ref={div} style={{ top: (-scrollTop).toString() + 'px', width: width.toString() + 'px', height: height.toString() + 'px' }}>
-            {actualValue.substring(0, selection.start)}
-            <span>{selection.text}</span>
-            {actualValue.substring(selection.end)}
-          </div>
-        )}
+      { selection && !focused && props.keepSelection && (
+        <div className={style.holder} ref={div} style={{ top: (-scrollTop).toString() + 'px', width: width.toString() + 'px', height: height.toString() + 'px' }}>
+          {actualValue.substring(0, selection.start)}
+          <span>{selection.text}</span>
+          {actualValue.substring(selection.end)}
+        </div>
+      )}
     </div>
   )
 }

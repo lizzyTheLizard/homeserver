@@ -92,6 +92,7 @@ export default function EditorPage() {
         value={state.text}
         onChange={(text) => { dispatch({ type: 'TEXT_CHANGE', text }) }}
         disabled={!state.contextValid}
+        keepSelection={true}
         onSelectionChange={setSelection}
       >
       </GsTextarea2>
