@@ -1,7 +1,6 @@
 import type { Application } from '../Application.ts'
 
 export default function ProjectPage() {
-  console.log('Rendering ProjectPage')
   return (
     <main>
       <h1>Cash Project Page</h1>

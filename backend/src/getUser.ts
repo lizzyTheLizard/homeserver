@@ -19,7 +19,6 @@ export async function getUser(event: Event): Promise<UserInfo> {
     return { accessToken: token, email: decodedToken.payload.email }
   }
   catch (error) {
-    console.error('Token validation error:', error)
-    throw expectedError('Invalid token ' + bearer.substring(0, 10) + '...', 401, 'Invalid Token')
+    throw expectedError('Invalid token ' + bearer.substring(0, 10) + '...: ' + (error as Error).message, 401, 'Invalid Token')
   }
 }

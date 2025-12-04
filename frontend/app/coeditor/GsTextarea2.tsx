@@ -87,14 +87,12 @@ export default function GsTextarea2(props: GsTextarea2Props) {
   }
 
   function updateSize() {
-    console.log('Update size')
     if (!input.current) return
     setWidth(input.current.clientWidth)
     setHeight(input.current.clientHeight)
   }
 
   useEffect(() => {
-    console.log('Setting up resize observer for textarea')
     const observer = new ResizeObserver(() => { updateSize() })
     if (input.current) {
       observer.observe(input.current)

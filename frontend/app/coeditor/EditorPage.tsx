@@ -22,14 +22,10 @@ export default function EditorPage() {
   const startDiscussion = useStartDiscussionMutation(user)
   const executeCommand = useExecuteCommandMutation(user)
 
-  // Get templates
+  // Get templates and discussion (if any)
   const templatesQuery = useTemplateQuery(user)
-  if (templatesQuery.isError) throw new Error('Failed to load templates', templatesQuery.error)
-
-  // Get existing discussion if any
   const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
   const existingDiscussionQuery = useDiscussionQuery(user, existingDiscussionId)
-  if (existingDiscussionQuery.isError) throw new Error('Failed to load discussion', existingDiscussionQuery.error)
 
   // State management
   const [state, dispatch] = useReducer(editorStateReducer, initialState(templatesQuery.data, existingDiscussionQuery.data))
@@ -39,29 +35,28 @@ export default function EditorPage() {
   function onCommandSuccess(result: Discussion) {
     dispatch({ type: 'COMMAND_EXECUTED', discussion: result })
     if (result.id !== state.discussion_id) {
-      console.log('Navigating to newly created discussion', result.id)
       void navigate(`/coeditor?id=${result.id}`)
     }
     setCustomCommand('')
   }
 
   function onCommandError(error: unknown) {
-    console.error('Command execution failed:', error)
-    infoHandler('danger', 'Error executing command', undefined, 5000)
+    console.error('[EditorPage] Command execution failed:', error)
+    infoHandler('danger', 'Error executing command', 5000)
   }
 
   function execute(command?: PredefinedCommandType) {
     executeCommand.mutate(
       command
-        ? { ...state, selection_start: selection?.start, selection_end: selection?.end, predefinedCommand: command }
-        : { ...state, selection_start: selection?.start, selection_end: selection?.end, customCommand: customCommand },
+        ? { ...state, template: state.template, selection_start: selection?.start, selection_end: selection?.end, predefinedCommand: command }
+        : { ...state, template: state.template, selection_start: selection?.start, selection_end: selection?.end, customCommand: customCommand },
       { onSuccess: onCommandSuccess, onError: onCommandError },
     )
   }
 
   function restart() {
     startDiscussion.mutate(
-      { ...state, discussion_id: undefined, text: '' },
+      { ...state, template: state.template, discussion_id: undefined, text: '' },
       { onSuccess: onCommandSuccess, onError: onCommandError },
     )
   }
@@ -69,7 +64,7 @@ export default function EditorPage() {
   function getValue(e: InputEvent): string {
     const result = e.currentTarget.value
     if (result === undefined)
-      infoHandler('danger', 'Value must be defined', undefined, 5000)
+      infoHandler('danger', 'Value must be defined', 5000)
     return result ?? ''
   }
 
@@ -84,7 +79,7 @@ export default function EditorPage() {
     if (!state.contextValid) return
     if (Object.keys(state.parameters).length === 0) return
     executeCommand.mutate(
-      { ...state, predefinedCommand: 'INITIALIZE' },
+      { ...state, template: state.template, predefinedCommand: 'INITIALIZE' },
       { onSuccess: onCommandSuccess, onError: onCommandError },
     )
   })

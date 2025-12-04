@@ -55,6 +55,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error) && error.status === 403) {
     return <ErrorPage title="403 Forbidden" message="You do not have permission to access this page" />
   }
+  if (isRouteErrorResponse(error) && error.status === 401) {
+    return <ErrorPage title="401 Unauthorized" message="You are not authorized to access this page. Please log in again" />
+  }
   if (isRouteErrorResponse(error)) {
     return <ErrorPage errorResponse={error} />
   }

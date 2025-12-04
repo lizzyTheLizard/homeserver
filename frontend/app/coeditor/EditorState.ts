@@ -6,7 +6,7 @@ export interface EditorState {
   text: string
   undoStack: string[]
   redoStack: string[]
-  template: Template
+  template?: Template
   parameters: Record<string, string>
   contextValid: boolean
 }
@@ -96,7 +96,8 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
   }
 }
 
-function isValid(template: Template, parameters: Record<string, string>): boolean {
+function isValid(template: Template | undefined, parameters: Record<string, string>): boolean {
+  if (!template) return false
   for (const param of template.parameters) {
     if (!(param.name in parameters)) return false
     if (parameters[param.name].trim() === '') return false
