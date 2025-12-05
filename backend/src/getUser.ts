@@ -1,7 +1,7 @@
 import type { IValidationOptions } from 'validate-azure-ad-token'
 import { expectedError } from './BackendError.js'
 import validate from 'validate-azure-ad-token'
-import type { UserInfo, Event } from './Context.js'
+import type { UserInfo, Event, Context } from './Context.js'
 import { Config } from './Config.js'
 
 const options: IValidationOptions = { ...Config, scopes: ['email', 'openid', 'profile'] }
@@ -21,4 +21,11 @@ export async function getUser(event: Event): Promise<UserInfo> {
   catch (error) {
     throw expectedError('Invalid token ' + bearer.substring(0, 10) + '...: ' + (error as Error).message, 401, 'Invalid Token')
   }
+}
+
+export async function getMyApplications(context: Context): Promise<string[]> {
+  console.log('Fetching applications for user', context.user.email)
+  // Simulate database fetch with a delay
+  await new Promise(resolve => setTimeout(resolve, 50))
+  return ['coeditor', 'admin']
 }

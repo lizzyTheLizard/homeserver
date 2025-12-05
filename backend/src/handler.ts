@@ -1,6 +1,6 @@
 import { BackendError, expectedError, isBackendError } from './BackendError.js'
 import { getDatabaseHandle } from './getDatabaseHandle.js'
-import { getUser } from './getUser.js'
+import { getMyApplications, getUser } from './getUser.js'
 import { getCorsHeaders } from './getCorsHeaders.js'
 import { type Context, type Event } from './Context.js'
 import { getMyTemplates } from './coeditor/template/getTemplates.js'
@@ -18,12 +18,21 @@ export async function handler(event: Event): Promise<Reponse> {
   try {
     const user = await getUser(event)
     const context = { event, user, db }
+    if (event.path.startsWith('/api/user/')) return await handleUserRequest(context)
     if (event.path.startsWith('/api/coeditor/')) return await handleCoeditorRequest(context)
     throw pathNotFound(context)
   }
   catch (err: unknown) {
     return error(err)
   }
+}
+
+async function handleUserRequest(context: Context): Promise<Reponse> {
+  if (context.event.path === '/api/user/applications') {
+    if (context.event.httpMethod === 'GET') return ok(await getMyApplications(context))
+    throw methodNotAllowed(context)
+  }
+  throw pathNotFound(context)
 }
 
 async function handleCoeditorRequest(context: Context): Promise<Reponse> {
