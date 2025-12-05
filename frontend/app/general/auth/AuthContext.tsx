@@ -18,6 +18,7 @@ export interface User {
   email: string
   applications: string[]
   accessToken: string
+  expiresAt: number
 }
 
 export function ensureApplicationAccess(user: User | undefined, application: string) {

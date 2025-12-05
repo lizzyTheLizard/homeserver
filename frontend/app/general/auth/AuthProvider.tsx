@@ -32,6 +32,11 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
     const storedUserJson = sessionStorage.getItem('authUser')
     if (!storedUserJson) return undefined
     const storedUser = JSON.parse(storedUserJson) as User
+    if ((storedUser.expiresAt - Date.now()) < 60 * 1000) {
+      console.log(`[AuthProvider] Stored user ${storedUser.email} has expired`)
+      sessionStorage.removeItem('authUser')
+      return undefined
+    }
     console.log(`[AuthProvider] Loaded user ${storedUser.email} from session storage`)
     return storedUser
   }
@@ -111,7 +116,9 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
     if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
     if (!response.ok)infoHandler('danger', `Could not fetch applications: ${response.status.toString()} ${response.statusText}`)
     const applications = await response.json() as string[]
-    return { applications, email, accessToken }
+    // eslint-disable-next-line react-hooks/purity
+    const expiresAt = oidcUser.expires_at ? oidcUser.expires_at * 1000 : Date.now() + (oidcUser.expires_in ?? 3600) * 1000
+    return { applications, email, accessToken, expiresAt }
   }
 
   function handleLoginError(error: unknown) {
