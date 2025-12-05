@@ -55,10 +55,18 @@ export default function EditorPage() {
   }
 
   function restart() {
-    startDiscussion.mutate(
-      { ...state, template: state.template, discussion_id: undefined, text: '' },
-      { onSuccess: onCommandSuccess, onError: onCommandError },
-    )
+    if (Object.keys(state.parameters).length === 0) {
+      startDiscussion.mutate(
+        { ...state, template: state.template, discussion_id: undefined, text: '' },
+        { onSuccess: onCommandSuccess, onError: onCommandError },
+      )
+    }
+    else {
+      executeCommand.mutate(
+        { ...state, template: state.template, discussion_id: undefined, text: '', predefinedCommand: 'INITIALIZE' },
+        { onSuccess: onCommandSuccess, onError: onCommandError },
+      )
+    }
   }
 
   function getValue(e: InputEvent): string {
