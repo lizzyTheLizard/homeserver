@@ -43,6 +43,16 @@ export function useDiscussionQuery(user: User | undefined, discussion_id: string
   })
 }
 
+export function useDiscussionsQuery(user: User | undefined): UseSuspenseQueryResult<Discussion[]> {
+  const infoHandler = useContext(InfoContext)
+  return useSuspenseQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['discussions', user?.accessToken],
+    queryFn: async () => getDiscussions(infoHandler, user?.accessToken),
+    staleTime: Infinity,
+  })
+}
+
 export function useStartDiscussionMutation(user: User | undefined): UseMutationResult<Discussion, Error, CommandParams> {
   const infoHandler = useContext(InfoContext)
   return useSuspenseMutation({
@@ -105,6 +115,19 @@ async function getDiscussion(infoHandler: InfoHandler, accessToken: string | und
   if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
   else infoHandler('danger', `Could not load existing discussion: ${response.status.toString()} ${response.statusText}`)
   return { id: '', template_id: '', parameters: {}, text: '', title: '', owner_id: '', created_at: '', updated_at: '', context: '' }
+}
+
+async function getDiscussions(infoHandler: InfoHandler, accessToken: string | undefined): Promise<Discussion[]> {
+  const url = `${BACKEND_URL}api/coeditor/discussions`
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Authorization: 'Bearer ' + (accessToken ?? '') },
+  })
+  if (response.ok) return await response.json() as Discussion[]
+  if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
+  else infoHandler('danger', `Could not load existing discussions: ${response.status.toString()} ${response.statusText}`)
+  return []
 }
 
 async function startDiscussion(infoHandler: InfoHandler, accessToken: string | undefined, commandParams: CommandParams): Promise<Discussion> {

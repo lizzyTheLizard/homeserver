@@ -30,6 +30,6 @@ export async function findDiscussionById(client: PoolClient, discussion_id: stri
 }
 
 export async function findDiscussionByOwner(client: PoolClient, owner: string): Promise<Discussion[]> {
-  const discussion = await client.query<Discussion>('SELECT * FROM discussion WHERE owner_id = $1', [owner])
+  const discussion = await client.query<Discussion>('SELECT * FROM discussion WHERE owner_id = $1 ORDER BY updated_at DESC', [owner])
   return discussion.rows
 }
