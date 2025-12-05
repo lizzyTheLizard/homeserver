@@ -1,15 +1,21 @@
 import type { Application } from '../Application'
-import SettingsProfile from './SettingsProfile'
-import { useProfileQuery, useTemplateQuery } from './EditorQueries'
-import { AuthContext } from '../general/auth/AuthContext'
+import SettingsProfile from './settingspage/SettingsProfile'
+import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 import { useContext } from 'react'
 import style from './SettingsPage.module.css'
-import SettingsTemplate from './SettingsTemplate'
+import SettingsTemplate from './settingspage/SettingsTemplate'
+import { useProfileQuery, useDeleteProfileMutation, useSaveProfileMutation } from './queries/ProfileQueries'
+import { useTemplateQuery, useDeleteTemplateMutation, useSaveTemplateMutation } from './queries/TemplateQueries'
 
 export default function SettingsPage() {
   const user = useContext(AuthContext)
+  ensureApplicationAccess(user, 'coeditor')
   const { data: profiles } = useProfileQuery(user)
   const { data: templates } = useTemplateQuery(user)
+  const deleteProfileMutation = useDeleteProfileMutation(user)
+  const saveProfileMutation = useSaveProfileMutation(user)
+  const deleteTemplateMutation = useDeleteTemplateMutation(user)
+  const saveTemplateMutation = useSaveTemplateMutation(user)
 
   return (
     <main>
@@ -23,8 +29,16 @@ export default function SettingsPage() {
           </tr>
         </thead>
         <tbody>
-          {profiles.map(p => (<SettingsProfile key={p.language} language={p.language} text={p.text} />))}
-          <SettingsProfile />
+          {profiles.map(p => (
+            <SettingsProfile
+              onChange={saveProfileMutation.mutate}
+              onDelete={deleteProfileMutation.mutate}
+              key={p.language}
+              language={p.language}
+              text={p.text}
+            />
+          ))}
+          <SettingsProfile onChange={saveProfileMutation.mutate} />
         </tbody>
       </table>
 
@@ -39,11 +53,20 @@ export default function SettingsPage() {
           </tr>
         </thead>
         <tbody>
-          {templates.filter(p => p.text).map(p => (<SettingsTemplate key={p.id} id={p.id} name={p.name} language={p.language} text={p.text} />))}
-          <SettingsTemplate />
+          {templates.filter(p => p.text).map(p => (
+            <SettingsTemplate
+              onChange={saveTemplateMutation.mutate}
+              onDelete={deleteTemplateMutation.mutate}
+              key={p.id}
+              id={p.id}
+              name={p.name}
+              language={p.language}
+              text={p.text}
+            />
+          ))}
+          <SettingsTemplate onChange={saveTemplateMutation.mutate} />
         </tbody>
       </table>
-
     </main>
   )
 }

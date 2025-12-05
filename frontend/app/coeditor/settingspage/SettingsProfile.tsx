@@ -1,25 +1,23 @@
 import { GsButton, GsInput, GsTextarea } from 'homeserver-webcomponents/react'
-import { useContext, useState, type FormEvent } from 'react'
-import { useDeleteProfileMutation, useSaveProfileMutation } from './EditorQueries'
-import { AuthContext } from '../general/auth/AuthContext'
-import style from './SettingsPage.module.css'
+import { useState, type FormEvent } from 'react'
+import type { ProfileInput } from 'homeserver-backend/src/coeditor/profile/ProfileInput'
+import style from '../SettingsPage.module.css'
 
 interface SettingsProfileProps {
   language?: string
   text?: string
+  onDelete?: (language: string) => void
+  onChange?: (p: ProfileInput) => void
 }
 
 export default function SettingsProfile(props: SettingsProfileProps) {
-  const user = useContext(AuthContext)
   const [language, setLanguage] = useState(props.language)
   const [text, setText] = useState(props.text)
-  const deleteProfileMutation = useDeleteProfileMutation(user)
-  const saveProfileMutation = useSaveProfileMutation(user)
 
   function saveProfile() {
     if (!language || !text) return
-    saveProfileMutation.mutate({ language, text })
-    if (!props.language) {
+    props.onChange?.({ language, text })
+    if (props.language === undefined) {
       setLanguage('')
       setText('')
     }
@@ -27,7 +25,7 @@ export default function SettingsProfile(props: SettingsProfileProps) {
 
   function deleteProfile() {
     if (!language) return
-    deleteProfileMutation.mutate(language)
+    props.onDelete?.(language)
   }
 
   return (
@@ -56,8 +54,22 @@ export default function SettingsProfile(props: SettingsProfileProps) {
         </GsTextarea>
       </td>
       <td>
-        <GsButton type="primary" className={style.actionButton} disabled={!language || !text} onClick={saveProfile}>Save</GsButton>
-        <GsButton type="danger" className={style.actionButton} disabled={!props.language} onClick={deleteProfile}>Delete</GsButton>
+        <GsButton
+          type="primary"
+          className={style.actionButton}
+          disabled={!language || !text}
+          onClick={saveProfile}
+        >
+          Save
+        </GsButton>
+        <GsButton
+          type="danger"
+          className={style.actionButton}
+          disabled={!props.language}
+          onClick={deleteProfile}
+        >
+          Delete
+        </GsButton>
       </td>
     </tr>
   )

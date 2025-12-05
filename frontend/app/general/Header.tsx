@@ -15,6 +15,7 @@ export function Header() {
   const application = getApplicationFromMatches(matches)
   const user = use(AuthContext)
 
+  // TODO: Instead of links use navigation
   return (
     <>
       <GsHeader applicationName={application.name} user={user?.email} portalAccess={showPortalAccess(user, application)}>

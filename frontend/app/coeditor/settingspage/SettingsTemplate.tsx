@@ -1,37 +1,36 @@
 import { GsButton, GsInput, GsTextarea } from 'homeserver-webcomponents/react'
-import { useContext, useState, type FormEvent } from 'react'
-import { useDeleteProfileMutation, useDeleteTemplateMutation, useSaveProfileMutation, useSaveTemplateMutation } from './EditorQueries'
-import { AuthContext } from '../general/auth/AuthContext'
-import { v4 as randomUUID } from 'uuid'
-import style from './SettingsPage.module.css'
+import { useState, type FormEvent } from 'react'
+import type { TemplateInput } from 'homeserver-backend/src/coeditor/template/TemplateInput'
+import { v4 as uuid } from 'uuid'
+import style from '../SettingsPage.module.css'
 
 interface SettingsTemplateProps {
   id?: string
   name?: string
   language?: string
   text?: string
+  onDelete?: (id: string) => void
+  onChange?: (t: TemplateInput) => void
 }
 
 export default function SettingsTemplate(props: SettingsTemplateProps) {
-  const user = useContext(AuthContext)
   const [language, setLanguage] = useState(props.language)
   const [text, setText] = useState(props.text)
   const [name, setName] = useState(props.name)
-  const deleteTemplateMutation = useDeleteTemplateMutation(user)
-  const saveTemplateMutation = useSaveTemplateMutation(user)
 
   function saveTemplate() {
     if (!name || !language || !text) return
-    saveTemplateMutation.mutate({ id: props.id ?? randomUUID(), name, language, text })
-    if (!props.language) {
+    props.onChange?.({ id: props.id ?? uuid(), name, language, text })
+    if (props.id === undefined) {
       setLanguage('')
       setText('')
+      setName('')
     }
   }
 
   function deleteTemplate() {
-    if (!name) return
-    deleteTemplateMutation.mutate(name)
+    if (!props.id) return
+    props.onDelete?.(props.id)
   }
 
   return (
@@ -69,8 +68,22 @@ export default function SettingsTemplate(props: SettingsTemplateProps) {
         </GsTextarea>
       </td>
       <td>
-        <GsButton type="primary" className={style.actionButton} disabled={!name || !language || !text} onClick={saveTemplate}>Save</GsButton>
-        <GsButton type="danger" className={style.actionButton} disabled={!props.name} onClick={deleteTemplate}>Delete</GsButton>
+        <GsButton
+          type="primary"
+          className={style.actionButton}
+          disabled={!name || !language || !text}
+          onClick={saveTemplate}
+        >
+          Save
+        </GsButton>
+        <GsButton
+          type="danger"
+          className={style.actionButton}
+          disabled={!props.id}
+          onClick={deleteTemplate}
+        >
+          Delete
+        </GsButton>
       </td>
     </tr>
   )

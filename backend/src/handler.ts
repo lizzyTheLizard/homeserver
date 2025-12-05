@@ -9,7 +9,9 @@ import { getDiscussion, getMyDiscussions } from './coeditor/discussion/getDiscus
 import { executeCommand } from './coeditor/command/executeCommand.js'
 import { startDiscussion } from './coeditor/discussion/startDiscussion.js'
 import { getMyProfiles } from './coeditor/profile/getProfiles.js'
-import { deleteProfile, updateProfile } from './coeditor/profile/updateProfile.js'
+import { updateProfile } from './coeditor/profile/updateProfile.js'
+import { deleteProfile } from './coeditor/profile/deleteProfile.js'
+import { deleteTemplate } from './coeditor/template/deleteTemplate.js'
 
 const db = await getDatabaseHandle()
 
@@ -55,13 +57,24 @@ async function handleCoeditorRequest(context: Context): Promise<Reponse> {
       throw methodNotAllowed(context)
     }
   }
-
   if (context.event.path === '/api/coeditor/templates') {
     if (context.event.httpMethod === 'GET') return ok(await getMyTemplates(context))
     if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)
     if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
     const template = JSON.parse(context.event.body) as unknown
     return ok(await updateTemplate(context, template))
+  }
+  if (context.event.path.startsWith('/api/coeditor/templates/')) {
+    const event = context.event
+    const id = event.path.substring('/api/coeditor/templates/'.length).split('/')[0]
+    if (!id) throw expectedError('Template id is missing', 400, 'Bad Request')
+    if (context.event.path === `/api/coeditor/templates/${id}`) {
+      if (context.event.httpMethod === 'DELETE') {
+        await deleteTemplate(context, id)
+        return ok()
+      }
+      throw methodNotAllowed(context)
+    }
   }
   if (context.event.path === '/api/coeditor/commands') {
     if (context.event.httpMethod !== 'POST') throw methodNotAllowed(context)

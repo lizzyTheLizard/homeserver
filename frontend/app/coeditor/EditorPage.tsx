@@ -1,16 +1,18 @@
 import { GsButton, GsInput } from 'homeserver-webcomponents/react'
-import EditorContext from './EditorContext'
+import EditorContext from './editorpage/EditorContext'
 import { useCallback, useContext, useEffect, useReducer, useState, type FormEvent } from 'react'
-import { editorStateReducer, initialState } from './EditorState'
-import { useDiscussionQuery, useExecuteCommandMutation, useStartDiscussionMutation, useTemplateQuery } from './EditorQueries'
+import { editorStateReducer, initialState } from './editorpage/EditorState'
+import { useExecuteCommandMutation } from './queries/CommandQueries'
 import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 import style from './EditorPage.module.css'
 import type { Application } from '../Application'
 import { useNavigate } from 'react-router'
 import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion'
 import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
-import GsTextarea2, { type Selection } from './GsTextarea2'
+import GsTextarea2, { type Selection } from './editorpage/GsTextarea2'
 import { InfoContext } from '../general/info/InfoContext'
+import { useDiscussionQuery, useStartDiscussionMutation } from './queries/DiscussionQueries'
+import { useTemplateQuery } from './queries/TemplateQueries'
 
 export default function EditorPage() {
   const user = useContext(AuthContext)

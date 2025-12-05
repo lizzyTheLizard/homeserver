@@ -1,17 +1,16 @@
 import { useNavigate } from 'react-router'
 import type { Application } from '../Application'
-import { useDiscussionsQuery } from './EditorQueries'
+import { useDiscussionsQuery } from './queries/DiscussionQueries'
 import { GsDate } from 'homeserver-webcomponents/react'
 import { useContext } from 'react'
 import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
+import style from './HistoryPage.module.css'
 
 export default function HistoryPage() {
   const user = useContext(AuthContext)
   ensureApplicationAccess(user, 'coeditor')
   const navigate = useNavigate()
-
-  // Get all discussions
-  const discussionsQuery = useDiscussionsQuery(user)
+  const { data: discussions } = useDiscussionsQuery(user)
 
   return (
     <main>
@@ -19,15 +18,15 @@ export default function HistoryPage() {
       <table className="data-table">
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Last Updated</th>
+            <th className={style.title}>Title</th>
+            <th className={style.updated}>Last Updated</th>
             <th>Text</th>
             <th>Context</th>
           </tr>
         </thead>
         <tbody>
-          {discussionsQuery.data.map(discussion => (
-            <tr key={discussion.id} onClick={() => void navigate(`/coeditor?id=${discussion.id}`)} style={{ cursor: 'pointer' }}>
+          {discussions.map(discussion => (
+            <tr className={style.row} key={discussion.id} onClick={() => void navigate(`/coeditor?id=${discussion.id}`)}>
               <td>{discussion.title}</td>
               <td><GsDate>{discussion.updated_at}</GsDate></td>
               <td>

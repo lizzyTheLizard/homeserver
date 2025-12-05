@@ -18,16 +18,6 @@ export async function updateProfile(context: Context, input: unknown): Promise<P
   })
 }
 
-export async function deleteProfile(context: Context, language: string): Promise<void> {
-  console.debug(`Deleting profile for ${context.user.email} and language ${language}`)
-
-  await context.db.inTransaction(async (client) => {
-    const existing = await findProfileByUserAndLanguage(client, context.user.email, language)
-    if (existing)
-      await deleteExistingProfile(client, language, context.user.email)
-  })
-}
-
 function validateInput(input: unknown): input is ProfileInput {
   const result = validate(input, ProfileInputConstraints, { format: 'flat' }) as string[] | undefined
   if (!result?.[0]) return true
@@ -50,11 +40,4 @@ async function createNewProfile(client: PoolClient, input: ProfileInput, ownerId
   )
   if (!result.rows[0]) throw expectedError('Failed to create profile', 500, 'Internal Server Error')
   return result.rows[0]
-}
-
-async function deleteExistingProfile(client: PoolClient, language: string, ownerId: string): Promise<void> {
-  await client.query(
-    'DELETE FROM profile WHERE owner_id = $1 AND language = $2',
-    [ownerId, language],
-  )
 }

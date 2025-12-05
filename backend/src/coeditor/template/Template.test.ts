@@ -4,6 +4,7 @@ import { type PoolClient } from 'pg'
 import { migrateDatabase } from '../../migrateDatabase.js'
 import { v4 as uuid } from 'uuid'
 import { updateTemplate } from './updateTemplate.js'
+import { deleteTemplate } from './deleteTemplate.js'
 import { extractParameters, createContextString } from './extractParameters.js'
 import { PGlite } from '@electric-sql/pglite'
 import { getMyTemplates } from './getTemplates.js'
@@ -103,6 +104,30 @@ describe.concurrent('Template Integration Tests', () => {
     const templates = await getMyTemplates(context)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     expect(templates).toEqual([{ ...input, created_at: expect.any(Date), updated_at: expect.any(Date), name: 'Modified Name', owner_id: context.user.email, parameters: [] }])
+  })
+
+  test('Delete', async () => {
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
+    const context = { user: { email: 'delete@template.com' }, db } as Context
+    await updateTemplate(context, input)
+    await deleteTemplate(context, input.id)
+    const templates = await getMyTemplates(context)
+    expect(templates).toEqual([...defaultTemplates])
+  })
+
+  test('Delete non existing', async () => {
+    const context = { user: { email: 'deleteNonExisting@template.com' }, db } as Context
+    await deleteTemplate(context, uuid())
+    const templates = await getMyTemplates(context)
+    expect(templates).toEqual([...defaultTemplates])
+  })
+
+  test('Delete wrong user', async () => {
+    const input = { id: uuid(), name: 'Valid Template', language: 'en', text: 'Sample text' }
+    const context = { user: { email: 'deleteWrongUser1@template.com' }, db } as Context
+    await updateTemplate(context, input)
+    const context2 = { user: { email: 'deleteWrongUser2@template.com' }, db } as Context
+    await expect(deleteTemplate(context2, input.id)).rejects.toThrow('You do not have permission to delete this template')
   })
 })
 
