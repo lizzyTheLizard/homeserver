@@ -9,7 +9,7 @@ import { getDiscussion, getMyDiscussions } from './coeditor/discussion/getDiscus
 import { executeCommand } from './coeditor/command/executeCommand.js'
 import { startDiscussion } from './coeditor/discussion/startDiscussion.js'
 import { getMyProfiles } from './coeditor/profile/getProfiles.js'
-import { updateProfile } from './coeditor/profile/updateProfile.js'
+import { deleteProfile, updateProfile } from './coeditor/profile/updateProfile.js'
 
 const db = await getDatabaseHandle()
 
@@ -43,6 +43,19 @@ async function handleCoeditorRequest(context: Context): Promise<Reponse> {
     const profiles = JSON.parse(context.event.body) as unknown
     return ok(await updateProfile(context, profiles))
   }
+  if (context.event.path.startsWith('/api/coeditor/profiles/')) {
+    const event = context.event
+    const language = event.path.substring('/api/coeditor/profiles/'.length).split('/')[0]
+    if (!language) throw expectedError('Profile language is missing', 400, 'Bad Request')
+    if (context.event.path === `/api/coeditor/profiles/${language}`) {
+      if (context.event.httpMethod === 'DELETE') {
+        await deleteProfile(context, language)
+        return ok()
+      }
+      throw methodNotAllowed(context)
+    }
+  }
+
   if (context.event.path === '/api/coeditor/templates') {
     if (context.event.httpMethod === 'GET') return ok(await getMyTemplates(context))
     if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)
@@ -81,7 +94,7 @@ interface Reponse {
   body: string
 }
 
-function ok(body: unknown): Reponse {
+function ok(body?: unknown): Reponse {
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },

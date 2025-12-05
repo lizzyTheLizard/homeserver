@@ -2,9 +2,12 @@ import { QueryClient, useMutation, useQueryClient, useSuspenseQuery, type Defaul
 import type { EditorState } from './EditorState'
 import { BACKEND_URL } from '../config'
 import type { Template } from 'homeserver-backend/src/coeditor/template/Template.js'
+import type { TemplateInput } from 'homeserver-backend/src/coeditor/template/TemplateInput.js'
 import type { DiscussionInput } from 'homeserver-backend/src/coeditor/discussion/DiscussionInput.js'
 import type { CommandInput } from 'homeserver-backend/src/coeditor/command/CommandInput.js'
 import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion.js'
+import type { Profile } from 'homeserver-backend/src/coeditor/profile/Profile.js'
+import type { ProfileInput } from 'homeserver-backend/src/coeditor/profile/ProfileInput.js'
 import { type User } from '../general/auth/AuthContext'
 import { v4 as uuid } from 'uuid'
 import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
@@ -37,7 +40,7 @@ export function useDiscussionQuery(user: User | undefined, discussion_id: string
   const infoHandler = useContext(InfoContext)
   return useSuspenseQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
-    queryKey: ['discussion', discussion_id, user?.accessToken],
+    queryKey: ['discussion', user?.accessToken, discussion_id],
     queryFn: async () => getDiscussion(infoHandler, user?.accessToken, discussion_id ?? undefined),
     staleTime: Infinity,
   })
@@ -47,8 +50,18 @@ export function useDiscussionsQuery(user: User | undefined): UseSuspenseQueryRes
   const infoHandler = useContext(InfoContext)
   return useSuspenseQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
-    queryKey: ['discussions', user?.accessToken],
+    queryKey: ['discussion', user?.accessToken],
     queryFn: async () => getDiscussions(infoHandler, user?.accessToken),
+    staleTime: Infinity,
+  })
+}
+
+export function useProfileQuery(user: User | undefined): UseSuspenseQueryResult<Profile[]> {
+  const infoHandler = useContext(InfoContext)
+  return useSuspenseQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['profile', user?.accessToken],
+    queryFn: async () => getProfiles(infoHandler, user?.accessToken),
     staleTime: Infinity,
   })
 }
@@ -65,7 +78,43 @@ export function useExecuteCommandMutation(user: User | undefined): UseMutationRe
   const queryClient = useQueryClient()
   return useSuspenseMutation({
     mutationFn: async (commandParams: CommandParams) => executeCommand(infoHandler, user?.accessToken, commandParams),
-    onSettled: discussion => queryClient.setQueryData(['discussion', discussion?.id, user?.accessToken], discussion),
+    onSettled: discussion => queryClient.setQueryData(['discussion', user?.accessToken, discussion?.id], discussion),
+  })
+}
+
+export function useSaveProfileMutation(user: User | undefined): UseMutationResult<void, Error, ProfileInput> {
+  const infoHandler = useContext(InfoContext)
+  const queryClient = useQueryClient()
+  return useSuspenseMutation({
+    mutationFn: async (profile: ProfileInput) => saveProfile(infoHandler, user?.accessToken, profile),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.accessToken] }),
+  })
+}
+
+export function useDeleteProfileMutation(user: User | undefined): UseMutationResult<void, Error, string> {
+  const infoHandler = useContext(InfoContext)
+  const queryClient = useQueryClient()
+  return useSuspenseMutation({
+    mutationFn: async (language: string) => deleteProfile(infoHandler, user?.accessToken, language),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.accessToken] }),
+  })
+}
+
+export function useSaveTemplateMutation(user: User | undefined): UseMutationResult<void, Error, TemplateInput> {
+  const infoHandler = useContext(InfoContext)
+  const queryClient = useQueryClient()
+  return useSuspenseMutation({
+    mutationFn: async (template: TemplateInput) => saveTemplate(infoHandler, user?.accessToken, template),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['template', user?.accessToken] }),
+  })
+}
+
+export function useDeleteTemplateMutation(user: User | undefined): UseMutationResult<void, Error, string> {
+  const infoHandler = useContext(InfoContext)
+  const queryClient = useQueryClient()
+  return useSuspenseMutation({
+    mutationFn: async (template_id: string) => deleteTemplate(infoHandler, user?.accessToken, template_id),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['template', user?.accessToken] }),
   })
 }
 
@@ -169,4 +218,67 @@ async function executeCommand(infoHandler: InfoHandler, accessToken: string | un
   if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
   else infoHandler('danger', `Could not execute command: ${response.status.toString()} ${response.statusText}`)
   return { ...commandParams, id: discussion_id, template_id: commandParams.template?.id ?? '', title: '', owner_id: '', created_at: '', updated_at: '', context: '' }
+}
+
+async function saveProfile(infoHandler: InfoHandler, accessToken: string | undefined, profile: ProfileInput): Promise<void> {
+  const url = `${BACKEND_URL}api/coeditor/profiles`
+  const response = await fetch(url, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { Authorization: 'Bearer ' + (accessToken ?? '') },
+    body: JSON.stringify(profile),
+  })
+  if (response.ok) return
+  if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
+  else infoHandler('danger', `Could not save profile: ${response.status.toString()} ${response.statusText}`)
+}
+
+async function deleteProfile(infoHandler: InfoHandler, accessToken: string | undefined, language: string): Promise<void> {
+  const url = `${BACKEND_URL}api/coeditor/profiles/${encodeURIComponent(language)}`
+  const response = await fetch(url, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { Authorization: 'Bearer ' + (accessToken ?? '') },
+  })
+  if (response.ok) return
+  if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
+  else infoHandler('danger', `Could not delete profile: ${response.status.toString()} ${response.statusText}`)
+}
+
+async function getProfiles(infoHandler: InfoHandler, accessToken: string | undefined): Promise<Profile[]> {
+  const url = `${BACKEND_URL}api/coeditor/profiles`
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Authorization: 'Bearer ' + (accessToken ?? '') },
+  })
+  if (response.ok) return await response.json() as Profile[]
+  if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
+  else infoHandler('danger', `Could not fetch profiles: ${response.status.toString()} ${response.statusText}`)
+  return []
+}
+
+async function saveTemplate(infoHandler: InfoHandler, accessToken: string | undefined, template: TemplateInput): Promise<void> {
+  const url = `${BACKEND_URL}api/coeditor/templates`
+  const response = await fetch(url, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { Authorization: 'Bearer ' + (accessToken ?? '') },
+    body: JSON.stringify(template),
+  })
+  if (response.ok) return
+  if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
+  else infoHandler('danger', `Could not save template: ${response.status.toString()} ${response.statusText}`)
+}
+
+async function deleteTemplate(infoHandler: InfoHandler, accessToken: string | undefined, template_id: string): Promise<void> {
+  const url = `${BACKEND_URL}api/coeditor/templates/${encodeURIComponent(template_id)}`
+  const response = await fetch(url, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { Authorization: 'Bearer ' + (accessToken ?? '') },
+  })
+  if (response.ok) return
+  if (response.status === 401) infoHandler('danger', 'Session expired. Please refresh page to log in again.')
+  else infoHandler('danger', `Could not delete template: ${response.status.toString()} ${response.statusText}`)
 }

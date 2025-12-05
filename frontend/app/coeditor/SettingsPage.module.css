@@ -1,0 +1,23 @@
+.languageColumn {
+   width: 15rem;
+}
+
+.actionsColumn {
+   width: 10rem;
+} 
+
+.actionButton {
+   margin-bottom: 0.5rem;
+}
+
+.input {
+   margin-bottom: 0.5rem;
+}
+
+.textarea {
+   height: 10rem;
+}
+
+.sectionSeparator {
+   height: 2rem;
+}

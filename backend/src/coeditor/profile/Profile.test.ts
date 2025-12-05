@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest'
 import type { Context, DatabaseHandle } from '../../Context.js'
 import { type PoolClient } from 'pg'
 import { migrateDatabase } from '../../migrateDatabase.js'
-import { updateProfile } from './updateProfile.js'
+import { deleteProfile, updateProfile } from './updateProfile.js'
 import { PGlite } from '@electric-sql/pglite'
 import { getMyProfiles } from './getProfiles.js'
 
@@ -91,5 +91,22 @@ describe.concurrent('Profile Integration Tests', () => {
     expect(profiles2.length).toBe(1)
     expect(profiles1[0]?.text).toBe('Profile text')
     expect(profiles2[0]?.text).toBe('Different profile text')
+  })
+
+  test('Delete existing profile', async () => {
+    const input = { language: 'en', text: 'Original profile text' }
+    const context = { user: { email: 'deleteexisting@profile.com' }, db } as Context
+    await updateProfile(context, input)
+    await deleteProfile(context, input.language)
+    const profiles = await getMyProfiles(context)
+    expect(profiles.length).toBe(0)
+  })
+
+  test('Delete non existing profile', async () => {
+    const input = { language: 'en', text: 'Original profile text' }
+    const context = { user: { email: 'delete@profile.com' }, db } as Context
+    await deleteProfile(context, input.language)
+    const profiles = await getMyProfiles(context)
+    expect(profiles.length).toBe(0)
   })
 })

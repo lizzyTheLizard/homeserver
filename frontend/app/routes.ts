@@ -6,6 +6,7 @@ export default [
   route('silent-callback.html', './general/auth/AuthPage.tsx', { id: 'silent-auth-callback' }),
   route('coeditor/', './coeditor/EditorPage.tsx'),
   route('coeditor/history', './coeditor/HistoryPage.tsx'),
+  route('coeditor/settings', './coeditor/SettingsPage.tsx'),
   route('admin/', './admin/DashboardPage.tsx'),
   index('general/MainPage.tsx'),
 ] satisfies RouteConfig
