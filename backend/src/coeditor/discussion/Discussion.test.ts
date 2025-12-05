@@ -65,7 +65,7 @@ describe.concurrent('Discussion Integration Tests', () => {
     const retrievedDiscussion1 = await getDiscussion(context, discussion1.id)
     expect(retrievedDiscussion1).toEqual(discussion1)
     const retrievedDiscussions1 = await getMyDiscussions(context)
-    expect(retrievedDiscussions1).toEqual([discussion, discussion1])
+    expect(retrievedDiscussions1).toEqual([discussion1, discussion])
   })
 
   test('Start Discussion Twice', async () => {
