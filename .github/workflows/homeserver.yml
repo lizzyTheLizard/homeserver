@@ -239,8 +239,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
           - name: Cache Backend Build
             uses: actions/cache@v3
             id: backend-cache
@@ -253,6 +251,8 @@ jobs:
             with:
                 path: frontend/build
                 key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/**') }}
+          - name: Setup
+            uses: ./.github/actions/setup
           - name: Deploy Frontend
             run: pnpm -F homeserver-frontend run deploy
           - name: Deploy Backend
