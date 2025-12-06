@@ -20,7 +20,16 @@
             "request": "launch",
             "url": "http://localhost:6006",
             "webRoot": "${workspaceFolder}/webcomponents",
+        },
+        {
+            "name": "Debug Backend",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "skipFiles": [
+                // Node.js internal core modules
+                "<node_internals>/**",
+                ],
         }
-
     ]
 }

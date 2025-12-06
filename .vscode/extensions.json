@@ -3,6 +3,7 @@
         "hossaini.bootstrap-intellisense",
         "dbaeumer.vscode-eslint",
         "github.vscode-github-actions",
-        "hashicorp.terraform"
+        "hashicorp.terraform",
+        "vitest.explorer"
     ]
 }

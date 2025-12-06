@@ -1,0 +1,73 @@
+    .container {
+      overflow: hidden;
+      position: relative;
+    }
+
+    .holder, .textarea {
+      /* These must be in sync between .textarea and .holder, so overwrite then here */
+      font: 400 13.3333px sans-serif;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      height: 100%;
+      width: 100%;
+      padding: 1rem 0.5rem 0.5rem 0.5rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--default-border-color);  
+      box-sizing: border-box;
+    }
+
+    .textarea {
+      resize: none;
+    }
+
+    .textarea:focus {
+      background-color: var(--primary-transparent-color);
+      color: var(--default-text-color)
+    }
+
+    .textarea:invalid {
+      background-color: var(--danger-transparent-color);
+      color: var(--default-text-color)
+    }
+
+    .holder{
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: transparent;
+      pointer-events: none;
+      border-color: transparent;
+    }
+
+    .disabled{
+      background-color: var(--disabled-transparent-color);
+      color: var(--default-text-color);
+      cursor: not-allowed;
+    }
+
+    .holder span {
+      /* highlighting when losing focus.
+      Below has been matched with Chrome
+      when textarea are losing focus 
+      to another IFrame */
+      background-color: #c8c8c8;
+      color: var(--default-text-color);
+    }
+
+    .label {
+      color: rgba(0, 0, 0, 0.6);
+      position: absolute;
+      left: 0.5rem;
+      top: 0.1rem;
+      font-size: x-small;
+    }
+
+    .textarea:placeholder-shown + .label {
+      top: 0.5rem;
+      font-size: small;
+    }
+
+    .textarea:focus + .label {
+      top: 0.1rem;
+      font-size: x-small;
+    }

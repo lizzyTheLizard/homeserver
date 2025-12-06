@@ -1,0 +1,30 @@
+.collapse {
+  display: flex;
+  flex-direction: column;
+}
+
+.collapse > *:first-child {
+  margin-top: var(--gap-small);
+}
+
+.collapse > *:last-child {
+  margin-bottom: var(--gap-small);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.row * {
+  display: inline-block;
+  margin-bottom: var(--gap-small);
+  min-width: 200px;
+  flex-grow: 1;
+}
+
+.textarea {
+  margin-bottom: var(--gap);
+  width: 100%;
+  height: 10rem;
+}

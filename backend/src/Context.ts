@@ -8,6 +8,7 @@ export interface Context {
 
 export interface Event {
   httpMethod: string
+  body: string | null
   path: string
   headers: Record<string, unknown> | null
 }

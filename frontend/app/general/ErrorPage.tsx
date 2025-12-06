@@ -1,21 +1,10 @@
 import type { ErrorResponse } from 'react-router'
-import { GsHeader, GsInfo } from 'homeserver-webcomponents/react'
-import { useContext } from 'react'
-import { AuthContext, type User } from './auth/AuthContext'
-import { defaultApplication } from '../Application'
-
-function showPortalAccess(user?: User) {
-  if (!user) return false
-  return user.applications.length > 0
-}
+import { Header } from './header/Header'
 
 export default function ErrorPage(props: { title?: string, message?: string, error?: Error, errorResponse?: ErrorResponse }) {
-  const user = useContext(AuthContext)
   return (
     <>
-      <GsHeader applicationName={defaultApplication.name} user={user?.email} portalAccess={showPortalAccess(user)}>
-      </GsHeader>
-      <GsInfo />
+      <Header />
       <main>
         <h1>{props.title ?? 'Error'}</h1>
         <p>

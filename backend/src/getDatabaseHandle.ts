@@ -7,7 +7,7 @@ export async function getDatabaseHandle(): Promise<DatabaseHandle> {
   console.debug('Setting up database connection...')
   const pool = new Pool({ connectionString: Config.dbConnectionString })
   await testConnection(pool)
-  await migrateDatabase(pool)
+  await inTransaction(async client => migrateDatabase(client), pool)
   console.log('Connected to database')
   return {
     inTransaction: async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {

@@ -17,7 +17,7 @@ export default defineConfig(
         ...globals.node,
       },
       parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.local.json'],
+        project: ['./tsconfig.json', './tsconfig.test.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },

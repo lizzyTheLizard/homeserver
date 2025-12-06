@@ -1,27 +1,105 @@
-import { getMyTemplates } from './coeditor/Template.js'
-import { expectedError, isBackendError } from './BackendError.js'
+import { BackendError, expectedError, isBackendError } from './BackendError.js'
 import { getDatabaseHandle } from './getDatabaseHandle.js'
-import { getUser } from './getUser.js'
+import { getMyApplications, getUser } from './getUser.js'
 import { getCorsHeaders } from './getCorsHeaders.js'
-import { type Event } from './Context.js'
+import { type Context, type Event } from './Context.js'
+import { getMyTemplates } from './coeditor/template/getTemplates.js'
+import { updateTemplate } from './coeditor/template/updateTemplate.js'
+import { getDiscussion, getMyDiscussions } from './coeditor/discussion/getDiscussion.js'
+import { executeCommand } from './coeditor/command/executeCommand.js'
+import { startDiscussion } from './coeditor/discussion/startDiscussion.js'
+import { getMyProfiles } from './coeditor/profile/getProfiles.js'
+import { updateProfile } from './coeditor/profile/updateProfile.js'
+import { deleteProfile } from './coeditor/profile/deleteProfile.js'
+import { deleteTemplate } from './coeditor/template/deleteTemplate.js'
 
 const db = await getDatabaseHandle()
 
 export async function handler(event: Event): Promise<Reponse> {
   if (event.httpMethod === 'OPTIONS') return ok(undefined)
-  const user = await getUser(event)
-  const context = { event, user, db }
   try {
-    if (event.httpMethod === 'GET' && event.path === '/api/coeditor/templates/mine') {
-      const templates = await getMyTemplates(context)
-      return ok(templates)
-    }
-    throw expectedError(event.httpMethod + ' ' + event.path + ' not Found', 404, 'Not Found')
+    const user = await getUser(event)
+    const context = { event, user, db }
+    if (event.path.startsWith('/api/user/')) return await handleUserRequest(context)
+    if (event.path.startsWith('/api/coeditor/')) return await handleCoeditorRequest(context)
+    throw pathNotFound(context)
   }
   catch (err: unknown) {
     return error(err)
   }
-};
+}
+
+async function handleUserRequest(context: Context): Promise<Reponse> {
+  if (context.event.path === '/api/user/applications') {
+    if (context.event.httpMethod === 'GET') return ok(await getMyApplications(context))
+    throw methodNotAllowed(context)
+  }
+  throw pathNotFound(context)
+}
+
+async function handleCoeditorRequest(context: Context): Promise<Reponse> {
+  if (context.event.path === '/api/coeditor/profiles') {
+    if (context.event.httpMethod === 'GET') return ok(await getMyProfiles(context))
+    if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)
+    if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
+    const profiles = JSON.parse(context.event.body) as unknown
+    return ok(await updateProfile(context, profiles))
+  }
+  if (context.event.path.startsWith('/api/coeditor/profiles/')) {
+    const event = context.event
+    const language = event.path.substring('/api/coeditor/profiles/'.length).split('/')[0]
+    if (!language) throw expectedError('Profile language is missing', 400, 'Bad Request')
+    if (context.event.path === `/api/coeditor/profiles/${language}`) {
+      if (context.event.httpMethod === 'DELETE') {
+        await deleteProfile(context, language)
+        return ok()
+      }
+      throw methodNotAllowed(context)
+    }
+  }
+  if (context.event.path === '/api/coeditor/templates') {
+    if (context.event.httpMethod === 'GET') return ok(await getMyTemplates(context))
+    if (context.event.httpMethod !== 'PUT') throw methodNotAllowed(context)
+    if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
+    const template = JSON.parse(context.event.body) as unknown
+    return ok(await updateTemplate(context, template))
+  }
+  if (context.event.path.startsWith('/api/coeditor/templates/')) {
+    const event = context.event
+    const id = event.path.substring('/api/coeditor/templates/'.length).split('/')[0]
+    if (!id) throw expectedError('Template id is missing', 400, 'Bad Request')
+    if (context.event.path === `/api/coeditor/templates/${id}`) {
+      if (context.event.httpMethod === 'DELETE') {
+        await deleteTemplate(context, id)
+        return ok()
+      }
+      throw methodNotAllowed(context)
+    }
+  }
+  if (context.event.path === '/api/coeditor/commands') {
+    if (context.event.httpMethod !== 'POST') throw methodNotAllowed(context)
+    if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
+    const command = JSON.parse(context.event.body) as unknown
+    return ok(await executeCommand(context, command))
+  }
+  if (context.event.path === '/api/coeditor/discussions') {
+    if (context.event.httpMethod === 'GET') return ok(await getMyDiscussions(context))
+    if (context.event.httpMethod !== 'POST') throw methodNotAllowed(context)
+    if (!context.event.body) throw expectedError('Request body is missing', 400, 'Bad Request')
+    const discussion = JSON.parse(context.event.body) as unknown
+    return ok(await startDiscussion(context, discussion))
+  }
+  if (context.event.path.startsWith('/api/coeditor/discussions/')) {
+    const event = context.event
+    const id = event.path.substring('/api/coeditor/discussions/'.length).split('/')[0]
+    if (!id) throw expectedError('Discussion ID is missing', 400, 'Bad Request')
+    if (context.event.path === `/api/coeditor/discussions/${id}`) {
+      if (context.event.httpMethod === 'GET') return ok(await getDiscussion(context, id))
+      throw methodNotAllowed(context)
+    }
+  }
+  throw pathNotFound(context)
+}
 
 interface Reponse {
   statusCode: number
@@ -29,13 +107,10 @@ interface Reponse {
   body: string
 }
 
-function ok(body: unknown): Reponse {
+function ok(body?: unknown): Reponse {
   return {
     statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getCorsHeaders(),
-    },
+    headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },
     body: body === undefined ? '' : JSON.stringify(body),
   }
 }
@@ -45,16 +120,26 @@ function error(error: unknown): Reponse {
     console.error('Handle Backend Error:', error.showStack ? error : error.message)
     return {
       statusCode: error.statusCode,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },
       body: JSON.stringify({ error: error.userMessage }),
     }
   }
   console.error('Handle Unexpected Error:', error)
   return {
     statusCode: 500,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getCorsHeaders() },
     body: JSON.stringify({ error: 'Unexpected error' }),
   }
+}
+
+function methodNotAllowed(context: Context): BackendError {
+  const message = `Method ${context.event.httpMethod} not allowed on path ${context.event.path}`
+  return expectedError(message, 405, 'Method Not Allowed')
+}
+
+function pathNotFound(content: Context): BackendError {
+  const message = `Path ${content.event.path} not found`
+  return expectedError(message, 404, 'Not Found')
 }
 
 /* This is used to test locally and will not be executed on Scaleway Functions */

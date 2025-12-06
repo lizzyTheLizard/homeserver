@@ -1,4 +1,4 @@
-import { Pool, type PoolClient } from 'pg'
+import { type PoolClient } from 'pg'
 import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
 import { dirname } from 'path'
@@ -17,24 +17,12 @@ interface PlannedDatabaseMigration {
   hash: string
 }
 
-export async function migrateDatabase(pool: Pool): Promise<void> {
+export async function migrateDatabase(client: PoolClient): Promise<void> {
   console.log('Starting Database Migrations...')
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const planned = await getAllPlannedMigrations()
-    const existing = await getAllExistingMigrations(client)
-    validateExistingMigrations(existing, planned)
-    await executeNewMigrations(client, existing, planned)
-    await client.query('COMMIT')
-  }
-  catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  }
-  finally {
-    client.release()
-  }
+  const planned = await getAllPlannedMigrations()
+  const existing = await getAllExistingMigrations(client)
+  validateExistingMigrations(existing, planned)
+  await executeNewMigrations(client, existing, planned)
   console.log('Database migrations successful')
 }
 
@@ -47,7 +35,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
     );
   `)
   const result = await client.query<DatabaseMigration>(`SELECT name, hash, run_on FROM migrations;`)
-  console.debug(`Found ${result.rowCount?.toString() ?? '0'} existing migrations`)
+  console.debug(`Found ${result.rows.length.toString()} existing migrations`)
   return result.rows
 }
 
@@ -67,8 +55,10 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {
-  console.debug(`Running migration ${migration.name}`)
-  await client.query(migration.content)
+  const commands = migration.content.split(';').map(c => c.trim()).filter(c => c.length > 0)
+  for (const command of commands) {
+    await client.query(command)
+  }
   await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
   console.log(`Migration ${migration.name} complete`)
 }

@@ -1,95 +1,134 @@
-import { GsButton, GsInput, GsTextarea } from 'homeserver-webcomponents/react'
-import type { Application } from '../Application.ts'
-import EditorContext from './EditorContext'
-import { useContext, useReducer, useState, type FormEvent } from 'react'
-import { editorStateReducer, initialEditorState } from './EditorState'
-import { EditorServer } from './EditorServer'
+import { GsButton, GsInput } from 'homeserver-webcomponents/react'
+import EditorContext from './editorpage/EditorContext'
+import { useCallback, useContext, useEffect, useReducer, useState, type FormEvent } from 'react'
+import { editorStateReducer, initialState } from './editorpage/EditorState'
+import { useExecuteCommandMutation } from './queries/CommandQueries'
 import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
+import style from './EditorPage.module.css'
+import type { Application } from '../general/Application'
+import { useNavigate } from 'react-router'
+import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion'
+import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
+import GsTextarea2, { type Selection } from '../components/GsTextarea2'
+import { InfoContext } from '../general/info/InfoContext'
+import { useDiscussionQuery, useStartDiscussionMutation } from './queries/DiscussionQueries'
+import { useTemplateQuery } from './queries/TemplateQueries'
 
 export default function EditorPage() {
   const user = useContext(AuthContext)
+  const infoHandler = useContext(InfoContext)
   ensureApplicationAccess(user, 'coeditor')
-  const [editorState, dispatch] = useReducer(editorStateReducer, initialEditorState)
+  const navigate = useNavigate()
+
+  // Mutations
+  const startDiscussion = useStartDiscussionMutation(user)
+  const executeCommand = useExecuteCommandMutation(user)
+
+  // State management
+  const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
+  const [state, dispatch] = useReducer(editorStateReducer, initialState(existingDiscussionId))
   const [customCommand, setCustomCommand] = useState('')
+  const [selection, setSelection] = useState<Selection | undefined>(undefined)
 
-  function executeCommand(command: string): void {
-    startDiscussionIfNeeded().then(async (id) => {
-      const newText = await EditorServer.executeCommand({ ...editorState, discussionId: id }, command)
-      dispatch({ type: 'TEXT_CHANGE', text: newText })
-    }).catch((error: unknown) => {
-      // TODO: Proper error handling
-      console.error('Error executing custom command:', error)
-    })
+  // Get templates and discussion (if any)
+  const { data: templates, isLoading: templatesLoading } = useTemplateQuery(user)
+  const { data: discussion, isLoading: discussionLoading } = useDiscussionQuery(user, existingDiscussionId)
+  if (!templatesLoading && !discussionLoading && !state.initialized) {
+    dispatch({ type: 'INITIALIZE', templates: templates ?? [], discussion: discussion ?? null })
   }
 
-  function executeCustomCommand(): void {
-    startDiscussionIfNeeded().then(async (id) => {
-      const newText = await EditorServer.executeCustomCommand({ ...editorState, discussionId: id }, customCommand)
-      dispatch({ type: 'TEXT_CHANGE', text: newText })
-    }).catch((error: unknown) => {
-      // TODO: Proper error handling
-      console.error('Error executing custom command:', error)
-    })
-  }
-
-  async function startDiscussionIfNeeded(): Promise<string> {
-    if (editorState.discussionId === undefined) {
-      const result = await EditorServer.startDiscussionWithText()
-      dispatch({ type: 'START', id: result.id })
-      return result.id
+  function onCommandSuccess(result: Discussion) {
+    dispatch({ type: 'COMMAND_EXECUTED', discussion: result })
+    if (result.id !== state.discussion_id) {
+      void navigate(`/coeditor?id=${result.id}`)
     }
-    return editorState.discussionId
+    setCustomCommand('')
+  }
+
+  function onCommandError(error: unknown) {
+    console.error('[EditorPage] Command execution failed:', error)
+    infoHandler('danger', 'Error executing command', 5000)
+  }
+
+  function execute(command?: PredefinedCommandType) {
+    executeCommand.mutate(
+      command
+        ? { ...state, template: state.template, selection_start: selection?.start, selection_end: selection?.end, predefinedCommand: command }
+        : { ...state, template: state.template, selection_start: selection?.start, selection_end: selection?.end, customCommand: customCommand },
+      { onSuccess: onCommandSuccess, onError: onCommandError },
+    )
   }
 
   function restart() {
-    EditorServer.startDiscussion(editorState).then((result) => {
-      dispatch({ type: 'START', ...result })
-    }).catch((error: unknown) => {
-      // TODO: Proper error handling
-      console.error('Error executing custom command:', error)
-    })
+    if (Object.keys(state.parameters).length === 0) {
+      startDiscussion.mutate(
+        { ...state, template: state.template, discussion_id: undefined, text: '' },
+        { onSuccess: onCommandSuccess, onError: onCommandError },
+      )
+    }
+    else {
+      executeCommand.mutate(
+        { ...state, template: state.template, discussion_id: undefined, text: '', predefinedCommand: 'INITIALIZE' },
+        { onSuccess: onCommandSuccess, onError: onCommandError },
+      )
+    }
   }
 
-  function onTextChangeHandler(event: FormEvent): void {
-    const newText = (event.target as HTMLTextAreaElement).value
-    dispatch({ type: 'TEXT_CHANGE', text: newText })
+  function getValue(e: InputEvent): string {
+    const result = e.currentTarget.value
+    if (result === undefined)
+      infoHandler('danger', 'Value must be defined', 5000)
+    return result ?? ''
   }
 
-  function onContextChangeHandler(newContext: string): void {
-    dispatch({ type: 'CONTEXT_CHANGE', context: newContext })
-    if (editorState.discussionId !== undefined) return
-    EditorServer.startDiscussion({ ...editorState, currentContext: newContext }).then((result) => {
-      dispatch({ type: 'START', ...result })
-    }).catch((error: unknown) => {
-      // TODO: Proper error handling
-      console.error('Error executing custom command:', error)
-    })
-  }
-
-  function onCustomCommandChangeHandler(event: FormEvent): void {
-    const newCommand = (event.target as HTMLInputElement).value
-    setCustomCommand(newCommand)
-  }
+  useEffect(() => {
+    // Initialize discussion automatically text when:
+    // * A template with parameters is filled out
+    // * AND no discussion is running
+    // * AND no text has been entered yet
+    // This will prefill the editor with an initial text based on the template and parameters.
+    if (state.discussion_id) return
+    if (state.text) return
+    if (!state.contextValid) return
+    if (Object.keys(state.parameters).length === 0) return
+    executeCommand.mutate(
+      { ...state, template: state.template, predefinedCommand: 'INITIALIZE' },
+      { onSuccess: onCommandSuccess, onError: onCommandError },
+    )
+  })
 
   return (
-    <main style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <main className={style.main}>
+      <title>CoEditor - Editor</title>
       <h1>CoEditor</h1>
-      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%', gap: '5px' }}>
-        <EditorContext onContextChange={onContextChangeHandler} />
-        <GsTextarea value={editorState.currentText} style={{ flexGrow: 1 }} onChange={onTextChangeHandler}></GsTextarea>
-        <div style={{ display: 'flex', width: '100%', gap: '5px' }}>
-          <GsInput onChange={onCustomCommandChangeHandler} style={{ flexGrow: 1 }}></GsInput>
-          <GsButton onClick={executeCustomCommand}>Send</GsButton>
-        </div>
-        <div className="row buttons">
-          <GsButton onClick={() => { executeCommand('IMPROVE') }}>Improve</GsButton>
-          <GsButton onClick={() => { executeCommand('REFORMULATE') }}>Reformulate</GsButton>
-          <GsButton onClick={() => { executeCommand('SUMMARIZE') }}>Summarize</GsButton>
-          <GsButton onClick={() => { executeCommand('EXTEND') }}>Extend</GsButton>
-          <GsButton onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!editorState.undoStack.length}>Undo</GsButton>
-          <GsButton onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!editorState.redoStack.length}>Redo</GsButton>
-          <GsButton onClick={restart}>New</GsButton>
-        </div>
+      <EditorContext
+        templates={templates ?? []}
+        template={state.template}
+        parameters={state.parameters}
+        onTemplateChange={useCallback((template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
+        onParametersChange={useCallback((name, value) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
+      />
+      <GsTextarea2
+        className={style.textarea}
+        value={state.text}
+        onChange={(text) => { dispatch({ type: 'TEXT_CHANGE', text }) }}
+        disabled={!state.contextValid}
+        keepSelection={true}
+        onSelectionChange={setSelection}
+      >
+      </GsTextarea2>
+      <div className={style.chat}>
+        <GsInput value={customCommand} onChange={(e: InputEvent) => { setCustomCommand(getValue(e)) }} className={style['chat-input']} disabled={!state.contextValid}></GsInput>
+        <GsButton onClick={() => { execute() }} disabled={!state.contextValid}>Send</GsButton>
+      </div>
+      <div className={style.buttons + ' buttons row'}>
+        <GsButton onClick={() => { execute('IMPROVE') }} disabled={!state.contextValid}>Improve</GsButton>
+        <GsButton onClick={() => { execute('REFORMULATE') }} disabled={!state.contextValid}>Reformulate</GsButton>
+        <GsButton onClick={() => { execute('SUMMARIZE') }} disabled={!state.contextValid}>Summarize</GsButton>
+        <GsButton onClick={() => { execute('EXTEND') }} disabled={!state.contextValid}>Extend</GsButton>
+        <GsButton onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length}>Undo</GsButton>
+        <GsButton onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length}>Redo</GsButton>
+        <GsButton onClick={() => { restart() }} disabled={!state.contextValid}>New</GsButton>
       </div>
     </main>
   )
@@ -105,3 +144,5 @@ export const handle: { application: Application } = {
     ],
   },
 }
+
+type InputEvent = FormEvent<{ value: string | undefined }>

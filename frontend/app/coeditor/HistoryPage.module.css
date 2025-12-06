@@ -1,0 +1,15 @@
+.row{
+   cursor: pointer;
+}
+
+.title{
+   width: var(--column-width-small);
+}
+
+.updated{
+   width: var(--column-width-small);
+}
+
+.textCell{
+   white-space: pre-wrap;
+}

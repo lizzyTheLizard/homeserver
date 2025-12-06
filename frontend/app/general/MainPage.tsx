@@ -8,6 +8,7 @@ const applications = [
   { key: 'coeditor', icon: 'coeditor', name: 'CoEditor', link: 'coeditor/', description: 'Customizable AI-driven Editor' },
 ]
 
+// TODO: Use NavLinks in GsCard when available
 export default function MainPage() {
   const user = useContext(AuthContext)
   const content = user
@@ -20,6 +21,7 @@ export default function MainPage() {
     : (<p>You need to be logged in to see your applications.</p>)
   return (
     <main>
+      <title>Gutschi.site - Dashboard</title>
       <div className="row">
         {content}
       </div>
