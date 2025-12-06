@@ -8,6 +8,7 @@ const applications = [
   { key: 'coeditor', icon: 'coeditor', name: 'CoEditor', link: 'coeditor/', description: 'Customizable AI-driven Editor' },
 ]
 
+// TODO: Use NavLinks in GsCard when available
 export default function MainPage() {
   const user = useContext(AuthContext)
   const content = user
