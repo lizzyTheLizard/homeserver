@@ -1,7 +1,7 @@
 import { use, useState } from 'react'
 import { NavLink, useMatches } from 'react-router'
-import { defaultApplication, getApplicationFromMatches, type Application } from '../Application.ts'
-import { AuthContext, type User } from './auth/AuthContext'
+import { defaultApplication, getApplicationFromMatches, type Application } from './Application.ts'
+import { AuthContext, type User } from '../auth/AuthContext'
 import { GsIcon } from 'homeserver-webcomponents/react'
 import style from './Header.module.css'
 

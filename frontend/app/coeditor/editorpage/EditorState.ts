@@ -9,21 +9,18 @@ export interface EditorState {
   template?: Template
   parameters: Record<string, string>
   contextValid: boolean
+  initialized: boolean
 }
 
-export function initialState(templates: Template[], discussion: Discussion | null): EditorState {
-  const template = discussion
-    ? templates.find(t => t.id === discussion.template_id) ?? templates[0]
-    : templates[0]
-  const parameters = discussion?.parameters ?? {}
+export function initialState(discussionId: string | null): EditorState {
   return {
-    discussion_id: discussion?.id ?? undefined,
-    template: template,
-    parameters: parameters,
-    text: discussion?.text ?? '',
+    discussion_id: discussionId ?? undefined,
+    text: '',
+    parameters: {},
+    contextValid: false,
+    initialized: false,
     undoStack: [],
     redoStack: [],
-    contextValid: isValid(template, parameters),
   }
 }
 
@@ -33,9 +30,24 @@ export type EditorStateAction = { type: 'COMMAND_EXECUTED', discussion: Discussi
   | { type: 'PARAMETERS_CHANGE', name: string, value: string | undefined }
   | { type: 'UNDO' }
   | { type: 'REDO' }
+  | { type: 'INITIALIZE', templates: Template[], discussion: Discussion | null }
 
 export function editorStateReducer(state: EditorState, action: EditorStateAction): EditorState {
   switch (action.type) {
+    case 'INITIALIZE': {
+      const template = action.discussion
+        ? action.templates.find(t => t.id === action.discussion?.template_id) ?? action.templates[0]
+        : action.templates[0]
+      const parameters = action.discussion?.parameters ?? {}
+      return { ...state,
+        template: template,
+        parameters: parameters,
+        text: action.discussion?.text ?? '',
+        contextValid: isValid(template, parameters),
+        initialized: true,
+      }
+    }
+
     case 'COMMAND_EXECUTED':{
       const newUndoStack = isRestart(state, action.discussion)
         ? []

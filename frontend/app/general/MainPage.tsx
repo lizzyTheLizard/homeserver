@@ -21,6 +21,7 @@ export default function MainPage() {
     : (<p>You need to be logged in to see your applications.</p>)
   return (
     <main>
+      <title>Gutschi.site - Dashboard</title>
       <div className="row">
         {content}
       </div>

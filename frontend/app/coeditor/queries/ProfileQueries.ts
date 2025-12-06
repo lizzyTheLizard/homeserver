@@ -1,15 +1,15 @@
-import { useQueryClient, useSuspenseQuery, type UseMutationResult, type UseSuspenseQueryResult } from '@tanstack/react-query'
+import { useQueryClient, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query'
 import { BACKEND_URL } from '../../config'
 import type { Profile } from 'homeserver-backend/src/coeditor/profile/Profile.js'
 import type { ProfileInput } from 'homeserver-backend/src/coeditor/profile/ProfileInput.js'
 import { type User } from '../../general/auth/AuthContext'
 import { useContext } from 'react'
 import { InfoContext, type InfoHandler } from '../../general/info/InfoContext'
-import { useSuspenseMutation } from './useSuspenseMutation'
+import { useLoadingMutation, useLoadingQuery } from '../../general/loading/LoadingContext'
 
-export function useProfileQuery(user: User | undefined): UseSuspenseQueryResult<Profile[]> {
+export function useProfileQuery(user: User | undefined): UseQueryResult<Profile[]> {
   const infoHandler = useContext(InfoContext)
-  return useSuspenseQuery({
+  return useLoadingQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ['profile', user?.accessToken],
     queryFn: async () => getProfiles(infoHandler, user?.accessToken),
@@ -20,7 +20,7 @@ export function useProfileQuery(user: User | undefined): UseSuspenseQueryResult<
 export function useSaveProfileMutation(user: User | undefined): UseMutationResult<void, Error, ProfileInput> {
   const infoHandler = useContext(InfoContext)
   const queryClient = useQueryClient()
-  return useSuspenseMutation({
+  return useLoadingMutation({
     mutationFn: async (profile: ProfileInput) => saveProfile(infoHandler, user?.accessToken, profile),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.accessToken] }),
   })
@@ -29,7 +29,7 @@ export function useSaveProfileMutation(user: User | undefined): UseMutationResul
 export function useDeleteProfileMutation(user: User | undefined): UseMutationResult<void, Error, string> {
   const infoHandler = useContext(InfoContext)
   const queryClient = useQueryClient()
-  return useSuspenseMutation({
+  return useLoadingMutation({
     mutationFn: async (language: string) => deleteProfile(infoHandler, user?.accessToken, language),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.accessToken] }),
   })

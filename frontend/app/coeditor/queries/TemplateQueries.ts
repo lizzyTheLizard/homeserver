@@ -1,15 +1,15 @@
-import { useQueryClient, useSuspenseQuery, type UseMutationResult, type UseSuspenseQueryResult } from '@tanstack/react-query'
+import { useQueryClient, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query'
 import { BACKEND_URL } from '../../config'
 import type { Template } from 'homeserver-backend/src/coeditor/template/Template.js'
 import type { TemplateInput } from 'homeserver-backend/src/coeditor/template/TemplateInput.js'
 import { type User } from '../../general/auth/AuthContext'
 import { useContext } from 'react'
 import { InfoContext, type InfoHandler } from '../../general/info/InfoContext'
-import { useSuspenseMutation } from './useSuspenseMutation'
+import { useLoadingMutation, useLoadingQuery } from '../../general/loading/LoadingContext'
 
-export function useTemplateQuery(user: User | undefined): UseSuspenseQueryResult<Template[]> {
+export function useTemplateQuery(user: User | undefined): UseQueryResult<Template[]> {
   const infoHandler = useContext(InfoContext)
-  return useSuspenseQuery({
+  return useLoadingQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ['template', user?.accessToken],
     queryFn: async () => getTemplates(infoHandler, user?.accessToken),
@@ -20,7 +20,7 @@ export function useTemplateQuery(user: User | undefined): UseSuspenseQueryResult
 export function useSaveTemplateMutation(user: User | undefined): UseMutationResult<void, Error, TemplateInput> {
   const infoHandler = useContext(InfoContext)
   const queryClient = useQueryClient()
-  return useSuspenseMutation({
+  return useLoadingMutation({
     mutationFn: async (template: TemplateInput) => saveTemplate(infoHandler, user?.accessToken, template),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['template', user?.accessToken] }),
   })
@@ -29,7 +29,7 @@ export function useSaveTemplateMutation(user: User | undefined): UseMutationResu
 export function useDeleteTemplateMutation(user: User | undefined): UseMutationResult<void, Error, string> {
   const infoHandler = useContext(InfoContext)
   const queryClient = useQueryClient()
-  return useSuspenseMutation({
+  return useLoadingMutation({
     mutationFn: async (template_id: string) => deleteTemplate(infoHandler, user?.accessToken, template_id),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['template', user?.accessToken] }),
   })

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import type { Application } from '../Application'
+import type { Application } from '../general/Application'
 import { useDiscussionsQuery } from './queries/DiscussionQueries'
 import { GsDate } from 'homeserver-webcomponents/react'
 import { useContext } from 'react'
@@ -14,6 +14,8 @@ export default function HistoryPage() {
 
   return (
     <main>
+      <title>CoEditor - History</title>
+      <meta name="title" content="CoEditor History" />
       <h1>History</h1>
       <table className="data-table">
         <thead>
@@ -25,7 +27,7 @@ export default function HistoryPage() {
           </tr>
         </thead>
         <tbody>
-          {discussions.map(discussion => (
+          {discussions?.map(discussion => (
             <tr className={style.row} key={discussion.id} onClick={() => void navigate(`/coeditor?id=${discussion.id}`)}>
               <td>{discussion.title}</td>
               <td><GsDate>{discussion.updated_at}</GsDate></td>

@@ -1,22 +1,26 @@
+:root{
+    --header-height: 2rem;
+    --header-text-size: 1.5rem;
+}
+
 .container {
     display: flex;
     flex-wrap: wrap;
-    flex-wrap: wrap;
     width: 100%;
-    background-color: rgba(0, 0, 256, 1);
-    color: white;
+    background-color: var(--primary-background-color);
+    color: var(--primary-text-color);
     align-items: center;
-    height: calc(2rem + 1rem + 1rem);
+    height: calc(var(--header-height) + var(--gap) + var(--gap));
     z-index: 10;
 }
 
 .mobileMenuIcon {
-    padding-left: 1rem;
+    padding-left: var(--gap);
     padding-right: 0;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    height: 2rem;
-    width: 2rem;
+    padding-top: var(--gap);
+    padding-bottom: var(--gap);
+    height: var(--header-height);
+    width: var(--header-height);
 }
 
 .spacer {
@@ -24,28 +28,28 @@
 }
 
 .applicationName {
-    font-size: 1.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    font-size: var(--header-text-size);
+    padding-left: var(--gap);
+    padding-right: var(--gap);
 }
 
 .link {
     display: flex;
     align-items: center;
-    background-color: rgba(0, 0, 256, 1);
-    color: white;
-    height: 4rem;
-    padding: 0 1rem;
+    background-color: var(--primary-background-color);
+    color: var(--primary-text-color);
+    height: calc(var(--header-height) + var(--gap) + var(--gap));
+    padding: 0 var(--gap);
     box-sizing: border-box;
     text-decoration: none;
 }
 
 .link:hover {
-    background-color: rgba(0, 0, 200, 1);
+    background-color: var(--primary-hover-color);
 }
 
 .activeLink span {
-    border-bottom: 0.2rem solid white;
+    border-bottom: 0.2rem solid var(--primary-text-color);
     padding-top: 0.4rem;
     padding-bottom: 0.2rem;
 }
@@ -72,7 +76,7 @@
         display: flex;
         flex-direction: column;
         width: 100%;
-        background-color: rgba(0, 0, 256, 1);
+        background-color: var(--primary-background-color);
     }
 
     .link {

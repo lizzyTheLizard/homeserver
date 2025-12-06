@@ -5,11 +5,11 @@ import { editorStateReducer, initialState } from './editorpage/EditorState'
 import { useExecuteCommandMutation } from './queries/CommandQueries'
 import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 import style from './EditorPage.module.css'
-import type { Application } from '../Application'
+import type { Application } from '../general/Application'
 import { useNavigate } from 'react-router'
 import type { Discussion } from 'homeserver-backend/src/coeditor/discussion/Discussion'
 import type { PredefinedCommandType } from 'homeserver-backend/src/coeditor/command/Command'
-import GsTextarea2, { type Selection } from './editorpage/GsTextarea2'
+import GsTextarea2, { type Selection } from '../components/GsTextarea2'
 import { InfoContext } from '../general/info/InfoContext'
 import { useDiscussionQuery, useStartDiscussionMutation } from './queries/DiscussionQueries'
 import { useTemplateQuery } from './queries/TemplateQueries'
@@ -24,15 +24,18 @@ export default function EditorPage() {
   const startDiscussion = useStartDiscussionMutation(user)
   const executeCommand = useExecuteCommandMutation(user)
 
-  // Get templates and discussion (if any)
-  const templatesQuery = useTemplateQuery(user)
-  const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
-  const existingDiscussionQuery = useDiscussionQuery(user, existingDiscussionId)
-
   // State management
-  const [state, dispatch] = useReducer(editorStateReducer, initialState(templatesQuery.data, existingDiscussionQuery.data))
+  const existingDiscussionId = new URLSearchParams(window.location.search).get('id')
+  const [state, dispatch] = useReducer(editorStateReducer, initialState(existingDiscussionId))
   const [customCommand, setCustomCommand] = useState('')
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
+
+  // Get templates and discussion (if any)
+  const { data: templates, isLoading: templatesLoading } = useTemplateQuery(user)
+  const { data: discussion, isLoading: discussionLoading } = useDiscussionQuery(user, existingDiscussionId)
+  if (!templatesLoading && !discussionLoading && !state.initialized) {
+    dispatch({ type: 'INITIALIZE', templates: templates ?? [], discussion: discussion ?? null })
+  }
 
   function onCommandSuccess(result: Discussion) {
     dispatch({ type: 'COMMAND_EXECUTED', discussion: result })
@@ -96,9 +99,10 @@ export default function EditorPage() {
 
   return (
     <main className={style.main}>
+      <title>CoEditor - Editor</title>
       <h1>CoEditor</h1>
       <EditorContext
-        templates={templatesQuery.data}
+        templates={templates ?? []}
         template={state.template}
         parameters={state.parameters}
         onTemplateChange={useCallback((template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
@@ -117,7 +121,7 @@ export default function EditorPage() {
         <GsInput value={customCommand} onChange={(e: InputEvent) => { setCustomCommand(getValue(e)) }} className={style['chat-input']} disabled={!state.contextValid}></GsInput>
         <GsButton onClick={() => { execute() }} disabled={!state.contextValid}>Send</GsButton>
       </div>
-      <div className="row buttons">
+      <div className={style.buttons + ' buttons row'}>
         <GsButton onClick={() => { execute('IMPROVE') }} disabled={!state.contextValid}>Improve</GsButton>
         <GsButton onClick={() => { execute('REFORMULATE') }} disabled={!state.contextValid}>Reformulate</GsButton>
         <GsButton onClick={() => { execute('SUMMARIZE') }} disabled={!state.contextValid}>Summarize</GsButton>

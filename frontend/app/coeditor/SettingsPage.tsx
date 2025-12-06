@@ -1,4 +1,4 @@
-import type { Application } from '../Application'
+import type { Application } from '../general/Application'
 import SettingsProfile from './settingspage/SettingsProfile'
 import { AuthContext, ensureApplicationAccess } from '../general/auth/AuthContext'
 import { useContext } from 'react'
@@ -19,6 +19,7 @@ export default function SettingsPage() {
 
   return (
     <main>
+      <title>CoEditor - Settings</title>
       <h1>Settings</h1>
       <table className="data-table">
         <thead>
@@ -29,7 +30,7 @@ export default function SettingsPage() {
           </tr>
         </thead>
         <tbody>
-          {profiles.map(p => (
+          {profiles?.map(p => (
             <SettingsProfile
               onChange={saveProfileMutation.mutate}
               onDelete={deleteProfileMutation.mutate}
@@ -53,7 +54,7 @@ export default function SettingsPage() {
           </tr>
         </thead>
         <tbody>
-          {templates.map(p => (
+          {templates?.map(p => (
             <SettingsTemplate
               onChange={saveTemplateMutation.mutate}
               onDelete={deleteTemplateMutation.mutate}

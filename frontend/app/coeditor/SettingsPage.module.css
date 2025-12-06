@@ -1,23 +1,23 @@
 .languageColumn {
-   width: 15rem;
+   width: var(--column-width-small);
 }
 
 .actionsColumn {
-   width: 10rem;
+   width: var(--column-width-small);
 } 
 
 .actionButton {
-   margin-bottom: 0.5rem;
+   margin-bottom: var(--gap-small);
 }
 
 .input {
-   margin-bottom: 0.5rem;
+   margin-bottom: var(--gap-small);
 }
 
 .textarea {
-   height: 10rem;
+   height: 7rem;
 }
 
 .sectionSeparator {
-   height: 2rem;
+   height: var(--gap);
 }

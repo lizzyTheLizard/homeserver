@@ -7,8 +7,8 @@ import { type User } from '../../general/auth/AuthContext'
 import { v4 as uuid } from 'uuid'
 import { useContext } from 'react'
 import { InfoContext, type InfoHandler } from '../../general/info/InfoContext'
-import { useSuspenseMutation } from './useSuspenseMutation'
 import { startDiscussion } from './DiscussionQueries'
+import { useLoadingMutation } from '../../general/loading/LoadingContext'
 
 export interface CommandParams extends Omit<CommandInput, 'discussion_id' | 'id' | 'template_id'> {
   discussion_id: string | undefined
@@ -18,7 +18,7 @@ export interface CommandParams extends Omit<CommandInput, 'discussion_id' | 'id'
 export function useExecuteCommandMutation(user: User | undefined): UseMutationResult<Discussion, Error, CommandParams> {
   const infoHandler = useContext(InfoContext)
   const queryClient = useQueryClient()
-  return useSuspenseMutation({
+  return useLoadingMutation({
     mutationFn: async (commandParams: CommandParams) => executeCommand(infoHandler, user?.accessToken, commandParams),
     onSettled: discussion => queryClient.setQueryData(['discussion', user?.accessToken, discussion?.id], discussion),
   })

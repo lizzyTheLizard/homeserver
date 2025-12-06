@@ -3,11 +3,11 @@
 }
 
 .title{
-   width: 10rem;
+   width: var(--column-width-small);
 }
 
 .updated{
-   width: 10rem
+   width: var(--column-width-small);
 }
 
 .textCell{

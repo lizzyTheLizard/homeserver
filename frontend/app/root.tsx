@@ -1,13 +1,13 @@
 import 'homeserver-webcomponents/style.css'
+import './vars.css'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import type { Route } from './+types/root'
 import { AuthProvider } from './general/auth/AuthProvider'
-import { Header } from './general/Header'
-import { GsLoadingSpinner } from 'homeserver-webcomponents/react'
+import { Header } from './general/header/Header'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Suspense } from 'react'
 import { InfoProvider } from './general/info/InfoProvider'
-import ErrorPage from './general/info/ErrorPage'
+import ErrorPage from './general/ErrorPage'
+import { LoadingProvider } from './general/loading/LoadingProvider'
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,10 +27,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function HydrateFallback() {
-  return <GsLoadingSpinner initial={true} />
-}
-
 const queryClient = new QueryClient()
 
 export default function App() {
@@ -38,10 +34,10 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <InfoProvider>
-          <Header />
-          <Suspense fallback={<GsLoadingSpinner initial={true} />}>
+          <LoadingProvider>
+            <Header />
             <Outlet />
-          </Suspense>
+          </LoadingProvider>
         </InfoProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -6,15 +6,13 @@
     .holder, .textarea {
       /* These must be in sync between .textarea and .holder, so overwrite then here */
       font: 400 13.3333px sans-serif;
-      padding: 15px 10px;
-      border: 0.66667px solid black;
       white-space: pre-wrap;
       word-wrap: break-word;
       height: 100%;
       width: 100%;
       padding: 1rem 0.5rem 0.5rem 0.5rem;
-      border-radius: 6px;
-      border: 1px solid black;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--default-border-color);  
       box-sizing: border-box;
     }
 
@@ -23,13 +21,13 @@
     }
 
     .textarea:focus {
-      background-color: rgba(0, 0, 255, 0.1);
-      color: black;
+      background-color: var(--primary-transparent-color);
+      color: var(--default-text-color)
     }
 
     .textarea:invalid {
-      background-color: rgba(150, 0, 0, 0.1);
-      color: black;
+      background-color: var(--danger-transparent-color);
+      color: var(--default-text-color)
     }
 
     .holder{
@@ -42,8 +40,8 @@
     }
 
     .disabled{
-      background-color: rgba(100, 100, 100, 0.1);
-      color: black;
+      background-color: var(--disabled-transparent-color);
+      color: var(--default-text-color);
       cursor: not-allowed;
     }
 
@@ -53,7 +51,7 @@
       when textarea are losing focus 
       to another IFrame */
       background-color: #c8c8c8;
-      color: black;
+      color: var(--default-text-color);
     }
 
     .label {

@@ -1,4 +1,4 @@
-import { useSuspenseQuery, type UseMutationResult, type UseSuspenseQueryResult } from '@tanstack/react-query'
+import { type UseMutationResult, type UseQueryResult } from '@tanstack/react-query'
 import { BACKEND_URL } from '../../config'
 import type { Template } from 'homeserver-backend/src/coeditor/template/Template.js'
 import type { DiscussionInput } from 'homeserver-backend/src/coeditor/discussion/DiscussionInput.js'
@@ -8,16 +8,16 @@ import { type User } from '../../general/auth/AuthContext'
 import { v4 as uuid } from 'uuid'
 import { useContext } from 'react'
 import { InfoContext, type InfoHandler } from '../../general/info/InfoContext'
-import { useSuspenseMutation } from './useSuspenseMutation'
+import { useLoadingMutation, useLoadingQuery } from '../../general/loading/LoadingContext'
 
 export interface StartDiscussionParams extends Omit<CommandInput, 'discussion_id' | 'id' | 'template_id'> {
   discussion_id: string | undefined
   template: Template | undefined
 }
 
-export function useDiscussionQuery(user: User | undefined, discussion_id: string | null): UseSuspenseQueryResult<Discussion | null> {
+export function useDiscussionQuery(user: User | undefined, discussion_id: string | null): UseQueryResult<Discussion | null> {
   const infoHandler = useContext(InfoContext)
-  return useSuspenseQuery({
+  return useLoadingQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ['discussion', user?.accessToken, discussion_id],
     queryFn: async () => getDiscussion(infoHandler, user?.accessToken, discussion_id ?? undefined),
@@ -25,9 +25,9 @@ export function useDiscussionQuery(user: User | undefined, discussion_id: string
   })
 }
 
-export function useDiscussionsQuery(user: User | undefined): UseSuspenseQueryResult<Discussion[]> {
+export function useDiscussionsQuery(user: User | undefined): UseQueryResult<Discussion[]> {
   const infoHandler = useContext(InfoContext)
-  return useSuspenseQuery({
+  return useLoadingQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ['discussion', user?.accessToken],
     queryFn: async () => getDiscussions(infoHandler, user?.accessToken),
@@ -37,7 +37,7 @@ export function useDiscussionsQuery(user: User | undefined): UseSuspenseQueryRes
 
 export function useStartDiscussionMutation(user: User | undefined): UseMutationResult<Discussion, Error, StartDiscussionParams> {
   const infoHandler = useContext(InfoContext)
-  return useSuspenseMutation({
+  return useLoadingMutation({
     mutationFn: async (params: StartDiscussionParams) => startDiscussion(infoHandler, user?.accessToken, params),
   })
 }
