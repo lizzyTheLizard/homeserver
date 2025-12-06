@@ -13,7 +13,7 @@ const discussion = { id: '1', text: 'Some text', template_id: '3', parameters: {
 
 describe('Initialize Editor State', () => {
   test('initial without discussion', () => {
-    const result = initialState(templates, null)
+    const result = editorStateReducer(initialState(null), { type: 'INITIALIZE', templates, discussion: null })
     expect(result).toEqual({
       discussion_id: undefined,
       text: '',
@@ -21,12 +21,13 @@ describe('Initialize Editor State', () => {
       redoStack: [],
       template: templates[0],
       parameters: {},
+      initialized: true,
       contextValid: true,
     })
   })
 
   test('initial with discussion', () => {
-    const result = initialState(templates.slice(2), discussion)
+    const result = editorStateReducer(initialState(discussion.id), { type: 'INITIALIZE', templates: templates.slice(2), discussion })
     expect(result).toEqual({
       discussion_id: discussion.id,
       text: discussion.text,
@@ -34,12 +35,13 @@ describe('Initialize Editor State', () => {
       redoStack: [],
       template: templates[2],
       parameters: discussion.parameters,
+      initialized: true,
       contextValid: true,
     })
   })
 
   test('initial invalid', () => {
-    const result = initialState(templates.slice(2), null)
+    const result = editorStateReducer(initialState(null), { type: 'INITIALIZE', templates: templates.slice(2), discussion: null })
     expect(result).toEqual({
       discussion_id: undefined,
       text: '',
@@ -47,13 +49,14 @@ describe('Initialize Editor State', () => {
       redoStack: [],
       template: templates[2],
       parameters: {},
+      initialized: true,
       contextValid: false,
     })
   })
 })
 
 describe('Context Change', () => {
-  const state = initialState(templates, discussion)
+  const state = editorStateReducer(initialState(discussion.id), { type: 'INITIALIZE', templates, discussion })
 
   test('Template change', () => {
     const result = editorStateReducer(state, { type: 'TEMPLATE_CHANGE', template: templates[1] })
@@ -94,7 +97,7 @@ describe('Context Change', () => {
 })
 
 describe('Text Change', () => {
-  const state = editorStateReducer(initialState(templates, null), { type: 'TEXT_CHANGE', text: 'Initial text' })
+  const state = editorStateReducer(editorStateReducer(initialState(null), { type: 'INITIALIZE', templates, discussion: null }), { type: 'TEXT_CHANGE', text: 'Initial text' })
 
   test('Change', () => {
     const result = editorStateReducer(state, { type: 'TEXT_CHANGE', text: 'New text' })
@@ -136,7 +139,7 @@ describe('Text Change', () => {
 })
 
 describe('Command Executed', () => {
-  const state = initialState(templates, discussion)
+  const state = editorStateReducer(initialState(discussion.id), { type: 'INITIALIZE', templates, discussion })
 
   test('Normal command', () => {
     const result = editorStateReducer(state, { type: 'COMMAND_EXECUTED', discussion: { ...discussion, text: 'Updated text' } as unknown as Discussion })
@@ -160,7 +163,7 @@ describe('Command Executed', () => {
   })
 
   test('Initialize command', () => {
-    const state = initialState(templates, null)
+    const state = editorStateReducer(initialState(null), { type: 'INITIALIZE', templates, discussion: null })
     const result = editorStateReducer(state, { type: 'COMMAND_EXECUTED', discussion: { id: '1', text: 'Initialized text', template_id: '1', parameters: {} } as unknown as Discussion })
     expect(result).toEqual({
       ...state,
