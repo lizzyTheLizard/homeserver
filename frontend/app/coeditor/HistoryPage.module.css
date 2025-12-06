@@ -9,3 +9,7 @@
 .updated{
    width: 10rem
 }
+
+.textCell{
+   white-space: pre-wrap;
+}

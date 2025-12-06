@@ -29,14 +29,8 @@ export default function HistoryPage() {
             <tr className={style.row} key={discussion.id} onClick={() => void navigate(`/coeditor?id=${discussion.id}`)}>
               <td>{discussion.title}</td>
               <td><GsDate>{discussion.updated_at}</GsDate></td>
-              <td>
-                {discussion.text.slice(0, 100)}
-                {discussion.text.length > 100 ? '...' : ''}
-              </td>
-              <td>
-                {discussion.context.slice(0, 100)}
-                {discussion.context.length > 100 ? '...' : ''}
-              </td>
+              <td className={style.textCell}>{discussion.text}</td>
+              <td className={style.textCell}>{discussion.context}</td>
             </tr>
           ))}
         </tbody>
