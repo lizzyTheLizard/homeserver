@@ -19,8 +19,8 @@ export default function SettingsTemplate(props: SettingsTemplateProps) {
   const [name, setName] = useState(props.name)
 
   function saveTemplate() {
-    if (!name || !language || !text) return
-    props.onChange?.({ id: props.id ?? uuid(), name, language, text })
+    if (!name || !language) return
+    props.onChange?.({ id: props.id ?? uuid(), name, language, text: text ?? '' })
     if (props.id === undefined) {
       setLanguage('')
       setText('')
@@ -37,21 +37,21 @@ export default function SettingsTemplate(props: SettingsTemplateProps) {
     <tr>
       <td>
         <GsInput
-          label="Name"
-          className={style.input}
-          changeOnKeyup={true}
-          value={name}
-          onChange={(e: InputEvent) => { setName(e.currentTarget.value) }}
-          disabled={!!props.name}
-        >
-        </GsInput>
-        <GsInput
           label="Language"
           className={style.input}
           changeOnKeyup={true}
           value={language}
           onChange={(e: InputEvent) => { setLanguage(e.currentTarget.value) }}
           disabled={!!props.language}
+        >
+        </GsInput>
+        <GsInput
+          label="Name"
+          className={style.input}
+          changeOnKeyup={true}
+          value={name}
+          onChange={(e: InputEvent) => { setName(e.currentTarget.value) }}
+          disabled={!!props.name}
         >
         </GsInput>
       </td>
@@ -61,7 +61,6 @@ export default function SettingsTemplate(props: SettingsTemplateProps) {
           changeOnKeyup={true}
           value={text}
           onChange={(e: InputEvent) => { setText(e.currentTarget.value) }}
-          required
           className={style.textarea}
           disabled={!language}
         >
@@ -71,7 +70,7 @@ export default function SettingsTemplate(props: SettingsTemplateProps) {
         <GsButton
           type="primary"
           className={style.actionButton}
-          disabled={!name || !language || !text}
+          disabled={!name || !language}
           onClick={saveTemplate}
         >
           Save

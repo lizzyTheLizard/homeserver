@@ -53,7 +53,7 @@ export default function SettingsPage() {
           </tr>
         </thead>
         <tbody>
-          {templates.filter(p => p.text).map(p => (
+          {templates.map(p => (
             <SettingsTemplate
               onChange={saveTemplateMutation.mutate}
               onDelete={deleteTemplateMutation.mutate}

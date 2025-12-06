@@ -23,7 +23,7 @@ export const TemplateInputConstraints = {
     type: 'string',
   },
   text: {
-    presence: { allowEmpty: false },
+    presence: { allowEmpty: true },
     type: 'string',
   },
 }

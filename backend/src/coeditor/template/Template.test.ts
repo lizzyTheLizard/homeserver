@@ -83,7 +83,6 @@ describe.concurrent('Template Integration Tests', () => {
     await expect(updateTemplate(context, { ...input, language: undefined })).rejects.toThrow('Language can\'t be blank')
     await expect(updateTemplate(context, { ...input, language: '' })).rejects.toThrow('Language can\'t be blank')
     await expect(updateTemplate(context, { ...input, text: undefined })).rejects.toThrow('Text can\'t be blank')
-    await expect(updateTemplate(context, { ...input, text: '' })).rejects.toThrow('Text can\'t be blank')
     const result = await getMyTemplates(context)
     expect(result).toEqual(defaultTemplates)
   })
