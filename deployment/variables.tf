@@ -8,11 +8,11 @@ variable "secret_key" {
 }
 variable "organization_id" {
   type = string
-  sensitive = true
+  sensitive = false
 }
 variable "project_id" {
   type = string
-  sensitive = true
+  sensitive = false
 }
 
 terraform {

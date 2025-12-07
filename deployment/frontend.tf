@@ -2,7 +2,7 @@ resource "scaleway_object_bucket" "frontend" {
   name       = "gutschi-site-fe-storage"
 }
 
-resource "scaleway_object_bucket_acl" "main" {
+resource "scaleway_object_bucket_acl" "frontend_acl" {
   bucket = scaleway_object_bucket.frontend.id
   acl    = "public-read"
 }
@@ -27,7 +27,7 @@ resource "scaleway_object" "frontend_upload" {
   visibility = "public-read"
 }
 
-resource "scaleway_object_bucket_website_configuration" "frontend" {
+resource "scaleway_object_bucket_website_configuration" "frontend_website" {
   bucket = scaleway_object_bucket.frontend.name
   index_document {
     suffix = "index.html"

@@ -1,26 +1,3 @@
-resource "scaleway_iam_application" "backend" {
-  name = "Backend Application"
-}
-
-resource "scaleway_iam_api_key" "backend" {
-  application_id = scaleway_iam_application.backend.id
-  description    = "API key for the backend to access other services"
-}
-
-data "scaleway_account_project" "homeserver" {
-  name = "Homeserver"
-}
-
-resource "scaleway_iam_policy" "backend_service_access" {
-  name           = "Backend Service Access Policy"
-  description    = "gives backend app access to other services project"
-  application_id = scaleway_iam_application.backend.id
-  rule {
-    project_ids          = [data.scaleway_account_project.homeserver.id]
-    permission_set_names = ["ServerlessSQLDatabaseReadWrite", "GenerativeApisModelAccess"]
-  }
-}
-
 resource "scaleway_function_namespace" "main" {
   name        = "homeserver"
   description = "Homeserver function namespace"
@@ -35,19 +12,23 @@ resource "scaleway_function" "backend" {
   privacy = "public"
   zip_file = "${path.module}/dist/backend/homeserver-backend.zip"
   zip_hash  = filesha256("${path.module}/dist/backend/homeserver-backend.zip")
-  environment_variables = {
+  secret_environment_variables = {
     DB_CONNECTION_STRING = format("postgres://%s:%s@%s",
-      scaleway_iam_application.backend.id,
-      scaleway_iam_api_key.backend.secret_key,
+      scaleway_iam_application.homeserver.id,
+      scaleway_iam_api_key.homeserver.secret_key,
       trimprefix(scaleway_sdb_sql_database.database.endpoint, "postgres://"),
     ),
-    OPENAI_API_KEY = scaleway_iam_api_key.backend.secret_key
+    OPENAI_API_KEY = scaleway_iam_api_key.homeserver.secret_key
+  }
+  environment_variables = {
+    CORS_ALLOWED_ORIGIN="https://gutschi-site-fe-storage.s3-website.fr-par.scw.cloud"
   }
   deploy = true
 }
 
-resource "scaleway_sdb_sql_database" "database" {
-  name    = "homeserver-db"
-  min_cpu = 0
-  max_cpu = 1
+resource "scaleway_function_domain" "backend" {
+  function_id = scaleway_function.backend.id
+  hostname    = "scaleway-backend.gutschi.site"
+  depends_on = [ scaleway_function.backend ]
 }
+
