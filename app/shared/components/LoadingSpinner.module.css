@@ -1,0 +1,81 @@
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 200;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 200;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner div {
+  border: 4px solid currentColor;
+  opacity: 1;
+  border-radius: 50%;
+  animation: spinner 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.text {
+  animation: blinker 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes spinner {
+  0% {
+    opacity: 0;
+  }
+  9% {
+    opacity: 0;
+  }
+  10% {
+    top: 36px;
+    left: 36px;
+    width: 8px;
+    height: 8px;
+    opacity: 1;
+  }
+  100% {
+    top: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+  }
+}
+
+@keyframes blinker {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

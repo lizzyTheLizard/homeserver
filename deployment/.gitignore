@@ -1,5 +1,0 @@
-# Terraform
-dist
-.terraform
-.terraform.lock.hcl
-tfplan

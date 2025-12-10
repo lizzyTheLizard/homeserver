@@ -3,33 +3,28 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [ 
         {
-            "name": "Debug Frontend in Edge",
+            "name": "Next.js: Debug Server-Side",
+            "type": "node",
+            "request": "attach",
+        },
+        {
+            "name": "Frontend in Edge",
             "type": "msedge",
             "request": "launch",
-            "url": "http://localhost:5173",
-            "webRoot": "${workspaceFolder}/frontend",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
             "sourceMapPathOverrides": {
-                "../src/*": "${workspaceFolder}/webcomponents/src/*"
             }
         },
         {
-            "name": "Debug Storybook in Edge",
+            "name": "Storybook in Edge",
             "type": "msedge",
             "request": "launch",
             "url": "http://localhost:6006",
-            "webRoot": "${workspaceFolder}/webcomponents",
+            "webRoot": "${workspaceFolder}",
         },
-        {
-            "name": "Debug Backend",
-            "type": "node",
-            "request": "attach",
-            "port": 9229,
-            "skipFiles": [
-                // Node.js internal core modules
-                "<node_internals>/**",
-                ],
-        }
+
     ]
 }

@@ -1,0 +1,31 @@
+.container {
+    display: flex;
+    margin: var(--gap);
+    width: 15rem;
+    max-width: calc(var(--mobile-breakpoint) - 4 * var(--gap));
+    border: 1px solid var(--default-border-color);
+    border-radius: var(--border-radius);
+    padding: var(--gap);
+    flex-direction: column;
+    flex-grow: 1;
+    color: var(--default-text-color);
+    text-decoration: none;
+    align-items: center;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: calc(100% - 2* var(--gap));
+        margin: var(--gap) 0;
+    }
+}
+
+@media print {
+    .container {
+        max-width: 100%;
+        width: calc(49% - 2* var(--gap));
+        margin: var(--gap) 0;
+        page-break-inside: avoid;
+    }
+}

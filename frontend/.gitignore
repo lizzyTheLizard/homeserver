@@ -1,7 +1,0 @@
-#npm
-build
-dist
-node_modules
-
-#react
-.react-router

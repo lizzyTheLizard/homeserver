@@ -1,8 +1,0 @@
-packages:
-  - webcomponents
-  - frontend
-  - backend
-
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - esbuild
