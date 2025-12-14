@@ -1,24 +1,14 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { Card } from './shared/components/Card'
 import { Icon } from './shared/components/Icon'
-import { getUserSession } from './common/auth/lib'
 import { applications } from './common/Application'
-import { Suspense } from 'react'
-import { LoadingSpinner } from './shared/components/LoadingSpinner'
+import { getUserSession } from './common/auth/lib'
 
 export const metadata: Metadata = {
   title: 'Gutschi.site - Dashboard',
 }
 
-export default function Page() {
-  return (
-    <Suspense fallback={<LoadingSpinner text="Loading..."></LoadingSpinner>}>
-      <DynamicContent />
-    </Suspense>
-  )
-}
-
-async function DynamicContent() {
+export default async function Page() {
   const session = await getUserSession()
   if (!session) throw new Error('Not authenticated')
   return (

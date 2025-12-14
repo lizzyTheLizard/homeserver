@@ -6,22 +6,12 @@ import { findDiscussionByOwner } from '../Discussion'
 import { DateTime } from '@/app/shared/components/DateTime'
 import Link from 'next/dist/client/link'
 import { DataTable } from '@/app/shared/components/DataTable'
-import { Suspense } from 'react'
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 
 export const metadata: Metadata = {
   title: 'CoEditor - History',
 }
 
-export default function Page() {
-  return (
-    <Suspense fallback={<LoadingSpinner text="Loading..."></LoadingSpinner>}>
-      <DynamicContent />
-    </Suspense>
-  )
-}
-
-async function DynamicContent() {
+export default async function Page() {
   const user = await getUserSession()
   if (!user) throw new Error('User not authenticated')
   const discussions = await transactional(client => findDiscussionByOwner(client, user.sub))

@@ -59,8 +59,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
           - name: Upload Configuration
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
             id: apply-upload
@@ -88,8 +86,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
           - name: Docker Build
             run: docker build --platform=linux/amd64 -t rg.fr-par.scw.cloud/funcscwgutschisitegliw2qsz/www_gutschi_site:latest .
           - name: Docker Push

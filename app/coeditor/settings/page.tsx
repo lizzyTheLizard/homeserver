@@ -10,22 +10,12 @@ import { TemplateRow } from './components/TemplateRow'
 import { ProfileRow } from './components/ProfileRow'
 import { TemplateCreateButton } from './components/TemplateCreateButton'
 import { ProfileCreateButton } from './components/ProfileCreateButton'
-import { Suspense } from 'react'
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 
 export const metadata: Metadata = {
   title: 'CoEditor - Settings',
 }
 
-export default function Page() {
-  return (
-    <Suspense fallback={<LoadingSpinner text="Loading..."></LoadingSpinner>}>
-      <DynamicContent />
-    </Suspense>
-  )
-}
-
-async function DynamicContent() {
+export default async function Page() {
   const user = await getUserSession()
   if (!user) throw new Error('User not authenticated')
   const templates = await transactional(client => findTemplatesByOwner(client, user.sub))

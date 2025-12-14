@@ -6,10 +6,14 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  return inTransaction(await pool, fn)
+  return inTransaction(await getPool(), fn)
 }
 
-const pool: Promise<Pool> = setupPool()
+let pool: Promise<Pool> | undefined = undefined
+export async function getPool(): Promise<Pool> {
+  pool ??= setupPool()
+  return pool
+}
 
 async function setupPool(): Promise<Pool> {
   console.debug('Setting up database connection...')

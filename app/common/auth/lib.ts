@@ -17,8 +17,6 @@ const settings = {
 }
 /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
-const clientConfig: Promise<client.Configuration> = client.discovery(new URL(settings.issuer), settings.clientId, settings.clientSecret)
-
 export interface UserSession {
   sub: string
   name: string
@@ -49,12 +47,12 @@ export async function startLogin(request: Request): Promise<URL> {
   session.originalUrlRelative = request.url
   await session.save()
 
-  return client.buildAuthorizationUrl(await clientConfig, parameters)
+  return client.buildAuthorizationUrl(await getClientConfig(), parameters)
 }
 
 export async function callback(currentUrl: URL | Request): Promise<string> {
   const session = await getSession()
-  const tokenSet = await client.authorizationCodeGrant(await clientConfig, currentUrl, {
+  const tokenSet = await client.authorizationCodeGrant(await getClientConfig(), currentUrl, {
     pkceCodeVerifier: session.code_verifier,
     expectedState: session.state,
   })
@@ -82,7 +80,7 @@ export async function logout(): Promise<URL> {
   session.originalUrlRelative = undefined
   await session.save()
   // TODO: We are not allowed to redirect to logout, check entra portal
-  return client.buildEndSessionUrl(await clientConfig)
+  return client.buildEndSessionUrl(await getClientConfig())
 }
 
 interface SessionData {
@@ -96,3 +94,9 @@ async function getSession(): Promise<IronSession<SessionData>> {
   const cookiesList = await cookies()
   return getIronSession<SessionData>(cookiesList, settings)
 }
+
+async function getClientConfig(): Promise<client.Configuration> {
+  clientConfigCache ??= client.discovery(new URL(settings.issuer), settings.clientId, settings.clientSecret)
+  return clientConfigCache
+}
+let clientConfigCache: Promise<client.Configuration> | undefined = undefined
