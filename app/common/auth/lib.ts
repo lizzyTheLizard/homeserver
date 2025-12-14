@@ -50,9 +50,10 @@ export async function startLogin(request: Request): Promise<URL> {
   return client.buildAuthorizationUrl(await getClientConfig(), parameters)
 }
 
-export async function callback(currentUrl: URL | Request): Promise<string> {
+export async function callback(urlOrRequest: URL | Request): Promise<string> {
   const session = await getSession()
-  const tokenSet = await client.authorizationCodeGrant(await getClientConfig(), currentUrl, {
+  const url = getActualUrl(urlOrRequest)
+  const tokenSet = await client.authorizationCodeGrant(await getClientConfig(), url, {
     pkceCodeVerifier: session.code_verifier,
     expectedState: session.state,
   })
@@ -70,6 +71,16 @@ export async function callback(currentUrl: URL | Request): Promise<string> {
   session.userInfo = { sub, name, email, applications }
   await session.save()
   return result
+}
+
+function getActualUrl(urlOrRequest: URL | Request): URL {
+  // We need to replace host, port etc. as the request will have the local docker address
+  const url = urlOrRequest instanceof URL ? urlOrRequest : new URL(urlOrRequest.url)
+  const appUrl = new URL(settings.redirect_uri)
+  url.protocol = appUrl.protocol
+  url.hostname = appUrl.hostname
+  url.port = appUrl.port
+  return url
 }
 
 export async function logout(): Promise<URL> {
