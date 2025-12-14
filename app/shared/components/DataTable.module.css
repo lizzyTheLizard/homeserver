@@ -1,0 +1,132 @@
+.emptyRow>td {
+  text-align: center;
+}
+
+.emptyRow {
+  display:none;
+}
+
+@media (min-width: 600px) {
+  table.dataTable {
+    border-spacing: 0;
+    border-collapse: separate;
+    border-radius: 6px;
+    border: 1px solid black;
+    width: 100%;
+
+    th {
+      background-color: blue;
+      color: white;
+      font-weight: bold;
+      padding: 1rem 0.5rem;
+      text-align: center;
+    }
+
+    th:first-child{
+    /* To make backgound of first header round, we need to set border-radius */
+    border-top-left-radius: 5px;
+    }
+
+    th:last-child{
+      border-top-right-radius: 5px;
+    }
+
+    th:not(:last-child),
+    td:not(:last-child) {
+    /* Apply a border to the right of all but the last column */
+    border-right: 1px solid black;
+    }
+
+    tr:not(:last-child)>th,
+    tr:not(:last-child)>td,
+    thead:not(:last-child),
+    tbody:not(:last-child),
+    tfoot:not(:last-child) {
+    /* Apply a border to the bottom of all but the last row */
+    border-bottom: 1px solid black;
+    }
+
+    td {
+      padding: 0.5rem 0.5rem;
+      vertical-align: top;
+    }
+
+    tr:not(.emptyRow) td {
+      text-align: left;
+    }
+        
+    tr:nth-child(even) td {
+      background-color: #f2f2f2;
+    }
+
+    tr:last-child td:first-child{
+      border-bottom-left-radius: 6px;
+    }
+
+    tr:last-child td:last-child{
+      border-bottom-right-radius: 6px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  table.dataTable{
+    display: block; 
+    border-radius: 6px;
+    border: 1px solid black;
+    width: 100%;
+
+    tbody, td, tr:not(.emptyRow) { 
+      display: block; 
+    }
+
+    thead, th { 
+      display: none;
+    }
+  
+    td {
+      padding: 0.5rem 0.5rem;
+      border-bottom: 1px solid black;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      word-break: break-all;
+      min-height: 1rem;
+    }
+    
+    tr:not(.emptyRow) td {
+      text-align: left;
+    }
+
+    td:first-child {
+      padding-top: 1rem;
+    }
+
+    td:last-child {
+      padding-bottom: 1rem;
+    }
+
+    tr:last-child td:last-child {
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f2f2f2;
+    }
+
+    tr:not(.emptyRow) td:not(:has(*[label])) { 
+      position: relative;
+      padding-left: 50%; 
+    }
+
+    tr:not(.emptyRow) td:not(:has(*[label])):before { 
+      position: absolute;
+      left: 1rem;
+      width: calc(50% - 2rem);
+      white-space: nowrap;
+      font-weight: bold;
+      content: attr(header);
+    }
+  }
+}

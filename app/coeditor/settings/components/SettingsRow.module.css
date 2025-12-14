@@ -1,0 +1,34 @@
+.form {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.textarea{
+    flex-grow: 1;
+}
+
+
+.form>* {
+    margin: var(--gap-small) 0;
+}
+.error {
+    color: var(--danger-background-color);
+}
+
+.createButtonRow {
+    margin-top: var(--gap);
+    justify-content: flex-end;
+}   
+
+@media (min-width: 600px) {
+    .createButton {
+        max-width: 300px;
+    }    
+}
+
+@media (max-width: 600px) {
+    .createButton {
+        width: 100%;
+    }    
+}

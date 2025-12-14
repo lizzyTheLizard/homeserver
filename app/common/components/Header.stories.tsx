@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Header } from './Header'
-import { expect } from 'storybook/test'
 
 const meta = {
   title: 'Common/Header',
@@ -55,7 +54,6 @@ export const MobileOpen: StoryObj<typeof meta> = {
 
 export const MobileOpenClose: StoryObj<typeof meta> = {
   globals: {
-    // 👇 Override viewport for this story
     viewport: { value: 'mobile1', isRotated: false },
   },
   play: async ({ canvasElement }) => {

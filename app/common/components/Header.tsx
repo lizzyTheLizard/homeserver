@@ -5,14 +5,17 @@ import style from './Header.module.css'
 import { Icon } from '../../shared/components/Icon'
 import Link from 'next/link'
 import { Application } from '../Application'
+import { usePathname } from 'next/navigation'
 
-function startWithIgnoreCase(str: string, prefix: string) {
-  return str.toLowerCase().startsWith(prefix.toLowerCase())
+function startWithIgnoreCase(path: string, app: Application) {
+  const split = app.link.split('/')
+  const prefix = '/' + split[1]
+  return path.toLowerCase().startsWith(prefix.toLowerCase())
 }
 
 export interface HeaderProps {
   accessibleApplications: Application[]
-  path: string
+  path?: string
 }
 
 /**
@@ -20,7 +23,9 @@ export interface HeaderProps {
  */
 export function Header({ accessibleApplications, path }: HeaderProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const currentApplication = accessibleApplications.find(app => startWithIgnoreCase(path, app.link))
+  const pathname = usePathname()
+  const effectivePath = path ?? pathname
+  const currentApplication = accessibleApplications.find(app => startWithIgnoreCase(effectivePath, app))
   const showPortalLink = currentApplication !== undefined && accessibleApplications.length > 1
 
   function toggle() {

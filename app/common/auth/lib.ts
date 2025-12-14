@@ -6,7 +6,6 @@ import * as client from 'openid-client'
 const settings = {
   clientId: process.env.CLIENT_ID!,
   clientSecret: process.env.CLIENT_SECRET!,
-  applicationId: process.env.APPLICATION_ID!,
   redirect_uri: `${process.env.APP_URL!}/common/auth/callback`,
   scope: 'openid profile email',
   password: process.env.SESSION_PASSWORD!,
@@ -14,7 +13,7 @@ const settings = {
   cookieOptions: { secure: process.env.NODE_ENV !== 'development' },
   ttl: 60 * 60 * 24 * 7, // 1 week
   code_challenge_method: 'S256',
-  issuer: 'https://login.microsoftonline.com/' + process.env.APPLICATION_ID! + '/v2.0',
+  issuer: process.env.ISSUER!,
 }
 /* eslint-enable @typescript-eslint/no-non-null-assertion */
 

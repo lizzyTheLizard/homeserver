@@ -1,0 +1,12 @@
+.main {
+    flex-grow: 1;
+}
+@media (min-width: 600px) {
+    .language {
+        width: 8rem;
+    }
+
+    .updated {
+        width: 8rem;
+    }
+}
