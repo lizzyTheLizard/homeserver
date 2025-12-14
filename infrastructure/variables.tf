@@ -27,7 +27,7 @@ terraform {
   cloud { 
     organization = "gutschi-site" 
     workspaces { 
-      name = "homesever" 
+      name = "homesever-cicd" 
     } 
   }
   required_providers {

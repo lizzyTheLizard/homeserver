@@ -52,11 +52,11 @@ resource "scaleway_container" "www_gutschi_site" {
     APP_URL="http://www-scaleway.gutschi.site",
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
-    COOKIE_NAME="session"
+    COOKIE_NAME="session",
   }
   secret_environment_variables = {
-    CLIENT_SECRET=variable.client_secret,
-    SESSION_PASSWORD=variable.session_password,
+    CLIENT_SECRET=var.client_secret,
+    SESSION_PASSWORD=var.session_password,
     DB_CONNECTION_STRING = format("postgres://%s:%s@%s",
       scaleway_iam_application.gutschi_site.id,
       scaleway_iam_api_key.gutschi_site.secret_key,
@@ -80,11 +80,11 @@ resource "scaleway_container" "test_gutschi_site" {
     APP_URL="http://test-scaleway.gutschi.site",
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
-    COOKIE_NAME=session
+    COOKIE_NAME="session"
   }
   secret_environment_variables = {
-    CLIENT_SECRET=variable.client_secret,
-    SESSION_PASSWORD=variable.session_password,
+    CLIENT_SECRET=var.client_secret,
+    SESSION_PASSWORD=var.session_password,
     DB_CONNECTION_STRING = format("postgres://%s:%s@%s",
       scaleway_iam_application.gutschi_site.id,
       scaleway_iam_api_key.gutschi_site.secret_key,

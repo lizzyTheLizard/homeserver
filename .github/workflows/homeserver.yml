@@ -87,6 +87,6 @@ jobs:
           - name: Checkout
             uses: actions/checkout@v4
           - name: Docker Build
-            run: docker build --platform=linux/amd64 -t rg.fr-par.scw.cloud/funcscwgutschisitegliw2qsz/www_gutschi_site:latest .
+            run: docker build --platform=linux/amd64 -t rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest .
           - name: Docker Push
-            run: docker push  rg.fr-par.scw.cloud/funcscwgutschisitegliw2qsz/www_gutschi_site:latest
+            run: docker push  rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest
