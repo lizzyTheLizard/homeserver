@@ -3,12 +3,22 @@ import { Card } from './shared/components/Card'
 import { Icon } from './shared/components/Icon'
 import { getUserSession } from './common/auth/lib'
 import { applications } from './common/Application'
+import { Suspense } from 'react'
+import { LoadingSpinner } from './shared/components/LoadingSpinner'
 
 export const metadata: Metadata = {
   title: 'Gutschi.site - Dashboard',
 }
 
-export default async function Page() {
+export default function Page() {
+  return (
+    <Suspense fallback={<LoadingSpinner text="Loading..."></LoadingSpinner>}>
+      <DynamicContent />
+    </Suspense>
+  )
+}
+
+async function DynamicContent() {
   const session = await getUserSession()
   if (!session) throw new Error('Not authenticated')
   return (
