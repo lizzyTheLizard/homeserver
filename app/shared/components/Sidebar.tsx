@@ -1,5 +1,5 @@
 'use client'
-import { MouseEvent, PropsWithChildren, useState } from 'react'
+import { PropsWithChildren, useState } from 'react'
 import styles from './Sidebar.module.css'
 import { Icon } from './Icon'
 import { SidebarContent, SidebarContext } from './Sidebar.context'

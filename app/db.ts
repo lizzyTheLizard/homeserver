@@ -17,6 +17,7 @@ async function setupPool(): Promise<Pool> {
   await testConnection(pool)
   console.log('DB Connection successful')
   await inTransaction(pool, async (client) => {
+    // TODO: Remove dropDB once in production
     // console.log('Dropping existing database objects...')
     // await dropDB(client)
     console.log('Starting Database Migrations...')
@@ -59,12 +60,14 @@ async function inTransaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<
   }
 }
 
+/*
 async function dropDB(client: PoolClient): Promise<void> {
   const result = await client.query<{ tablename: string }>(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`)
   for (const row of result.rows) {
     await client.query(`DROP TABLE IF EXISTS ${row.tablename} CASCADE`)
   }
 }
+*/
 
 async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMigration[]> {
   await client.query(`
