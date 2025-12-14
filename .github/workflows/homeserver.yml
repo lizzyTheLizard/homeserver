@@ -54,7 +54,7 @@ jobs:
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
             TF_API_TOKEN: "${{ secrets.TF_TOKEN }}"
-            TF_WORKSPACE: "homeserver-cicd"
+            TF_WORKSPACE: "homesever-cicd"
             CONFIG_DIRECTORY: "./"
         steps:
           - name: Checkout
