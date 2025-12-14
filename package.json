@@ -12,7 +12,8 @@
     "test:watch": "vitest --watch",
     "clean": "rimraf .next storybook-static",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic --build-script-name build-storybook"
   },
   "dependencies": {
     "iron-session": "^8.0.4",
@@ -44,6 +45,7 @@
     "@vitest/browser-playwright": "^4.0.15",
     "@vitest/coverage-v8": "^4.0.15",
     "babel-plugin-react-compiler": "1.0.0",
+    "chromatic": "^13.3.4",
     "eslint": "^9",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

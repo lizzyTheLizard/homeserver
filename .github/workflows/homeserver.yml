@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
 jobs:
     test:
-        name: Test
+        name: Test Application
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
@@ -29,7 +29,7 @@ jobs:
             env:
                 CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     build:
-        name: Build
+        name: Build Application
         needs: test
         runs-on: ubuntu-latest
         steps:
@@ -40,7 +40,7 @@ jobs:
           - name: Build
             run: pnpm run build
     infrastructure:
-        name: Infrastructure
+        name: Update Infrastructure
         if: github.ref == 'refs/heads/main' && (!failure() && !cancelled())
         runs-on: ubuntu-latest
         env:
@@ -73,7 +73,7 @@ jobs:
                 run: ${{ steps.apply-run.outputs.run_id }}
                 comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
     container:
-        name: Container
+        name: Build and Push Docker Container
         needs: [test, build, infrastructure]
         runs-on: ubuntu-latest        
         if: github.ref == 'refs/heads/main' && (!failure() && !cancelled())
