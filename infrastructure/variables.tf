@@ -14,6 +14,14 @@ variable "project_id" {
   type = string
   sensitive = false
 }
+variable "client_secret" {
+  type = string
+  sensitive = true
+}
+variable "session_password" {
+  type = string
+  sensitive = true
+}
 
 terraform {
   cloud { 
