@@ -32,7 +32,6 @@ jobs:
                 CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     build:
         name: Build Application
-        needs: test
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
