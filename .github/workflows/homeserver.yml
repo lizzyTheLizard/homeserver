@@ -49,7 +49,7 @@ jobs:
             run: pnpm run build
     infrastructure:
         name: Update Infrastructure
-        if: github.ref == 'refs/heads/main' && (!failure() && !cancelled())
+        if: github.ref == 'refs/heads/next' && (!failure() && !cancelled())
         runs-on: ubuntu-latest
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
@@ -82,7 +82,7 @@ jobs:
         name: Build and Push Docker Container
         needs: [test, build, infrastructure]
         runs-on: ubuntu-latest        
-        if: github.ref == 'refs/heads/main' && (!failure() && !cancelled())
+        if: github.ref == 'refs/heads/next' && (!failure() && !cancelled())
         steps:
           - name: Checkout
             uses: actions/checkout@v4
