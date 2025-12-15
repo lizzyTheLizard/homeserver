@@ -6,6 +6,7 @@ import { modifyTemplate, createTemplate, findTemplateById, Template, TemplateInp
 import { PoolClient } from 'pg'
 import { validate } from 'validate.js'
 import { expectedError, isBackendError } from '@/app/BackendError'
+import { logger } from '@/logger'
 
 const TemplateInputConstraints = {
   id: {
@@ -40,10 +41,10 @@ export async function updateTemplate(input: unknown): Promise<{ error?: string }
     .then(() => ({}))
     .catch((error: unknown) => {
       if (isBackendError(error)) {
-        console.error('Error in updateTemplate:', error.showStack ? error : error.message)
+        logger.error('Error in updateTemplate:', error.showStack ? error : error.message)
         return { error: error.userMessage }
       }
-      console.error('Error in updateTemplate:', error)
+      logger.error('Error in updateTemplate:', error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }

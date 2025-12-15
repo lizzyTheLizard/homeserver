@@ -1,0 +1,8 @@
+[2025-12-15T23:06:52.367Z] info:  [32m[1m✓[22m[39m Compiled in 17ms
+[2025-12-15T23:07:11.458Z] info:  [32m[1m✓[22m[39m Compiled in 9ms
+[2025-12-15T23:07:21.254Z] info:  [32m[1m✓[22m[39m Compiled in 12ms
+[2025-12-15T23:07:26.861Z] info:  [32m[1m✓[22m[39m Compiled in 40ms
+[2025-12-15T23:07:30.737Z] info: Logger initialized.
+[2025-12-15T23:07:30.764Z] info: GET /admin/logs 200 for matthias.graf.for.president@gmail.com
+[2025-12-15T23:07:32.665Z] info: GET /.well-known/appspecific/com.chrome.devtools.json 200 for matthias.graf.for.president@gmail.com
+[2025-12-15T23:07:33.209Z] info: GET /favicon.ico 200 for matthias.graf.for.president@gmail.com

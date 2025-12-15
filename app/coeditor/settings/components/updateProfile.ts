@@ -6,6 +6,7 @@ import { PoolClient } from 'pg'
 import { validate } from 'validate.js'
 import { expectedError, isBackendError } from '@/app/BackendError'
 import { createProfile, findProfileByOwnerAndLanguage, modifyProfile, Profile, ProfileInput } from '../../Profile'
+import { logger } from '@/logger'
 
 const ProfileInputConstraints = {
   language: {
@@ -28,10 +29,10 @@ export async function updateProfile(input: unknown): Promise<{ error?: string }>
     .then(() => ({}))
     .catch((error: unknown) => {
       if (isBackendError(error)) {
-        console.error('Error in updateProfile:', error.showStack ? error : error.message)
+        logger.error('Error in updateProfile:', error.showStack ? error : error.message)
         return { error: error.userMessage }
       }
-      console.error('Error in updateProfile:', error)
+      logger.error('Error in updateProfile:', error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }

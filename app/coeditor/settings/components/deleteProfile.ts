@@ -5,6 +5,7 @@ import { transactional } from '@/app/db'
 import { PoolClient } from 'pg'
 import { expectedError, isBackendError } from '@/app/BackendError'
 import { findProfileByOwnerAndLanguage, Profile, deleteProfile as deleteProfileInt } from '../../Profile'
+import { logger } from '@/logger'
 
 export async function deleteProfile(language: unknown): Promise<{ error?: string }> {
   return transactional(async (client) => {
@@ -15,10 +16,10 @@ export async function deleteProfile(language: unknown): Promise<{ error?: string
     .then(() => ({}))
     .catch((error: unknown) => {
       if (isBackendError(error)) {
-        console.error('Error in deleteProfile:', error.showStack ? error : error.message)
+        logger.error('Error in deleteProfile:', error.showStack ? error : error.message)
         return { error: error.userMessage }
       }
-      console.error('Error in deleteProfile:', error)
+      logger.error('Error in deleteProfile:', error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }

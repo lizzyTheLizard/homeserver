@@ -24,7 +24,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "uuid": "^13.0.0",
-    "validate.js": "^0.13.1"
+    "validate.js": "^0.13.1",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.3",

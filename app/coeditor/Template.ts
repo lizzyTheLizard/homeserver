@@ -1,6 +1,7 @@
 import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { expectedError } from '../BackendError'
+import { logger } from '@/logger'
 
 export interface Template {
   id: string
@@ -31,17 +32,19 @@ export interface TemplateInput {
 export async function findTemplatesByOwner(client: PoolClient, owner: string): Promise<Template[]> {
   const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1', [owner])
   if (result.rows.length === 0) {
-    console.debug('No templates found, inserting default template')
+    logger.info('No templates found, inserting default template')
     return [
       await createTemplate(client, owner, { id: randomUUID(), name: 'No Context', language: 'English', text: '' }),
       await createTemplate(client, owner, { id: randomUUID(), name: 'With Context', language: 'English', text: '{context:TEXT}' }),
     ]
   }
+  logger.debug(`Found ${result.rows.length.toString()} templates for  owner ${owner}`)
   return result.rows
 }
 
 export async function findTemplateById(client: PoolClient, template_id: string): Promise<Template | undefined> {
   const result = await client.query<Template>('SELECT * FROM template WHERE id = $1', [template_id])
+  logger.debug(`${result.rows.length ? 'Found' : 'Did not find'} template ${template_id}`)
   return result.rows[0] ?? undefined
 }
 
@@ -52,7 +55,7 @@ export async function createTemplate(client: PoolClient, owner: string, input: T
     [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)],
   )
   if (!result.rows[0]) throw expectedError('Failed to create template', 500, 'Internal Server Error')
-  console.debug(`Created template ${input.id} for owner ${owner}`)
+  logger.info(`Created template ${input.id} for owner ${owner}`)
   return result.rows[0]
 }
 
@@ -63,7 +66,7 @@ export async function modifyTemplate(client: PoolClient, input: TemplateInput): 
     [input.name, input.language, input.text, JSON.stringify(parameters), input.id],
   )
   if (!result.rows[0]) throw expectedError('Failed to modify template', 500, 'Internal Server Error')
-  console.debug(`Modified template ${input.id}`)
+  logger.info(`Modified template ${input.id}`)
   return result.rows[0]
 }
 
@@ -74,7 +77,7 @@ export async function deleteTemplate(client: PoolClient, owner: string, template
       [template_id, owner],
     )
     if (result.rowCount === 0) throw expectedError('Failed to delete template', 500, 'Internal Server Error')
-    console.debug(`Deleted template ${template_id} for owner ${owner}`)
+    logger.info(`Deleted template ${template_id} for owner ${owner}`)
   }
 }
 

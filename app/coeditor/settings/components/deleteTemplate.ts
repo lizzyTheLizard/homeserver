@@ -5,6 +5,7 @@ import { transactional } from '@/app/db'
 import { PoolClient } from 'pg'
 import { expectedError, isBackendError } from '@/app/BackendError'
 import { findTemplateById, Template, deleteTemplate as deleteTemplateInt } from '../../Template'
+import { logger } from '@/logger'
 
 export async function deleteTemplate(id: unknown): Promise<{ error?: string }> {
   return transactional(async (client) => {
@@ -15,10 +16,10 @@ export async function deleteTemplate(id: unknown): Promise<{ error?: string }> {
     .then(() => ({}))
     .catch((error: unknown) => {
       if (isBackendError(error)) {
-        console.error('Error in deleteTemplate:', error.showStack ? error : error.message)
+        logger.error('Error in deleteTemplate:', error.showStack ? error : error.message)
         return { error: error.userMessage }
       }
-      console.error('Error in deleteTemplate:', error)
+      logger.error('Error in deleteTemplate:', error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }

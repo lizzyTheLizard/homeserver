@@ -1,6 +1,7 @@
+'use client'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import style from './Textarea.module.css'
-import { v4 as randomUUID } from 'uuid'
 
 export interface Selection {
   start: number
@@ -31,7 +32,6 @@ export default function Textarea({ label, keepSelection, onSelectionChange, clas
   const inputIfNotDefined = useRef<HTMLTextAreaElement | null>(null)
   const input = props.ref ?? inputIfNotDefined
   const div = useRef<HTMLDivElement | null>(null)
-  const id = props.id ?? randomUUID()
   const textareaClasses = [style.textarea, label ? '' : style.noLabel].join(' ')
   const containerClasses = [style.container, className ?? ''].join(' ')
   const holderClasses = [style.holder, label ? '' : style.noLabel].join(' ')
@@ -117,7 +117,6 @@ export default function Textarea({ label, keepSelection, onSelectionChange, clas
     <div className={containerClasses} style={inputStyle}>
       <textarea
         {...props}
-        id={id}
         className={textareaClasses}
         value={value}
         ref={input}
@@ -131,7 +130,7 @@ export default function Textarea({ label, keepSelection, onSelectionChange, clas
         onScroll={handleScroll}
       >
       </textarea>
-      { label && <label className={style.label} htmlFor={id}>{label}</label>}
+      { label && <label className={style.label} htmlFor={props.id}>{label}</label>}
       { selection && !focused && keepSelection && (
         <div className={holderClasses} ref={div} style={{ top: (-scrollTop).toString() + 'px', width: width.toString() + 'px', height: height.toString() + 'px' }}>
           {value.substring(0, selection.start)}

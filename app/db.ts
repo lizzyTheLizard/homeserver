@@ -5,6 +5,7 @@ import { dirname } from 'path'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { config } from './config'
+import { logger } from '@/logger'
 
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   return inTransaction(await getPool(), fn)
@@ -17,21 +18,17 @@ export async function getPool(): Promise<Pool> {
 }
 
 async function setupPool(): Promise<Pool> {
-  console.debug('Setting up database connection...')
+  logger.debug('Setting up database connection...')
   const pool = new Pool({ connectionString: config.database.value })
   await testConnection(pool)
-  console.log('DB Connection successful')
   await inTransaction(pool, async (client) => {
-    // TODO: Remove dropDB once in production
-    // console.log('Dropping existing database objects...')
-    // await dropDB(client)
-    console.log('Starting Database Migrations...')
+    logger.debug('Starting Database Migrations...')
     const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned)
   })
-  console.log('Database migrations successful, ready to go!')
+  logger.info('Database successfully connected and migrations complete.')
   return pool
 }
 
@@ -65,15 +62,6 @@ async function inTransaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<
   }
 }
 
-/*
-async function dropDB(client: PoolClient): Promise<void> {
-  const result = await client.query<{ tablename: string }>(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`)
-  for (const row of result.rows) {
-    await client.query(`DROP TABLE IF EXISTS ${row.tablename} CASCADE`)
-  }
-}
-*/
-
 async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMigration[]> {
   await client.query(`
     CREATE TABLE IF NOT EXISTS migrations (
@@ -83,7 +71,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
     );
   `)
   const result = await client.query<DatabaseMigration>(`SELECT name, hash, run_on FROM migrations;`)
-  console.debug(`Found ${result.rows.length.toString()} existing migrations`)
+  logger.debug(`Found ${result.rows.length.toString()} existing migrations`)
   return result.rows
 }
 
@@ -98,7 +86,7 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
     const hash = createHash('sha256').update(content).digest('hex')
     result.push({ content, hash, name })
   }
-  console.debug(`Found ${result.length.toString()} planned migrations`)
+  logger.debug(`Found ${result.length.toString()} planned migrations`)
   return result
 }
 
@@ -108,7 +96,7 @@ async function runMigration(client: PoolClient, migration: PlannedDatabaseMigrat
     await client.query(command)
   }
   await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
-  console.log(`Migration ${migration.name} complete`)
+  logger.info(`Migration ${migration.name} executed successfully`)
 }
 
 function validateExistingMigrations(existing: DatabaseMigration[], planned: PlannedDatabaseMigration[]) {
@@ -127,7 +115,7 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
     const e = existing.find(m => m.name === p.name)
     if (e && lastMigrationToRun) throw new Error(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
-      console.debug(`Migration ${p.name} has already run on ${e.run_on.toISOString()}`)
+      logger.debug(`Migration ${p.name} has already run on ${e.run_on.toISOString()}`)
       continue
     }
     await runMigration(client, p)
