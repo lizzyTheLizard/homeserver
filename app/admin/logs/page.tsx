@@ -2,7 +2,7 @@ import { getUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import styles from './page.module.css'
 import { promises as fs } from 'fs'
-import Textarea from '@/app/shared/components/Textarea'
+
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 

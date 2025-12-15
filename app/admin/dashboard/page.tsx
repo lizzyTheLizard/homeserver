@@ -1,6 +1,5 @@
 import { getUserSession } from '@/app/common/auth/auth'
 import { Card } from '@/app/shared/components/Card'
-import { DateTime } from '@/app/shared/components/DateTime'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import styles from './page.module.css'
 import { config } from '@/app/config'

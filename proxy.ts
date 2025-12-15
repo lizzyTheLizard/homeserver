@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import type { NextFetchEvent, NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getUserSession, startLogin } from './app/common/auth/auth'
 import { logger } from '@/logger'
 
-export async function proxy(request: NextRequest, event: NextFetchEvent): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const session = await getUserSession()
   let response: NextResponse
   if (session)
