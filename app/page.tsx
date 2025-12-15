@@ -2,7 +2,7 @@ import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { Card } from './shared/components/Card'
 import { Icon } from './shared/components/Icon'
 import { applications } from './common/Application'
-import { getUserSession } from './common/auth/lib'
+import { getUserSession } from './common/auth/auth'
 
 export const metadata: Metadata = {
   title: 'Gutschi.site - Dashboard',
@@ -13,7 +13,6 @@ export default async function Page() {
   if (!session) throw new Error('Not authenticated')
   return (
     <main>
-      <title>Gutschi.site - Dashboard</title>
       <div className="row">
         {applications.filter(a => session.applications.includes(a.key)).map(app => (
           <Card href={app.link} key={app.key}>

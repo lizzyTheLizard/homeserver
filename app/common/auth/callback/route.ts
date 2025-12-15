@@ -1,4 +1,4 @@
-import { callback } from '../lib'
+import { callback } from '../auth'
 import { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {

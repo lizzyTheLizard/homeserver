@@ -1,21 +1,7 @@
+import { config } from '@/app/config'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
-
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-const settings = {
-  clientId: process.env.CLIENT_ID!,
-  clientSecret: process.env.CLIENT_SECRET!,
-  redirect_uri: `${process.env.APP_URL!}/common/auth/callback`,
-  scope: 'openid profile email',
-  password: process.env.SESSION_PASSWORD!,
-  cookieName: process.env.COOKIE_NAME!,
-  cookieOptions: { secure: process.env.NODE_ENV !== 'development' },
-  ttl: 60 * 60 * 24 * 7, // 1 week
-  code_challenge_method: 'S256',
-  issuer: process.env.ISSUER!,
-}
-/* eslint-enable @typescript-eslint/no-non-null-assertion */
 
 export interface UserSession {
   sub: string
@@ -33,11 +19,11 @@ export async function startLogin(request: Request): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
   const parameters: Record<string, string> = {
-    redirect_uri: settings.redirect_uri,
-    scope: settings.scope,
+    redirect_uri: config.redirectUri.value,
+    scope: config.scope.value,
     code_challenge,
     state: client.randomState(),
-    code_challenge_method: settings.code_challenge_method,
+    code_challenge_method: config.challenge.value,
   }
 
   const session = await getSession()
@@ -76,7 +62,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
 function getActualUrl(urlOrRequest: URL | Request): URL {
   // We need to replace host, port etc. as the request will have the local docker address
   const url = urlOrRequest instanceof URL ? urlOrRequest : new URL(urlOrRequest.url)
-  const appUrl = new URL(settings.redirect_uri)
+  const appUrl = new URL(config.redirectUri.value)
   url.protocol = appUrl.protocol
   url.hostname = appUrl.hostname
   url.port = appUrl.port
@@ -103,11 +89,19 @@ interface SessionData {
 
 async function getSession(): Promise<IronSession<SessionData>> {
   const cookiesList = await cookies()
+  const settings = {
+    cookieName: config.cookieName.value,
+    password: config.password.value,
+    ttl: parseInt(config.cookieTtl.value, 10),
+    cookieOptions: {
+      secure: Boolean(config.cookieSecure.value),
+    },
+  }
   return getIronSession<SessionData>(cookiesList, settings)
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
-  clientConfigCache ??= client.discovery(new URL(settings.issuer), settings.clientId, settings.clientSecret)
+  clientConfigCache ??= client.discovery(new URL(config.issuer.value), config.clientId.value, config.clientSecret.value)
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined

@@ -1,7 +1,7 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import style from './page.module.css'
 import { DataTable } from '@/app/shared/components/DataTable'
-import { getUserSession } from '@/app/common/auth/lib'
+import { getUserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
 import { findProfilesByOwner } from '../Profile'
 import { findTemplatesByOwner } from '../Template'

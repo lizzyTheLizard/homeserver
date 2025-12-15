@@ -19,7 +19,9 @@ export const applications: Application[] = [
     key: 'admin', link: '/admin/dashboard', icon: 'admin', name: 'Admin',
     description: 'General server admin',
     links: [
-      { text: 'Home', href: '/admin/' },
+      { text: 'Dashboard', href: '/admin/dashboard' },
+      { text: 'Logs', href: '/admin/logs' },
+      { text: 'Cash', href: '/admin/cash' },
     ],
   },
   {

@@ -12,6 +12,7 @@
     text-decoration: none;
     align-items: center;
     text-align: center;
+    overflow-x: hidden;
 }
 
 @media (max-width: 600px) {

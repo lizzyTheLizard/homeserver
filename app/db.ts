@@ -4,6 +4,7 @@ import { createHash } from 'crypto'
 import { dirname } from 'path'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { config } from './config'
 
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   return inTransaction(await getPool(), fn)
@@ -17,7 +18,7 @@ export async function getPool(): Promise<Pool> {
 
 async function setupPool(): Promise<Pool> {
   console.debug('Setting up database connection...')
-  const pool = new Pool({ connectionString: process.env.DB_CONNECTION_STRING })
+  const pool = new Pool({ connectionString: config.database.value })
   await testConnection(pool)
   console.log('DB Connection successful')
   await inTransaction(pool, async (client) => {

@@ -1,4 +1,4 @@
-import { logout } from '../lib'
+import { logout } from '../auth'
 
 export async function GET() {
   const endSessionUrl = await logout()

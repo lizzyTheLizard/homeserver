@@ -1,6 +1,6 @@
 'use server'
 
-import { getUserSession, UserSession } from '@/app/common/auth/lib'
+import { getUserSession, UserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
 import { modifyTemplate, createTemplate, findTemplateById, Template, TemplateInput } from '../../Template'
 import { PoolClient } from 'pg'

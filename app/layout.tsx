@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Header } from './common/components/Header'
-import { getUserSession } from './common/auth/lib'
+import { getUserSession } from './common/auth/auth'
 import { applications } from './common/Application'
 
 export const metadata: Metadata = {

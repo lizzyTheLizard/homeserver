@@ -1,6 +1,6 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import style from './page.module.css'
-import { getUserSession } from '@/app/common/auth/lib'
+import { getUserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
 import { findDiscussionByOwner } from '../Discussion'
 import { DateTime } from '@/app/shared/components/DateTime'
