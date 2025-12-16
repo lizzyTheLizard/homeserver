@@ -19,6 +19,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.nextUrl.pathname.startsWith('/_next/')) {
     return response
   }
-  logger.info(`${request.method} ${request.nextUrl.pathname} ${response.status.toString()} for ${session?.email ?? 'unauthenticated user'}`)
+  logger.debug(`${request.method} ${request.nextUrl.pathname} for ${session?.email ?? 'unauthenticated user'}`)
   return response
 }

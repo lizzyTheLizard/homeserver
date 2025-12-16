@@ -8,10 +8,18 @@
     flex-direction: column;
 }
 
-.errorLine {
+.error {
     color: red;
 }
 
-.warnLine {
+.warn {
     color: orange;
+}
+
+.info {
+    color: black;
+}
+
+.debug {
+    color: gray;
 }

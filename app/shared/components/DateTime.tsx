@@ -35,7 +35,7 @@ export function DateTime({ date, hideTime }: DateProps) {
   }
   else {
     if (hideTime) output = date.toLocaleDateString()
-    else output = date.toLocaleString()
+    else output = date.toLocaleString('de-ch', { timeZone: 'Europe/Zurich' })
   }
   return (<span>{output}</span>)
 }
