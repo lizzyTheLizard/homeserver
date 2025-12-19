@@ -44,7 +44,7 @@
     background-color: var(--danger-hover-color);
 }
 
-.disabled {
+.button:disabled {
     background-color: var(--disabled-background-color);
     color: var(--disabled-text-color);
     border: 1px solid var(--disabled-border-color);

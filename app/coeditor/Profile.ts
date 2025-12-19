@@ -17,7 +17,7 @@ export interface ProfileInput {
 
 export async function findProfilesByOwner(client: PoolClient, owner: string): Promise<Profile[]> {
   const result = await client.query<Profile>('SELECT * FROM profile WHERE owner_id = $1', [owner])
-  logger.debug(`Found ${result.rows.length.toString()} profiles for  owner ${owner}`)
+  logger.debug(`Found ${result.rows.length.toString()} profiles for owner ${owner}`)
   return result.rows
 }
 
@@ -26,7 +26,7 @@ export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: s
     'SELECT * FROM profile WHERE owner_id = $1 AND language = $2 LIMIT 1',
     [owner, language],
   )
-  logger.debug(`Found ${result.rows.length.toString()} profiles for  owner ${owner} and language ${language}`)
+  logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile ${language} for owner ${owner}`)
   return result.rows[0]
 }
 

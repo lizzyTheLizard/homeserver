@@ -25,3 +25,9 @@ export const Danger: StoryObj<typeof meta> = {
     variant: 'danger',
   },
 }
+
+export const Disabled: StoryObj<typeof meta> = {
+  args: {
+    disabled: true,
+  },
+}

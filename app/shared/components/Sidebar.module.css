@@ -10,7 +10,6 @@
     background-color: white;
     border-left: 1px solid black;
     position: relative;
-    height: calc(100% - 2 * var(--gap));
 }
 
 .sidebar>div {
@@ -34,6 +33,9 @@
 
 .type {
     margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.17em;
+    font-weight: bold;
 }
 
 .closebutton {
@@ -78,7 +80,6 @@
 
     .sidebar {
         transition: width 1s, border-left 1s, margin-left 1s;
-        height: 100%;
     }
 
     .open {

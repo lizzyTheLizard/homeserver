@@ -5,7 +5,7 @@ import { transactional } from '@/app/db'
 import { PoolClient } from 'pg'
 import { validate } from 'validate.js'
 import { expectedError, isBackendError } from '@/app/BackendError'
-import { createProfile, findProfileByOwnerAndLanguage, modifyProfile, Profile, ProfileInput } from '../../Profile'
+import { createProfile, findProfileByOwnerAndLanguage, modifyProfile, Profile, ProfileInput } from '../Profile'
 import { logger } from '@/logger'
 
 const ProfileInputConstraints = {
@@ -28,11 +28,16 @@ export async function updateProfile(input: unknown): Promise<{ error?: string }>
   })
     .then(() => ({}))
     .catch((error: unknown) => {
-      if (isBackendError(error)) {
-        logger.error('Error in updateProfile:', error.showStack ? error : error.message)
+      if (isBackendError(error) && error.showStack) {
+        logger.error('Error in updateProfile', error)
         return { error: error.userMessage }
       }
-      logger.error('Error in updateProfile:', error)
+      else if (isBackendError(error)) {
+        logger.error('Error in updateProfile: ' + error.message)
+        return { error: error.userMessage }
+      }
+      logger.error('Unknown error in updateProfile:', error)
+      console.error(error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }
@@ -45,7 +50,7 @@ async function getUser(): Promise<UserSession> {
 
 function validateInput(input: unknown): input is ProfileInput {
   const validationResult = validate(input, ProfileInputConstraints, { format: 'flat' }) as string[] | undefined
-  if (validationResult?.[0]) expectedError(validationResult[0], 400)
+  if (validationResult?.[0]) throw expectedError(validationResult[0], 400)
   return true
 }
 

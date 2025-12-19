@@ -36,14 +36,12 @@ export const NoApplication: StoryObj<typeof meta> = {
 
 export const Mobile: StoryObj<typeof meta> = {
   globals: {
-    // 👇 Override viewport for this story
     viewport: { value: 'mobile1', isRotated: false },
   },
 }
 
 export const MobileOpen: StoryObj<typeof meta> = {
   globals: {
-    // 👇 Override viewport for this story
     viewport: { value: 'mobile1', isRotated: false },
   },
   play: ({ canvasElement }) => {

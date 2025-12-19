@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import style from './Input.module.css'
-import { v4 as randomUUID } from 'uuid'
 
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'placeholder' | 'children'> {
   label?: string
@@ -12,7 +11,8 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
  */
 export default function Input({ label, ...props }: InputProps) {
   const [internalValue, setInternalValue] = useState('')
-  const id = props.id ?? randomUUID()
+  const fallbackId = useId()
+  const id = props.id ?? fallbackId
   const inputClasses = [style.input, props.className ?? '', label ? '' : style.noLabel].join(' ')
   const value = props.value ?? internalValue
 
@@ -22,7 +22,7 @@ export default function Input({ label, ...props }: InputProps) {
   }
 
   return (
-    <div className={style.container} style={props.style}>
+    <div className={style.container}>
       <input
         {...props}
         id={id}

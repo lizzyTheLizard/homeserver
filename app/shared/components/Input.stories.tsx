@@ -13,6 +13,9 @@ const meta = {
 export default meta
 
 export const Normal: StoryObj<typeof meta> = {
+  args: {
+    label: 'Normal input',
+  },
 }
 
 export const Disabled: StoryObj<typeof meta> = {

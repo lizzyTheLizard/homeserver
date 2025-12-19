@@ -1,0 +1,39 @@
+.main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.textarea {
+    margin-top: var(--gap-small);
+    flex-grow: 1;
+}
+
+.chatRow{
+    margin-top: var(--gap-small);
+    display: flex;
+    gap: var(--gap-small);
+}
+
+.chatRow div {
+    flex-grow: 1;
+}
+
+.chatRow button {
+   width: initial;
+}
+
+.error{
+    color: red;
+}
+
+.buttons {
+    display: flex;
+    gap: var(--gap-small);
+    margin-top: var(--gap-small);
+}
+
+.buttons button {
+    flex-grow: 1;
+    width: initial;
+}

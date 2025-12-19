@@ -12,7 +12,7 @@ export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): 
 }
 
 let pool: Promise<Pool> | undefined = undefined
-export async function getPool(): Promise<Pool> {
+async function getPool(): Promise<Pool> {
   pool ??= setupPool()
   return pool
 }

@@ -2,7 +2,7 @@
 
 import { getUserSession, UserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
-import { modifyTemplate, createTemplate, findTemplateById, Template, TemplateInput } from '../../Template'
+import { modifyTemplate, createTemplate, findTemplateById, Template, TemplateInput } from '../Template'
 import { PoolClient } from 'pg'
 import { validate } from 'validate.js'
 import { expectedError, isBackendError } from '@/app/BackendError'
@@ -40,11 +40,16 @@ export async function updateTemplate(input: unknown): Promise<{ error?: string }
   })
     .then(() => ({}))
     .catch((error: unknown) => {
-      if (isBackendError(error)) {
-        logger.error('Error in updateTemplate:', error.showStack ? error : error.message)
+      if (isBackendError(error) && error.showStack) {
+        logger.error('Error in updateTemplate', error)
         return { error: error.userMessage }
       }
-      logger.error('Error in updateTemplate:', error)
+      else if (isBackendError(error)) {
+        logger.error('Error in updateTemplate: ' + error.message)
+        return { error: error.userMessage }
+      }
+      logger.error('Unknown error in updateTemplate:', error)
+      console.error(error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }
@@ -57,7 +62,7 @@ async function getUser(): Promise<UserSession> {
 
 function validateInput(input: unknown): input is TemplateInput {
   const validationResult = validate(input, TemplateInputConstraints, { format: 'flat' }) as string[] | undefined
-  if (validationResult?.[0]) expectedError(validationResult[0], 400)
+  if (validationResult?.[0]) throw expectedError(validationResult[0], 400)
   return true
 }
 

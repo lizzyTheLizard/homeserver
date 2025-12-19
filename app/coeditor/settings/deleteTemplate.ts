@@ -4,7 +4,7 @@ import { getUserSession, UserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
 import { PoolClient } from 'pg'
 import { expectedError, isBackendError } from '@/app/BackendError'
-import { findTemplateById, Template, deleteTemplate as deleteTemplateInt } from '../../Template'
+import { findTemplateById, Template, deleteTemplate as deleteTemplateInt } from '../Template'
 import { logger } from '@/logger'
 
 export async function deleteTemplate(id: unknown): Promise<{ error?: string }> {
@@ -15,11 +15,16 @@ export async function deleteTemplate(id: unknown): Promise<{ error?: string }> {
   })
     .then(() => ({}))
     .catch((error: unknown) => {
-      if (isBackendError(error)) {
-        logger.error('Error in deleteTemplate:', error.showStack ? error : error.message)
+      if (isBackendError(error) && error.showStack) {
+        logger.error('Error in deleteTemplate', error)
         return { error: error.userMessage }
       }
-      logger.error('Error in deleteTemplate:', error)
+      else if (isBackendError(error)) {
+        logger.error('Error in deleteTemplate: ' + error.message)
+        return { error: error.userMessage }
+      }
+      logger.error('Unknown error in deleteTemplate:', error)
+      console.error(error)
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }

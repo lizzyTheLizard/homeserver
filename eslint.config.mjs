@@ -18,9 +18,6 @@ export default defineConfig([
   reactHooks.configs.flat.recommended,
   ...storybook.configs['flat/recommended'],
   reactRefresh.configs.vite,
-  // TODO enable tanstack/react-query rules when needed
-  // import pluginQuery from '@tanstack/eslint-plugin-query'
-  // ...pluginQuery.configs['flat/recommended'],
   globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'storybook-static/**']),
   {
     languageOptions: {

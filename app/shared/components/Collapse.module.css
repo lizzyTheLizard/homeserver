@@ -1,0 +1,33 @@
+.box {
+    display: block;
+    width: calc(100% - 2 * var(--gap-small));
+    border-radius: var(--border-radius);
+    border: 1px solid var(--default-border-color);
+    position: relative;
+    padding: var(--gap-small);
+    cursor: pointer;
+    min-height: 0.5rem;;
+}
+
+.header {
+    color: var(--default-text-color);
+    display: flex;
+    position: absolute;
+    left: var(--gap-small);
+    padding-right: var(--gap-small);
+    top: -0.5rem;
+    font-size: small;
+    background-color: var(--default-background-color);
+    align-items: center;
+    border: 0;
+}
+
+.icon {
+    display: inline-block;
+    height: 1rem;
+}
+
+.content {
+    width: 100%;
+    cursor: initial;
+}
