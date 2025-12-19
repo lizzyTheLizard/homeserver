@@ -46,6 +46,8 @@ jobs:
               restore-keys: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
           - name: Build
             run: pnpm run build
+            env:
+                OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     infrastructure:
         name: Update Infrastructure
         if: github.ref == 'refs/heads/next' && (!failure() && !cancelled())
