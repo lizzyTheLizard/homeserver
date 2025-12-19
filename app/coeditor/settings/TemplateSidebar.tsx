@@ -1,3 +1,4 @@
+'use client'
 import { startTransition, useState } from 'react'
 import { Template, TemplateInput } from '../Template'
 import styles from './TemplateSidebar.module.css'

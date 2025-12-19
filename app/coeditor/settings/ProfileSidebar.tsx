@@ -1,3 +1,4 @@
+'use client'
 import { startTransition, useState } from 'react'
 import styles from './ProfileSidebar.module.css'
 import Input from '@/app/shared/components/Input'

@@ -1,3 +1,4 @@
+'use client'
 import style from './Settings.module.css'
 import { DataTable } from '@/app/shared/components/DataTable'
 import { Profile, ProfileInput } from '../Profile'

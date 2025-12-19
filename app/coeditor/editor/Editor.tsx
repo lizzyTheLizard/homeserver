@@ -33,7 +33,7 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
     setExecutePending(true)
     const input = {
       id: randomUUID(),
-      discussion_id: restart ? undefined : discussion?.id,
+      discussion_id: restart ? randomUUID() : discussion?.id ?? randomUUID(),
       template_id: state.template.id,
       text: state.text,
       parameters: state.parameters,

@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import type { ResponseInputItem } from 'openai/resources/responses/responses.mjs'
-import { expectedError, unexpectedError } from '../../BackendError.js'
-import { Command, CommandResult, PredefinedCommandType } from '../Command.js'
+import { expectedError, unexpectedError } from '../../BackendError'
+import { Command, CommandResult, PredefinedCommandType } from '../Command'
 
 export type CommandWithoutResult = Omit<Command, 'result'>
 
