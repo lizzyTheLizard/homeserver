@@ -66,9 +66,12 @@ jobs:
           - name: Build Docker
             uses: docker/build-push-action@v6
             with:
+              context: .
               platforms: linux/amd64
               push: false
               tags: myimage:latest
+              cache-from: type=gha
+              cache-to: type=gha,mode=max 
               outputs: type=docker,dest=${{ runner.temp }}/myimage.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}
