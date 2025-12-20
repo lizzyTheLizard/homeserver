@@ -16,9 +16,9 @@ export interface SettingsProps {
   profiles: Profile[]
   templates: Template[]
   onSaveProfile?: (profile: ProfileInput) => Promise<{ error?: string }>
-  onDeleteProfile?: (profile: ProfileInput) => Promise<{ error?: string }>
+  onDeleteProfile?: (language: string) => Promise<{ error?: string }>
   onSaveTemplate?: (template: TemplateInput) => Promise<{ error?: string }>
-  onDeleteTemplate?: (template: TemplateInput) => Promise<{ error?: string }>
+  onDeleteTemplate?: (id: string) => Promise<{ error?: string }>
 }
 
 export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
@@ -33,7 +33,7 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
     setOpen(true)
     setTitle(item ? (item.name + ' (' + item.language + ')') : 'New Template')
     setType('Template')
-    setSidebar((<TemplateSidebar key={item?.id} template={item} onDelete={input => onSidebarAction(input, onDeleteTemplate)} onSave={input => onSidebarAction(input, onSaveTemplate)} onClose={() => { setOpen(false) }} />))
+    setSidebar((<TemplateSidebar key={item?.id} template={item} onDelete={language => onSidebarAction(language, onDeleteTemplate)} onSave={input => onSidebarAction(input, onSaveTemplate)} onClose={() => { setOpen(false) }} />))
     e.stopPropagation()
   }
 
@@ -41,7 +41,7 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
     setOpen(true)
     setTitle(item?.language ?? 'New Profile')
     setType('Profile')
-    setSidebar(<ProfileSidebar key={item?.language} profile={item} onDelete={input => onSidebarAction(input, onDeleteProfile)} onSave={input => onSidebarAction(input, onSaveProfile)} onClose={() => { setOpen(false) }} />)
+    setSidebar(<ProfileSidebar key={item?.language} profile={item} onDelete={id => onSidebarAction(id, onDeleteProfile)} onSave={input => onSidebarAction(input, onSaveProfile)} onClose={() => { setOpen(false) }} />)
     e.stopPropagation()
   }
 

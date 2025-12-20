@@ -5,25 +5,36 @@ import styles from './TemplateSidebar.module.css'
 import Input from '@/app/shared/components/Input'
 import Textarea from '@/app/shared/components/Textarea'
 import Button from '@/app/shared/components/Button'
+import { v4 as randomUUID } from 'uuid'
 
 export interface TemplateSidebarProps {
   template?: Template
   onSave?: (template: TemplateInput) => Promise<{ error?: string }>
-  onDelete?: (template: TemplateInput) => Promise<{ error?: string }>
+  onDelete?: (id: string) => Promise<{ error?: string }>
   onClose?: () => void
 }
 
 export function TemplateSidebar({ template, onSave, onDelete, onClose }: TemplateSidebarProps) {
-  const [id] = useState(template?.id ?? '')
+  const [id] = useState(template?.id ?? randomUUID())
   const [name, setName] = useState(template?.name ?? '')
   const [language, setLanguage] = useState(template?.language ?? '')
   const [text, setText] = useState(template?.text ?? '')
   const [error, setError] = useState<string | undefined>(undefined)
 
-  function handle(fn?: (template: TemplateInput) => Promise<{ error?: string }>) {
+  function handleSave() {
     setError(undefined)
     startTransition(async () => {
-      const result = await fn?.({ id, name, language, text })
+      const result = await onSave?.({ id, name, language, text })
+      if (result?.error) {
+        setError(result.error)
+      }
+    })
+  }
+
+  function handleDelete() {
+    setError(undefined)
+    startTransition(async () => {
+      const result = await onDelete?.(id)
       if (result?.error) {
         setError(result.error)
       }
@@ -37,8 +48,8 @@ export function TemplateSidebar({ template, onSave, onDelete, onClose }: Templat
         <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
         <Textarea className={styles.textarea} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
         {error && <div className={styles.error}>{error}</div>}
-        <Button type="button" variant="primary" onClick={() => { handle(onSave) }}>Save</Button>
-        {template !== undefined && <Button type="button" variant="danger" onClick={() => { handle(onDelete) }}>Delete</Button>}
+        <Button type="button" variant="primary" onClick={handleSave}>Save</Button>
+        {template !== undefined && <Button type="button" variant="danger" onClick={handleDelete}>Delete</Button>}
         <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
       </form>
     </>

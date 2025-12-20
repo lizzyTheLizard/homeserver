@@ -2,9 +2,6 @@
   text-align: center;
 }
 
-.emptyRow {
-  display:none;
-}
 
 @media (min-width: 600px) {
   table.dataTable {

@@ -23,11 +23,10 @@ export function DataTable({ children }: React.PropsWithChildren) {
     if (table.current == null) return
     const rowsCount = table.current.querySelectorAll(`tbody>tr:not(.${style.emptyRow})`).length
     const colCount = table.current.rows[0].cells.length
-    if (rowsCount !== 0) return
     table.current.querySelectorAll<HTMLTableCellElement>(`.${style.emptyRow} td`).forEach((tr) => { tr.colSpan = colCount })
     const emptyRow = table.current.querySelector<HTMLTableCellElement>(`.${style.emptyRow}`)
     if (!emptyRow) return
-    emptyRow.style.display = 'table-row'
+    emptyRow.style.display = (rowsCount !== 0) ? 'none' : 'table-row'
   }, [children])
 
   return (

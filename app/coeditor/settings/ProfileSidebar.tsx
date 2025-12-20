@@ -9,7 +9,7 @@ export interface ProfileSidebarProps {
   profile?: Profile
   onClose?: () => void
   onSave?: (profile: ProfileInput) => Promise<{ error?: string }>
-  onDelete?: (profile: ProfileInput) => Promise<{ error?: string }>
+  onDelete?: (language: string) => Promise<{ error?: string }>
 }
 
 export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSidebarProps) {
@@ -30,7 +30,7 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
   function handleDelete() {
     setError(undefined)
     startTransition(async () => {
-      const result = await onDelete?.({ language, text })
+      const result = await onDelete?.(language)
       if (result?.error) {
         setError(result.error)
       }
@@ -40,7 +40,7 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
   return (
     <>
       <form className={styles.form}>
-        <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
+        <Input type="text" label="Language" disabled={!!profile} value={language} onChange={(e) => { setLanguage(e.target.value) }} />
         <Textarea className={styles.textarea} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
         {error && <div className={styles.error}>{error}</div>}
         <Button type="button" variant="primary" onClick={handleSave}>Save</Button>

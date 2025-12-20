@@ -6,6 +6,8 @@ import { findTemplatesByOwner } from '../Template'
 import { Settings } from './Settings'
 import { updateProfile } from './updateProfile'
 import { deleteProfile } from './deleteProfile'
+import { updateTemplate } from './updateTemplate'
+import { deleteTemplate } from './deleteTemplate'
 
 export const metadata: Metadata = {
   title: 'CoEditor - Settings',
@@ -23,6 +25,8 @@ export default async function Page() {
       templates={templates}
       onDeleteProfile={deleteProfile}
       onSaveProfile={updateProfile}
+      onDeleteTemplate={deleteTemplate}
+      onSaveTemplate={updateTemplate}
     />
   )
 }
