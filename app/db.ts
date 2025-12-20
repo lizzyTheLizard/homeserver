@@ -82,7 +82,7 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
   const names = await fs.readdir(migrationsDir)
   const result: PlannedDatabaseMigration[] = []
   for (const name of names) {
-    const content = await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')
+    const content = (await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')).replaceAll(/\r\n/g, '\n')
     const hash = createHash('sha256').update(content).digest('hex')
     result.push({ content, hash, name })
   }
