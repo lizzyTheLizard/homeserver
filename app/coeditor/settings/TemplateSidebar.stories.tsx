@@ -33,7 +33,7 @@ export const Mobile: StoryObj<typeof meta> = {
 export const Actions: StoryObj<typeof meta> = {
   args: {
     onSave: fn<(t: TemplateInput) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
-    onDelete: fn<(t: TemplateInput) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
+    onDelete: fn<(id: string) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
     onClose: fn<() => void>(() => { /* empty */ }),
   },
   play: async ({ canvas, userEvent, args }) => {
