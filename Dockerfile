@@ -58,6 +58,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 RUN mkdir -p /app/logs
 RUN chown -R nextjs:nodejs /app/logs
 COPY .env /app/.env
+COPY db /db
 
 USER nextjs
 
