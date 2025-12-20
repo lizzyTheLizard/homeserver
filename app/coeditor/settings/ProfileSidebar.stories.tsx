@@ -46,7 +46,7 @@ export const Actions: StoryObj<typeof meta> = {
     const deleteButton = await canvas.findByText('Delete')
     console.log('deleteButton', deleteButton)
     await userEvent.click(deleteButton)
-    await expect(args.onDelete).toHaveBeenCalledWith({ language: 'en', text: 'Updated Profile' })
+    await expect(args.onDelete).toHaveBeenCalledWith('en')
     const cancelButton = await canvas.findByText('Cancel')
     await userEvent.click(cancelButton)
     await expect(args.onClose).toHaveBeenCalledOnce()
