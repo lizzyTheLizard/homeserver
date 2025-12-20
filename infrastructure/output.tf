@@ -21,6 +21,21 @@ output "docker_image_name" {
   description = "Docker Image Name"
 }
 
+output "container_namespace_id" {
+  value = scaleway_container_namespace.gutschi_site.id
+  description = "Container Namespace ID"
+}
+
+output "test-container_id" {
+  value = scaleway_container.test_gutschi_site.domain_name
+  description = "Test Container ID"
+}
+
+output "www-container_id" {
+  value = scaleway_container.www_gutschi_site.domain_name
+  description = "WWW Container ID"
+}
+
 output "test_gutschi_site" {
     value = scaleway_container.test_gutschi_site.domain_name
     description = "test.gutschi.site"
