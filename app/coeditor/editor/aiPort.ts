@@ -9,6 +9,7 @@ export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command
   const messagesSoFar = commandsSoFar.flatMap(command => mapCommandsSoFar(command))
   const nextMessage = createNextMessage(input)
   const start = performance.now()
+  const client = new OpenAI({ baseURL: 'https://api.scaleway.ai/v1' })
   const response = await client.responses.create({
     model: 'gpt-oss-120b',
     input: [systemMessage, ...messagesSoFar, nextMessage],
@@ -19,8 +20,6 @@ export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command
   const newText = getFullNewText(input, output.newText)
   return { title: output.newTitle, text: newText, durationMs: end - start }
 }
-
-const client = new OpenAI({ baseURL: 'https://api.scaleway.ai/v1' })
 
 const systemMessage: ResponseInputItem = { role: 'developer', content: `You are an AI editor that helps users to edit text documents.
 You can answer questions about the text, execute commands and replace text. You will get your input in the form of a JSON object with the following fields:

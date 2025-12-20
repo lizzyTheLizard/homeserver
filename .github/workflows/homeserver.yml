@@ -3,18 +3,24 @@ on:
     push:
     workflow_dispatch:
 jobs:
-    test:
-        name: Test Application
+    lint:
+        name: Lint Application
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-            with:
-               fetch-depth: 0
           - name: Setup
             uses: ./.github/actions/setup
           - name: Lint
             run: pnpm run lint
+    test:
+        name: Test Application (Unit)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+          - name: Setup
+            uses: ./.github/actions/setup
           - name: Cache Playwright Browsers
             uses: actions/cache@v3
             id: playwright-cache
@@ -26,31 +32,56 @@ jobs:
             if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Tests
             run: pnpm run test
+    chromatic:
+        name: Test Application (Chromatic)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+            with:
+               fetch-depth: 0
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Cache Playwright Browsers
+            uses: actions/cache@v3
+            id: playwright-cache
+            with:
+                path: ~/.cache/ms-playwright
+                key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          - name: Install Playwright Browsers
+            run: pnpm exec playwright install --with-deps
+            if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Chromatic
             run: pnpm run chromatic
             env:
                 CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     build:
-        name: Build Application
-        runs-on: ubuntu-latest
+        name: Build Docker Container
+        runs-on: ubuntu-latest        
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Cache Next.js build
-            uses: actions/cache@v4
+          - name: Get Git info and create .env
+            run: |
+              echo "GIT_COMMIT_HASH=$(git rev-parse HEAD)" >> .env
+              echo "GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> .env
+              echo "GITHUB_RUN_ID=${GITHUB_RUN_ID}" >> .env
+              echo "DATE_BUILT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> .env
+              cat .env
+          - name: Build Docker
+            uses: docker/build-push-action@v6
             with:
-              path: ${{ github.workspace }}/.next/cache
-              key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-              restore-keys: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
-          - name: Build
-            run: pnpm run build
-            env:
-                OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+              platforms: linux/amd64
+              push: false
+              tags: myimage:latest
+              outputs: type=docker,dest=${{ runner.temp }}/myimage.tar
+          - name: Upload artifact
+            uses: actions/upload-artifact@v4
+            with:
+              name: myimage
+              path: ${{ runner.temp }}/myimage.tar
     infrastructure:
-        name: Update Infrastructure
-        if: github.ref == 'refs/heads/next' && (!failure() && !cancelled())
+        name: Check Infrastructure
         runs-on: ubuntu-latest
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
@@ -66,41 +97,37 @@ jobs:
             with:
                 directory: "./infrastructure"
                 workspace: ${{ env.TF_WORKSPACE }}
-          - name: Create Apply Run
+          - name: Create Plan Run
             uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
             id: apply-run
             with:
+                plan_only: true
                 workspace: ${{ env.TF_WORKSPACE }}
                 configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-          - name: Apply
-            uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
-            if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-            id: apply
-            with:
-                run: ${{ steps.apply-run.outputs.run_id }}
-                comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
-    container:
-        name: Build and Push Docker Container
-        needs: [test, build, infrastructure]
+          - name: Show Plan Status
+            run: "echo Status: ${{ steps.apply-run.outputs.status }}, Plan-Status: ${{ steps.apply-run.outputs.plan_status }}, Run-Status: ${{ steps.apply-run.outputs.run_state }}"
+    deploy:
+        name: Push Docker Container and restart
+        needs: [lint, test, chromatic, build, infrastructure]
         runs-on: ubuntu-latest        
         if: github.ref == 'refs/heads/next' && (!failure() && !cancelled())
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Get Git info and create .env
-            run: |
-              echo "GIT_COMMIT_HASH=$(git rev-parse HEAD)" >> .env
-              echo "GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> .env
-              echo "GITHUB_RUN_ID=${GITHUB_RUN_ID}" >> .env
-              echo "DATE_BUILT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> .env
-              cat .env
           - name: Login to Registry
             uses: docker/login-action@v3
             with:
               username: nologin
               password: ${{ secrets.SCW_SECRET_KEY }}
               registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur
-          - name: Docker Build
-            run: docker build --platform=linux/amd64 -t rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest .
+          - name: Download artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: myimage
+              path: ${{ runner.temp }}
+          - name: Load image
+            run: docker load --input ${{ runner.temp }}/myimage.tar
+          - name: Tag image
+            run: docker tag myimage:latest rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest
           - name: Docker Push
             run: docker push  rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest
