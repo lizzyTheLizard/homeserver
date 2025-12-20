@@ -27,12 +27,12 @@ output "container_namespace_id" {
 }
 
 output "test-container_id" {
-  value = scaleway_container.test_gutschi_site.domain_name
+  value = scaleway_container.test_gutschi_site.id
   description = "Test Container ID"
 }
 
 output "www-container_id" {
-  value = scaleway_container.www_gutschi_site.domain_name
+  value = scaleway_container.www_gutschi_site.id
   description = "WWW Container ID"
 }
 
