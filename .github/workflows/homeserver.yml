@@ -119,7 +119,7 @@ jobs:
                 echo "No changes detected in infrastructure."
                 exit 0
               else
-                echo "Changes detected in infrastructure! ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+                echo "Changes detected in infrastructure! ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy."
                 echo "See ${{ steps.plan-run.outputs.run_link }} for details."
                 echo "Updating infrastructure manually."
                 exit -1
@@ -149,3 +149,11 @@ jobs:
             run: docker tag myimage:latest rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest
           - name: Docker Push
             run: docker push  rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest
+          - name: Scaleway Container Deploy action
+            uses:  philibea/scaleway-containers-deploy@v1.0.5
+            with:
+              type: deploy
+              scw_access_key:  ${{ vars.SCW_ACCESS_KEY }}
+              scw_secret_key: ${{ secrets.SCW_SECRET_KEY }}
+              scw_containers_namespace_id: ${{ secrets.CONTAINERS_NAMESPACE_ID }}
+              scw_registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur/www_gutschi_site:latest
