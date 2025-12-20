@@ -124,7 +124,6 @@ jobs:
         name: Push Docker Container and restart
         needs: [lint, test, chromatic, build, infrastructure]
         runs-on: ubuntu-latest        
-        if:  && (!failure() && !cancelled())
         env:
             registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur
         steps:
