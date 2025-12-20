@@ -54,8 +54,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Custom modifications: We want log files and .env variables
 RUN mkdir -p /app/logs
 RUN chown -R nextjs:nodejs /app/logs
+COPY .env /app/.env
 
 USER nextjs
 
