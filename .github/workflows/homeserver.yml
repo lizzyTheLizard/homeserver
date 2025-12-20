@@ -164,5 +164,3 @@ jobs:
                 --header "X-Auth-Token: ${{ secrets.SCW_SECRET_KEY }}" \
                 --data '{}' \
                 https://api.scaleway.com/containers/v1beta1/regions/fr-par/containers/${{env.container_id}}/deploy
-
-
