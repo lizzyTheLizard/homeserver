@@ -61,13 +61,6 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Get Git info and create .env
-            run: |
-              echo "GIT_COMMIT_HASH=$(git rev-parse HEAD)" >> .env
-              echo "GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> .env
-              echo "GITHUB_RUN_ID=${GITHUB_RUN_ID}" >> .env
-              echo "DATE_BUILT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> .env
-              cat .env
           - name: Set up Docker Buildx
             uses: docker/setup-buildx-action@v3
           - name: Build Docker
@@ -77,6 +70,11 @@ jobs:
               push: false
               tags: myimage:latest
               outputs: type=docker,dest=${{ runner.temp }}/myimage.tar
+              build-args: |
+                GIT_COMMIT_HASH=${{ github.sha }}
+                GIT_BRANCH=${{ github.ref_name }}
+                GITHUB_RUN_ID=${{ github.run_id }}
+                DATE_BUILT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           - name: Upload artifact
             uses: actions/upload-artifact@v4
             with:

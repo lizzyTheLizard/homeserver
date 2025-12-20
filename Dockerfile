@@ -55,10 +55,17 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Custom modifications: We want log files, db scripts and .env variables
+ARG GIT_COMMIT_HASH
+ARG GIT_BRANCH
+ARG GITHUB_RUN_ID
+ARG DATE_BUILT
 RUN mkdir -p /app/logs
 RUN chown -R nextjs:nodejs /app/logs
 COPY db /db
-COPY .env /app/.env
+ENV GIT_COMMIT_HASH=$GIT_COMMIT_HASH
+ENV GIT_BRANCH=$GIT_BRANCH
+ENV GITHUB_RUN_ID=$GITHUB_RUN_ID
+ENV DATE_BUILT=$DATE_BUILT
 
 USER nextjs
 
