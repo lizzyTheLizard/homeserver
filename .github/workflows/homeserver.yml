@@ -101,13 +101,27 @@ jobs:
                 workspace: ${{ env.TF_WORKSPACE }}
           - name: Create Plan Run
             uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-            id: apply-run
+            id: plan-run
             with:
                 plan_only: true
                 workspace: ${{ env.TF_WORKSPACE }}
                 configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-          - name: Show Plan Status
-            run: "echo Status: ${{ steps.apply-run.outputs.status }}, Plan-Status: ${{ steps.apply-run.outputs.plan_status }}, Run-Status: ${{ steps.apply-run.outputs.run_state }}"
+          - name: Get Plan Output
+            uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
+            id: plan-output
+            with:
+              plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+          - name: Check for changes
+            run: |
+              echo "Plan Output:"
+              echo "${{ steps.plan-output.outputs.plan_output }}"
+              if echo "${{ steps.plan-output.outputs.plan_output }}" | grep -q 'No changes. Infrastructure is up-to-date.'; then
+                echo "No changes detected in infrastructure."
+                exit 0
+              else
+                echo "Changes detected in infrastructure, please update manually."
+                exit -1
+              fi
     deploy:
         name: Push Docker Container and restart
         needs: [lint, test, chromatic, build, infrastructure]
