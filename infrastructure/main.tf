@@ -80,7 +80,7 @@ resource "scaleway_container" "test_gutschi_site" {
     APP_URL="https://test-scaleway.gutschi.site",
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
-    COOKIE_NAME="session-test"
+    COOKIE_NAME="session"
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
