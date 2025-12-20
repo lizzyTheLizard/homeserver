@@ -77,7 +77,7 @@ jobs:
                 GIT_COMMIT_HASH=${{ github.sha }}
                 GIT_BRANCH=${{ github.ref_name }}
                 GITHUB_RUN_ID=${{ github.run_id }}
-                DATE_BUILT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+                BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           - name: Upload artifact
             uses: actions/upload-artifact@v4
             with:

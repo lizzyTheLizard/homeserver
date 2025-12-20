@@ -58,14 +58,14 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 ARG GIT_COMMIT_HASH
 ARG GIT_BRANCH
 ARG GITHUB_RUN_ID
-ARG DATE_BUILT
+ARG BUILD_TIME
 RUN mkdir -p /app/logs
 RUN chown -R nextjs:nodejs /app/logs
 COPY db /db
 ENV GIT_COMMIT_HASH=$GIT_COMMIT_HASH
 ENV GIT_BRANCH=$GIT_BRANCH
 ENV GITHUB_RUN_ID=$GITHUB_RUN_ID
-ENV DATE_BUILT=$DATE_BUILT
+ENV BUILD_TIME=$BUILD_TIME
 
 USER nextjs
 
