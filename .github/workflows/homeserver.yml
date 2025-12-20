@@ -113,7 +113,7 @@ jobs:
               plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
           - name: Check for changes
             run: |
-              if (${{ steps.plan-output.outputs.add }} + ${{ steps.plan-output.outputs.change }} + ${{ steps.plan-output.outputs.destroy }} == 0 ); then
+              if ((${{ steps.plan-output.outputs.add }} + ${{ steps.plan-output.outputs.change }} + ${{ steps.plan-output.outputs.destroy }} == 0 )); then
                 echo "No changes detected in infrastructure."
                 exit 0
               else
