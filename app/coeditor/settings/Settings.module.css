@@ -1,0 +1,36 @@
+.main {
+    flex-grow: 1;
+}
+
+.createButtonRow {
+    margin-top: var(--gap);
+    justify-content: flex-end;
+}   
+
+.settingsrow {
+    cursor: pointer;
+}
+
+.settingsrow:hover td {
+    background-color: grey !important
+}
+
+@media (max-width: 600px) {
+    .createButton {
+        width: 100%;
+    }    
+}
+
+@media (min-width: 600px) {
+    .title {
+        width: 8rem;
+    }
+
+    .updated {
+        width: 8rem;
+    }
+
+    .createButton {
+        max-width: 300px;
+    }
+}

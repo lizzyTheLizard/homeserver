@@ -1,0 +1,20 @@
+.collapse{
+    display: flex;
+    flex-direction: column;
+    margin-top: calc(var(--gap) - var(--gap-small));
+}
+
+.row{
+    display: flex;
+    flex-direction: row;
+    gap: var(--gap-small);
+    margin-top: var(--gap-small);
+}
+
+.row > div {
+    flex-grow: 1;
+}
+
+.textarea{
+    margin-top: var(--gap-small);
+}

@@ -1,0 +1,19 @@
+.key {
+    font-weight: bold;
+    text-align: left;
+}
+
+.value {
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.table {
+    width: 100%;
+    max-width: 450px;
+}
+
+.table td {
+    border-bottom: 1px solid #ddd;
+    padding-top: var(--gap);
+}

@@ -3,119 +3,24 @@ on:
     push:
     workflow_dispatch:
 jobs:
-    change_detection:
-        name: Check for changes
-        runs-on: ubuntu-latest
-        outputs:
-            backend: ${{ steps.compute_changes.outputs.backend }}
-            frontend: ${{ steps.compute_changes.outputs.frontend }}
-            webcomponents: ${{ steps.compute_changes.outputs.webcomponents }}
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-            with:
-                fetch-depth: 0
-          - uses: dorny/paths-filter@v3
-            id: check_files
-            with:
-                filters: |
-                    general:
-                        - 'package.json'
-                        - 'pnpm-lock.yaml'
-                    backend:
-                        - 'backend/**'
-                    frontend:
-                        - 'frontend/**'
-                    webcomponents:
-                        - 'webcomponents/**'
-          - name: Compute change flags
-            id: compute_changes
-            run: |
-                # Check if workflow was manually triggered
-                MANUAL_TRIGGER="${{ github.event_name == 'workflow_dispatch' }}"
-                
-                # Get file change flags from paths-filter
-                GENERAL_CHANGED="${{ steps.check_files.outputs.general }}"
-                BACKEND_CHANGED="${{ steps.check_files.outputs.backend }}"
-                FRONTEND_CHANGED="${{ steps.check_files.outputs.frontend }}"
-                WEBCOMPONENTS_CHANGED="${{ steps.check_files.outputs.webcomponents }}"
-                
-                # Compute final flags (force true if manual trigger)
-                if [ "$MANUAL_TRIGGER" = "true" ]; then
-                    BACKEND_FLAG="true"
-                    FRONTEND_FLAG="true"
-                    WEBCOMPONENTS_FLAG="true"
-                    echo "🚀 Manual workflow trigger detected - all components will be processed"
-                else
-                    # Backend: backend changes OR general changes
-                    if [ "$BACKEND_CHANGED" = "true" ] || [ "$GENERAL_CHANGED" = "true" ]; then
-                        BACKEND_FLAG="true"
-                        echo "🔧 Backend changes detected: backend=$BACKEND_CHANGED, general=$GENERAL_CHANGED"
-                    else
-                        BACKEND_FLAG="false"
-                        echo "✅ No backend changes detected"
-                    fi
-                    
-                    # Frontend: frontend changes OR webcomponents changes OR general changes
-                    if [ "$FRONTEND_CHANGED" = "true" ] || [ "$WEBCOMPONENTS_CHANGED" = "true" ] || [ "$GENERAL_CHANGED" = "true" ]; then
-                        FRONTEND_FLAG="true"
-                        echo "🎨 Frontend changes detected: frontend=$FRONTEND_CHANGED, webcomponents=$WEBCOMPONENTS_CHANGED, general=$GENERAL_CHANGED"
-                    else
-                        FRONTEND_FLAG="false"
-                        echo "✅ No frontend changes detected"
-                    fi
-                    
-                    # WebComponents: webcomponents changes OR general changes
-                    if [ "$WEBCOMPONENTS_CHANGED" = "true" ] || [ "$GENERAL_CHANGED" = "true" ]; then
-                        WEBCOMPONENTS_FLAG="true"
-                        echo "⚛️ WebComponents changes detected: webcomponents=$WEBCOMPONENTS_CHANGED, general=$GENERAL_CHANGED"
-                    else
-                        WEBCOMPONENTS_FLAG="false"
-                        echo "✅ No webcomponents changes detected"
-                    fi
-                fi
-                
-                # Set outputs
-                echo "backend=$BACKEND_FLAG" >> $GITHUB_OUTPUT
-                echo "frontend=$FRONTEND_FLAG" >> $GITHUB_OUTPUT
-                echo "webcomponents=$WEBCOMPONENTS_FLAG" >> $GITHUB_OUTPUT                
-                echo "📋 Final results: backend=$BACKEND_FLAG, frontend=$FRONTEND_FLAG, webcomponents=$WEBCOMPONENTS_FLAG"
-    webcomponents_build:
-        name: Build WebComponents
+    lint:
+        name: Lint Application
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Create Build Directory
-            run: mkdir -p ~/webcomponents/build && mkdir -p ~/webcomponents/dist
-          - name: Cache Webcomponent Build
-            uses: actions/cache@v3
-            id: webcomponents-cache
-            with:
-                path: |
-                    webcomponents/build
-                    webcomponents/dist
-                key: ${{ runner.os }}-webcomponents-${{ hashFiles('webcomponents/**') }}
-          - name: Setup
-            if: ${{ steps.webcomponents-cache.outputs.cache-hit != 'true' }}
-            uses: ./.github/actions/setup
-          - name: Build
-            if: ${{ steps.webcomponents-cache.outputs.cache-hit != 'true' }}
-            run: pnpm -F homeserver-webcomponents run build
-    webcomponents_test:
-        name: Test WebComponents
-        runs-on: ubuntu-latest
-        needs: change_detection        
-        if: ${{ needs.change_detection.outputs.webcomponents == 'true' }}
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-            with:
-               fetch-depth: 0
           - name: Setup
             uses: ./.github/actions/setup
           - name: Lint
-            run: pnpm -F homeserver-webcomponents run lint
+            run: pnpm run lint
+    test:
+        name: Test Application (Unit)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+          - name: Setup
+            uses: ./.github/actions/setup
           - name: Cache Playwright Browsers
             uses: actions/cache@v3
             id: playwright-cache
@@ -124,112 +29,65 @@ jobs:
                 key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
           - name: Install Playwright Browsers
             run: pnpm exec playwright install --with-deps
-            working-directory: ./webcomponents
             if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Tests
-            run: pnpm -F homeserver-webcomponents run test
+            run: pnpm run test
+    chromatic:
+        name: Test Application (Chromatic)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+            with:
+               fetch-depth: 0
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Cache Playwright Browsers
+            uses: actions/cache@v3
+            id: playwright-cache
+            with:
+                path: ~/.cache/ms-playwright
+                key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          - name: Install Playwright Browsers
+            run: pnpm exec playwright install --with-deps
+            if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Chromatic
-            run: pnpm -F homeserver-webcomponents run chromatic
+            run: pnpm run chromatic
             env:
                 CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-    frontend_build:
-        name: Build Frontend
-        needs: webcomponents_build
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-          - name: Cache Webcomponent Build
-            uses: actions/cache@v3
-            id: webcomponents-cache
-            with:
-                path: |
-                    webcomponents/build
-                    webcomponents/dist
-                key: ${{ runner.os }}-webcomponents-${{ hashFiles('webcomponents/**') }}
-          - name: Create Build Directory
-            run: mkdir -p ~/frontend/build
-          - name: Cache Frontend Build
-            uses: actions/cache@v3
-            id: frontend-cache
-            with:
-                path: frontend/build
-                key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/**') }}
-          - name: Setup
-            if: ${{ steps.frontend-cache.outputs.cache-hit != 'true' }}
-            uses: ./.github/actions/setup
-          - name: Build
-            if: ${{ steps.frontend-cache.outputs.cache-hit != 'true' }}
-            run: pnpm -F homeserver-frontend run build
-    frontend_test:
-        name: Test Frontend
-        needs: [webcomponents_build, change_detection]
+    build:
+        name: Build Docker Container
         runs-on: ubuntu-latest        
-        if: ${{ needs.change_detection.outputs.frontend == 'true' }}
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Cache Webcomponent Build
-            uses: actions/cache@v3
-            id: webcomponents-cache
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v3
+          - name: Get Datetime
+            run: echo "::set-output name=datetime::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            id: get-datetime
+          - name: Build Docker
+            uses: docker/build-push-action@v6
             with:
-                path: |
-                    webcomponents/build
-                    webcomponents/dist
-                key: ${{ runner.os }}-webcomponents-${{ hashFiles('webcomponents/**') }}
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Lint
-            run: pnpm -F homeserver-frontend run lint
-          - name: Tests
-            run: pnpm -F homeserver-frontend run test
-    backend_build:
-        name: Build Backend
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-          - name: Create Build Directory
-            run: mkdir -p ~/backend/build
-          - name: Cache Backend Build
-            uses: actions/cache@v3
-            id: backend-cache
+              context: .
+              platforms: linux/amd64
+              push: false
+              tags: myimage:latest
+              cache-from: type=gha
+              cache-to: type=gha,mode=max 
+              outputs: type=docker,dest=${{ runner.temp }}/myimage.tar
+              build-args: |
+                GIT_COMMIT_HASH=${{ github.sha }}
+                GIT_BRANCH=${{ github.ref_name }}
+                GITHUB_RUN_ID=${{ github.run_id }}
+                BUILD_TIME=${{ steps.get-datetime.outputs.datetime }}
+          - name: Upload artifact
+            uses: actions/upload-artifact@v4
             with:
-                path: backend/build
-                key: ${{ runner.os }}-backend-${{ hashFiles('backend/**') }}
-          - name: Setup
-            if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
-            uses: ./.github/actions/setup
-          - name: Build
-            if: ${{ steps.backend-cache.outputs.cache-hit != 'true' }}
-            run: pnpm -F homeserver-backend run build
-    backend_test:
-        name: Test Backend
-        runs-on: ubuntu-latest        
-        needs: change_detection        
-        if: ${{ needs.change_detection.outputs.backend == 'true' }}
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Lint
-            run: pnpm -F homeserver-backend run lint
-          - name: Tests
-            run: pnpm -F homeserver-backend run test
-            env:
-              OPENAI_API_KEY: ${{ secrets.SCW_SECRET_KEY }}
-                
-    deploy:
-        name: Deploy
-        needs:
-          - change_detection
-          - webcomponents_test
-          - frontend_build
-          - frontend_test
-          - backend_build
-          - backend_test
-        if: github.ref == 'refs/heads/main' && (!failure() && !cancelled())
+              name: myimage
+              path: ${{ runner.temp }}/myimage.tar
+    infrastructure:
+        name: Check Infrastructure
         runs-on: ubuntu-latest
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
@@ -239,40 +97,76 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Cache Backend Build
-            uses: actions/cache@v3
-            id: backend-cache
-            with:
-                path: backend/build
-                key: ${{ runner.os }}-backend-${{ hashFiles('backend/**') }}
-          - name: Cache Frontend Build
-            uses: actions/cache@v3
-            id: frontend-cache
-            with:
-                path: frontend/build
-                key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/**') }}
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Deploy Frontend
-            run: pnpm -F homeserver-frontend run deploy
-          - name: Deploy Backend
-            run: pnpm -F homeserver-backend run deploy
           - name: Upload Configuration
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
             id: apply-upload
             with:
-                directory: "./deployment"
+                directory: "./infrastructure"
                 workspace: ${{ env.TF_WORKSPACE }}
-          - name: Create Apply Run
+          - name: Create Plan Run
             uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-            id: apply-run
+            id: plan-run
             with:
+                plan_only: true
                 workspace: ${{ env.TF_WORKSPACE }}
                 configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-          - name: Apply
-            uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
-            if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-            id: apply
+          - name: Get Plan Output
+            uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
+            id: plan-output
             with:
-                run: ${{ steps.apply-run.outputs.run_id }}
-                comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+              plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+          - name: Check for changes
+            run: |
+              if ((${{ steps.plan-output.outputs.add }} + ${{ steps.plan-output.outputs.change }} + ${{ steps.plan-output.outputs.destroy }} == 0 )); then
+                echo "No changes detected in infrastructure."
+                exit 0
+              else
+                echo "Changes detected in infrastructure! ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy."
+                echo "See ${{ steps.plan-run.outputs.run_link }} for details."
+                echo "Updating infrastructure manually."
+                exit -1
+              fi
+    deploy:
+        name: Push Docker Container and restart
+        needs: [lint, test, chromatic, build, infrastructure]
+        runs-on: ubuntu-latest        
+        env:
+            registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+          - name: Set Environment Variables (Prod)
+            if : github.ref == 'refs/heads/main'
+            run: |
+              echo "container_tag=latest" >> $GITHUB_ENV
+              echo "container_id=606c9f62-bceb-484c-a576-679874d37517" >> $GITHUB_ENV
+          - name: Set Environment Variables (Test)
+            if : github.ref != 'refs/heads/main'
+            run: |
+              echo "container_tag=test" >> $GITHUB_ENV
+              echo "container_id=89160430-514c-49ef-a53d-9e936beaec8a" >> $GITHUB_ENV
+          - name: Login to Registry
+            uses: docker/login-action@v3
+            with:
+              username: nologin
+              password: ${{ secrets.SCW_SECRET_KEY }}
+              registry: ${{env.registry}}
+          - name: Download artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: myimage
+              path: ${{ runner.temp }}
+          - name: Load image
+            run: docker load --input ${{ runner.temp }}/myimage.tar
+          - name: Tag image
+            run: docker tag myimage:latest ${{env.registry}}/www_gutschi_site:${{env.container_tag}}
+          - name: Docker Push
+            run: docker push  ${{env.registry}}/www_gutschi_site:${{env.container_tag}}
+          - name: Restart Container
+            run: |
+              # deploy the container using the API
+              curl --silent --fail -o /dev/null -w "Response: %{http_code}\n" \
+                --request POST \
+                --header "X-Auth-Token: ${{ secrets.SCW_SECRET_KEY }}" \
+                --data '{}' \
+                https://api.scaleway.com/containers/v1beta1/regions/fr-par/containers/${{env.container_id}}/deploy

@@ -1,0 +1,9 @@
+@media (min-width: 600px) {
+    .title {
+        width: 10rem;
+    }
+
+    .updated {
+        width: 8rem;
+    }
+}

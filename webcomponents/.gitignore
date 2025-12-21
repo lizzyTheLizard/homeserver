@@ -1,9 +1,0 @@
-#npm
-.env
-build
-dist
-node_modules
-
-#Storybook
-*storybook.log
-
