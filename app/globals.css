@@ -21,6 +21,13 @@ body {
 }
 
 
+@media (max-width: 600px) {
+  main{
+    margin: 0 var(--gap-small)
+  }
+}
+
+
 .row {
   display: flex;
   flex-direction: row;
