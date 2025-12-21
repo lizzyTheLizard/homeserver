@@ -1,6 +1,7 @@
 import { config } from '@/app/config'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
+import { get } from 'node:http'
 import * as client from 'openid-client'
 
 export interface UserSession {
@@ -30,7 +31,7 @@ export async function startLogin(request: Request): Promise<URL> {
   session.userInfo = undefined
   session.code_verifier = code_verifier
   session.state = parameters.state
-  session.originalUrlRelative = request.url
+  session.originalUrlRelative = getActualUrl(request).toString()
   await session.save()
 
   return client.buildAuthorizationUrl(await getClientConfig(), parameters)
