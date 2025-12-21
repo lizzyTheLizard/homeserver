@@ -58,7 +58,7 @@ function getBuildInfo(): LineItem[] {
     { name: 'Commit', value: process.env.GIT_COMMIT_HASH, url: process.env.GIT_COMMIT_HASH ? 'https://github.com/lizzyTheLizard/homeserver/commit/' + process.env.GIT_COMMIT_HASH : undefined },
     { name: 'Action', value: process.env.GITHUB_RUN_ID, url: process.env.GITHUB_RUN_ID ? 'https://github.com/lizzyTheLizard/homeserver/actions/runs/' + process.env.GITHUB_RUN_ID : undefined },
     { name: 'Origin', value: process.env.GITHUB_RUN_ID ? 'GitHub' : 'Local' },
-    { name: 'Built', value: process.env.BUILD_TIME ? new Date(parseInt(process.env.BUILD_TIME)).toString() : undefined },
+    { name: 'Built', value: process.env.BUILD_TIME ? new Date(process.env.BUILD_TIME) : undefined },
 
   ]
 }
