@@ -50,7 +50,6 @@ export function Header({ accessibleApplications, path }: HeaderProps) {
       </div>
       <div className={style.spacer}></div>
       {showPortalLink ? (<Link href="/" onClick={toggle} className={getClasses('/')}>All Applications</Link>) : ''}
-      <a onClick={toggle} href="/common/auth/logout" className={getClasses('/common/auth/logout')}>Logout</a>
     </div>
   )
 }
