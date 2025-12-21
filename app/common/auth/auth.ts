@@ -1,7 +1,6 @@
 import { config } from '@/app/config'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
-import { get } from 'node:http'
 import * as client from 'openid-client'
 
 export interface UserSession {
