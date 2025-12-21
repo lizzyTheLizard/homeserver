@@ -28,6 +28,9 @@ export function TemplateSidebar({ template, onSave, onDelete, onClose }: Templat
       if (result?.error) {
         setError(result.error)
       }
+      setName('')
+      setLanguage('')
+      setText('')
     })
   }
 
@@ -38,6 +41,9 @@ export function TemplateSidebar({ template, onSave, onDelete, onClose }: Templat
       if (result?.error) {
         setError(result.error)
       }
+      setName('')
+      setLanguage('')
+      setText('')
     })
   }
 

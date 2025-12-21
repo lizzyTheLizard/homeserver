@@ -24,6 +24,8 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
       if (result?.error) {
         setError(result.error)
       }
+      setLanguage('')
+      setText('')
     })
   }
 
@@ -34,6 +36,8 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
       if (result?.error) {
         setError(result.error)
       }
+      setLanguage('')
+      setText('')
     })
   }
 
