@@ -57,6 +57,14 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
     })
   }
 
+  function handleCustomCommandKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      if (!state.contextValid || !customCommand) return
+      execute()
+    }
+  }
+
   function initialize() {
     // Initializ  e discussion automatically text when:
     // * A template with parameters is filled out
@@ -98,11 +106,12 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
         <Input
           value={customCommand}
           onChange={(e) => { setCustomCommand(e.currentTarget.value) }}
+          onKeyDown={(e) => { handleCustomCommandKeyDown(e) }}
           label="Custom Command"
           disabled={!state.contextValid}
         >
         </Input>
-        <Button onClick={() => { startTransition(() => { execute() }) }} disabled={!state.contextValid || !customCommand}>Send</Button>
+        <Button onClick={() => { execute() }} disabled={!state.contextValid || !customCommand}>Send</Button>
       </div>
       {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
       <div className={style.buttons + ' buttons row'}>
