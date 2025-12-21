@@ -81,7 +81,7 @@ jobs:
                 GIT_BRANCH=${{ github.ref_name }}
                 GITHUB_RUN_ID=${{ github.run_id }}
                 BUILD_TIME=${{ steps.get-datetime.outputs.datetime }}
-           - name: Upload artifact
+          - name: Upload artifact
             uses: actions/upload-artifact@v4
             with:
               name: myimage
