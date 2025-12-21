@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg'
-import { logger } from 'storybook/internal/node-logger'
+import { logger } from '@/logger'
 
 export interface Command {
   id: string

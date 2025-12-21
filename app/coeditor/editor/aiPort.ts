@@ -2,23 +2,26 @@ import OpenAI from 'openai'
 import type { ResponseInputItem } from 'openai/resources/responses/responses.mjs'
 import { expectedError, unexpectedError } from '../../BackendError'
 import { Command, CommandResult, PredefinedCommandType } from '../Command'
+import { logger } from '@/logger'
 
 export type CommandWithoutResult = Omit<Command, 'result'>
 
 export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command[]): Promise<CommandResult> {
   const messagesSoFar = commandsSoFar.flatMap(command => mapCommandsSoFar(command))
   const nextMessage = createNextMessage(input)
+  logger.debug(`AI Port called with message: ${nextMessage.content}`)
   const start = performance.now()
   const client = new OpenAI({ baseURL: 'https://api.scaleway.ai/v1' })
   const response = await client.responses.create({
     model: 'gpt-oss-120b',
-    input: [systemMessage, ...messagesSoFar, nextMessage],
+    input: [systemMessage, ...messagesSoFar, nextMessage as ResponseInputItem],
   })
   const end = performance.now()
-  const output = JSON.parse(response.output_text) as { newText: string, newTitle: string, error?: string }
+  const output = JSON.parse(response.output_text) as { text: string, title: string, error?: string }
+  logger.debug(`AI Port got response: ${JSON.stringify(output)}`)
   if (output.error) throw new Error(`AI Port Error: ${output.error}`)
-  const newText = getFullNewText(input, output.newText)
-  return { title: output.newTitle, text: newText, durationMs: end - start }
+  const newText = getFullNewText(input, output.text)
+  return { title: output.title, text: newText, durationMs: end - start }
 }
 
 const systemMessage: ResponseInputItem = { role: 'developer', content: `You are an AI editor that helps users to edit text documents.
@@ -32,8 +35,8 @@ You can answer questions about the text, execute commands and replace text. You 
 - command: The command that the user wants to execute. It contains the message of the messagePredefinedCommand.
 
 You will answer with a JSON object with the following fields:
-- newText: The text as changed by the command. If a selection has been send, this only has to be the replacement of the selected text.
-- newTitle: The new title of the document. The title must be max 256 characters long. For short texts, the title can be the text itself, for longer texts, it should be a summary of the text. If the old title still fits you can keep it
+- text: The text as changed by the command. If a selection has been send, this only has to be the replacement of the selected text.
+- title: The new title of the document. The title must be max 256 characters long. For short texts, the title can be the text itself, for longer texts, it should be a summary of the text. If the old title still fits you can keep it
 - error: If an error occurred, this field contains the error message. If no error occurred, this field is not present.
 You will never change the profile or context of the discussion, only the text. Do not response any other text that this JSON object.` }
 
@@ -55,7 +58,7 @@ function mapCommandsSoFar(command: Command): ResponseInputItem[] {
   ]
 }
 
-function createNextMessage(input: CommandWithoutResult): ResponseInputItem {
+function createNextMessage(input: CommandWithoutResult) {
   return { role: 'user', content: JSON.stringify({
     language: input.language,
     profile: input.profile,
