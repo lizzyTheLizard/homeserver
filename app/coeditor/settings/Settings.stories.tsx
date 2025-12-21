@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Template } from '../Template'
 import { Settings } from './Settings'
 import { Profile } from '../Profile'
+import { Header } from '@/app/common/components/Header'
 
 const templates = [
   { id: '1', language: 'en', parameters: [], name: 'Template 1', text: 'Template 1 Text' },
@@ -66,10 +67,17 @@ export const OpenProfileSidebarMobile: StoryObj<typeof meta> = {
   globals: {
     viewport: { value: 'mobile1', isRotated: false },
   },
+  parameters: { layout: 'fullscreen' },
   play: async ({ canvasElement, userEvent }) => {
     const row = canvasElement.querySelector('tbody tr')
     await userEvent.click(row!)
   },
+  render: args => (
+    <div style={{ height: '100vh' }}>
+      <Header accessibleApplications={[]} />
+      <Settings {...args} />
+    </div>
+  ),
 }
 
 export const OpenCloseProfileSidebar: StoryObj<typeof meta> = {
