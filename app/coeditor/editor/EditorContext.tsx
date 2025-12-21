@@ -35,7 +35,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
   }
 
   return (
-    <Collapse header="Context">
+    <Collapse header="Context" initiallyExpanded={true}>
       <div className={style.collapse}>
         <div className={`row ${style.row}`}>
           <Select value={template?.language} onChange={(e) => { handleLanguageChange(e) }} required label="Language">

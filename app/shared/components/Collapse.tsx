@@ -4,13 +4,14 @@ import { Icon } from './Icon'
 
 export interface CollapseProps {
   header: string
+  initiallyExpanded?: boolean
 }
 
 /**
  * A collapsible container element that can hold any content
  */
-export function Collapse({ children, header }: React.PropsWithChildren<CollapseProps>) {
-  const [expanded, setExpanded] = useState(false)
+export function Collapse({ children, header, initiallyExpanded }: React.PropsWithChildren<CollapseProps>) {
+  const [expanded, setExpanded] = useState(initiallyExpanded ?? false)
 
   if (!expanded) {
     return (
