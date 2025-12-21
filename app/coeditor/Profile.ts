@@ -26,7 +26,7 @@ export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: s
     'SELECT * FROM profile WHERE owner_id = $1 AND language = $2 LIMIT 1',
     [owner, language],
   )
-  logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile ${language} for owner ${owner}`)
+  logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile '${language}' for owner ${owner}`)
   return result.rows[0]
 }
 
@@ -36,7 +36,7 @@ export async function createProfile(client: PoolClient, owner: string, input: Pr
     [input.language, input.text, owner],
   )
   if (!result.rows[0]) throw expectedError('Failed to create profile', 500, 'Internal Server Error')
-  logger.info(`Created profile ${input.language} for owner ${owner}`)
+  logger.info(`Created profile '${input.language}' for owner ${owner}`)
   return result.rows[0]
 }
 
@@ -46,7 +46,7 @@ export async function modifyProfile(client: PoolClient, owner: string, input: Pr
     [input.text, owner, input.language],
   )
   if (!result.rows[0]) throw expectedError('Failed to modify profile', 500, 'Internal Server Error')
-  logger.info(`Modified profile ${input.language} for owner ${owner}`)
+  logger.info(`Modified profile '${input.language}' for owner ${owner}`)
   return result.rows[0]
 }
 
@@ -56,5 +56,5 @@ export async function removeProfile(client: PoolClient, owner: string, language:
     [owner, language],
   )
   if (result.rowCount === 0) throw expectedError('Failed to delete profile', 500, 'Internal Server Error')
-  logger.info(`Deleted profile ${language} for owner ${owner}`)
+  logger.info(`Deleted profile '${language}' for owner ${owner}`)
 }

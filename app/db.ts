@@ -18,17 +18,17 @@ async function getPool(): Promise<Pool> {
 }
 
 async function setupPool(): Promise<Pool> {
-  logger.debug('Setting up database connection...')
+  logger.debug('Setting up database connection')
   const pool = new Pool({ connectionString: config.database.value })
   await testConnection(pool)
   await inTransaction(pool, async (client) => {
-    logger.debug('Starting Database Migrations...')
+    logger.debug('Starting Database Migrations')
     const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned)
   })
-  logger.info('Database successfully connected and migrations complete.')
+  logger.info('Database successfully connected and migrations complete')
   return pool
 }
 
