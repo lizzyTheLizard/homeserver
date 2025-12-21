@@ -29,7 +29,7 @@ export default meta
 export const Normal: StoryObj<typeof meta> = {
 }
 
-export const Open: StoryObj<typeof meta> = {
+export const Close: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
     const collapse = canvas.getByRole('button', { name: 'Context' })
     await userEvent.click(collapse)
@@ -39,10 +39,6 @@ export const Open: StoryObj<typeof meta> = {
 export const MissingValues: StoryObj<typeof meta> = {
   args: {
     parameters: { },
-  },
-  play: async ({ canvas, userEvent }) => {
-    const collapse = canvas.getByRole('button', { name: 'Context' })
-    await userEvent.click(collapse)
   },
 }
 
@@ -54,8 +50,6 @@ export const TemplateChange: StoryObj<typeof meta> = {
     onBlur: fn(),
   },
   play: async ({ args, canvas, userEvent }) => {
-    const collapse = canvas.getByRole('button', { name: 'Context' })
-    await userEvent.click(collapse)
     const param1 = canvas.getByLabelText('param1')
     await userEvent.type(param1, 'New Value')
     await expect(args.onBlur).not.toHaveBeenCalled() // onBlur triggers the change
