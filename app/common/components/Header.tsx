@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import style from './Header.module.css'
 import { Icon } from '../../shared/components/Icon'
 import Link from 'next/link'
@@ -38,6 +38,14 @@ export function Header({ accessibleApplications, path }: HeaderProps) {
     if (link === path) classes.push(style.activeLink)
     return classes.join(' ')
   }
+
+  useEffect(() => {
+    document.body.addEventListener('click', (e) => {
+      if (showMenu && !(e.target as HTMLElement).closest(`.${style.container}`)) {
+        setShowMenu(false)
+      }
+    })
+  }, [showMenu])
 
   return (
     <div className={style.container}>
