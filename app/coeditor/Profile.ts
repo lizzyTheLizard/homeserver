@@ -50,7 +50,7 @@ export async function modifyProfile(client: PoolClient, owner: string, input: Pr
   return result.rows[0]
 }
 
-export async function deleteProfile(client: PoolClient, owner: string, language: string): Promise<void> {
+export async function removeProfile(client: PoolClient, owner: string, language: string): Promise<void> {
   const result = await client.query(
     'DELETE FROM profile WHERE owner_id = $1 AND language = $2',
     [owner, language],

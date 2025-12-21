@@ -4,14 +4,17 @@ import { getUserSession, UserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
 import { PoolClient } from 'pg'
 import { expectedError, isBackendError } from '@/app/BackendError'
-import { findTemplateById, Template, deleteTemplate as deleteTemplateInt } from '../Template'
+import { findTemplateById, Template, removeTemplate } from '../Template'
 import { logger } from '@/logger'
+import { removeDiscussionsByTemplate } from '../Discussion'
 
 export async function deleteTemplate(id: unknown): Promise<{ error?: string }> {
   return transactional(async (client) => {
     const user = await getUser()
     if (!validateInput(id)) throw expectedError('Invalid input', 400)
-    if (await getExistingTemplate(client, user, id)) await deleteTemplateInt(client, user.sub, id)
+    if (!await getExistingTemplate(client, user, id)) return
+    await removeDiscussionsByTemplate(client, id)
+    await removeTemplate(client, user.sub, id)
   })
     .then(() => ({}))
     .catch((error: unknown) => {

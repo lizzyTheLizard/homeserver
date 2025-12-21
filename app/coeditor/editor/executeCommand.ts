@@ -2,7 +2,7 @@
 
 import { logger } from '@/logger'
 import { createCommand, findCommandsByDiscussion, PredefinedCommandType } from '../Command'
-import { Discussion, findDiscussionById, modifyDiscussion, startDiscussion } from '../Discussion'
+import { Discussion, findDiscussionById, modifyDiscussion, createDiscussion } from '../Discussion'
 import { getUserSession, UserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/db'
 import { createContextString, findTemplateById, Template } from '../Template'
@@ -105,7 +105,7 @@ export async function executeCommand(input: unknown): Promise<Discussion | { err
     const commandResult = await aiPort(command, pastCommands)
     const result = discussion
       ? await modifyDiscussion(client, user.sub, { ...input, ...commandResult, id: input.discussion_id, context })
-      : await startDiscussion(client, user.sub, { ...input, ...commandResult, id: input.discussion_id, context })
+      : await createDiscussion(client, user.sub, { ...input, ...commandResult, id: input.discussion_id, context })
     await createCommand(client, { ...command, result: commandResult })
     return result
   }).catch((error: unknown) => {

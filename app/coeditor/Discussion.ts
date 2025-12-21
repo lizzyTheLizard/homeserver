@@ -34,7 +34,7 @@ export async function findDiscussionByOwner(client: PoolClient, owner: string): 
   return result.rows
 }
 
-export async function startDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {
+export async function createDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {
   const result = await client.query<Discussion>('INSERT INTO discussion (id, text, title, owner_id, template_id, context, parameters) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
     [input.id, input.text, input.title, owner, input.template_id, input.context, JSON.stringify(input.parameters)])
   logger.info(`Started new discussion ${result.rows[0].id} for owner ${owner}`)
@@ -46,4 +46,9 @@ export async function modifyDiscussion(client: PoolClient, owner: string, input:
     [input.id, input.text, input.title, input.template_id, input.context, JSON.stringify(input.parameters)])
   logger.info(`Modified discussion ${result.rows[0].id} for owner ${owner}`)
   return result.rows[0]
+}
+
+export async function removeDiscussionsByTemplate(client: PoolClient, template_id: string): Promise<void> {
+  const result = await client.query('DELETE FROM discussion WHERE template_id = $1', [template_id])
+  logger.info(`Removed ${(result.rowCount ?? 0).toString()} discussions for template ${template_id}`)
 }

@@ -70,7 +70,7 @@ export async function modifyTemplate(client: PoolClient, input: TemplateInput): 
   return result.rows[0]
 }
 
-export async function deleteTemplate(client: PoolClient, owner: string, template_id: string): Promise<void> {
+export async function removeTemplate(client: PoolClient, owner: string, template_id: string): Promise<void> {
   {
     const result = await client.query(
       'DELETE FROM template WHERE id = $1 AND owner_id = $2',
