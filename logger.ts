@@ -26,12 +26,14 @@ function createLogger(logFile: string) {
     transports: [
       new winston.transports.File({
         format: winston.format.combine(
+          winston.format.errors({ stack: true }),
           winston.format.timestamp(),
           winston.format.printf(info => toConsoleString(info, false))),
         filename: logFilePath,
       }),
       new winston.transports.Console({
         format: winston.format.combine(
+          winston.format.errors({ stack: true }),
           winston.format.colorize(),
           winston.format.timestamp(),
           winston.format.printf(info => toConsoleString(info, true))),
