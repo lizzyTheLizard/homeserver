@@ -24,6 +24,7 @@ export async function startLogin(request: Request): Promise<URL> {
     code_challenge,
     state: client.randomState(),
     code_challenge_method: config.challenge.value,
+    prompt: 'select_account',
   }
 
   const session = await getSession()
@@ -69,15 +70,13 @@ function getActualUrl(urlOrRequest: URL | Request): URL {
   return url
 }
 
-export async function logout(): Promise<URL> {
+export async function logout(): Promise<void> {
   const session = await getSession()
   session.userInfo = undefined
   session.code_verifier = undefined
   session.state = undefined
   session.originalUrlRelative = undefined
   await session.save()
-  // TODO: We are not allowed to redirect to logout, check entra portal
-  return client.buildEndSessionUrl(await getClientConfig())
 }
 
 interface SessionData {

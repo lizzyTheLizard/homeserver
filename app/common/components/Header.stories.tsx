@@ -7,6 +7,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     path: '/my-app/dashboard',
+    hasSession: true,
     accessibleApplications: [{
       key: 'my-app',
       link: '/my-app',
@@ -59,5 +60,13 @@ export const MobileOpenClose: StoryObj<typeof meta> = {
     menuIcon?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await new Promise(resolve => setTimeout(resolve, 10))
     menuIcon?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  },
+}
+
+export const NoSession: StoryObj<typeof meta> = {
+  args: {
+    path: '/auth/common/out',
+    hasSession: false,
+    accessibleApplications: [],
   },
 }

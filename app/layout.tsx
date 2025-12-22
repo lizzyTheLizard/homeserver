@@ -15,7 +15,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
   return (
     <html lang="en">
       <body>
-        <Header accessibleApplications={accessibleApplications}></Header>
+        <Header accessibleApplications={accessibleApplications} hasSession={!!user}></Header>
         {children}
       </body>
     </html>

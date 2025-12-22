@@ -15,13 +15,14 @@ function startWithIgnoreCase(path: string, app: Application) {
 
 export interface HeaderProps {
   accessibleApplications: Application[]
+  hasSession: boolean
   path?: string
 }
 
 /**
  * The common header component shown on all pages. It shows the current aplication name and navigation links.
  */
-export function Header({ accessibleApplications, path }: HeaderProps) {
+export function Header({ accessibleApplications, hasSession, path }: HeaderProps) {
   const [showMenu, setShowMenu] = useState(false)
   const pathname = usePathname()
   const effectivePath = path ?? pathname
@@ -58,6 +59,7 @@ export function Header({ accessibleApplications, path }: HeaderProps) {
       </div>
       <div className={style.spacer}></div>
       {showPortalLink ? (<Link href="/" onClick={toggle} className={getClasses('/')}>All Applications</Link>) : ''}
+      {hasSession ? (<Link href="/common/auth/logout" onClick={toggle} className={getClasses('/common/auth/logout')}>Logout</Link>) : ''}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { logger } from '@/logger'
 import { callback } from '../auth'
 import { NextRequest } from 'next/server'
+import { config } from '@/app/config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +10,6 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logger.error(error)
-    return new Response('Authentication failed', { status: 500 })
+    return Response.redirect(config.appUrl.value + '/common/auth/error')
   }
 }
