@@ -40,14 +40,17 @@ function createLogger(logFile: string) {
           winston.format.errors({ stack: true }),
           winston.format.colorize(),
           winston.format.timestamp(),
-          winston.format.printf(info => toConsoleString(info, true))),
+          winston.format.printf(info => toConsoleString(info, false))),
       }),
     ],
   })
 }
 
 function toConsoleString(info: winston.Logform.TransformableInfo, color: boolean) {
-  const message = `[${info.timestamp as string}] ${info.level}: ${info.message as string}`
+  let message = `[${info.timestamp as string}] ${info.level}: ${info.message as string}`
+  if (info.stack) {
+    message = message + '\n' + (info.stack as string)
+  }
   if (color) {
     return message
   }

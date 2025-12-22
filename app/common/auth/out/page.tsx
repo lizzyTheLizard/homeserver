@@ -9,15 +9,17 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const session = await getUserSession()
-  if (session) {
+  const user = await getUserSession()
+  if (user) {
     redirect(config.appUrl.value + '/common/auth/logout')
   }
-  return (
-    <main>
-      <h1>Logged Out</h1>
-      <p>You have successfully logged out of the application.</p>
-      <Link prefetch={false} href="/">Login</Link>
-    </main>
-  )
+  else {
+    return (
+      <main>
+        <h1>Logged Out</h1>
+        <p>You have successfully logged out of the application.</p>
+        <a href="/">Login</a>
+      </main>
+    )
+  }
 }
