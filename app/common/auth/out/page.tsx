@@ -17,7 +17,7 @@ export default async function Page() {
     <main>
       <h1>Logged Out</h1>
       <p>You have successfully logged out of the application.</p>
-      <Link href="/">Login</Link>
+      <Link prefetch={false} href="/">Login</Link>
     </main>
   )
 }

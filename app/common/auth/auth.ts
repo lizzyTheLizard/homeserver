@@ -1,4 +1,5 @@
 import { config } from '@/app/config'
+import { logger } from '@/logger'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
@@ -57,6 +58,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   session.originalUrlRelative = undefined
   session.userInfo = { sub, name, email, applications }
   await session.save()
+  logger.info(`User ${email} logged in successfully`)
   return result
 }
 
@@ -72,11 +74,13 @@ function getActualUrl(urlOrRequest: URL | Request): URL {
 
 export async function logout(): Promise<void> {
   const session = await getSession()
+  const oldInfo = session.userInfo
   session.userInfo = undefined
   session.code_verifier = undefined
   session.state = undefined
   session.originalUrlRelative = undefined
   await session.save()
+  logger.info(`User ${oldInfo?.email ?? ''} logged out successfully`)
 }
 
 interface SessionData {

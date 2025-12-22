@@ -59,7 +59,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
       </div>
       <div className={style.spacer}></div>
       {showPortalLink ? (<Link href="/" onClick={toggle} className={getClasses('/')}>All Applications</Link>) : ''}
-      {hasSession ? (<Link href="/common/auth/logout" onClick={toggle} className={getClasses('/common/auth/logout')}>Logout</Link>) : ''}
+      {hasSession ? (<Link prefetch={false} href="/common/auth/logout" onClick={toggle} className={getClasses('/common/auth/logout')}>Logout</Link>) : ''}
     </div>
   )
 }
