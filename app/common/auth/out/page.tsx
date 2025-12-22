@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Metadata } from 'openai/resources/index.js'
 import { getUserSession } from '../auth'
 import { redirect } from 'next/navigation'
