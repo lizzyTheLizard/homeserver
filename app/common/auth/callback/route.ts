@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return Response.redirect(redirect)
   }
   catch (error) {
-    logger.error('Error during authentication callback', error)
+    logger.error(error)
     return new Response('Authentication failed', { status: 500 })
   }
 }

@@ -25,6 +25,8 @@ function createLogger(logFile: string) {
     level: 'debug',
     transports: [
       new winston.transports.File({
+        handleExceptions: true,
+        handleRejections: true,
         format: winston.format.combine(
           winston.format.errors({ stack: true }),
           winston.format.timestamp(),
@@ -32,6 +34,8 @@ function createLogger(logFile: string) {
         filename: logFilePath,
       }),
       new winston.transports.Console({
+        handleExceptions: true,
+        handleRejections: true,
         format: winston.format.combine(
           winston.format.errors({ stack: true }),
           winston.format.colorize(),
