@@ -64,7 +64,7 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
         <DataTable>
           <thead>
             <tr>
-              <th className={style.title}>Title</th>
+              <th className={style.language}>Language</th>
               <th className={style.updated}>Last Updated</th>
               <th>Text</th>
             </tr>
@@ -74,7 +74,7 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
               <tr key={profile.language} onClick={(e) => { openProfileSidebar(e, profile) }} className={style.settingsrow}>
                 <td>{profile.language}</td>
                 <td><DateTime hideTime={true} date={profile.updated_at} /></td>
-                <td>{profile.text}</td>
+                <td className={style.text}>{profile.text}</td>
               </tr>
             ))}
           </tbody>
@@ -87,7 +87,8 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
         <DataTable>
           <thead>
             <tr>
-              <th className={style.title}>Title</th>
+              <th className={style.language}>Language</th>
+              <th className={style.name}>Name</th>
               <th className={style.updated}>Last Updated</th>
               <th>Text</th>
             </tr>
@@ -95,9 +96,10 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
           <tbody>
             {templates.map(template => (
               <tr key={template.id} onClick={(e) => { openTemplateSidebar(e, template) }} className={style.settingsrow}>
-                <td>{template.name + ' (' + template.language + ')'}</td>
+                <td>{template.language}</td>
+                <td>{template.name}</td>
                 <td><DateTime hideTime={true} date={template.updated_at} /></td>
-                <td>{template.text}</td>
+                <td className={style.text}>{template.text}</td>
               </tr>
             ))}
           </tbody>

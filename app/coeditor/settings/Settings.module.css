@@ -15,6 +15,10 @@
     background-color: grey !important
 }
 
+.text {
+    white-space: pre;
+}
+
 @media (max-width: 600px) {
     .createButton {
         width: 100%;
@@ -22,11 +26,15 @@
 }
 
 @media (min-width: 600px) {
-    .title {
-        width: 8rem;
+    .language {
+        width: 6rem;
     }
 
     .updated {
+        width: 6rem;
+    }
+
+    .name {
         width: 8rem;
     }
 

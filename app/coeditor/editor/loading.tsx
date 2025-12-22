@@ -6,10 +6,10 @@ import { executeCommand } from './executeCommand'
 export default function Loading() {
   const dummyTemplate: Template = {
     id: 'dummy-template',
-    name: 'Dummy Template',
+    name: '',
     created_at: new Date(),
     updated_at: new Date(),
-    language: 'en',
+    language: '',
     text: 'This is a dummy template used during loading state.',
     parameters: [],
     owner_id: 'system',
