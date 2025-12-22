@@ -74,7 +74,7 @@ export const OpenProfileSidebarMobile: StoryObj<typeof meta> = {
   },
   render: args => (
     <div style={{ height: '100vh' }}>
-      <Header accessibleApplications={[]} />
+      <Header hasSession={true} accessibleApplications={[]} />
       <Settings {...args} />
     </div>
   ),
