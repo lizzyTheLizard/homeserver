@@ -1,7 +1,6 @@
 import { Metadata } from 'openai/resources/index.js'
 import { getUserSession } from '../auth'
 import { redirect } from 'next/navigation'
-import { config } from '@/app/config'
 
 export const metadata: Metadata = {
   title: 'Gutschi.site - Logged Out',
@@ -10,7 +9,8 @@ export const metadata: Metadata = {
 export default async function Page() {
   const user = await getUserSession()
   if (user) {
-    redirect(config.appUrl.value + '/common/auth/logout')
+    if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
+    redirect(process.env.APP_URL + '/common/auth/logout')
   }
   else {
     return (

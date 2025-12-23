@@ -1,6 +1,5 @@
 import { logger } from '@/logger'
 import { logout } from '../auth'
-import { config } from '@/app/config'
 import { redirect } from 'next/navigation'
 
 export async function GET() {
@@ -8,8 +7,10 @@ export async function GET() {
     await logout()
   }
   catch (error) {
+    if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
     logger.error('Error during logout', error)
-    return redirect(config.appUrl.value + '/common/auth/error')
+    return redirect(process.env.APP_URL + '/common/auth/error')
   }
-  return redirect(config.appUrl.value + '/common/auth/out')
+  if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
+  return redirect(process.env.APP_URL + '/common/auth/out')
 }

@@ -17,3 +17,7 @@
     border-bottom: 1px solid #ddd;
     padding-top: var(--gap);
 }
+
+.link {
+    padding-top: 1rem;
+}

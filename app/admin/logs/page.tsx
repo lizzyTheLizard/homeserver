@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 export default async function Page() {
   const session = await getUserSession()
   if (!session) throw new Error('Not authenticated')
+  if (!session.applications.includes('admin')) throw new Error('Not authorized')
 
   const logFile = await fs.readFile(logFilePath, 'utf-8')
   const lines = logFile.split('\n').slice(-1000).reverse()

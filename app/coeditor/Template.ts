@@ -48,6 +48,11 @@ export async function findTemplateById(client: PoolClient, template_id: string):
   return result.rows[0] ?? undefined
 }
 
+export async function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
+  const result = await client.query<{ count: string }>('SELECT COUNT(DISTINCT owner_id) AS count FROM template')
+  return parseInt(result.rows[0].count, 10)
+}
+
 export async function createTemplate(client: PoolClient, owner: string, input: TemplateInput): Promise<Template> {
   const parameters = extractParameters(input.text)
   const result = await client.query<Template>(

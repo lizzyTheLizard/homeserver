@@ -36,7 +36,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
   function getClasses(link: string) {
     const classes = [style.link]
     if (!showMenu) classes.push(style.mobileMenuHidden)
-    if (link === path) classes.push(style.activeLink)
+    if (link === effectivePath) classes.push(style.activeLink)
     return classes.join(' ')
   }
 
