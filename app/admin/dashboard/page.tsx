@@ -1,10 +1,9 @@
 import { getUserSession } from '@/app/common/auth/auth'
-import { Card } from '@/app/shared/components/Card'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import styles from './page.module.css'
-import { config } from '@/app/config'
 import { randomUUID } from 'crypto'
-import { Line, LineItem } from './components/Line'
+import { LineItem, DashboardCard } from './DashboardCard'
+import { transactional } from '@/app/db'
+import { findNumberOfCommands } from '@/app/coeditor/Command'
 
 const instanceId = randomUUID()
 
@@ -15,38 +14,15 @@ export const metadata: Metadata = {
 export default async function Page() {
   const session = await getUserSession()
   if (!session) throw new Error('Not authenticated')
-
-  const buildInfo = getBuildInfo()
-  const runInfo = getRunInfo()
-  const configInfo = getConfigInfo()
+  if (!session.applications.includes('admin')) throw new Error('Not authorized')
 
   return (
     <main>
       <div className="row">
-        <Card>
-          <h2>Build</h2>
-          <table className={styles.table}>
-            <tbody>
-              {buildInfo.map(i => <Line key={i.name} item={i}></Line>)}
-            </tbody>
-          </table>
-        </Card>
-        <Card>
-          <h2>Run</h2>
-          <table className={styles.table}>
-            <tbody>
-              {runInfo.map(i => <Line key={i.name} item={i}></Line>)}
-            </tbody>
-          </table>
-        </Card>
-        <Card>
-          <h2>Config</h2>
-          <table className={styles.table}>
-            <tbody>
-              {configInfo.map(i => <Line key={i.name} item={i}></Line>)}
-            </tbody>
-          </table>
-        </Card>
+        <DashboardCard header="Build" items={getBuildInfo()}></DashboardCard>
+        <DashboardCard header="Run" items={getRunInfo()}></DashboardCard>
+        <DashboardCard header="Config" url="/admin/config" items={getConfigInfo()}></DashboardCard>
+        <DashboardCard header="Metrics" url="/admin/metrics" items={await getMetricsInfo()}></DashboardCard>
       </div>
     </main>
   )
@@ -67,11 +43,23 @@ function getRunInfo(): LineItem[] {
   return [
     { name: 'Instance', value: instanceId },
     { name: 'Started', value: new Date(Date.now() - process.uptime() * 1000) },
+    { name: 'Uptime (s)', value: process.uptime().toFixed(0) },
     { name: 'Environment', value: process.env.NODE_ENV },
-
   ]
 }
 
+async function getMetricsInfo(): Promise<LineItem[]> {
+  return transactional(async client => [
+    { name: 'Memory (MB)', value: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) },
+    { name: 'CoEditor Commands', value: await findNumberOfCommands(client, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+  ] as LineItem[])
+}
+
 function getConfigInfo(): LineItem[] {
-  return Object.keys(config).map(key => ({ name: key, value: config[key].confidential ? '***' : config[key].value }))
+  const dbId = process.env.DB_CONNECTION_STRING ? process.env.DB_CONNECTION_STRING.split('@')[1].split('.')[0] : undefined
+  return [
+    { name: 'Database', value: dbId, url: dbId ? 'https://console.scaleway.com/serverless-db/fr-par/databases/' + dbId + '/overview' : undefined },
+    { name: 'AppUrl', value: process.env.APP_URL, url: process.env.APP_URL },
+    { name: 'ClientId', value: process.env.CLIENT_ID, url: process.env.CLIENT_ID ? 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/' + process.env.CLIENT_ID + '/isMSAApp~/false' : undefined },
+  ]
 }

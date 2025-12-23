@@ -39,6 +39,15 @@ export async function findCommandsByDiscussion(client: PoolClient, discussionId:
   }))
 }
 
+export async function findNumberOfCommands(client: PoolClient, since?: Date): Promise<number> {
+  if (since === undefined) {
+    const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM command')
+    return parseInt(result.rows[0].count, 10)
+  }
+  const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM command WHERE created_at > $1', [since])
+  return parseInt(result.rows[0].count, 10)
+}
+
 export async function createCommand(client: PoolClient, input: Command): Promise<Command> {
   const result = await client.query<Command>('INSERT INTO command (id, discussion_id, text, title, context, language, profile, selection_start, selection_end, result, custom_command, predefined_command) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *',
     [input.id, input.discussion_id, input.text, input.title, input.context, input.language, input.profile, input.selection_start, input.selection_end, JSON.stringify(input.result), input.custom_command, input.predefined_command])

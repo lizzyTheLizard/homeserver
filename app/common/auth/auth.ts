@@ -1,4 +1,3 @@
-import { config } from '@/app/config'
 import { logger } from '@/logger'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
@@ -19,12 +18,13 @@ export async function getUserSession(): Promise<UserSession | undefined> {
 export async function startLogin(request: Request): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
+  if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
   const parameters: Record<string, string> = {
-    redirect_uri: config.redirectUri.value,
-    scope: config.scope.value,
+    redirect_uri: `${process.env.APP_URL}/common/auth/callback`,
+    scope: 'openid profile email',
     code_challenge,
     state: client.randomState(),
-    code_challenge_method: config.challenge.value,
+    code_challenge_method: 'S256',
     prompt: 'select_account',
   }
 
@@ -65,7 +65,8 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
 function getActualUrl(urlOrRequest: URL | Request): URL {
   // We need to replace host, port etc. as the request will have the local docker address
   const url = urlOrRequest instanceof URL ? urlOrRequest : new URL(urlOrRequest.url)
-  const appUrl = new URL(config.redirectUri.value)
+  if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
+  const appUrl = new URL(process.env.APP_URL)
   url.protocol = appUrl.protocol
   url.hostname = appUrl.hostname
   url.port = appUrl.port
@@ -92,19 +93,24 @@ interface SessionData {
 
 async function getSession(): Promise<IronSession<SessionData>> {
   const cookiesList = await cookies()
+  if (!process.env.COOKIE_NAME) throw new Error('COOKIE_NAME is not defined in environment variables')
+  if (!process.env.SESSION_PASSWORD) throw new Error('SESSION_PASSWORD is not defined in environment variables')
   const settings = {
-    cookieName: config.cookieName.value,
-    password: config.password.value,
-    ttl: parseInt(config.cookieTtl.value, 10),
+    cookieName: process.env.COOKIE_NAME,
+    password: process.env.SESSION_PASSWORD,
+    ttl: 604800, // 1 week in seconds
     cookieOptions: {
-      secure: Boolean(config.cookieSecure.value),
+      secure: process.env.NODE_ENV === 'development' ? false : true,
     },
   }
   return getIronSession<SessionData>(cookiesList, settings)
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
-  clientConfigCache ??= client.discovery(new URL(config.issuer.value), config.clientId.value, config.clientSecret.value)
+  if (!process.env.ISSUER_URL) throw new Error('ISSUER_URL is not defined in environment variables')
+  if (!process.env.CLIENT_ID) throw new Error('CLIENT_ID is not defined in environment variables')
+  if (!process.env.CLIENT_SECRET) throw new Error('CLIENT_SECRET is not defined in environment variables')
+  clientConfigCache ??= client.discovery(new URL(process.env.ISSUER_URL), process.env.CLIENT_ID, process.env.CLIENT_SECRET)
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
