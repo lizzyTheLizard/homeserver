@@ -7,7 +7,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     header: 'Dashboard Card Title',
-    items: [{ name: 'Item 1', value: 'Value 1' }, { name: 'Item 2', value: new Date() }, { name: 'Item 3', value: 'Link', url: 'https://example.com' }],
+    items: [{ name: 'Item 1', value: 'Value 1' }, { name: 'Item 2', value: new Date('2025-02-01T10:32:10.821Z') }, { name: 'Item 3', value: 'Link', url: 'https://example.com' }],
   },
 } satisfies Meta<typeof DashboardCard>
 export default meta
