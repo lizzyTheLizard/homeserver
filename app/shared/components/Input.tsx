@@ -9,7 +9,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 
 /** An input component styled
  */
-export default function Input({ label, ...props }: InputProps) {
+export function Input({ label, ...props }: InputProps) {
   const [internalValue, setInternalValue] = useState('')
   const fallbackId = useId()
   const id = props.id ?? fallbackId

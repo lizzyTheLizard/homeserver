@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Template, TemplateInput } from '../Template'
+import { Template } from '../Template'
 import { TemplateSidebar } from './TemplateSidebar'
 import { expect, fn } from 'storybook/test'
 
@@ -32,9 +32,9 @@ export const Mobile: StoryObj<typeof meta> = {
 
 export const Actions: StoryObj<typeof meta> = {
   args: {
-    onSave: fn<(t: TemplateInput) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
-    onDelete: fn<(id: string) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
-    onClose: fn<() => void>(() => { /* empty */ }),
+    onSave: fn(),
+    onDelete: fn(),
+    onClose: fn(),
   },
   play: async ({ canvas, userEvent, args }) => {
     const nameInput = await canvas.findByLabelText('Name')
@@ -42,11 +42,11 @@ export const Actions: StoryObj<typeof meta> = {
     await userEvent.type(nameInput, 'Updated Template Name')
     const saveButton = await canvas.findByText('Save')
     await userEvent.click(saveButton)
-    await expect(args.onSave).toHaveBeenCalledWith({ id: '1', name: 'Updated Template Name', language: 'en', text: 'Template 1 Text' })
+    await expect(args.onSave).toHaveBeenCalledWith({ id: '1', name: 'Updated Template Name', language: 'en', text: 'Template 1 Text' }, expect.any(Function))
     const deleteButton = await canvas.findByText('Delete')
     console.log('deleteButton', deleteButton)
     await userEvent.click(deleteButton)
-    await expect(args.onDelete).toHaveBeenCalledWith('1')
+    await expect(args.onDelete).toHaveBeenCalledWith('1', expect.any(Function))
     const cancelButton = await canvas.findByText('Cancel')
     await userEvent.click(cancelButton)
     await expect(args.onClose).toHaveBeenCalledOnce()
@@ -55,7 +55,7 @@ export const Actions: StoryObj<typeof meta> = {
 
 export const Error: StoryObj<typeof meta> = {
   args: {
-    onSave: fn<(t: TemplateInput) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({ error: 'Message' }) }, 10))),
+    onSave: fn(),
   },
   play: async ({ canvas, userEvent }) => {
     const saveButton = await canvas.findByText('Save')

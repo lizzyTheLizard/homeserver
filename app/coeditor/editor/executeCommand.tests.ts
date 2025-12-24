@@ -1,11 +1,12 @@
 import { describe, expect, Mock, test, vi } from 'vitest'
-import { pglite, setUser } from '../../../vitest.setup'
+import { setUser } from '../../../vitest.setup'
 import { executeCommand } from './executeCommand'
 import { updateTemplate } from '../settings/updateTemplate'
 import { v4 as randomUUID } from 'uuid'
 import { findDiscussionByOwner } from '../Discussion'
 import { aiPort } from './aiPort'
 import { updateProfile } from '../settings/updateProfile'
+import { transactional } from '@/app/shared/db'
 
 const { fn } = await vi.hoisted(async () => await import('storybook/test'))
 
@@ -31,8 +32,8 @@ describe('Execute Command', () => {
       created_at: expect.any(Date) as Date,
       updated_at: expect.any(Date) as Date }
 
-    expect(result).toEqual(expectedDiscussion)
-    const discussions = await findDiscussionByOwner(pglite, task.id)
+    expect(result).toEqual({ success: true, data: expectedDiscussion })
+    const discussions = await transactional(c => findDiscussionByOwner(c, task.id))
     expect(discussions.length).toBe(1)
     expect(discussions[0]).toEqual(expectedDiscussion)
   })
@@ -56,8 +57,8 @@ describe('Execute Command', () => {
       created_at: expect.any(Date) as Date,
       updated_at: expect.any(Date) as Date }
 
-    expect(result).toEqual(expectedDiscussion)
-    const discussions = await findDiscussionByOwner(pglite, task.id)
+    expect(result).toEqual({ success: true, data: expectedDiscussion })
+    const discussions = await transactional(c => findDiscussionByOwner(c, task.id))
     expect(discussions.length).toBe(1)
     expect(discussions[0]).toEqual(expectedDiscussion)
   })

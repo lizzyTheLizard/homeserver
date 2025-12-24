@@ -1,16 +1,17 @@
 'use client'
-import { startTransition, useState } from 'react'
+import { useState } from 'react'
 import { Template, TemplateInput } from '../Template'
 import styles from './TemplateSidebar.module.css'
-import Input from '@/app/shared/components/Input'
-import Textarea from '@/app/shared/components/Textarea'
+import { Input } from '@/app/shared/components/Input'
+import { Textarea } from '@/app/shared/components/Textarea'
 import Button from '@/app/shared/components/Button'
 import { v4 as randomUUID } from 'uuid'
+import { AwaitedActionResponse } from '@/app/shared/ActionResponse'
 
 export interface TemplateSidebarProps {
   template?: Template
-  onSave?: (template: TemplateInput) => Promise<{ error?: string }>
-  onDelete?: (id: string) => Promise<{ error?: string }>
+  onSave?: (template: TemplateInput, callback: (response: AwaitedActionResponse<Template>) => void) => void
+  onDelete?: (id: string, callback: (response: AwaitedActionResponse<void>) => void) => void
   onClose?: () => void
 }
 
@@ -22,12 +23,10 @@ export function TemplateSidebar({ template, onSave, onDelete, onClose }: Templat
   const [error, setError] = useState<string | undefined>(undefined)
 
   function handleSave() {
-    setError(undefined)
-    startTransition(async () => {
-      const result = await onSave?.({ id, name, language, text })
-      if (result?.error) {
-        setError(result.error)
-      }
+    if (!onSave) return
+    onSave({ id, name, language, text }, (result) => {
+      if (!result.success) setError(result.error)
+      else setError(undefined)
       if (!template) {
         setName('')
         setLanguage('')
@@ -37,12 +36,10 @@ export function TemplateSidebar({ template, onSave, onDelete, onClose }: Templat
   }
 
   function handleDelete() {
-    setError(undefined)
-    startTransition(async () => {
-      const result = await onDelete?.(id)
-      if (result?.error) {
-        setError(result.error)
-      }
+    if (!onDelete) return
+    onDelete(id, (result) => {
+      if (!result.success) setError(result.error)
+      else setError(undefined)
     })
   }
 

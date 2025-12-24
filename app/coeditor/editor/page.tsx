@@ -3,7 +3,7 @@ import { findDiscussionById } from '../Discussion'
 import { findTemplatesByOwner } from '../Template'
 import Editor from './Editor'
 import { getUserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { executeCommand } from './executeCommand'
 
 export const metadata: Metadata = {

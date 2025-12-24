@@ -1,8 +1,8 @@
 import { getUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { randomUUID } from 'crypto'
-import { LineItem, DashboardCard } from './DashboardCard'
-import { transactional } from '@/app/db'
+import { LineItem, DashboardCard } from '../DashboardCard'
+import { transactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/Command'
 
 const instanceId = randomUUID()

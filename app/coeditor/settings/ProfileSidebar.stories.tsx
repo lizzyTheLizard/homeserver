@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, fn } from 'storybook/test'
 import { ProfileSidebar } from './ProfileSidebar'
-import { Profile, ProfileInput } from '../Profile'
+import { Profile } from '../Profile'
 
 const profile = { language: 'en', text: 'Profile Text' } as unknown as Profile
 
@@ -32,8 +32,8 @@ export const Mobile: StoryObj<typeof meta> = {
 
 export const Actions: StoryObj<typeof meta> = {
   args: {
-    onSave: fn<(t: ProfileInput) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
-    onDelete: fn<(lang: string) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({}) }, 10))),
+    onSave: fn(),
+    onDelete: fn(),
     onClose: fn<() => void>(() => { /* empty */ }),
   },
   play: async ({ canvas, userEvent, args }) => {
@@ -42,11 +42,11 @@ export const Actions: StoryObj<typeof meta> = {
     await userEvent.type(textInput, 'Updated Profile')
     const saveButton = await canvas.findByText('Save')
     await userEvent.click(saveButton)
-    await expect(args.onSave).toHaveBeenCalledWith({ language: 'en', text: 'Updated Profile' })
+    await expect(args.onSave).toHaveBeenCalledWith({ language: 'en', text: 'Updated Profile' }, expect.any(Function))
     const deleteButton = await canvas.findByText('Delete')
     console.log('deleteButton', deleteButton)
     await userEvent.click(deleteButton)
-    await expect(args.onDelete).toHaveBeenCalledWith('en')
+    await expect(args.onDelete).toHaveBeenCalledWith('en', expect.any(Function))
     const cancelButton = await canvas.findByText('Cancel')
     await userEvent.click(cancelButton)
     await expect(args.onClose).toHaveBeenCalledOnce()
@@ -55,7 +55,7 @@ export const Actions: StoryObj<typeof meta> = {
 
 export const Error: StoryObj<typeof meta> = {
   args: {
-    onSave: fn<(t: ProfileInput) => Promise<{ error?: string }>>(() => new Promise<{ error?: string }>(resolve => setTimeout(() => { resolve({ error: 'Message' }) }, 10))),
+    onSave: fn(),
   },
   play: async ({ canvas, userEvent }) => {
     const saveButton = await canvas.findByText('Save')

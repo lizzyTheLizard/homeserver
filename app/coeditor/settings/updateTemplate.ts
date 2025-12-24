@@ -1,12 +1,12 @@
 'use server'
 
 import { getUserSession, UserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { modifyTemplate, createTemplate, findTemplateById, Template, TemplateInput } from '../Template'
 import { PoolClient } from 'pg'
 import { validate } from 'validate.js'
-import { expectedError, isBackendError } from '@/app/BackendError'
-import { logger } from '@/logger'
+import { expectedError } from '@/app/shared/BackendError'
+import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
 
 const TemplateInputConstraints = {
   id: {
@@ -31,27 +31,13 @@ const TemplateInputConstraints = {
   },
 }
 
-export async function updateTemplate(input: unknown): Promise<{ error?: string }> {
-  return transactional(async (client) => {
+export async function updateTemplate(input: unknown): ActionResponse<Template> {
+  return await toResponse(transactional(async (client) => {
     const user = await getUser()
     if (!validateInput(input)) throw expectedError('Invalid input', 400)
-    if (await getExistingTemplate(client, user, input)) await modifyTemplate(client, input)
-    else await createTemplate(client, user.sub, input)
-  })
-    .then(() => ({}))
-    .catch((error: unknown) => {
-      if (isBackendError(error) && error.showStack) {
-        logger.error('Error in updateTemplate', error)
-        return { error: error.userMessage }
-      }
-      else if (isBackendError(error)) {
-        logger.error('Error in updateTemplate: ' + error.message)
-        return { error: error.userMessage }
-      }
-      logger.error('Unknown error in updateTemplate:', error)
-      console.error(error)
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    })
+    if (await getExistingTemplate(client, user, input)) return await modifyTemplate(client, input)
+    else return await createTemplate(client, user.sub, input)
+  }))
 }
 
 async function getUser(): Promise<UserSession> {

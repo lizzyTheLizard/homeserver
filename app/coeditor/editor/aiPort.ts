@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import type { ResponseInputItem } from 'openai/resources/responses/responses.mjs'
-import { expectedError, unexpectedError } from '../../BackendError'
+import { expectedError, unexpectedError } from '../../shared/BackendError'
 import { Command, CommandResult, PredefinedCommandType } from '../Command'
 import { logger } from '@/logger'
 

@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg'
-import { expectedError } from '../BackendError'
+import { expectedError } from '../shared/BackendError'
 import { logger } from '@/logger'
 
 export interface Profile {

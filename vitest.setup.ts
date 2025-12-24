@@ -3,7 +3,7 @@ import { PGlite } from '@electric-sql/pglite'
 import { promises as fs } from 'fs'
 import { PoolClient } from 'pg'
 
-export const pglite = new PGlite() as unknown as PoolClient
+const pglite = new PGlite()
 
 let user = 'test-user'
 
@@ -20,8 +20,8 @@ beforeAll(async () => {
       await pglite.query(command)
     }
   }
-  vi.mock('@/app/db', () => ({
-    transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite) },
+  vi.mock('@/app/shared/db', () => ({
+    transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
   }))
   vi.mock('@/app/common/auth/auth', () => ({
     getUserSession() { return Promise.resolve({ sub: user, email: user + '@example.com' }) },

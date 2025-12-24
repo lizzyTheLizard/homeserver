@@ -1,24 +1,25 @@
 'use client'
 
 import { startTransition, useCallback, useReducer, useState } from 'react'
-import style from './Editor.module.css'
 import { editorStateReducer, initialState } from './EditorState'
 import { Discussion } from '../Discussion'
 import { PredefinedCommandType } from '../Command'
-import { EditorContext } from './EditorContext'
-import Input from '@/app/shared/components/Input'
-import Button from '@/app/shared/components/Button'
-import Textarea, { Selection } from '@/app/shared/components/Textarea'
+import { Textarea, Selection } from '@/app/shared/components/Textarea'
 import { Template } from '../Template'
 import { v4 as randomUUID } from 'uuid'
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { useRouter } from 'next/navigation'
 import { CommandInput } from './executeCommand'
+import { ActionResponse } from '@/app/shared/ActionResponse'
+import style from './Editor.module.css'
+import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
+import { EditorContext } from './EditorContext'
+import { Input } from '@/app/shared/components/Input'
+import Button from '@/app/shared/components/Button'
 
 export interface EditorProps {
   discussion: Discussion | undefined
   templates: Template[]
-  executeCommand: (input: CommandInput) => Promise<Discussion | { error: string }>
+  executeCommand?: (input: CommandInput) => ActionResponse<Discussion>
 }
 
 export default function Editor({ discussion, templates, executeCommand }: EditorProps) {
@@ -43,17 +44,17 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
       predefinedCommand: command,
     }
     startTransition(async () => {
-      const result = await executeCommand(input)
+      const result = await executeCommand?.(input)
       setExecutePending(false)
-      if ('error' in result) {
-        setError(result.error)
+      if (!result?.success) {
+        setError(result?.error)
         return
       }
-      dispatch({ type: 'COMMAND_EXECUTED', discussion: result, restart: restart ?? false })
+      dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
       setCustomCommand('')
       setError(undefined)
-      if (result.id !== discussion?.id)
-        router.replace(`/coeditor/editor?id=${result.id}`)
+      if (result.data.id !== discussion?.id)
+        router.replace(`/coeditor/editor?id=${result.data.id}`)
     })
   }
 

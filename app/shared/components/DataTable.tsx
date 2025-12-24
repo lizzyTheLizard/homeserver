@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { TableHTMLAttributes, useEffect, useRef } from 'react'
 import style from './DataTable.module.css'
 
-export function DataTable({ children }: React.PropsWithChildren) {
+export function DataTable({ children, ...props }: React.PropsWithChildren<TableHTMLAttributes<HTMLTableElement>>) {
   const table = useRef<HTMLTableElement>(null)
+  const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
 
   // Add header attributes to td elements for mobile view
   useEffect(() => {
@@ -30,7 +31,7 @@ export function DataTable({ children }: React.PropsWithChildren) {
   }, [children])
 
   return (
-    <table className={style.dataTable} ref={table}>
+    <table {...props} className={classNames} ref={table}>
       {children}
       <tbody>
         <tr className={style.emptyRow}>
