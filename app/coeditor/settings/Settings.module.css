@@ -15,8 +15,12 @@
     background-color: grey !important
 }
 
+.table{
+    table-layout: fixed;
+}
+
 .text {
-    white-space: pre;
+    white-space: pre-wrap;
 }
 
 @media (max-width: 600px) {

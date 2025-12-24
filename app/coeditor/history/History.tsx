@@ -12,7 +12,7 @@ export function History({ discussions }: HistoryProps) {
   return (
     <main>
       <h1>History</h1>
-      <DataTable>
+      <DataTable className={style.table}>
         <thead>
           <tr>
             <th className={style.title}>Title</th>
@@ -26,8 +26,8 @@ export function History({ discussions }: HistoryProps) {
             <tr key={discussion.id}>
               <td><Link href={`/coeditor/editor?id=${discussion.id}`}>{discussion.title}</Link></td>
               <td><DateTime date={discussion.updated_at} /></td>
-              <td>{discussion.text}</td>
-              <td>{discussion.context}</td>
+              <td className={style.text}>{discussion.text}</td>
+              <td className={style.text}>{discussion.context}</td>
             </tr>
           ))}
         </tbody>

@@ -81,7 +81,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
       {pending && <LoadingSpinner text="Processing..." />}
       <Sidebar open={open} onClose={() => { setOpen(false) }} sidebar={sidebar} title={title} type={type}>
         <h1>Profiles</h1>
-        <DataTable>
+        <DataTable className={style.table}>
           <thead>
             <tr>
               <th className={style.language}>Language</th>
@@ -104,7 +104,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
         </div>
 
         <h1>Templates</h1>
-        <DataTable>
+        <DataTable className={style.table}>
           <thead>
             <tr>
               <th className={style.language}>Language</th>
