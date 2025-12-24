@@ -1,6 +1,6 @@
 import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
-import { expectedError } from '../BackendError'
+import { expectedError } from '../shared/BackendError'
 import { logger } from '@/logger'
 
 export interface Template {

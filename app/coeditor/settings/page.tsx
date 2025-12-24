@@ -1,6 +1,6 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { getUserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { findProfilesByOwner } from '../Profile'
 import { findTemplatesByOwner } from '../Template'
 import { Settings } from './Settings'

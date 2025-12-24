@@ -22,7 +22,7 @@ export interface TextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
  * It informs the parent component of changes via onChange only when the textarea loses focus (onBlur).
  * It displays a floating label when a label prop is provided.
  */
-export default function Textarea({ label, keepSelection, onSelectionChange, className, style: inputStyle, ...props }: TextareaProps) {
+export function Textarea({ label, keepSelection, onSelectionChange, className, style: inputStyle, ...props }: TextareaProps) {
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
   const [focused, setFocused] = useState<boolean>(false)
   const [scrollTop, setScrollTop] = useState<number>(0)

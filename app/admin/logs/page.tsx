@@ -1,9 +1,9 @@
 import { getUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import styles from './page.module.css'
 import { promises as fs } from 'fs'
 
 import { logFilePath } from '@/logger'
+import { Log } from './Log'
 
 export const metadata: Metadata = {
   title: 'Admin - Log',
@@ -18,15 +18,8 @@ export default async function Page() {
   const lines = logFile.split('\n').slice(-1000).reverse()
 
   return (
-    <main className={styles.container}>
-      {lines.map((l, index) => {
-        const level = l.substring(27, 40).split(':')[0].trim()
-        return (
-          <span key={index} className={styles[level]}>
-            {l}
-          </span>
-        )
-      })}
+    <main>
+      <Log lines={lines} />
     </main>
   )
 }

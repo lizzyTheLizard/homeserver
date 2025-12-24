@@ -1,12 +1,12 @@
 'use server'
 
 import { getUserSession, UserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { PoolClient } from 'pg'
 import { validate } from 'validate.js'
-import { expectedError, isBackendError } from '@/app/BackendError'
+import { expectedError } from '@/app/shared/BackendError'
 import { createProfile, findProfileByOwnerAndLanguage, modifyProfile, Profile, ProfileInput } from '../Profile'
-import { logger } from '@/logger'
+import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
 
 const ProfileInputConstraints = {
   language: {
@@ -19,27 +19,13 @@ const ProfileInputConstraints = {
   },
 }
 
-export async function updateProfile(input: unknown): Promise<{ error?: string }> {
-  return transactional(async (client) => {
+export async function updateProfile(input: unknown): ActionResponse<Profile> {
+  return await toResponse(transactional(async (client) => {
     const user = await getUser()
     if (!validateInput(input)) throw expectedError('Invalid input', 400)
-    if (await getExistingProfile(client, user, input)) await modifyProfile(client, user.sub, input)
-    else await createProfile(client, user.sub, input)
-  })
-    .then(() => ({}))
-    .catch((error: unknown) => {
-      if (isBackendError(error) && error.showStack) {
-        logger.error('Error in updateProfile', error)
-        return { error: error.userMessage }
-      }
-      else if (isBackendError(error)) {
-        logger.error('Error in updateProfile: ' + error.message)
-        return { error: error.userMessage }
-      }
-      logger.error('Unknown error in updateProfile:', error)
-      console.error(error)
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    })
+    if (await getExistingProfile(client, user, input)) return await modifyProfile(client, user.sub, input)
+    else return await createProfile(client, user.sub, input)
+  }))
 }
 
 async function getUser(): Promise<UserSession> {

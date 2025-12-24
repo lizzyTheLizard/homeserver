@@ -1,35 +1,21 @@
 'use server'
 
 import { getUserSession, UserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { PoolClient } from 'pg'
-import { expectedError, isBackendError } from '@/app/BackendError'
+import { expectedError } from '@/app/shared/BackendError'
 import { findTemplateById, Template, removeTemplate } from '../Template'
-import { logger } from '@/logger'
 import { removeDiscussionsByTemplate } from '../Discussion'
+import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
 
-export async function deleteTemplate(id: unknown): Promise<{ error?: string }> {
-  return transactional(async (client) => {
+export async function deleteTemplate(id: unknown): ActionResponse<void> {
+  return await toResponse(transactional(async (client) => {
     const user = await getUser()
     if (!validateInput(id)) throw expectedError('Invalid input', 400)
     if (!await getExistingTemplate(client, user, id)) return
     await removeDiscussionsByTemplate(client, id)
     await removeTemplate(client, user.sub, id)
-  })
-    .then(() => ({}))
-    .catch((error: unknown) => {
-      if (isBackendError(error) && error.showStack) {
-        logger.error('Error in deleteTemplate', error)
-        return { error: error.userMessage }
-      }
-      else if (isBackendError(error)) {
-        logger.error('Error in deleteTemplate: ' + error.message)
-        return { error: error.userMessage }
-      }
-      logger.error('Unknown error in deleteTemplate:', error)
-      console.error(error)
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    })
+  }))
 }
 
 async function getUser(): Promise<UserSession> {

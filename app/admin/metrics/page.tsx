@@ -1,10 +1,10 @@
 import { getUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { findNumberOfDiscussions } from '@/app/coeditor/Discussion'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/Command'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/Template'
-import { DashboardCard, LineItem } from '../dashboard/DashboardCard'
+import { DashboardCard, LineItem } from '../DashboardCard'
 
 export const metadata: Metadata = {
   title: 'Admin - Metrics',

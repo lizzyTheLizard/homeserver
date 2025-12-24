@@ -1,15 +1,17 @@
 'use client'
-import { startTransition, useState } from 'react'
+import { useState } from 'react'
 import styles from './ProfileSidebar.module.css'
-import Input from '@/app/shared/components/Input'
-import Textarea from '@/app/shared/components/Textarea'
+import { Input } from '@/app/shared/components/Input'
+import { Textarea } from '@/app/shared/components/Textarea'
 import Button from '@/app/shared/components/Button'
 import { Profile, ProfileInput } from '../Profile'
+import { AwaitedActionResponse } from '@/app/shared/ActionResponse'
+
 export interface ProfileSidebarProps {
   profile?: Profile
   onClose?: () => void
-  onSave?: (profile: ProfileInput) => Promise<{ error?: string }>
-  onDelete?: (language: string) => Promise<{ error?: string }>
+  onSave?: (profile: ProfileInput, callback: (response: AwaitedActionResponse<Profile>) => void) => void
+  onDelete?: (language: string, callback: (response: AwaitedActionResponse<void>) => void) => void
 }
 
 export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSidebarProps) {
@@ -18,12 +20,10 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
   const [error, setError] = useState<string | undefined>(undefined)
 
   function handleSave() {
-    setError(undefined)
-    startTransition(async () => {
-      const result = await onSave?.({ language, text })
-      if (result?.error) {
-        setError(result.error)
-      }
+    if (!onSave) return
+    onSave({ language, text }, (result) => {
+      if (!result.success) setError(result.error)
+      else setError(undefined)
       if (!profile) {
         setLanguage('')
         setText('')
@@ -32,12 +32,10 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
   }
 
   function handleDelete() {
-    setError(undefined)
-    startTransition(async () => {
-      const result = await onDelete?.(language)
-      if (result?.error) {
-        setError(result.error)
-      }
+    if (!onDelete) return
+    onDelete(language, (result) => {
+      if (!result.success) setError(result.error)
+      else setError(undefined)
     })
   }
 

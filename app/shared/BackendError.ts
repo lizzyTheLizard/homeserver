@@ -13,7 +13,3 @@ export function expectedError(message: string, statusCode?: number, userMessage?
 export function unexpectedError(message: string, statusCode?: number, userMessage?: string): BackendError {
   return new BackendError(message, userMessage ?? message, statusCode ?? 500, true)
 }
-
-export function isBackendError(error: unknown): error is BackendError {
-  return error instanceof BackendError
-}

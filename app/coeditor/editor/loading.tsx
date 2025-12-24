@@ -1,7 +1,6 @@
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { Template } from '../Template'
 import Editor from './Editor'
-import { executeCommand } from './executeCommand'
 
 export default function Loading() {
   const dummyTemplate: Template = {
@@ -18,7 +17,7 @@ export default function Loading() {
   return (
     <>
       <LoadingSpinner></LoadingSpinner>
-      <Editor discussion={undefined} templates={[dummyTemplate]} executeCommand={executeCommand} />
+      <Editor discussion={undefined} templates={[dummyTemplate]} />
     </>
   )
 }

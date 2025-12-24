@@ -1,16 +1,16 @@
 'use server'
 
-import { logger } from '@/logger'
 import { createCommand, findCommandsByDiscussion, PredefinedCommandType } from '../Command'
 import { Discussion, findDiscussionById, modifyDiscussion, createDiscussion } from '../Discussion'
 import { getUserSession, UserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/db'
+import { transactional } from '@/app/shared/db'
 import { createContextString, findTemplateById, Template } from '../Template'
 import { findProfileByOwnerAndLanguage } from '../Profile'
 import { validate } from 'validate.js'
-import { expectedError, isBackendError } from '@/app/BackendError'
+import { expectedError } from '@/app/shared/BackendError'
 import { PoolClient } from 'pg'
 import { aiPort, CommandWithoutResult } from './aiPort'
+import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
 
 export interface CommandInput {
   id: string
@@ -79,11 +79,10 @@ const CommandInputConstraints = {
   },
 }
 
-export async function executeCommand(input: unknown): Promise<Discussion | { error: string }> {
-  const user = await getUser()
-  if (!validateInput(input)) throw expectedError('Invalid input', 400)
-
-  return transactional(async (client) => {
+export async function executeCommand(input: unknown): ActionResponse<Discussion> {
+  return toResponse(transactional(async (client) => {
+    const user = await getUser()
+    if (!validateInput(input)) throw expectedError('Invalid input', 400)
     const template = await getTemplate(client, user.sub, input.template_id)
     const discussion = await getDiscussion(client, user.sub, input)
     const context = createContextString(template, input.parameters)
@@ -108,19 +107,7 @@ export async function executeCommand(input: unknown): Promise<Discussion | { err
       : await createDiscussion(client, user.sub, { ...input, ...commandResult, id: input.discussion_id, context })
     await createCommand(client, { ...command, result: commandResult })
     return result
-  }).catch((error: unknown) => {
-    if (isBackendError(error) && error.showStack) {
-      logger.error('Error in executeCommand', error)
-      return { error: error.userMessage }
-    }
-    else if (isBackendError(error)) {
-      logger.error('Error in executeCommand: ' + error.message)
-      return { error: error.userMessage }
-    }
-    logger.error('Unknown error in executeCommand:', error)
-    console.error(error)
-    return { error: error instanceof Error ? error.message : 'Unknown error' }
-  })
+  }))
 }
 
 async function getUser(): Promise<UserSession> {

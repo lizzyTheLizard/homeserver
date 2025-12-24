@@ -14,18 +14,18 @@ export default async function Page() {
   return (
     <main>
       <h1>Configuration</h1>
-      <DataTable>
+      <DataTable style={{ tableLayout: 'fixed' }}>
         <thead>
           <tr>
-            <th>Key</th>
+            <th style={{ width: '20rem' }}>Key</th>
             <th>Value</th>
           </tr>
         </thead>
         <tbody>
           {Object.keys(process.env).map(key => (
             <tr key={key}>
-              <td>{key}</td>
-              <td>{process.env[key]}</td>
+              <td style={{ overflow: 'hidden' }}>{key}</td>
+              <td style={{ overflow: 'auto' }}>{process.env[key]}</td>
             </tr>
           ))}
 

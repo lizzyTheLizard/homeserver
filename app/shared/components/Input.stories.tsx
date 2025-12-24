@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { useState } from 'react'
 import { fn, expect } from 'storybook/test'
-import Input from './Input'
+import { Input } from './Input'
 
 const meta = {
   title: 'Shared/Form/Input',

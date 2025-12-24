@@ -77,7 +77,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
   const filename = fileURLToPath(import.meta.url)
   const currentDir = dirname(filename)
-  const migrationsDir = path.resolve(currentDir, '../../db')
+  const migrationsDir = path.resolve(currentDir, '../../../db')
   const names = await fs.readdir(migrationsDir)
   const result: PlannedDatabaseMigration[] = []
   for (const name of names) {

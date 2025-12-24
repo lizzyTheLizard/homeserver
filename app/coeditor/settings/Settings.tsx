@@ -6,23 +6,24 @@ import { Template, TemplateInput } from '../Template'
 import { Sidebar } from '@/app/shared/components/Sidebar'
 import Button from '@/app/shared/components/Button'
 import { DateTime } from '@/app/shared/components/DateTime'
-import { MouseEvent, useState } from 'react'
+import { MouseEvent, startTransition, useState } from 'react'
 import { ProfileSidebar } from './ProfileSidebar'
 import { TemplateSidebar } from './TemplateSidebar'
-import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
+import { ActionResponse, AwaitedActionResponse } from '@/app/shared/ActionResponse'
 
 export interface SettingsProps {
   profiles: Profile[]
   templates: Template[]
-  onSaveProfile?: (profile: ProfileInput) => Promise<{ error?: string }>
-  onDeleteProfile?: (language: string) => Promise<{ error?: string }>
-  onSaveTemplate?: (template: TemplateInput) => Promise<{ error?: string }>
-  onDeleteTemplate?: (id: string) => Promise<{ error?: string }>
+  onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
+  onDeleteProfile?: (language: string) => ActionResponse<void>
+  onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
+  onDeleteTemplate?: (id: string) => ActionResponse<void>
 }
 
-export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
-  const router = useRouter()
+export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
+  const [profiles, setProfiles] = useState<Profile[]>(pin)
+  const [templates, setTemplates] = useState<Template[]>(tin)
   const [open, setOpen] = useState(false)
   const [sidebar, setSidebar] = useState<React.ReactNode>(null)
   const [title, setTitle] = useState<string>('New')
@@ -33,7 +34,7 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
     setOpen(true)
     setTitle(item ? (item.name + ' (' + item.language + ')') : 'New Template')
     setType('Template')
-    setSidebar((<TemplateSidebar key={item?.id} template={item} onDelete={language => onSidebarAction(language, onDeleteTemplate)} onSave={input => onSidebarAction(input, onSaveTemplate)} onClose={() => { setOpen(false) }} />))
+    setSidebar(<TemplateSidebar key={item?.id} template={item} onDelete={deleteTemplate} onSave={saveTemplate} onClose={() => { setOpen(false) }} />)
     e.stopPropagation()
   }
 
@@ -41,19 +42,38 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
     setOpen(true)
     setTitle(item?.language ?? 'New Profile')
     setType('Profile')
-    setSidebar(<ProfileSidebar key={item?.language} profile={item} onDelete={id => onSidebarAction(id, onDeleteProfile)} onSave={input => onSidebarAction(input, onSaveProfile)} onClose={() => { setOpen(false) }} />)
+    setSidebar(<ProfileSidebar key={item?.language} profile={item} onDelete={deleteProfile} onSave={saveProfile} onClose={() => { setOpen(false) }} />)
     e.stopPropagation()
   }
 
-  async function onSidebarAction<T>(input: T, action?: (input: T) => Promise<{ error?: string }>) {
+  function saveTemplate(input: TemplateInput, callback: (response: AwaitedActionResponse<Template>) => void): void {
+    wrap(onSaveTemplate, input, callback, (result) => { setTemplates([...templates.filter(t => input.id !== t.id), result]) })
+  }
+
+  function deleteTemplate(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
+    wrap(onDeleteTemplate, input, callback, () => { setTemplates([...templates.filter(t => input !== t.id)]) })
+  }
+
+  function saveProfile(input: ProfileInput, callback: (response: AwaitedActionResponse<Profile>) => void): void {
+    wrap(onSaveProfile, input, callback, (result) => { setProfiles([...profiles.filter(p => input.language !== p.language), result]) })
+  }
+
+  function deleteProfile(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
+    wrap(onDeleteProfile, input, callback, () => { setProfiles([...profiles.filter(p => p.language !== input)]) })
+  }
+
+  function wrap<IN, OUT>(action: undefined | ((input: IN) => ActionResponse<OUT>), input: IN, callback: (result: AwaitedActionResponse<OUT>) => void, merge: (result: OUT) => void) {
+    if (!action) return
     setPending(true)
-    const result = action ? await action(input) : {}
-    if (!result.error) {
-      setOpen(false)
-      router.refresh()
-    }
-    setPending(false)
-    return result
+    startTransition(async () => {
+      const result = await action(input)
+      callback(result)
+      if (result.success) {
+        merge(result.data)
+        setOpen(false)
+      }
+      setPending(false)
+    })
   }
 
   return (
