@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Template } from '../Template'
+import { Template, TemplateInput } from '../Template'
 import { TemplateSidebar } from './TemplateSidebar'
 import { expect, fn } from 'storybook/test'
+import { AwaitedActionResponse, ErrorResponse } from '@/app/shared/ActionResponse'
 
 const template = { id: '1', language: 'en', parameters: [], name: 'Template 1', text: 'Template 1 Text' } as unknown as Template
 
@@ -55,7 +56,9 @@ export const Actions: StoryObj<typeof meta> = {
 
 export const Error: StoryObj<typeof meta> = {
   args: {
-    onSave: fn(),
+    onSave: fn((i: TemplateInput, c: (response: AwaitedActionResponse<Template>) => void) => {
+      c({ success: false, error: 'Message' } as ErrorResponse)
+    }),
   },
   play: async ({ canvas, userEvent }) => {
     const saveButton = await canvas.findByText('Save')

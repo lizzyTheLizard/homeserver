@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, fn } from 'storybook/test'
 import { ProfileSidebar } from './ProfileSidebar'
-import { Profile } from '../Profile'
+import { Profile, ProfileInput } from '../Profile'
+import { AwaitedActionResponse, ErrorResponse } from '@/app/shared/ActionResponse'
 
 const profile = { language: 'en', text: 'Profile Text' } as unknown as Profile
 
@@ -55,7 +56,9 @@ export const Actions: StoryObj<typeof meta> = {
 
 export const Error: StoryObj<typeof meta> = {
   args: {
-    onSave: fn(),
+    onSave: fn((i: ProfileInput, c: (response: AwaitedActionResponse<Profile>) => void) => {
+      c({ success: false, error: 'Message' } as ErrorResponse)
+    }),
   },
   play: async ({ canvas, userEvent }) => {
     const saveButton = await canvas.findByText('Save')
