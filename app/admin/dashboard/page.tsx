@@ -18,6 +18,7 @@ export default async function Page() {
 
   return (
     <main>
+      <h1>Admin Dashboard</h1>
       <div className="row">
         <DashboardCard header="Build" items={getBuildInfo()}></DashboardCard>
         <DashboardCard header="Run" items={getRunInfo()}></DashboardCard>

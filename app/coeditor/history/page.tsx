@@ -14,6 +14,9 @@ export default async function Page() {
   const discussions = await transactional(client => findDiscussionByOwner(client, user.sub))
 
   return (
-    <History discussions={discussions} />
+    <main>
+      <h1>History</h1>
+      <History discussions={discussions} />
+    </main>
   )
 }

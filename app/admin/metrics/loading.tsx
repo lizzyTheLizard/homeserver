@@ -4,6 +4,7 @@ import { DashboardCard } from '../DashboardCard'
 export default function Loading() {
   return (
     <main>
+      <h1>Metrics</h1>
       <LoadingSpinner />
       <div className="row">
         <DashboardCard header="General" items={[]}></DashboardCard>

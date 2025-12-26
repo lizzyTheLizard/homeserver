@@ -77,57 +77,55 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
   }
 
   return (
-    <main className={style.main}>
+    <Sidebar open={open} onClose={() => { setOpen(false) }} sidebar={sidebar} title={title} type={type}>
       {pending && <LoadingSpinner text="Processing..." />}
-      <Sidebar open={open} onClose={() => { setOpen(false) }} sidebar={sidebar} title={title} type={type}>
-        <h1>Profiles</h1>
-        <DataTable className={style.table}>
-          <thead>
-            <tr>
-              <th className={style.language}>Language</th>
-              <th className={style.updated}>Last Updated</th>
-              <th>Text</th>
+      <h2>Profiles</h2>
+      <DataTable className={style.table}>
+        <thead>
+          <tr>
+            <th className={style.language}>Language</th>
+            <th className={style.updated}>Last Updated</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody>
+          {profiles.map(profile => (
+            <tr key={profile.language} onClick={(e) => { openProfileSidebar(e, profile) }} className={style.settingsrow}>
+              <td>{profile.language}</td>
+              <td><DateTime hideTime={true} date={profile.updated_at} /></td>
+              <td className={style.text}>{profile.text}</td>
             </tr>
-          </thead>
-          <tbody>
-            {profiles.map(profile => (
-              <tr key={profile.language} onClick={(e) => { openProfileSidebar(e, profile) }} className={style.settingsrow}>
-                <td>{profile.language}</td>
-                <td><DateTime hideTime={true} date={profile.updated_at} /></td>
-                <td className={style.text}>{profile.text}</td>
-              </tr>
-            ))}
-          </tbody>
-        </DataTable>
-        <div className={style.createButtonRow + ' row'}>
-          <Button className={style.createButton} onClick={(e) => { openProfileSidebar(e) }}>Add</Button>
-        </div>
+          ))}
+        </tbody>
+      </DataTable>
+      <div className={style.createButtonRow + ' row'}>
+        <Button className={style.createButton} onClick={(e) => { openProfileSidebar(e) }}>Add</Button>
+      </div>
 
-        <h1>Templates</h1>
-        <DataTable className={style.table}>
-          <thead>
-            <tr>
-              <th className={style.language}>Language</th>
-              <th className={style.name}>Name</th>
-              <th className={style.updated}>Last Updated</th>
-              <th>Text</th>
+      <h2>Templates</h2>
+      <DataTable className={style.table}>
+        <thead>
+          <tr>
+            <th className={style.language}>Language</th>
+            <th className={style.name}>Name</th>
+            <th className={style.updated}>Last Updated</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody>
+          {templates.map(template => (
+            <tr key={template.id} onClick={(e) => { openTemplateSidebar(e, template) }} className={style.settingsrow}>
+              <td>{template.language}</td>
+              <td>{template.name}</td>
+              <td><DateTime hideTime={true} date={template.updated_at} /></td>
+              <td className={style.text}>{template.text}</td>
             </tr>
-          </thead>
-          <tbody>
-            {templates.map(template => (
-              <tr key={template.id} onClick={(e) => { openTemplateSidebar(e, template) }} className={style.settingsrow}>
-                <td>{template.language}</td>
-                <td>{template.name}</td>
-                <td><DateTime hideTime={true} date={template.updated_at} /></td>
-                <td className={style.text}>{template.text}</td>
-              </tr>
-            ))}
-          </tbody>
-        </DataTable>
-        <div className={style.createButtonRow + ' row'}>
-          <Button className={style.createButton} onClick={(e) => { openTemplateSidebar(e) }}>Add</Button>
-        </div>
-      </Sidebar>
-    </main>
+          ))}
+        </tbody>
+      </DataTable>
+      <div className={style.createButtonRow + ' row'}>
+        <Button className={style.createButton} onClick={(e) => { openTemplateSidebar(e) }}>Add</Button>
+      </div>
+    </Sidebar>
   )
 }

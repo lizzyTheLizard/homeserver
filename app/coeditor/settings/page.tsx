@@ -20,13 +20,16 @@ export default async function Page() {
   const profiles = await transactional(client => findProfilesByOwner(client, user.sub))
 
   return (
-    <Settings
-      profiles={profiles}
-      templates={templates}
-      onDeleteProfile={deleteProfile}
-      onSaveProfile={updateProfile}
-      onDeleteTemplate={deleteTemplate}
-      onSaveTemplate={updateTemplate}
-    />
+    <main>
+      <h1>Settings</h1>
+      <Settings
+        profiles={profiles}
+        templates={templates}
+        onDeleteProfile={deleteProfile}
+        onSaveProfile={updateProfile}
+        onDeleteTemplate={deleteTemplate}
+        onSaveTemplate={updateTemplate}
+      />
+    </main>
   )
 }

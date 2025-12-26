@@ -23,6 +23,9 @@ export default async function Page({ searchParams}: { searchParams: Promise<Reco
   })
 
   return (
-    <Editor discussion={discussion} templates={templates} executeCommand={executeCommand} />
+    <main>
+      <h1>CoEditor</h1>
+      <Editor discussion={discussion} templates={templates} executeCommand={executeCommand} />
+    </main>
   )
 }
