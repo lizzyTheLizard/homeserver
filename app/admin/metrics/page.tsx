@@ -17,6 +17,7 @@ export default async function Page() {
 
   return (
     <main>
+      <h1>Metrics</h1>
       <div className="row">
         <DashboardCard header="General" items={getGeneralMetrics()}></DashboardCard>
         <DashboardCard header="CoEditor" items={await getCoeditorMetrics()}></DashboardCard>

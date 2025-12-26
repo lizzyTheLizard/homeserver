@@ -19,6 +19,7 @@ export default async function Page() {
 
   return (
     <main>
+      <h1>Logs</h1>
       <Log lines={lines} />
     </main>
   )

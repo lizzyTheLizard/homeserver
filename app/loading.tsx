@@ -1,5 +1,10 @@
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 
 export default function Loading() {
-  return <LoadingSpinner />
+  return (
+    <main>
+      <h1>Portal</h1>
+      <LoadingSpinner />
+    </main>
+  )
 }

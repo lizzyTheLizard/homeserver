@@ -1,8 +1,3 @@
-:root{
-    --header-height: 2rem;
-    --header-text-size: 1.5rem;
-}
-
 .container {
     display: flex;
     flex-wrap: wrap;
