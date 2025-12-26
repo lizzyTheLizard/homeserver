@@ -107,10 +107,10 @@ async function getSession(): Promise<IronSession<SessionData>> {
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
-  if (!process.env.ISSUER_URL) throw new Error('ISSUER_URL is not defined in environment variables')
+  if (!process.env.ISSUER) throw new Error('ISSUER is not defined in environment variables')
   if (!process.env.CLIENT_ID) throw new Error('CLIENT_ID is not defined in environment variables')
   if (!process.env.CLIENT_SECRET) throw new Error('CLIENT_SECRET is not defined in environment variables')
-  clientConfigCache ??= client.discovery(new URL(process.env.ISSUER_URL), process.env.CLIENT_ID, process.env.CLIENT_SECRET)
+  clientConfigCache ??= client.discovery(new URL(process.env.ISSUER), process.env.CLIENT_ID, process.env.CLIENT_SECRET)
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
