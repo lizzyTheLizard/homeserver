@@ -2,36 +2,35 @@
   text-align: center;
 }
 
-
 @media (min-width: 600px) {
   table.dataTable {
     border-spacing: 0;
     border-collapse: separate;
-    border-radius: 6px;
-    border: 1px solid black;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--primary-border-color);
     width: 100%;
 
     th {
-      background-color: blue;
-      color: white;
+      background-color: var(--primary-background-color);
+      color: var(--default-background-color);
       font-weight: bold;
-      padding: 1rem 0.5rem;
+      padding: var(--gap) var(--gap-small);
       text-align: center;
     }
 
     th:first-child{
     /* To make backgound of first header round, we need to set border-radius */
-    border-top-left-radius: 5px;
+    border-top-left-radius: var(--border-radius);
     }
 
     th:last-child{
-      border-top-right-radius: 5px;
+      border-top-right-radius: var(--border-radius);
     }
 
     th:not(:last-child),
     td:not(:last-child) {
     /* Apply a border to the right of all but the last column */
-    border-right: 1px solid black;
+    border-right: 1px solid var(--primary-border-color);
     }
 
     tr:not(:last-child)>th,
@@ -40,11 +39,11 @@
     tbody:not(:last-child),
     tfoot:not(:last-child) {
     /* Apply a border to the bottom of all but the last row */
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid var(--primary-border-color);
     }
 
     td {
-      padding: 0.5rem 0.5rem;
+      padding: var(--gap-small) var(--gap-small);
       vertical-align: top;
     }
 
@@ -57,11 +56,11 @@
     }
 
     tr:last-child td:first-child{
-      border-bottom-left-radius: 6px;
+      border-bottom-left-radius: var(--border-radius);
     }
 
     tr:last-child td:last-child{
-      border-bottom-right-radius: 6px;
+      border-bottom-right-radius: var(--border-radius);
     }
   }
 }
@@ -69,9 +68,10 @@
 @media (max-width: 600px) {
   table.dataTable{
     display: block; 
-    border-radius: 6px;
-    border: 1px solid black;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--primary-border-color);
     width: 100%;
+    --header-width: 8rem;
 
     tbody, td, tr:not(.emptyRow) { 
       display: block; 
@@ -82,12 +82,12 @@
     }
   
     td {
-      padding: 0.5rem 0.5rem;
-      border-bottom: 1px solid black;
-      border-top-left-radius: 6px;
-      border-top-right-radius: 6px;
+      padding: var(--gap-small) var(--gap-small);
+      border-bottom: 1px solid var(--primary-border-color);
+      border-top-left-radius: var(--border-radius);
+      border-top-right-radius: var(--border-radius);
       word-break: break-all;
-      min-height: 1rem;
+      min-height: var(--gap);
     }
     
     tr:not(.emptyRow) td {
@@ -95,16 +95,16 @@
     }
 
     td:first-child {
-      padding-top: 1rem;
+      padding-top: var(--gap);
     }
 
     td:last-child {
-      padding-bottom: 1rem;
+      padding-bottom: var(--gap);
     }
 
     tr:last-child td:last-child {
-      border-bottom-left-radius: 6px;
-      border-bottom-right-radius: 6px;
+      border-bottom-left-radius: var(--border-radius);
+      border-bottom-right-radius: var(--border-radius);
       border-bottom: none;
     }
 
@@ -114,13 +114,13 @@
 
     tr:not(.emptyRow) td:not(:has(*[label])) { 
       position: relative;
-      padding-left: 8rem; 
+      padding-left: var(--header-width); 
     }
 
     tr:not(.emptyRow) td:not(:has(*[label])):before { 
       position: absolute;
-      left: 1rem;
-      width: calc(100% - 8rem - 2rem);
+      left: var(--gap);
+      width: calc(100% - var(--header-width) - 2 * var(--gap));
       white-space: nowrap;
       font-weight: bold;
       content: attr(header);
