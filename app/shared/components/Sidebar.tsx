@@ -17,9 +17,15 @@ export function Sidebar({ children, open, onClose, sidebar, title, type }: Props
 
   function adjustHeight() {
     if (!ref.current) return
-    if (window.matchMedia('(max-width: 600px)').matches) return
-    const top = ref.current.getBoundingClientRect().top
-    ref.current.style.height = `calc(100vh - 2* var(--gap) -  var(--gap-small) - ${top === 0 ? '0' : top.toString() + 'px'})`
+    if (window.matchMedia('(max-width: 600px)').matches) {
+      // On Mobile
+      ref.current.style.height = '100%'
+    }
+    else {
+      // On Desktop
+      const top = ref.current.getBoundingClientRect().top
+      ref.current.style.height = `calc(100vh - 2* var(--gap) -  var(--gap-small) - ${top === 0 ? '0' : top.toString() + 'px'})`
+    }
   }
 
   useEffect(() => {
@@ -33,14 +39,12 @@ export function Sidebar({ children, open, onClose, sidebar, title, type }: Props
         {children}
       </div>
       <aside className={styles.sidebar + ' ' + (open ? styles.open : styles.closed)} ref={ref}>
-        <div>
-          <div className={styles.titlebar}>
-            <h1 className={styles.title}>{title}</h1>
-            <Icon className={styles.closebutton} name="close" onClick={() => { onClose?.() }} />
-          </div>
-          {type !== undefined && <div className={styles.type}>{type}</div>}
-          {sidebar}
+        <div className={styles.titlebar}>
+          <h1 className={styles.title}>{title}</h1>
+          <Icon className={styles.closebutton} name="close" onClick={() => { onClose?.() }} />
         </div>
+        {type !== undefined && <div className={styles.type}>{type}</div>}
+        {sidebar}
       </aside>
     </div>
   )

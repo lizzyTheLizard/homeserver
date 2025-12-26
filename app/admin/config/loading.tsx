@@ -6,10 +6,10 @@ export default function Loading() {
     <main>
       <LoadingSpinner />
       <h1>Configuration</h1>
-      <DataTable>
+      <DataTable style={{ tableLayout: 'fixed' }}>
         <thead>
           <tr>
-            <th>Key</th>
+            <th style={{ width: '20rem' }}>Key</th>
             <th>Value</th>
           </tr>
         </thead>
