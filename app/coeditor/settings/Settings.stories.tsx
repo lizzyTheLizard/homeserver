@@ -84,8 +84,8 @@ export const OpenCloseProfileSidebar: StoryObj<typeof meta> = {
   play: async ({ canvasElement, userEvent }) => {
     const row = canvasElement.querySelector('tbody tr')
     await userEvent.click(row!)
-    const header = canvasElement.querySelector('h1')
-    await userEvent.click(header!)
+    const svg = canvasElement.querySelector('svg')
+    await userEvent.click(svg!)
   },
 }
 
@@ -100,7 +100,7 @@ export const OpenCloseTemplateSidebar: StoryObj<typeof meta> = {
   play: async ({ canvasElement, userEvent }) => {
     const row = canvasElement.querySelector('table:nth-of-type(2) tbody tr')
     await userEvent.click(row!)
-    const header = canvasElement.querySelector('h1')
-    await userEvent.click(header!)
+    const svg = canvasElement.querySelector('svg')
+    await userEvent.click(svg!)
   },
 }
