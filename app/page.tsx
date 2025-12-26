@@ -13,6 +13,7 @@ export default async function Page() {
   if (!session) throw new Error('Not authenticated')
   return (
     <main>
+      <h1>Portal</h1>
       <div className="row">
         {applications.filter(a => session.applications.includes(a.key)).map(app => (
           <Card href={app.link} key={app.key}>

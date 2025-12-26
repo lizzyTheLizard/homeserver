@@ -1,7 +1,3 @@
-.main {
-    flex-grow: 1;
-}
-
 .createButtonRow {
     margin-top: var(--gap);
     justify-content: flex-end;

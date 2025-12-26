@@ -10,28 +10,25 @@ export interface HistoryProps {
 }
 export function History({ discussions }: HistoryProps) {
   return (
-    <main>
-      <h1>History</h1>
-      <DataTable className={style.table}>
-        <thead>
-          <tr>
-            <th className={style.title}>Title</th>
-            <th className={style.updated}>Last Updated</th>
-            <th>Text</th>
-            <th>Context</th>
+    <DataTable className={style.table}>
+      <thead>
+        <tr>
+          <th className={style.title}>Title</th>
+          <th className={style.updated}>Last Updated</th>
+          <th>Text</th>
+          <th>Context</th>
+        </tr>
+      </thead>
+      <tbody>
+        {discussions.map(discussion => (
+          <tr key={discussion.id}>
+            <td><Link href={`/coeditor/editor?id=${discussion.id}`}>{discussion.title}</Link></td>
+            <td><DateTime date={discussion.updated_at} /></td>
+            <td className={style.text}>{discussion.text}</td>
+            <td className={style.text}>{discussion.context}</td>
           </tr>
-        </thead>
-        <tbody>
-          {discussions.map(discussion => (
-            <tr key={discussion.id}>
-              <td><Link href={`/coeditor/editor?id=${discussion.id}`}>{discussion.title}</Link></td>
-              <td><DateTime date={discussion.updated_at} /></td>
-              <td className={style.text}>{discussion.text}</td>
-              <td className={style.text}>{discussion.context}</td>
-            </tr>
-          ))}
-        </tbody>
-      </DataTable>
-    </main>
+        ))}
+      </tbody>
+    </DataTable>
   )
 }

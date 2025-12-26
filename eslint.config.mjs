@@ -33,7 +33,7 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-extraneous-class': ['off'],
       '@stylistic/max-statements-per-line': ['error', { max: 2 }],
-      'react-refresh/only-export-components': ['error', { allowExportNames: ['metadata'] }],
+      'react-refresh/only-export-components': ['error', { allowExportNames: ['metadata', 'viewport'] }],
 
     },
   },

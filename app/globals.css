@@ -13,6 +13,15 @@ body {
   flex-direction: column;
 }
 
+main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  text-align: center;
+}
 
 @media (min-width: 600px) {
   main{
@@ -20,13 +29,11 @@ body {
   }
 }
 
-
 @media (max-width: 600px) {
   main{
     margin: 0 var(--gap-small)
   }
 }
-
 
 .row {
   display: flex;
@@ -35,7 +42,6 @@ body {
   align-items: stretch;
     justify-content: center;
 }
-
 
 :root {
   --gap: 1rem;
@@ -72,6 +78,8 @@ body {
   --disabled-transparent-color: rgba(100, 100, 100, 0.1);
 
   --input-height: 2.5rem;
-
+  --header-height: 2rem;
+  --header-text-size: 1.5rem;
+  --sidebar-width: 400px;
 
 }

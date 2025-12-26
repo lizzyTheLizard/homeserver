@@ -80,10 +80,8 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
   }
 
   return (
-    <main className={style.main}>
-      <title>CoEditor - Editor</title>
+    <>
       {executePending && <LoadingSpinner text="Executing command..." />}
-      <h1>CoEditor</h1>
       <EditorContext
         templates={templates}
         template={state.template}
@@ -124,6 +122,6 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
         <Button onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length}>Redo</Button>
         <Button onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id}>New</Button>
       </div>
-    </main>
+    </>
   )
 }
