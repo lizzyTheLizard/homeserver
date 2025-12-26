@@ -15,9 +15,10 @@ export default function Loading() {
   }
 
   return (
-    <>
+    <main>
+      <h1>CoEditor</h1>
       <LoadingSpinner></LoadingSpinner>
       <Editor discussion={undefined} templates={[dummyTemplate]} />
-    </>
+    </main>
   )
 }

@@ -1,9 +1,8 @@
-.sidebar>div {
+.sidebar {
     display:flex;
     flex-direction: column;
-    height: calc(100% - 2 * var(--gap));
-    width: calc(100% - 2 * var(--gap));
-    padding: var(--gap);
+    height: 100%;
+    width: 100%;
 }
 
 .titlebar {
@@ -70,17 +69,16 @@
     .sidebar {
         background-color: white;
         position: fixed;
-        padding: var(--gap);
-        height: calc(100vh - 2 * var(--gap));
+        padding: var(--gap-small);
+        height: calc(100vh - 2 * var(--gap-small));
         top: 0;
-        width: calc(100vw - 2 * var(--gap));
+        width: calc(100vw - 2 * var(--gap-small));
         transition: left 1s ease-in-out;
-        z-index: 100;
+        z-index: 300;
     }
 
     .sidebar.open {
         left: 0;
-        border-left: 1px solid black;
     }
 
     .sidebar.closed {
