@@ -6,6 +6,7 @@ import { Textarea } from '@/app/shared/components/Textarea'
 import Button from '@/app/shared/components/Button'
 import { Profile, ProfileInput } from '../Profile'
 import { AwaitedActionResponse } from '@/app/shared/ActionResponse'
+import { v4 as randomUUID } from 'uuid'
 
 export interface ProfileSidebarProps {
   profile?: Profile
@@ -15,13 +16,14 @@ export interface ProfileSidebarProps {
 }
 
 export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSidebarProps) {
+  const [id] = useState(profile?.id ?? randomUUID())
   const [language, setLanguage] = useState(profile?.language ?? '')
   const [text, setText] = useState(profile?.text ?? '')
   const [error, setError] = useState<string | undefined>(undefined)
 
   function handleSave() {
     if (!onSave) return
-    onSave({ language, text }, (result) => {
+    onSave({ id, language, text }, (result) => {
       if (!result.success) setError(result.error)
       else setError(undefined)
       if (!profile) {
@@ -33,7 +35,7 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
 
   function handleDelete() {
     if (!onDelete) return
-    onDelete(language, (result) => {
+    onDelete(id, (result) => {
       if (!result.success) setError(result.error)
       else setError(undefined)
     })
@@ -42,7 +44,7 @@ export function ProfileSidebar({ profile, onSave, onDelete, onClose }: ProfileSi
   return (
     <>
       <form className={styles.form}>
-        <Input type="text" label="Language" disabled={!!profile} value={language} onChange={(e) => { setLanguage(e.target.value) }} />
+        <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
         <Textarea className={styles.textarea} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
         {error && <div className={styles.error}>{error}</div>}
         <Button type="button" variant="primary" onClick={handleSave}>Save</Button>

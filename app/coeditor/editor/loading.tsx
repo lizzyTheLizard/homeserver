@@ -1,6 +1,6 @@
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { Template } from '../Template'
-import Editor from './Editor'
+import { Editor } from './Editor'
 
 export default function Loading() {
   const dummyTemplate: Template = {

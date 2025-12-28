@@ -4,7 +4,7 @@ import { ProfileSidebar } from './ProfileSidebar'
 import { Profile, ProfileInput } from '../Profile'
 import { AwaitedActionResponse, ErrorResponse } from '@/app/shared/ActionResponse'
 
-const profile = { language: 'en', text: 'Profile Text' } as unknown as Profile
+const profile = { id: '1', language: 'en', text: 'Profile Text' } as unknown as Profile
 
 const meta = {
   title: 'CoEditor/Settings/ProfileSidebar',
@@ -43,11 +43,11 @@ export const Actions: StoryObj<typeof meta> = {
     await userEvent.type(textInput, 'Updated Profile')
     const saveButton = await canvas.findByText('Save')
     await userEvent.click(saveButton)
-    await expect(args.onSave).toHaveBeenCalledWith({ language: 'en', text: 'Updated Profile' }, expect.any(Function))
+    await expect(args.onSave).toHaveBeenCalledWith({ id: '1', language: 'en', text: 'Updated Profile' }, expect.any(Function))
     const deleteButton = await canvas.findByText('Delete')
     console.log('deleteButton', deleteButton)
     await userEvent.click(deleteButton)
-    await expect(args.onDelete).toHaveBeenCalledWith('en', expect.any(Function))
+    await expect(args.onDelete).toHaveBeenCalledWith('1', expect.any(Function))
     const cancelButton = await canvas.findByText('Cancel')
     await userEvent.click(cancelButton)
     await expect(args.onClose).toHaveBeenCalledOnce()

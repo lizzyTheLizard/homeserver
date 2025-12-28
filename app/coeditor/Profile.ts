@@ -1,16 +1,18 @@
 import { PoolClient } from 'pg'
-import { expectedError } from '../shared/BackendError'
+import { expectedError, unexpectedError } from '../shared/BackendError'
 import { logger } from '@/logger'
 
 export interface Profile {
-  owner_id: string
+  id: string
   language: string
+  text: string
+  owner_id: string
   updated_at: Date
   create_at: Date
-  text: string
 }
 
 export interface ProfileInput {
+  id: string
   language: string
   text: string
 }
@@ -30,31 +32,28 @@ export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: s
   return result.rows[0]
 }
 
-export async function createProfile(client: PoolClient, owner: string, input: ProfileInput): Promise<Profile> {
-  const result = await client.query<Profile>(
-    'INSERT INTO profile (language, text, owner_id) VALUES ($1, $2, $3) RETURNING *',
-    [input.language, input.text, owner],
-  )
-  if (!result.rows[0]) throw expectedError('Failed to create profile', 500, 'Internal Server Error')
-  logger.info(`Created profile '${input.language}' for owner ${owner}`)
-  return result.rows[0]
-}
-
-export async function modifyProfile(client: PoolClient, owner: string, input: ProfileInput): Promise<Profile> {
-  const result = await client.query<Profile>(
-    'UPDATE profile SET text = $1, updated_at = NOW() WHERE owner_id = $2 AND language = $3 RETURNING *',
-    [input.text, owner, input.language],
-  )
-  if (!result.rows[0]) throw expectedError('Failed to modify profile', 500, 'Internal Server Error')
+export async function createOrModifyProfile(client: PoolClient, owner: string, input: ProfileInput): Promise<Profile> {
+  const sameLang = await findProfileByOwnerAndLanguage(client, owner, input.language)
+  if (sameLang && sameLang.id !== input.id) {
+    throw expectedError(`There is alread a profile for language ${input.language}`)
+  }
+  const existing = await client.query<Profile>('SELECT * FROM profile WHERE owner_id=$1 AND id=$2', [owner, input.id])
+  const query = existing.rows[0]
+    ? 'UPDATE profile SET text = $2, language=$3, updated_at = NOW() WHERE owner_id = $4 AND id = $1 RETURNING *'
+    : 'INSERT INTO profile (id,text, language, owner_id) VALUES ($1, $2, $3, $4) RETURNING *'
+  const result = await client.query<Profile>(query, [input.id, input.text, input.language, owner])
+  if (!result.rows[0]) throw unexpectedError('Failed to modify profile', 500, 'Internal Server Error')
   logger.info(`Modified profile '${input.language}' for owner ${owner}`)
   return result.rows[0]
 }
 
-export async function removeProfile(client: PoolClient, owner: string, language: string): Promise<void> {
+export async function removeProfile(client: PoolClient, owner: string, id: string): Promise<void> {
   const result = await client.query(
-    'DELETE FROM profile WHERE owner_id = $1 AND language = $2',
-    [owner, language],
+    'DELETE FROM profile WHERE owner_id = $1 AND id = $2',
+    [owner, id],
   )
-  if (result.rowCount === 0) throw expectedError('Failed to delete profile', 500, 'Internal Server Error')
-  logger.info(`Deleted profile '${language}' for owner ${owner}`)
+  if (result.rowCount !== 0)
+    logger.info(`Deleted profile '${id}' for owner ${owner}`)
+  else
+    logger.debug(`Try to delete non exising profile '${id}' for owner ${owner}`)
 }

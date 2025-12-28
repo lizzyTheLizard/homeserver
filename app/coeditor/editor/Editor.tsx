@@ -3,12 +3,11 @@
 import { startTransition, useCallback, useReducer, useState } from 'react'
 import { editorStateReducer, initialState } from './EditorState'
 import { Discussion } from '../Discussion'
-import { PredefinedCommandType } from '../Command'
+import { CommandInput, PredefinedCommandType } from '../Command'
 import { Textarea, Selection } from '@/app/shared/components/Textarea'
 import { Template } from '../Template'
 import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
-import { CommandInput } from './executeCommand'
 import { ActionResponse } from '@/app/shared/ActionResponse'
 import style from './Editor.module.css'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
@@ -22,7 +21,7 @@ export interface EditorProps {
   executeCommand?: (input: CommandInput) => ActionResponse<Discussion>
 }
 
-export default function Editor({ discussion, templates, executeCommand }: EditorProps) {
+export function Editor({ discussion, templates, executeCommand }: EditorProps) {
   const [state, dispatch] = useReducer(editorStateReducer, initialState(discussion, templates))
   const [customCommand, setCustomCommand] = useState('')
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
@@ -40,8 +39,8 @@ export default function Editor({ discussion, templates, executeCommand }: Editor
       parameters: state.parameters,
       selection_start: selection?.start,
       selection_end: selection?.end,
-      customCommand: command ? undefined : customCommand,
-      predefinedCommand: command,
+      custom_command: command ? undefined : customCommand,
+      predefined_command: command,
     }
     startTransition(async () => {
       const result = await executeCommand?.(input)
