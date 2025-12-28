@@ -15,6 +15,12 @@ export async function getUserSession(): Promise<UserSession | undefined> {
   return session.userInfo
 }
 
+export async function getAuthenticatedUserSession(): Promise<UserSession> {
+  const session = await getUserSession()
+  if (!session) throw new Error('User not authenticated')
+  return session
+}
+
 export async function startLogin(request: Request): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)

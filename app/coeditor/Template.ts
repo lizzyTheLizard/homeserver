@@ -1,7 +1,7 @@
 import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
-import { expectedError } from '../shared/BackendError'
 import { logger } from '@/logger'
+import { unexpectedError } from '../shared/BackendError'
 
 export interface Template {
   id: string
@@ -34,18 +34,12 @@ export async function findTemplatesByOwner(client: PoolClient, owner: string): P
   if (result.rows.length === 0) {
     logger.info('No templates found, inserting default template')
     return [
-      await createTemplate(client, owner, { id: randomUUID(), name: 'No Context', language: 'English', text: '' }),
-      await createTemplate(client, owner, { id: randomUUID(), name: 'With Context', language: 'English', text: '{context:TEXT}' }),
+      await createOrModifyTemplate(client, owner, { id: randomUUID(), name: 'No Context', language: 'English', text: '' }),
+      await createOrModifyTemplate(client, owner, { id: randomUUID(), name: 'With Context', language: 'English', text: '{context:TEXT}' }),
     ]
   }
   logger.debug(`Found ${result.rows.length.toString()} templates for  owner ${owner}`)
   return result.rows
-}
-
-export async function findTemplateById(client: PoolClient, template_id: string): Promise<Template | undefined> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE id = $1', [template_id])
-  logger.debug(`${result.rows.length ? 'Found' : 'Did not find'} template ${template_id}`)
-  return result.rows[0] ?? undefined
 }
 
 export async function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
@@ -53,40 +47,24 @@ export async function findNumberOfUsersWithTemplates(client: PoolClient): Promis
   return parseInt(result.rows[0].count, 10)
 }
 
-export async function createTemplate(client: PoolClient, owner: string, input: TemplateInput): Promise<Template> {
-  const parameters = extractParameters(input.text)
-  const result = await client.query<Template>(
-    'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)],
-  )
-  if (!result.rows[0]) throw expectedError('Failed to create template', 500, 'Internal Server Error')
-  logger.info(`Created template ${input.id} for owner ${owner}`)
+export async function findTemplateById(client: PoolClient, owner: string, id: string): Promise<Template | undefined> {
+  const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1 AND id=$2', [owner, id])
   return result.rows[0]
 }
 
-export async function modifyTemplate(client: PoolClient, input: TemplateInput): Promise<Template> {
+export async function createOrModifyTemplate(client: PoolClient, owner: string, input: TemplateInput): Promise<Template> {
   const parameters = extractParameters(input.text)
-  const result = await client.query<Template>(
-    'UPDATE template SET name = $1, language = $2, text = $3, parameters = $4, updated_at = NOW() WHERE id = $5 RETURNING *',
-    [input.name, input.language, input.text, JSON.stringify(parameters), input.id],
-  )
-  if (!result.rows[0]) throw expectedError('Failed to modify template', 500, 'Internal Server Error')
-  logger.info(`Modified template ${input.id}`)
+  const query = await findTemplateById(client, owner, input.id)
+    ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_id = $5 RETURNING *'
+    : 'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
+  const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
+
+  if (!result.rows[0]) throw unexpectedError('Failed to modify template', 500, 'Internal Server Error')
+  logger.info(`Modified template '${input.id}' for owner ${owner}`)
   return result.rows[0]
 }
 
-export async function removeTemplate(client: PoolClient, owner: string, template_id: string): Promise<void> {
-  {
-    const result = await client.query(
-      'DELETE FROM template WHERE id = $1 AND owner_id = $2',
-      [template_id, owner],
-    )
-    if (result.rowCount === 0) throw expectedError('Failed to delete template', 500, 'Internal Server Error')
-    logger.info(`Deleted template ${template_id} for owner ${owner}`)
-  }
-}
-
-export function extractParameters(text: string): TemplateParameter[] {
+function extractParameters(text: string): TemplateParameter[] {
   const PARAMETER_REGEX = /\{([^}]+)\}/g
   return Array.from(text.matchAll(PARAMETER_REGEX)).map((match) => {
     const matchedString = match[1]
@@ -114,15 +92,20 @@ function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SE
   return { name, type, values }
 }
 
-export function createContextString(template: Template, values: Record<string, string>): string {
-  let result = template.text
-  let offset = 0
-  for (const param of template.parameters) {
-    if (!(param.name in values))
-      throw new Error(`Missing parameter '${param.name}'`)
-    const value = values[param.name]
-    result = result.substring(0, param.startPosition + offset) + value + result.substring(param.endPosition + offset)
-    offset += value.length - (param.endPosition - param.startPosition)
-  }
-  return result
+export async function removeTemplate(client: PoolClient, owner: string, template_id: string): Promise<void> {
+  // First remove all discussions related to this template
+  const result1 = await client.query(
+    'DELETE FROM discussion WHERE template_id = $1 AND owner_id = $2',
+    [template_id, owner],
+  )
+  logger.info(`Removed ${(result1.rowCount ?? 0).toString()} discussions for template ${template_id}`)
+
+  const result2 = await client.query(
+    'DELETE FROM template WHERE id = $1 AND owner_id = $2',
+    [template_id, owner],
+  )
+  if (result2.rowCount !== 0)
+    logger.info(`Deleted template ${template_id} for owner ${owner}`)
+  else
+    logger.debug(`Try to delete non exising template '${template_id}' for owner ${owner}`)
 }

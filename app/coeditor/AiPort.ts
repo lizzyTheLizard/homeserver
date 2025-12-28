@@ -1,17 +1,31 @@
 import OpenAI from 'openai'
 import type { ResponseInputItem } from 'openai/resources/responses/responses.mjs'
-import { expectedError, unexpectedError } from '../../shared/BackendError'
-import { Command, CommandResult, PredefinedCommandType } from '../Command'
+import { expectedError, unexpectedError } from '../shared/BackendError'
+import { Command, CommandResult, PredefinedCommandType } from './Command'
 import { logger } from '@/logger'
+import { ClientOptions } from 'openai'
 
-export type CommandWithoutResult = Omit<Command, 'result'>
+export interface TextAndSelection {
+  text?: string
+  selection_start?: number
+  selection_end?: number
+}
 
-export async function aiPort(input: CommandWithoutResult, commandsSoFar: Command[]): Promise<CommandResult> {
+export interface AiPortInput extends TextAndSelection {
+  language: string
+  profile?: string
+  context: string
+  title?: string
+  custom_command?: string
+  predefined_command?: PredefinedCommandType
+}
+
+export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?: ClientOptions): Promise<CommandResult> {
   const messagesSoFar = commandsSoFar.flatMap(command => mapCommandsSoFar(command))
   const nextMessage = createNextMessage(input)
   logger.debug(`AI Port called with message: ${nextMessage.content}`)
   const start = performance.now()
-  const client = new OpenAI({ baseURL: 'https://api.scaleway.ai/v1' })
+  const client = new OpenAI({ ...opts, baseURL: 'https://api.scaleway.ai/v1' })
   const response = await client.responses.create({
     model: 'gpt-oss-120b',
     input: [systemMessage, ...messagesSoFar, nextMessage as ResponseInputItem],
@@ -48,7 +62,7 @@ function mapCommandsSoFar(command: Command): ResponseInputItem[] {
     title: command.title,
     text: command.text,
     selection: getSelection(command),
-    command: getCommand(command),
+    command: getCommand(command.custom_command, command.predefined_command),
   }
   const response = { text: command.result.text, title: command.result.title }
 
@@ -58,7 +72,7 @@ function mapCommandsSoFar(command: Command): ResponseInputItem[] {
   ]
 }
 
-function createNextMessage(input: CommandWithoutResult) {
+function createNextMessage(input: AiPortInput) {
   return { role: 'user', content: JSON.stringify({
     language: input.language,
     profile: input.profile,
@@ -66,11 +80,11 @@ function createNextMessage(input: CommandWithoutResult) {
     title: input.title,
     text: input.text,
     selection: getSelection(input),
-    command: getCommand(input),
+    command: getCommand(input.custom_command, input.predefined_command),
   }) }
 }
 
-function getSelection(input: CommandWithoutResult): unknown {
+function getSelection(input: TextAndSelection): unknown {
   if (input.selection_end === undefined)
     return undefined
   if (input.selection_start === undefined)
@@ -84,7 +98,7 @@ function getSelection(input: CommandWithoutResult): unknown {
   }
 }
 
-function getFullNewText(input: CommandWithoutResult, newText: string): string {
+function getFullNewText(input: TextAndSelection, newText: string): string {
   if (input.selection_end === undefined)
     return newText
   if (input.selection_start === undefined)
@@ -103,13 +117,13 @@ const commands: Record<PredefinedCommandType, string> = {
   EXTEND: 'I want to extend the text. Add more information and details to the text.',
 }
 
-function getCommand(input: CommandWithoutResult): string {
-  if (input.custom_command)
-    return input.custom_command
-  if (!input.predefined_command)
+function getCommand(custom_command: string | undefined, predefined_command: PredefinedCommandType | undefined): string {
+  if (custom_command)
+    return custom_command
+  if (!predefined_command)
     throw expectedError('No custom nor predefined command given', 400)
-  const command = commands[input.predefined_command]
+  const command = commands[predefined_command]
   if (!command)
-    throw unexpectedError(`Unknown predefined command: ${input.predefined_command}`, 500, 'Unknown Predefined Command')
+    throw unexpectedError(`Unknown predefined command: ${predefined_command}`, 500, 'Unknown Predefined Command')
   return command
 }

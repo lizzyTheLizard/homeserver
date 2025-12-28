@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import Editor from './Editor'
+import { Editor } from './Editor'
 import { fn } from 'storybook/test'
 import { Discussion } from '../Discussion'
 import { Template } from '../Template'
