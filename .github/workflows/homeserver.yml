@@ -32,6 +32,8 @@ jobs:
             if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Tests
             run: pnpm run test
+            env:
+              OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY}}
     chromatic:
         name: Test Application (Chromatic)
         runs-on: ubuntu-latest
