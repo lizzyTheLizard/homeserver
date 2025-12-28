@@ -55,11 +55,11 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
   }
 
   function saveProfile(input: ProfileInput, callback: (response: AwaitedActionResponse<Profile>) => void): void {
-    wrap(onSaveProfile, input, callback, (result) => { setProfiles([...profiles.filter(p => input.language !== p.language), result]) })
+    wrap(onSaveProfile, input, callback, (result) => { setProfiles([...profiles.filter(p => input.id !== p.id), result]) })
   }
 
   function deleteProfile(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
-    wrap(onDeleteProfile, input, callback, () => { setProfiles([...profiles.filter(p => p.language !== input)]) })
+    wrap(onDeleteProfile, input, callback, () => { setProfiles([...profiles.filter(p => p.id !== input)]) })
   }
 
   function wrap<IN, OUT>(action: undefined | ((input: IN) => ActionResponse<OUT>), input: IN, callback: (result: AwaitedActionResponse<OUT>) => void, merge: (result: OUT) => void) {
