@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Header } from './common/components/Header'
 import { getUserSession } from './common/auth/auth'
-import { applications } from './common/Application'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -17,11 +16,10 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: React.PropsWithChildren) {
   const user = await getUserSession()
-  const accessibleApplications = applications.filter(a => user?.applications.includes(a.key) ?? false)
   return (
     <html lang="en">
       <body>
-        <Header accessibleApplications={accessibleApplications} hasSession={!!user}></Header>
+        <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
         {children}
       </body>
     </html>

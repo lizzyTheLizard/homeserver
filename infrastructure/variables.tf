@@ -23,6 +23,10 @@ variable "session_password" {
   sensitive = true
 }
 
+variable "admin_email" {
+  type = string
+}
+
 terraform {
   cloud { 
     organization = "gutschi-site" 

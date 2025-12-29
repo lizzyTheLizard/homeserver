@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import style from './Header.module.css'
 import { Icon } from '../../shared/components/Icon'
 import Link from 'next/link'
-import { Application } from '../Application'
+import { Application, applications } from '../Application'
 import { usePathname } from 'next/navigation'
 
 function startWithIgnoreCase(path: string, app: Application) {
@@ -14,7 +14,7 @@ function startWithIgnoreCase(path: string, app: Application) {
 }
 
 export interface HeaderProps {
-  accessibleApplications: Application[]
+  accessibleApplications: string[]
   hasSession: boolean
   path?: string
 }
@@ -26,7 +26,9 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
   const [showMenu, setShowMenu] = useState(false)
   const pathname = usePathname()
   const effectivePath = path ?? pathname
-  const currentApplication = accessibleApplications.find(app => startWithIgnoreCase(effectivePath, app))
+  const currentApplication = applications
+    .filter(app => accessibleApplications.includes(app.key))
+    .find(app => startWithIgnoreCase(effectivePath, app))
   const showPortalLink = currentApplication !== undefined && accessibleApplications.length > 1
 
   function toggle() {
@@ -53,7 +55,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
       <Icon className={style.mobileMenuIcon} onClick={toggle} name="menu"></Icon>
       <span className={style.applicationName}>{currentApplication?.name ?? 'Homeserver'}</span>
       <div className={style.links}>
-        {(currentApplication?.links ?? []).map(link =>
+        {(currentApplication?.getLinks(effectivePath) ?? []).map(link =>
           <Link onClick={toggle} key={link.href} href={link.href} className={getClasses(link.href)}><div><span>{link.text}</span></div></Link>,
         )}
       </div>

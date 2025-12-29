@@ -6,21 +6,10 @@ const meta = {
   component: Header,
   tags: ['autodocs'],
   args: {
-    path: '/my-app/dashboard',
+    path: '/coeditor/editor',
     hasSession: true,
-    accessibleApplications: [{
-      key: 'my-app',
-      link: '/my-app',
-      icon: 'app',
-      description: 'My Application Description',
-      name: 'My Application',
-      links: [
-        { text: 'Link1', href: '/my-app/link.html' },
-        { text: 'Link2', href: '/my-app/dashboard' },
-      ],
-    }],
+    accessibleApplications: ['admin', 'coeditor'],
   },
-
 } satisfies Meta<typeof Header>
 export default meta
 
