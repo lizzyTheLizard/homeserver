@@ -13,7 +13,7 @@ import style from './Editor.module.css'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { EditorContext } from './EditorContext'
 import { Input } from '@/app/shared/components/Input'
-import Button from '@/app/shared/components/Button'
+import { Button } from '@/app/shared/components/Button'
 
 export interface EditorProps {
   discussion: Discussion | undefined

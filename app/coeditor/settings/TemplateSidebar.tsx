@@ -4,7 +4,7 @@ import { Template, TemplateInput } from '../Template'
 import styles from './TemplateSidebar.module.css'
 import { Input } from '@/app/shared/components/Input'
 import { Textarea } from '@/app/shared/components/Textarea'
-import Button from '@/app/shared/components/Button'
+import { Button } from '@/app/shared/components/Button'
 import { v4 as randomUUID } from 'uuid'
 import { AwaitedActionResponse } from '@/app/shared/ActionResponse'
 

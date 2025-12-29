@@ -13,7 +13,7 @@ export interface ButtonProps {
 
 /** An simple button
  */
-export default function Button({ variant, children, ...props }: ButtonProps) {
+export function Button({ variant, children, ...props }: ButtonProps) {
   const buttonClasses = [style.button, props.className ?? '', style[variant ?? 'primary']].join(' ')
 
   return (
