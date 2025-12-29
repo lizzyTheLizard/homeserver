@@ -22,6 +22,7 @@ beforeAll(async () => {
   }
   vi.mock('@/app/shared/db', () => ({
     transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
+    nontransactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
   }))
   vi.mock('@/app/common/auth/auth', () => ({
     getUserSession() { return Promise.resolve({ sub: user, email: user + '@example.com' }) },

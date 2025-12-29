@@ -1,5 +1,5 @@
 import { findProjectsByOwner } from '@/app/cash/Project'
-import { transactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/db'
 import { logger } from '@/logger'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
@@ -129,7 +129,7 @@ async function getApplications(sub: string, email: string): Promise<string[]> {
   // Only the admin can access admin pages
   if (email === process.env.ADMIN_EMAIL) result.push('admin')
   // Only if you have a project you can access cash
-  const projects = await transactional(tx => findProjectsByOwner(tx, sub))
+  const projects = await nontransactional(c => findProjectsByOwner(c, sub))
   if (projects.length > 0) {
     result.push('cash')
   }

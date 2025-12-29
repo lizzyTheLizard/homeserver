@@ -2,7 +2,7 @@ import { getUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { randomUUID } from 'crypto'
 import { LineItem, DashboardCard } from '../DashboardCard'
-import { transactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/Command'
 
 const instanceId = randomUUID()
@@ -50,9 +50,9 @@ function getRunInfo(): LineItem[] {
 }
 
 async function getMetricsInfo(): Promise<LineItem[]> {
-  return transactional(async client => [
+  return nontransactional(async c => [
     { name: 'Memory (MB)', value: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) },
-    { name: 'CoEditor Commands', value: await findNumberOfCommands(client, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+    { name: 'CoEditor Commands', value: await findNumberOfCommands(c, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
   ] as LineItem[])
 }
 

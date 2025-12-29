@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, Mock, test, vi } from 'vitest'
 import { v4 as randomUUID } from 'uuid'
 import { findDiscussionByOwner } from './Discussion'
 import { aiPort } from './AiPort'
-import { transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/db'
 import { createOrModifyTemplate } from './Template'
 import { CommandInput, executeCommand, findNumberOfCommands } from './Command'
 import { createOrModifyProfile } from './Profile'
@@ -19,14 +19,12 @@ describe('Find Number of Commands', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
 
-    const beforeTest = await transactional(async (client) => {
-      return await findNumberOfCommands(client)
-    })
+    const beforeTest = await nontransactional(c => findNumberOfCommands(c))
 
-    const result = await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      await executeCommand(client, task.id, input)
-      return await findNumberOfCommands(client)
+    const result = await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      await executeCommand(tx, task.id, input)
+      return await findNumberOfCommands(tx)
     })
 
     expect(result).toEqual(beforeTest + 1)
@@ -43,9 +41,9 @@ describe('Execute Command', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
 
-    const result = await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    const result = await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(result).toEqual({
@@ -64,12 +62,12 @@ describe('Execute Command', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
 
-    const result = await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    const result = await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })
 
-    const discussions = await transactional(c => findDiscussionByOwner(c, task.id))
+    const discussions = await nontransactional(c => findDiscussionByOwner(c, task.id))
     expect(discussions.length).toBe(1)
     expect(discussions[0]).toEqual(result)
   })
@@ -79,10 +77,10 @@ describe('Execute Command', () => {
     const input1: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'Original text', parameters: {}, predefined_command: 'INITIALIZE' }
     const input: CommandInput = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' }
 
-    const result = await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      await executeCommand(client, task.id, input1)
-      return await executeCommand(client, task.id, input)
+    const result = await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      await executeCommand(tx, task.id, input1)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(result).toEqual({
@@ -102,13 +100,13 @@ describe('Execute Command', () => {
     const input1: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'Original text', parameters: {}, predefined_command: 'INITIALIZE' }
     const input: CommandInput = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' }
 
-    const result = await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      await executeCommand(client, task.id, input1)
-      return await executeCommand(client, task.id, input)
+    const result = await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      await executeCommand(tx, task.id, input1)
+      return await executeCommand(tx, task.id, input)
     })
 
-    const discussions = await transactional(c => findDiscussionByOwner(c, task.id))
+    const discussions = await nontransactional(c => findDiscussionByOwner(c, task.id))
     expect(discussions.length).toBe(1)
     expect(discussions[0]).toEqual(result)
   })
@@ -117,9 +115,9 @@ describe('Execute Command', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(aiPort).toHaveBeenCalledWith({
@@ -140,10 +138,10 @@ describe('Execute Command', () => {
     const profileInput = { id: randomUUID(), text: 'Profile Text', language: 'en' }
     const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      await createOrModifyProfile(client, task.id, profileInput)
-      return await executeCommand(client, task.id, input)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      await createOrModifyProfile(tx, task.id, profileInput)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(aiPort).toHaveBeenCalledWith(expect.objectContaining({
@@ -155,9 +153,9 @@ describe('Execute Command', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE', selection_start: 5, selection_end: 10 }
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(aiPort).toHaveBeenCalledWith(expect.objectContaining({
@@ -170,9 +168,9 @@ describe('Execute Command', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, custom_command: 'Custom Command Text' }
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(aiPort).toHaveBeenCalledWith(expect.objectContaining({
@@ -185,9 +183,9 @@ describe('Execute Command', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, custom_command: 'Custom Command Text' }
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(aiPort).toHaveBeenCalledWith(expect.anything(), [])
@@ -199,11 +197,11 @@ describe('Execute Command', () => {
     const input = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput.id, text: 'New text 2', parameters: {}, custom_command: 'Custom Command Text' }
     const aiPortMock: Mock = aiPort as Mock
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      await executeCommand(client, task.id, input1)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      await executeCommand(tx, task.id, input1)
       aiPortMock.mockClear()
-      return await executeCommand(client, task.id, input)
+      return await executeCommand(tx, task.id, input)
     })
 
     expect(aiPort).toHaveBeenCalledWith(expect.anything(), [{
@@ -247,14 +245,14 @@ describe('Execute Command', () => {
     const input1: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput1.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
     const input: CommandInput = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
 
-    await transactional(async (client) => {
-      await createOrModifyTemplate(client, otherUser, templateInput1)
-      await executeCommand(client, otherUser, input1)
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, otherUser, templateInput1)
+      await executeCommand(tx, otherUser, input1)
     })
 
-    await expect(transactional(async (client) => {
-      await createOrModifyTemplate(client, task.id, templateInput)
-      return await executeCommand(client, task.id, input)
+    await expect(transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      return await executeCommand(tx, task.id, input)
     })).rejects.not.toThrow(BackendError)
   })
 })

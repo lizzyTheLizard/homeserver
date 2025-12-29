@@ -1,7 +1,7 @@
 import { getUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { findNumberOfDiscussions } from '@/app/coeditor/Discussion'
-import { transactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/Command'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/Template'
 import { DashboardCard, LineItem } from '../DashboardCard'
@@ -35,12 +35,12 @@ function getGeneralMetrics(): LineItem[] {
 }
 
 async function getCoeditorMetrics(): Promise<LineItem[]> {
-  return transactional(async client => ([
-    { name: 'Coeditor Users', value: await findNumberOfUsersWithTemplates(client) },
-    { name: 'Discussions (Total)', value: await findNumberOfDiscussions(client) },
-    { name: 'Discussions (day)', value: await findNumberOfDiscussions(client, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
-    { name: 'Commands (Total)', value: await findNumberOfCommands(client) },
-    { name: 'Commands (day)', value: await findNumberOfCommands(client, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+  return nontransactional(async c => ([
+    { name: 'Coeditor Users', value: await findNumberOfUsersWithTemplates(c) },
+    { name: 'Discussions (Total)', value: await findNumberOfDiscussions(c) },
+    { name: 'Discussions (day)', value: await findNumberOfDiscussions(c, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+    { name: 'Commands (Total)', value: await findNumberOfCommands(c) },
+    { name: 'Commands (day)', value: await findNumberOfCommands(c, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
   ] as LineItem[]))
 }
 

@@ -6,6 +6,18 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { logger } from '@/logger'
 
+export async function nontransactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  const pool = await getPool()
+  const client = await pool.connect()
+  try {
+    const result = await fn(client)
+    return result
+  }
+  finally {
+    client.release()
+  }
+}
+
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   return inTransaction(await getPool(), fn)
 }

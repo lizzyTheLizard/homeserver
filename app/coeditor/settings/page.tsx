@@ -13,8 +13,10 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const user = await getAuthenticatedUserSession()
-  const templates = await transactional(client => findTemplatesByOwner(client, user.sub))
-  const profiles = await transactional(client => findProfilesByOwner(client, user.sub))
+  const [templates, profiles] = await transactional(async tx => ([
+    await findTemplatesByOwner(tx, user.sub),
+    await findProfilesByOwner(tx, user.sub),
+  ]))
 
   return (
     <main>
