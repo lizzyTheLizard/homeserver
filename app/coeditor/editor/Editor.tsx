@@ -1,6 +1,6 @@
 'use client'
 
-import { startTransition, useCallback, useReducer, useState } from 'react'
+import { useCallback, useReducer, useState } from 'react'
 import { editorStateReducer, initialState } from './EditorState'
 import { Discussion } from '../Discussion'
 import { CommandInput, PredefinedCommandType } from '../Command'
@@ -30,6 +30,7 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
   const router = useRouter()
 
   function execute(command?: PredefinedCommandType, restart?: boolean) {
+    if (!executeCommand) return
     setExecutePending(true)
     const input = {
       id: randomUUID(),
@@ -42,18 +43,22 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
       custom_command: command ? undefined : customCommand,
       predefined_command: command,
     }
-    startTransition(async () => {
-      const result = await executeCommand?.(input)
-      setExecutePending(false)
-      if (!result?.success) {
-        setError(result?.error)
+    executeCommand(input).then((result) => {
+      if (!result.success) {
+        setError(result.error)
+        setExecutePending(false)
         return
       }
       dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
       setCustomCommand('')
       setError(undefined)
+      setExecutePending(false)
       if (result.data.id !== discussion?.id)
         router.replace(`/coeditor/editor?id=${result.data.id}`)
+    }).catch((error: unknown) => {
+      console.error('Error executing command:', error)
+      setExecutePending(false)
+      setError(error instanceof Error ? error.message : String(error))
     })
   }
 
