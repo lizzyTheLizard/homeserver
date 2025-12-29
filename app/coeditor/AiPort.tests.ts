@@ -18,7 +18,7 @@ describe.concurrent('AI Integration Tests', () => {
       text: 'THIS IS A SAMPLE TEXT',
       title: 'Story',
     })
-  }, 6000)
+  }, 10000)
 
   test('Context', async () => {
     const command: AiPortInput = {
@@ -35,7 +35,7 @@ describe.concurrent('AI Integration Tests', () => {
       text: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
       title: 'Story',
     })
-  }, 6000)
+  }, 10000)
 
   test('Profile', async () => {
     const command: AiPortInput = {
@@ -53,7 +53,7 @@ describe.concurrent('AI Integration Tests', () => {
       text: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
       title: 'Story',
     })
-  }, 6000)
+  }, 10000)
 
   test('Selection', async () => {
     const command: AiPortInput = {
@@ -72,5 +72,5 @@ describe.concurrent('AI Integration Tests', () => {
       text: expect.stringContaining('This is a SAMPLE TEXT') as string,
       title: 'Story',
     })
-  }, 6000)
+  }, 10000)
 })
