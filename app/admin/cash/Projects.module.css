@@ -1,0 +1,24 @@
+.createButtonRow {
+    margin-top: var(--gap);
+    justify-content: flex-end;
+}   
+
+.projectrow {
+    cursor: pointer;
+}
+
+.projectrow:hover td {
+    background-color: grey !important
+}
+
+@media (max-width: 600px) {
+    .createButton {
+        width: 100%;
+    }    
+}
+
+@media (min-width: 600px) {
+    .createButton {
+        max-width: 300px;
+    }
+}
