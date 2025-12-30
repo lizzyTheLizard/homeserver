@@ -33,12 +33,12 @@ export default async function Page() {
   )
 }
 
-async function deleteProfile(language: string): ActionResponse<void> {
+async function deleteProfile(input: ProfileInput): ActionResponse<void> {
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession()
-    validateString(language)
-    return removeProfile(client, user.sub, language)
+    validateString(input.id)
+    return removeProfile(client, user.sub, input.id)
   }))
 }
 
@@ -51,12 +51,12 @@ async function updateProfile(input: ProfileInput): ActionResponse<Profile> {
   }))
 }
 
-async function deleteTemplate(id: string): ActionResponse<void> {
+async function deleteTemplate(input: TemplateInput): ActionResponse<void> {
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession()
-    validateString(id)
-    await removeTemplate(client, user.sub, id)
+    validateString(input.id)
+    await removeTemplate(client, user.sub, input.id)
   }))
 }
 

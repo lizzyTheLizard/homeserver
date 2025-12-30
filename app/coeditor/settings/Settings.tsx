@@ -1,24 +1,25 @@
 'use client'
-import style from './Settings.module.css'
 import { DataTable } from '@/app/shared/components/DataTable'
 import { Profile, ProfileInput } from '../Profile'
 import { Template, TemplateInput } from '../Template'
 import { Sidebar } from '@/app/shared/components/Sidebar'
 import { Button } from '@/app/shared/components/Button'
 import { DateTime } from '@/app/shared/components/DateTime'
-import { MouseEvent, startTransition, useState } from 'react'
+import { useState, useTransition } from 'react'
 import { ProfileSidebar } from './ProfileSidebar'
 import { TemplateSidebar } from './TemplateSidebar'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { ActionResponse, AwaitedActionResponse } from '@/app/shared/ActionResponse'
+import { ActionResponse } from '@/app/shared/ActionResponse'
+import { v4 as randomUUID } from 'uuid'
+import style from './Settings.module.css'
 
 export interface SettingsProps {
   profiles: Profile[]
   templates: Template[]
   onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
-  onDeleteProfile?: (language: string) => ActionResponse<void>
+  onDeleteProfile?: (profile: ProfileInput) => ActionResponse<void>
   onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
-  onDeleteTemplate?: (id: string) => ActionResponse<void>
+  onDeleteTemplate?: (template: TemplateInput) => ActionResponse<void>
 }
 
 export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
@@ -28,52 +29,62 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
   const [sidebar, setSidebar] = useState<React.ReactNode>(null)
   const [title, setTitle] = useState<string>('New')
   const [type, setType] = useState<string | undefined>(undefined)
-  const [pending, setPending] = useState<boolean>(false)
+  const [pending, startTransition] = useTransition()
 
-  function openTemplateSidebar(e: MouseEvent, item?: Template) {
+  function showTemplateSidebar(item?: TemplateInput, error?: string) {
     setOpen(true)
     setTitle(item ? (item.name + ' (' + item.language + ')') : 'New Template')
     setType('Template')
-    setSidebar(<TemplateSidebar key={item?.id} template={item} onDelete={deleteTemplate} onSave={saveTemplate} onClose={() => { setOpen(false) }} />)
-    e.stopPropagation()
+    const template = item ?? { id: randomUUID(), name: '', language: '', text: '' }
+    const update = (input: TemplateInput, out: Template | undefined) => {
+      setTemplates([...templates.filter(t => t.id !== input.id), ...(out ? [out] : [])])
+    }
+    setSidebar (
+      <TemplateSidebar
+        key={template.id}
+        template={template}
+        onDelete={asSidebarAction(showTemplateSidebar, update, onDeleteTemplate)}
+        onSave={asSidebarAction(showTemplateSidebar, update, onSaveTemplate)}
+        onClose={() => { setOpen(false) }}
+        error={error}
+      />,
+    )
   }
 
-  function openProfileSidebar(e: MouseEvent, item?: Profile) {
+  function showProfileSidebar(item?: ProfileInput, error?: string) {
     setOpen(true)
-    setTitle(item?.language ?? 'New Profile')
+    setTitle(item ? item.language : 'New Profile')
     setType('Profile')
-    setSidebar(<ProfileSidebar key={item?.language} profile={item} onDelete={deleteProfile} onSave={saveProfile} onClose={() => { setOpen(false) }} />)
-    e.stopPropagation()
+    const profile = item ?? { id: randomUUID(), language: '', text: '' }
+    const update = (input: ProfileInput, out: Profile | undefined) => {
+      setProfiles([...profiles.filter(t => t.id !== input.id), ...(out ? [out] : [])])
+    }
+    setSidebar(
+      <ProfileSidebar
+        key={profile.id}
+        profile={profile}
+        onDelete={asSidebarAction(showProfileSidebar, update, onDeleteProfile)}
+        onSave={asSidebarAction(showProfileSidebar, update, onSaveProfile)}
+        onClose={() => { setOpen(false) }}
+        error={error}
+      />,
+    )
   }
 
-  function saveTemplate(input: TemplateInput, callback: (response: AwaitedActionResponse<Template>) => void): void {
-    wrap(onSaveTemplate, input, callback, (result) => { setTemplates([...templates.filter(t => input.id !== t.id), result]) })
-  }
-
-  function deleteTemplate(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
-    wrap(onDeleteTemplate, input, callback, () => { setTemplates([...templates.filter(t => input !== t.id)]) })
-  }
-
-  function saveProfile(input: ProfileInput, callback: (response: AwaitedActionResponse<Profile>) => void): void {
-    wrap(onSaveProfile, input, callback, (result) => { setProfiles([...profiles.filter(p => input.id !== p.id), result]) })
-  }
-
-  function deleteProfile(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
-    wrap(onDeleteProfile, input, callback, () => { setProfiles([...profiles.filter(p => p.id !== input)]) })
-  }
-
-  function wrap<IN, OUT>(action: undefined | ((input: IN) => ActionResponse<OUT>), input: IN, callback: (result: AwaitedActionResponse<OUT>) => void, merge: (result: OUT) => void) {
-    if (!action) return
-    setPending(true)
-    startTransition(async () => {
-      const result = await action(input)
-      callback(result)
-      if (result.success) {
-        merge(result.data)
+  function asSidebarAction<IN, OUT>(show: (input: IN, error: string) => void, update: (input: IN, result: OUT | undefined) => void, action?: (input: IN) => ActionResponse<OUT> | ActionResponse<void>): ((input: IN) => void) {
+    if (!action) return () => { /* empty */ }
+    return (input: IN) => {
+      startTransition(async () => {
+        const result = await action(input)
+        if (!result.success) {
+          show(input, result.error)
+          return
+        }
+        if (result.data) update(input, result.data)
+        else update(input, undefined)
         setOpen(false)
-      }
-      setPending(false)
-    })
+      })
+    }
   }
 
   return (
@@ -90,7 +101,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
         </thead>
         <tbody>
           {profiles.map(profile => (
-            <tr key={profile.language} onClick={(e) => { openProfileSidebar(e, profile) }} className={style.settingsrow}>
+            <tr key={profile.id} onClick={(e) => { showProfileSidebar(profile); e.stopPropagation() }} className={style.settingsrow}>
               <td>{profile.language}</td>
               <td><DateTime hideTime={true} date={profile.updated_at} /></td>
               <td className={style.text}>{profile.text}</td>
@@ -99,7 +110,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
         </tbody>
       </DataTable>
       <div className={style.createButtonRow + ' row'}>
-        <Button className={style.createButton} onClick={(e) => { openProfileSidebar(e) }}>Add</Button>
+        <Button className={style.createButton} onClick={(e) => { showProfileSidebar(); e.stopPropagation() }}>Add</Button>
       </div>
 
       <h2>Templates</h2>
@@ -114,7 +125,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
         </thead>
         <tbody>
           {templates.map(template => (
-            <tr key={template.id} onClick={(e) => { openTemplateSidebar(e, template) }} className={style.settingsrow}>
+            <tr key={template.id} onClick={(e) => { showTemplateSidebar(template); e.stopPropagation() }} className={style.settingsrow}>
               <td>{template.language}</td>
               <td>{template.name}</td>
               <td><DateTime hideTime={true} date={template.updated_at} /></td>
@@ -124,7 +135,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
         </tbody>
       </DataTable>
       <div className={style.createButtonRow + ' row'}>
-        <Button className={style.createButton} onClick={(e) => { openTemplateSidebar(e) }}>Add</Button>
+        <Button className={style.createButton} onClick={(e) => { showTemplateSidebar(); e.stopPropagation() }}>Add</Button>
       </div>
     </Sidebar>
   )
