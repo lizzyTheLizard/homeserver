@@ -17,16 +17,16 @@ export interface SettingsProps {
   profiles: Profile[]
   templates: Template[]
   onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
-  onDeleteProfile?: (profile: ProfileInput) => ActionResponse<void>
+  onDeleteProfile?: (id: string) => ActionResponse<void>
   onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
-  onDeleteTemplate?: (template: TemplateInput) => ActionResponse<void>
+  onDeleteTemplate?: (id: string) => ActionResponse<void>
 }
 
 export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
   const [state, dispatch] = useReducer(settingsStateReducer, initialState(pin, tin))
 
   function deleteProfile(input: ProfileInput) {
-    onDeleteProfile?.(input).then((result) => {
+    onDeleteProfile?.(input.id).then((result) => {
       if (!result.success) dispatch({ type: 'SET_PROFILE_ERROR', error: result.error })
       else dispatch({ type: 'UPDATE_PROFILES', input })
     }).catch((error: unknown) => {
@@ -46,7 +46,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
   }
 
   function deleteTemplate(input: TemplateInput) {
-    onDeleteTemplate?.(input).then((result) => {
+    onDeleteTemplate?.(input.id).then((result) => {
       if (!result.success) dispatch({ type: 'SET_TEMPLATE_ERROR', error: result.error })
       else dispatch({ type: 'UPDATE_TEMPLATES', input })
     }).catch((error: unknown) => {
