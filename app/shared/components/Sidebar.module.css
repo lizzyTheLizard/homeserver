@@ -72,7 +72,7 @@
         padding: var(--gap-small);
         height: calc(100vh - 2 * var(--gap-small));
         top: 0;
-        width: calc(100vw - 2 * var(--gap-small));
+        width: calc(100% - 2 * var(--gap-small));
         transition: left 1s ease-in-out;
         z-index: 300;
     }

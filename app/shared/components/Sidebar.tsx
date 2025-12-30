@@ -1,18 +1,36 @@
 'use client'
-import { PropsWithChildren, ReactNode, useEffect, useRef } from 'react'
+import { PropsWithChildren, useEffect, useRef } from 'react'
 import styles from './Sidebar.module.css'
 import { Icon } from './Icon'
 
-export interface SidebarProps {
-  open?: boolean
-  onClose?: () => void
-  sidebar?: ReactNode
-  title?: string
-  type?: string
-
+export function SidebarContainer({ children }: PropsWithChildren<object>) {
+  return (
+    <div className={styles.container}>
+      {children}
+    </div>
+  )
 }
 
-export function Sidebar({ children, open, onClose, sidebar, title, type }: PropsWithChildren<SidebarProps>) {
+export interface SidebarContentProps {
+  onClose?: () => void
+}
+
+export function SidebarContent({ children, onClose }: PropsWithChildren<SidebarContentProps>) {
+  return (
+    <div className={styles.content} onClick={() => { onClose?.() }}>
+      {children}
+    </div>
+  )
+}
+
+export interface SidebarProps {
+  open?: boolean
+  title?: string
+  type?: string
+  onClose?: () => void
+}
+
+export function Sidebar({ children, open, title, type, onClose }: PropsWithChildren<SidebarProps>) {
   const ref = useRef<HTMLElement | null>(null)
 
   function adjustHeight() {
@@ -34,18 +52,13 @@ export function Sidebar({ children, open, onClose, sidebar, title, type }: Props
   }, [ref, open])
 
   return (
-    <div className={styles.container}>
-      <div className={styles.content + ' ' + (open ? styles.open : styles.closed)} onClick={() => { if (open) onClose?.() }}>
-        {children}
+    <aside className={styles.sidebar + ' ' + (open ? styles.open : styles.closed)} ref={ref}>
+      <div className={styles.titlebar}>
+        <h1 className={styles.title}>{title}</h1>
+        <Icon className={styles.closebutton} name="close" onClick={() => { onClose?.() }} />
       </div>
-      <aside className={styles.sidebar + ' ' + (open ? styles.open : styles.closed)} ref={ref}>
-        <div className={styles.titlebar}>
-          <h1 className={styles.title}>{title}</h1>
-          <Icon className={styles.closebutton} name="close" onClick={() => { onClose?.() }} />
-        </div>
-        {type !== undefined && <div className={styles.type}>{type}</div>}
-        {sidebar}
-      </aside>
-    </div>
+      {type !== undefined && <div className={styles.type}>{type}</div>}
+      {children}
+    </aside>
   )
 }

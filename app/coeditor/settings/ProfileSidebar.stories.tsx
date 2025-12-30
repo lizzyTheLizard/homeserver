@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, fn } from 'storybook/test'
 import { ProfileSidebar } from './ProfileSidebar'
-import { Profile, ProfileInput } from '../Profile'
-import { AwaitedActionResponse, ErrorResponse } from '@/app/shared/ActionResponse'
+import { Profile } from '../Profile'
 
 const profile = { id: '1', language: 'en', text: 'Profile Text' } as unknown as Profile
 
@@ -17,12 +16,6 @@ const meta = {
 export default meta
 
 export const Normal: StoryObj<typeof meta> = {
-}
-
-export const Empty: StoryObj<typeof meta> = {
-  args: {
-    profile: undefined,
-  },
 }
 
 export const Mobile: StoryObj<typeof meta> = {
@@ -43,11 +36,11 @@ export const Actions: StoryObj<typeof meta> = {
     await userEvent.type(textInput, 'Updated Profile')
     const saveButton = await canvas.findByText('Save')
     await userEvent.click(saveButton)
-    await expect(args.onSave).toHaveBeenCalledWith({ id: '1', language: 'en', text: 'Updated Profile' }, expect.any(Function))
+    await expect(args.onSave).toHaveBeenCalledWith({ id: '1', language: 'en', text: 'Updated Profile' })
     const deleteButton = await canvas.findByText('Delete')
     console.log('deleteButton', deleteButton)
     await userEvent.click(deleteButton)
-    await expect(args.onDelete).toHaveBeenCalledWith('1', expect.any(Function))
+    await expect(args.onDelete).toHaveBeenCalledWith({ id: '1', language: 'en', text: 'Updated Profile' })
     const cancelButton = await canvas.findByText('Cancel')
     await userEvent.click(cancelButton)
     await expect(args.onClose).toHaveBeenCalledOnce()
@@ -56,9 +49,7 @@ export const Actions: StoryObj<typeof meta> = {
 
 export const Error: StoryObj<typeof meta> = {
   args: {
-    onSave: fn((i: ProfileInput, c: (response: AwaitedActionResponse<Profile>) => void) => {
-      c({ success: false, error: 'Message' } as ErrorResponse)
-    }),
+    error: 'Message',
   },
   play: async ({ canvas, userEvent }) => {
     const saveButton = await canvas.findByText('Save')
