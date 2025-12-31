@@ -1,5 +1,5 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { getUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { nontransactional } from '@/app/shared/db'
 import { Card } from '@/app/shared/components/Card'
 import { findProjectsByOwner, Project } from '../Project'
@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const user = await getUserSession()
-  if (!user) throw new Error('User not authenticated')
+  const user = await getAuthenticatedUserSession()
   if (!(user.applications.includes('cash'))) throw new Error('User not authorized for cash application')
   const projects = await nontransactional(c => findProjectsByOwner(c, user.sub))
 

@@ -1,4 +1,4 @@
-import { getUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { findNumberOfDiscussions } from '@/app/coeditor/Discussion'
 import { nontransactional } from '@/app/shared/db'
@@ -11,9 +11,8 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const session = await getUserSession()
-  if (!session) throw new Error('Not authenticated')
-  if (!session.applications.includes('admin')) throw new Error('Not authorized')
+  const user = await getAuthenticatedUserSession()
+  if (!user.applications.includes('admin')) throw new Error('Not authorized')
 
   return (
     <main>
