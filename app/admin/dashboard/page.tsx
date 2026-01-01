@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { LineItem, DashboardCard } from '../DashboardCard'
 import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/Command'
+import { config } from '@/app/config'
 
 const instanceId = randomUUID()
 
@@ -12,8 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const user = await getAuthenticatedUserSession()
-  if (!user.applications.includes('admin')) throw new Error('Not authorized')
+  await getAuthenticatedUserSession('admin')
 
   return (
     <main>
@@ -56,10 +56,10 @@ async function getMetricsInfo(): Promise<LineItem[]> {
 }
 
 function getConfigInfo(): LineItem[] {
-  const dbId = process.env.DB_CONNECTION_STRING ? process.env.DB_CONNECTION_STRING.split('@')[1].split('.')[0] : undefined
+  const dbId = config.DB_CONNECTION_STRING.split('@')[1].split('.')[0]
   return [
     { name: 'Database', value: dbId, url: dbId ? 'https://console.scaleway.com/serverless-db/fr-par/databases/' + dbId + '/overview' : undefined },
-    { name: 'AppUrl', value: process.env.APP_URL, url: process.env.APP_URL },
-    { name: 'ClientId', value: process.env.CLIENT_ID, url: process.env.CLIENT_ID ? 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/' + process.env.CLIENT_ID + '/isMSAApp~/false' : undefined },
+    { name: 'AppUrl', value: config.APP_URL, url: config.APP_URL },
+    { name: 'ClientId', value: config.CLIENT_ID, url: config.CLIENT_ID ? 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/' + config.CLIENT_ID + '/isMSAApp~/false' : undefined },
   ]
 }

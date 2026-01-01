@@ -1,7 +1,7 @@
 import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/logger'
-import { unexpectedError } from '../shared/BackendError'
+import { invalidInput, unexpectedError } from '../shared/BackendError'
 
 export interface Template {
   id: string
@@ -59,7 +59,7 @@ export async function createOrModifyTemplate(client: PoolClient, owner: string, 
     : 'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
   const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
 
-  if (!result.rows[0]) throw unexpectedError('Failed to modify template', 500, 'Internal Server Error')
+  if (!result.rows[0]) throw unexpectedError('Failed to modify template')
   logger.info(`Modified template '${input.id}' for owner ${owner}`)
   return result.rows[0]
 }
@@ -76,18 +76,13 @@ function extractParameters(text: string): TemplateParameter[] {
 
 function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SELECT' | 'TEXT', values?: string[] } {
   const parts: string[] = text.split(':')
-  if (parts.length < 2 || parts.length > 3) {
-    const message = `'{${text}}' is not a valid parameter. It must be in the format 'name:type[:value1,value2,...]'`
-    throw new Error(message)
-  }
-
+  if (parts.length < 2 || parts.length > 3)
+    throw invalidInput(`'{${text}}' is not a valid parameter. It must be in the format 'name:type[:value1,value2,...]'`)
   const name = parts[0]
   const typeString = parts[1]
   const type = typeString.toUpperCase()
-  if (type !== 'STRING' && type !== 'SELECT' && type !== 'TEXT') {
-    const message = `'{${text}}' is not valid. It has an invalid type '${typeString}'. Allowed types are: STRING, SELECT, TEXT`
-    throw new Error(message)
-  }
+  if (type !== 'STRING' && type !== 'SELECT' && type !== 'TEXT')
+    throw invalidInput(`'{${text}}' is not valid. It has an invalid type '${typeString}'. Allowed types are: STRING, SELECT, TEXT`)
   const values = parts[2]?.split(',') ?? []
   return { name, type, values }
 }

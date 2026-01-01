@@ -1,0 +1,5 @@
+.errorStack {
+    white-space: pre-wrap;
+    color: red;
+    font-size: small;
+}

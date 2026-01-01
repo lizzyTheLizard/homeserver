@@ -3,7 +3,6 @@ import { Card } from './shared/components/Card'
 import { Icon } from './shared/components/Icon'
 import { applications } from './common/Application'
 import { getAuthenticatedUserSession } from './common/auth/auth'
-import { get } from 'http'
 
 export const metadata: Metadata = {
   title: 'Gutschi.site - Dashboard',

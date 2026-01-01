@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const user = await getAuthenticatedUserSession()
-  if (!user.applications.includes('admin')) throw new Error('Not authorized')
+  await getAuthenticatedUserSession('admin')
 
   return (
     <main>

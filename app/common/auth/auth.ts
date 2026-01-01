@@ -1,4 +1,6 @@
 import { findProjectsByOwner } from '@/app/cash/Project'
+import { config } from '@/app/config'
+import { unexpectedError } from '@/app/shared/BackendError'
 import { nontransactional } from '@/app/shared/db'
 import { logger } from '@/logger'
 import { IronSession, getIronSession } from 'iron-session'
@@ -17,18 +19,24 @@ export async function getUserSession(): Promise<UserSession | undefined> {
   return session.userInfo
 }
 
-export async function getAuthenticatedUserSession(): Promise<UserSession> {
-  const session = await getUserSession()
-  if (!session) throw new Error('User not authenticated')
-  return session
+export async function getAuthenticatedUserSession(app?: string): Promise<UserSession> {
+  const user = await getUserSession()
+  if (!user) {
+    logger.warn(`No user session found when accessing application: ${app ?? 'unknown'}`)
+    throw unexpectedError(`No user session found`)
+  }
+  if (app && !user.applications.includes(app)) {
+    logger.warn(`User ${user.email} attempted to access unauthorized application: ${app}`)
+    throw unexpectedError(`Not authorized for application ${app}`, 'Authentication Failed')
+  }
+  return user
 }
 
 export async function startLogin(request: Request): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
-  if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
   const parameters: Record<string, string> = {
-    redirect_uri: `${process.env.APP_URL}/common/auth/callback`,
+    redirect_uri: `${config.APP_URL}/common/auth/callback`,
     scope: 'openid profile email',
     code_challenge,
     state: client.randomState(),
@@ -54,7 +62,10 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
     expectedState: session.state,
   })
   const claims = tokenSet.claims()
-  if (!claims) throw new Error('No claims found in token set')
+  if (!claims) {
+    logger.error('No claims found in token set during callback')
+    throw unexpectedError('Invalid token set received from identity provider', 'Authentication Failed')
+  }
   const sub = claims.sub
   const name = claims.given_name as string
   const email = claims.email as string
@@ -72,8 +83,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
 function getActualUrl(urlOrRequest: URL | Request): URL {
   // We need to replace host, port etc. as the request will have the local docker address
   const url = urlOrRequest instanceof URL ? urlOrRequest : new URL(urlOrRequest.url)
-  if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
-  const appUrl = new URL(process.env.APP_URL)
+  const appUrl = new URL(config.APP_URL)
   url.protocol = appUrl.protocol
   url.hostname = appUrl.hostname
   url.port = appUrl.port
@@ -100,24 +110,17 @@ interface SessionData {
 
 async function getSession(): Promise<IronSession<SessionData>> {
   const cookiesList = await cookies()
-  if (!process.env.COOKIE_NAME) throw new Error('COOKIE_NAME is not defined in environment variables')
-  if (!process.env.SESSION_PASSWORD) throw new Error('SESSION_PASSWORD is not defined in environment variables')
   const settings = {
-    cookieName: process.env.COOKIE_NAME,
-    password: process.env.SESSION_PASSWORD,
+    cookieName: config.COOKIE_NAME,
+    password: config.SESSION_PASSWORD,
     ttl: 604800, // 1 week in seconds
-    cookieOptions: {
-      secure: process.env.NODE_ENV === 'development' ? false : true,
-    },
+    cookieOptions: { secure: process.env.NODE_ENV === 'development' ? false : true },
   }
   return getIronSession<SessionData>(cookiesList, settings)
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
-  if (!process.env.ISSUER) throw new Error('ISSUER is not defined in environment variables')
-  if (!process.env.CLIENT_ID) throw new Error('CLIENT_ID is not defined in environment variables')
-  if (!process.env.CLIENT_SECRET) throw new Error('CLIENT_SECRET is not defined in environment variables')
-  clientConfigCache ??= client.discovery(new URL(process.env.ISSUER), process.env.CLIENT_ID, process.env.CLIENT_SECRET)
+  clientConfigCache ??= client.discovery(new URL(config.ISSUER), config.CLIENT_ID, config.CLIENT_SECRET)
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
@@ -127,7 +130,7 @@ async function getApplications(sub: string, email: string): Promise<string[]> {
   // Everyone can access coeditor
   const result = ['coeditor']
   // Only the admin can access admin pages
-  if (email === process.env.ADMIN_EMAIL) result.push('admin')
+  if (email === config.ADMIN_EMAIL) result.push('admin')
   // Only if you have a project you can access cash
   const projects = await nontransactional(c => findProjectsByOwner(c, sub))
   if (projects.length > 0) {

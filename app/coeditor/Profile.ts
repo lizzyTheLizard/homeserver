@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg'
-import { expectedError, unexpectedError } from '../shared/BackendError'
+import { invalidInput, unexpectedError } from '../shared/BackendError'
 import { logger } from '@/logger'
 
 export interface Profile {
@@ -35,14 +35,14 @@ export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: s
 export async function createOrModifyProfile(client: PoolClient, owner: string, input: ProfileInput): Promise<Profile> {
   const sameLang = await findProfileByOwnerAndLanguage(client, owner, input.language)
   if (sameLang && sameLang.id !== input.id) {
-    throw expectedError(`There is alread a profile for language ${input.language}`)
+    throw invalidInput(`There is alread a profile for language ${input.language}`)
   }
   const existing = await client.query<Profile>('SELECT * FROM profile WHERE owner_id=$1 AND id=$2', [owner, input.id])
   const query = existing.rows[0]
     ? 'UPDATE profile SET text = $2, language=$3, updated_at = NOW() WHERE owner_id = $4 AND id = $1 RETURNING *'
     : 'INSERT INTO profile (id,text, language, owner_id) VALUES ($1, $2, $3, $4) RETURNING *'
   const result = await client.query<Profile>(query, [input.id, input.text, input.language, owner])
-  if (!result.rows[0]) throw unexpectedError('Failed to modify profile', 500, 'Internal Server Error')
+  if (!result.rows[0]) throw unexpectedError('Failed to modify profile')
   logger.info(`Modified profile '${input.language}' for owner ${owner}`)
   return result.rows[0]
 }

@@ -1,15 +1,37 @@
 export class BackendError extends Error {
-  constructor(message: string, public readonly userMessage: string, public readonly statusCode: number, public readonly showStack: boolean) {
+  constructor(message: string, public readonly userMessage: string, public readonly statusCode: StatusCode, public readonly showStack: boolean) {
     super(message)
-    this.name = 'BackendError'
+    this.name = statusCodeToString(statusCode)
+
+    // We need to mannipulate the stack to get rid of the factory function call
+    try {
+      throw new Error()
+    }
+    catch (e: unknown) {
+      if (e instanceof Error && e.stack) {
+        this.stack = e.stack.split('\n').slice(3).join('\n')
+      }
+    }
     Object.setPrototypeOf(this, BackendError.prototype)
   }
 }
 
-export function expectedError(message: string, statusCode?: number, userMessage?: string): BackendError {
-  return new BackendError(message, userMessage ?? message, statusCode ?? 400, false)
+export type StatusCode = 400 | 401 | 403 | 404 | 500
+
+function statusCodeToString(statusCode: StatusCode): string {
+  switch (statusCode) {
+    case 400: return '400 Bad Request'
+    case 401: return '401 Unauthorized'
+    case 403: return '403 Forbidden'
+    case 404: return '404 Not Found'
+    case 500: return '500 Internal Server Error'
+  }
 }
 
-export function unexpectedError(message: string, statusCode?: number, userMessage?: string): BackendError {
-  return new BackendError(message, userMessage ?? message, statusCode ?? 500, true)
+export function invalidInput(message: string): BackendError {
+  return new BackendError(message, message, 400, false)
+}
+
+export function unexpectedError(message: string, userMessage?: string): BackendError {
+  return new BackendError(message, userMessage ?? message, 500, true)
 }

@@ -10,8 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const session = await getAuthenticatedUserSession()
-  if (!session.applications.includes('admin')) throw new Error('Not authorized')
+  await getAuthenticatedUserSession('admin')
   const projects = await nontransactional(c => findAllProjects(c))
 
   return (

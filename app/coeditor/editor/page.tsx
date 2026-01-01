@@ -7,6 +7,8 @@ import { nontransactional, transactional } from '@/app/shared/db'
 import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
 import { CommandInput, executeCommand } from '../Command'
 import { validateObject } from '@/app/shared/validation'
+import { notFound } from 'next/navigation'
+import { logger } from '@/logger'
 
 export const metadata: Metadata = {
   title: 'CoEditor',
@@ -19,8 +21,14 @@ export default async function Page({ searchParams}: { searchParams: Promise<Reco
     existingDiscussionId ? await findDiscussionById(c, user.sub, existingDiscussionId) : undefined,
     await findTemplatesByOwner(c, user.sub),
   ]))
-  if (existingDiscussionId && !discussion) throw new Error('Discussion not found')
-  if (discussion && discussion.owner_id !== user.sub) throw new Error('Unauthorized')
+  if (existingDiscussionId && !discussion) {
+    logger.info(`Discussion with id ${existingDiscussionId} not found for user ${user.sub}`)
+    notFound()
+  }
+  if (discussion && discussion.owner_id !== user.sub) {
+    logger.info(`User ${user.sub} not authorized for discussion with id ${discussion.id}`)
+    notFound()
+  }
 
   return (
     <main>

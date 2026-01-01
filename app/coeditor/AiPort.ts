@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import type { ResponseInputItem } from 'openai/resources/responses/responses.mjs'
-import { expectedError, unexpectedError } from '../shared/BackendError'
+import { invalidInput, unexpectedError } from '../shared/BackendError'
 import { Command, CommandResult, PredefinedCommandType } from './Command'
 import { logger } from '@/logger'
 import { ClientOptions } from 'openai'
@@ -35,7 +35,7 @@ export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?
   const output = JSON.parse(response.output_text) as { text: string, title: string, error?: string }
   validateObject(output, OpenAiOutputContraints)
   logger.debug(`AI Port got response: ${JSON.stringify(output)}`)
-  if (output.error) throw new Error(`AI Port Error: ${output.error}`)
+  if (output.error) throw unexpectedError(`AI Port error: ${output.error}`, 'AI Port Error')
   const newText = getFullNewText(input, output.text)
   return { title: output.title, text: newText, durationMs: end - start }
 }
@@ -122,11 +122,15 @@ const commands: Record<PredefinedCommandType, string> = {
 function getCommand(custom_command: string | undefined, predefined_command: PredefinedCommandType | undefined): string {
   if (custom_command)
     return custom_command
-  if (!predefined_command)
-    throw expectedError('No custom nor predefined command given', 400)
+  if (!predefined_command) {
+    logger.info('No custom nor predefined command given')
+    throw invalidInput('No custom nor predefined command given')
+  }
   const command = commands[predefined_command]
-  if (!command)
-    throw unexpectedError(`Unknown predefined command: ${predefined_command}`, 500, 'Unknown Predefined Command')
+  if (!command) {
+    logger.info(`Unknown predefined command: ${predefined_command}`)
+    throw invalidInput(`Unknown predefined command '${predefined_command}'`)
+  }
   return command
 }
 

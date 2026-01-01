@@ -4,7 +4,7 @@ import { Discussion, DiscussionInput, findDiscussionById } from './Discussion'
 import { findTemplateById, Template } from './Template'
 import { findProfileByOwnerAndLanguage, Profile } from './Profile'
 import { aiPort, AiPortInput } from './AiPort'
-import { expectedError } from '../shared/BackendError'
+import { invalidInput } from '../shared/BackendError'
 
 export interface Command {
   id: string
@@ -52,7 +52,10 @@ export async function findNumberOfCommands(client: PoolClient, since?: Date): Pr
 
 export async function executeCommand(client: PoolClient, owner: string, input: CommandInput): Promise<Discussion> {
   const template = await findTemplateById(client, owner, input.template_id)
-  if (!template) throw expectedError('Template not found', 404)
+  if (!template) {
+    logger.info(`Given template ${input.template_id} not found for owner ${owner}`)
+    throw invalidInput(`Given template ${input.template_id} not found`)
+  }
   const discussion = await findDiscussionById(client, owner, input.discussion_id)
   const profile = await findProfileByOwnerAndLanguage(client, owner, template.language)
   const aiPortInput = toAiPortInput(input, discussion, template, profile)
@@ -118,7 +121,7 @@ function createContextString(template: Template, values: Record<string, string>)
   let offset = 0
   for (const param of template.parameters) {
     if (!(param.name in values))
-      throw new Error(`Missing parameter '${param.name}'`)
+      throw invalidInput(`Vale for parameter '${param.name}' is missing`)
     const value = values[param.name]
     result = result.substring(0, param.startPosition + offset) + value + result.substring(param.endPosition + offset)
     offset += value.length - (param.endPosition - param.startPosition)
