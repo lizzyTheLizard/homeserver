@@ -5,13 +5,9 @@ import { findProjectsByOwner } from './Project'
 import { redirect } from 'next/navigation'
 
 export async function GET() {
-  const user = await getAuthenticatedUserSession()
-  if (!(user.applications.includes('cash'))) throw new Error('User not authorized for cash application')
+  const user = await getAuthenticatedUserSession('cash')
   const projects = await nontransactional(c => findProjectsByOwner(c, user.sub))
 
-  if (projects.length === 0) {
-    throw new Error('No projects found for user, you should not have access to this application')
-  }
   if (projects.length === 1) {
     logger.debug(`User ${user.sub} has only one project, redirecting to it`)
     const project = projects[0]

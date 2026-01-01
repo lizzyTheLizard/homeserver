@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const user = await getAuthenticatedUserSession()
-  if (!(user.applications.includes('cash'))) throw new Error('User not authorized for cash application')
+  const user = await getAuthenticatedUserSession('cash')
   const projects = await nontransactional(c => findProjectsByOwner(c, user.sub))
 
   return (
