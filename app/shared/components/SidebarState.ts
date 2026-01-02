@@ -22,7 +22,7 @@ export function useSidebarState<T extends { id: string }, TInput extends { id: s
   return useReducer(reducer, initialState)
 }
 
-export function sidebarStateReducer<T, TInput>(state: SidebarState<T, TInput>, action: SidebarAction<TInput, T>, createItem: () => TInput): SidebarState<T, TInput> {
+export function sidebarStateReducer<T extends { id: string }, TInput extends { id: string }>(state: SidebarState<T, TInput>, action: SidebarAction<TInput, T>, createItem: () => TInput): SidebarState<T, TInput> {
   switch (action.type) {
     case 'CLOSE_SIDEBAR':
       return { ...state, sidebarOpen: false }
@@ -38,8 +38,11 @@ export function sidebarStateReducer<T, TInput>(state: SidebarState<T, TInput>, a
         return { ...state, pending: false, error: action.result.error }
       }
       else {
-        const all = state.all.filter(a => a.id !== state.current.id)
-        if (action.result.data) all.push(action.result.data)
+        const existingId = state.all.findIndex(a => a.id === state.current.id)
+        let all: T[]
+        if (!action.result.data) all = [...state.all.slice(0, existingId), ...state.all.slice(existingId + 1)]
+        else if (existingId === -1) all = [...state.all, action.result.data]
+        else all = [...state.all.slice(0, existingId), action.result.data, ...state.all.slice(existingId + 1)]
         return { ...state, sidebarOpen: false, pending: false, all, error: undefined }
       }
     case 'ACTION_ERROR':
