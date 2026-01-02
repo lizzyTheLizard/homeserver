@@ -9,66 +9,64 @@ import { ProfileSidebar } from './ProfileSidebar'
 import { TemplateSidebar } from './TemplateSidebar'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { ActionResponse } from '@/app/shared/ActionResponse'
+import { useSidebarState } from '@/app/shared/components/SidebarState'
+import { v4 as randomUUID } from 'uuid'
 import style from './Settings.module.css'
-import { useReducer } from 'react'
-import { initialState, settingsStateReducer } from './SettingsState'
 
 export interface SettingsProps {
   profiles: Profile[]
   templates: Template[]
-  onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
-  onDeleteProfile?: (id: string) => ActionResponse<void>
-  onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
-  onDeleteTemplate?: (id: string) => ActionResponse<void>
+  onSaveProfile: (profile: ProfileInput) => ActionResponse<Profile>
+  onDeleteProfile: (id: string) => ActionResponse<void>
+  onSaveTemplate: (template: TemplateInput) => ActionResponse<Template>
+  onDeleteTemplate: (id: string) => ActionResponse<void>
 }
 
-export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
-  const [state, dispatch] = useReducer(settingsStateReducer, initialState(pin, tin))
+export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
+  const [profilesState, dispatchProfiles] = useSidebarState(profiles, () => (
+    { id: randomUUID(), language: '', text: '' } as ProfileInput
+  ))
+  const [templatesState, dispatchTemplates] = useSidebarState(templates, () => (
+    { id: randomUUID(), name: '', language: '', text: '' } as TemplateInput
+  ))
 
   function deleteProfile(input: ProfileInput) {
-    onDeleteProfile?.(input.id).then((result) => {
-      if (!result.success) dispatch({ type: 'SET_PROFILE_ERROR', error: result.error })
-      else dispatch({ type: 'UPDATE_PROFILES', input })
-    }).catch((error: unknown) => {
-      console.error('Error deleting profile', error)
-      dispatch({ type: 'SET_PROFILE_ERROR', error: 'An unexpected error occurred.' })
-    })
+    dispatchProfiles({ type: 'START_ACTION' })
+    onDeleteProfile(input.id)
+      .then((result) => { dispatchProfiles({ type: 'STOP_ACTION', result }) })
+      .catch((error: unknown) => { dispatchProfiles({ type: 'ACTION_ERROR', error }) })
   }
 
   function saveProfile(input: ProfileInput) {
-    onSaveProfile?.(input).then((result) => {
-      if (!result.success) dispatch({ type: 'SET_PROFILE_ERROR', error: result.error })
-      else dispatch({ type: 'UPDATE_PROFILES', input, result: result.data })
-    }).catch((error: unknown) => {
-      console.error('Error saving profile', error)
-      dispatch({ type: 'SET_PROFILE_ERROR', error: 'An unexpected error occurred.' })
-    })
+    dispatchProfiles({ type: 'START_ACTION' })
+    onSaveProfile(input)
+      .then((result) => { dispatchProfiles({ type: 'STOP_ACTION', result }) })
+      .catch((error: unknown) => { dispatchProfiles({ type: 'ACTION_ERROR', error }) })
   }
 
   function deleteTemplate(input: TemplateInput) {
-    onDeleteTemplate?.(input.id).then((result) => {
-      if (!result.success) dispatch({ type: 'SET_TEMPLATE_ERROR', error: result.error })
-      else dispatch({ type: 'UPDATE_TEMPLATES', input })
-    }).catch((error: unknown) => {
-      console.error('Error deleting template', error)
-      dispatch({ type: 'SET_TEMPLATE_ERROR', error: 'An unexpected error occurred.' })
-    })
+    dispatchTemplates({ type: 'START_ACTION' })
+    onDeleteTemplate(input.id)
+      .then((result) => { dispatchTemplates({ type: 'STOP_ACTION', result }) })
+      .catch((error: unknown) => { dispatchTemplates({ type: 'ACTION_ERROR', error }) })
   }
 
   function saveTemplate(input: TemplateInput) {
-    onSaveTemplate?.(input).then((result) => {
-      if (!result.success) dispatch({ type: 'SET_TEMPLATE_ERROR', error: result.error })
-      else dispatch({ type: 'UPDATE_TEMPLATES', input, result: result.data })
-    }).catch((error: unknown) => {
-      console.error('Error saving template', error)
-      dispatch({ type: 'SET_TEMPLATE_ERROR', error: 'An unexpected error occurred.' })
-    })
+    dispatchTemplates({ type: 'START_ACTION' })
+    onSaveTemplate(input)
+      .then((result) => { dispatchTemplates({ type: 'STOP_ACTION', result }) })
+      .catch((error: unknown) => { dispatchTemplates({ type: 'ACTION_ERROR', error }) })
+  }
+
+  function closeAllSidebars() {
+    dispatchProfiles({ type: 'CLOSE_SIDEBAR' })
+    dispatchTemplates({ type: 'CLOSE_SIDEBAR' })
   }
 
   return (
     <SidebarContainer>
-      {state.pending && <LoadingSpinner text="Processing..." />}
-      <SidebarContent onClose={() => { dispatch({ type: 'CLOSE_SIDEBARS' }) }}>
+      {(profilesState.pending || templatesState.pending) && <LoadingSpinner text="Processing..." />}
+      <SidebarContent onClose={closeAllSidebars}>
         <h2>Profiles</h2>
         <DataTable className={style.table}>
           <thead>
@@ -79,8 +77,8 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
             </tr>
           </thead>
           <tbody>
-            {state.profiles.map(profile => (
-              <tr key={profile.id} onClick={(e) => { dispatch({ type: 'SHOW_PROFILE_SIDEBAR', profile }); e.stopPropagation() }} className={style.settingsrow}>
+            {profilesState.all.map(profile => (
+              <tr key={profile.id} onClick={(e) => { dispatchProfiles({ type: 'SHOW_SIDEBAR', item: profile }); e.stopPropagation() }} className={style.settingsrow}>
                 <td>{profile.language}</td>
                 <td><DateTime hideTime={true} date={profile.updated_at} /></td>
                 <td className={style.text}>{profile.text}</td>
@@ -89,7 +87,7 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
           </tbody>
         </DataTable>
         <div className={style.createButtonRow + ' row'}>
-          <Button className={style.createButton} onClick={(e) => { dispatch({ type: 'SHOW_PROFILE_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
+          <Button className={style.createButton} onClick={(e) => { dispatchProfiles({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
         </div>
 
         <h2>Templates</h2>
@@ -103,8 +101,8 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
             </tr>
           </thead>
           <tbody>
-            {state.templates.map(template => (
-              <tr key={template.id} onClick={(e) => { dispatch({ type: 'SHOW_TEMPLATE_SIDEBAR', template }); e.stopPropagation() }} className={style.settingsrow}>
+            {templatesState.all.map(template => (
+              <tr key={template.id} onClick={(e) => { dispatchTemplates({ type: 'SHOW_SIDEBAR', item: template }); e.stopPropagation() }} className={style.settingsrow}>
                 <td>{template.language}</td>
                 <td>{template.name}</td>
                 <td><DateTime hideTime={true} date={template.updated_at} /></td>
@@ -114,37 +112,37 @@ export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDelet
           </tbody>
         </DataTable>
         <div className={style.createButtonRow + ' row'}>
-          <Button className={style.createButton} onClick={(e) => { dispatch({ type: 'SHOW_TEMPLATE_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
+          <Button className={style.createButton} onClick={(e) => { dispatchTemplates({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
         </div>
       </SidebarContent>
       <Sidebar
-        open={state.profileSidebarOpen}
+        open={profilesState.sidebarOpen}
         type="Profile"
-        title={state.profile.language === '' ? 'New Profile' : state.profile.language}
-        onClose={() => { dispatch({ type: 'CLOSE_SIDEBARS' }) }}
+        title={profilesState.current.language === '' ? 'New Profile' : profilesState.current.language}
+        onClose={() => { dispatchProfiles({ type: 'CLOSE_SIDEBAR' }) }}
       >
         <ProfileSidebar
-          key={state.profile.id}
-          profile={state.profile}
+          key={profilesState.current.id}
+          profile={profilesState.current}
           onDelete={deleteProfile}
           onSave={saveProfile}
-          onClose={() => { dispatch({ type: 'CLOSE_SIDEBARS' }) }}
-          error={state.profileError}
+          onClose={() => { dispatchProfiles({ type: 'CLOSE_SIDEBAR' }) }}
+          error={profilesState.error}
         />
       </Sidebar>
       <Sidebar
-        open={state.templateSidebarOpen}
+        open={templatesState.sidebarOpen}
         type="Template"
-        title={state.template.language === '' ? 'New Template' : state.template.name + ' (' + state.template.language + ')'}
-        onClose={() => { dispatch({ type: 'CLOSE_SIDEBARS' }) }}
+        title={templatesState.current.language === '' ? 'New Template' : templatesState.current.name + ' (' + templatesState.current.language + ')'}
+        onClose={() => { dispatchTemplates({ type: 'CLOSE_SIDEBAR' }) }}
       >
         <TemplateSidebar
-          key={state.template.id}
-          template={state.template}
+          key={templatesState.current.id}
+          template={templatesState.current}
           onDelete={deleteTemplate}
           onSave={saveTemplate}
-          onClose={() => { dispatch({ type: 'CLOSE_SIDEBARS' }) }}
-          error={state.templateError}
+          onClose={() => { dispatchTemplates({ type: 'CLOSE_SIDEBAR' }) }}
+          error={templatesState.error}
         />
       </Sidebar>
     </SidebarContainer>
