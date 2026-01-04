@@ -12,7 +12,6 @@ describe.concurrent('AI Integration Tests', () => {
       custom_command: 'Transform everything to uppercase',
     }
     const result: CommandResult = await aiPort(command, [], { dangerouslyAllowBrowser: true })
-    console.log(result)
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       text: 'THIS IS A SAMPLE TEXT',
