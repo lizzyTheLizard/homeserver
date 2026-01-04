@@ -17,7 +17,7 @@
     padding: var(--gap-small) 0.5rem var(--gap-small) 0.5rem;
 }
 
-.input:focus {
+.input:focus:not(.small) {
     background-color: var(--primary-transparent-color);
     color: var(--default-text-color)
 }
@@ -50,3 +50,24 @@
     top: 0.1rem;
     font-size: x-small;
 }
+
+.input.small {
+    padding: 0 0.5rem;
+    height: calc(var(--input-height) / 2);
+}
+
+
+.input.small + .label {
+    display: none;
+}
+
+.input.small:placeholder-shown + .label {
+    display: initial;
+    top: 0.1rem;
+    font-size: small;
+}
+
+.input.small:focus + .label {
+    display: none;
+}
+

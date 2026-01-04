@@ -5,15 +5,20 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   label?: string
   emptyLabel?: string
   value?: string
+  small?: boolean
 }
 
 /**
  * A select component allowing users to choose from a list of options.
  */
-export function Select({ label, emptyLabel, children, ...props }: SelectProps) {
+export function Select({ label, emptyLabel, small, children, ...props }: SelectProps) {
   const fallbackId = useId()
   const id = props.id ?? fallbackId
-  const inputClasses = [style.input, props.className ?? '', label ? '' : style.noLabel].join(' ')
+  const inputClasses = [
+    style.input, props.className ?? '',
+    label ? '' : style.noLabel,
+    small ? style.small : '',
+  ].join(' ')
 
   return (
     <div className={style.container} style={props.style}>

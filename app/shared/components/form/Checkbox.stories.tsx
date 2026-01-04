@@ -46,3 +46,10 @@ export const Checked: StoryObj<typeof meta> = {
     await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ checked: true }) as HTMLInputElement }))
   },
 }
+
+export const Small: StoryObj<typeof meta> = {
+  args: {
+    label: 'Small checkbox',
+    small: true,
+  },
+}

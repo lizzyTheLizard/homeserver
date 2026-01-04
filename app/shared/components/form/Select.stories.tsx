@@ -70,3 +70,10 @@ export const NoEmptyLabel: StoryObj<typeof meta> = {
     emptyLabel: undefined,
   },
 }
+
+export const Small: StoryObj<typeof meta> = {
+  args: {
+    label: 'Small Select',
+    small: true,
+  },
+}

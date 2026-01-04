@@ -82,3 +82,10 @@ export const File: StoryObj<typeof meta> = {
     label: 'File input',
   },
 }
+
+export const Small: StoryObj<typeof meta> = {
+  args: {
+    label: 'Small input',
+    small: true,
+  },
+}
