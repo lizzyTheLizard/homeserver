@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { Input } from '@/app/shared/components/Input'
-import { Textarea } from '@/app/shared/components/Textarea'
-import { Button } from '@/app/shared/components/Button'
+import { Input } from '@/app/shared/components/form/Input'
+import { Textarea } from '@/app/shared/components/form/Textarea'
+import { Button } from '@/app/shared/components/form/Button'
 import { ProfileInput } from '../Profile'
 import styles from './ProfileSidebar.module.css'
 

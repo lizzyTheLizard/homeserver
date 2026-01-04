@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Sidebar, SidebarContainer, SidebarContent } from './Sidebar'
 import { useState } from 'react'
-import { Button } from './Button'
+import { Button } from '../form/Button'
 
 const meta = {
   title: 'Shared/Sidebar',

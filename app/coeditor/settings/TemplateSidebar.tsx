@@ -2,9 +2,9 @@
 import { useState } from 'react'
 import { TemplateInput } from '../Template'
 import styles from './TemplateSidebar.module.css'
-import { Input } from '@/app/shared/components/Input'
-import { Textarea } from '@/app/shared/components/Textarea'
-import { Button } from '@/app/shared/components/Button'
+import { Input } from '@/app/shared/components/form/Input'
+import { Textarea } from '@/app/shared/components/form/Textarea'
+import { Button } from '@/app/shared/components/form/Button'
 
 export interface TemplateSidebarProps {
   template: TemplateInput

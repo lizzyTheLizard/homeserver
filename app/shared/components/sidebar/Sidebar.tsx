@@ -1,6 +1,6 @@
 'use client'
 import { PropsWithChildren, useEffect, useRef } from 'react'
-import { Icon } from './Icon'
+import { Icon } from '../Icon'
 import styles from './Sidebar.module.css'
 
 export function SidebarContainer({ children }: PropsWithChildren<object>) {

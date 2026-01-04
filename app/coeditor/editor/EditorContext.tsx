@@ -1,10 +1,10 @@
 import { type FormEvent } from 'react'
 import style from './EditorContext.module.css'
 import { Template } from '../Template'
-import { Input } from '@/app/shared/components/Input'
-import { Textarea } from '@/app/shared/components/Textarea'
+import { Input } from '@/app/shared/components/form/Input'
+import { Textarea } from '@/app/shared/components/form/Textarea'
 import { Collapse } from '@/app/shared/components/Collapse'
-import { Select } from '@/app/shared/components/Select'
+import { Select } from '@/app/shared/components/form/Select'
 
 interface Props {
   templates: Template[]
