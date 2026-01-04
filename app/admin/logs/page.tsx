@@ -13,7 +13,7 @@ export default async function Page() {
   await getAuthenticatedUserSession('admin')
 
   const logFile = await fs.readFile(logFilePath, 'utf-8')
-  const lines = logFile.split('\n').slice(-1000).reverse()
+  const lines = logFile.split('\n').slice(-1000)
 
   return (
     <main>

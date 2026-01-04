@@ -1,20 +1,31 @@
-import styles from './Log.module.css'
+'use client'
+import { DataTable } from '@/app/shared/components/table/DataTable'
+import { dateColumn, selectColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
-export interface LogProbs {
+export interface LogProps {
   lines: string[]
 }
 
-export function Log({ lines }: LogProbs) {
+const columns = {
+  time: dateColumn('Time', { style: { width: '15rem' } }, true),
+  level: selectColumn('Level', ['debug', 'info', 'warn', 'error'], { style: { width: '10rem' } }),
+  message: textColumn('Message'),
+}
+
+export function Log({ lines }: LogProps) {
+  const data = lines.map((line) => {
+    const time = new Date(line.slice(1, 24))
+    const split = line.slice(27).split(':')
+    const level = split[0].trim()
+    const message = split.slice(1).join(':').trim()
+    return { id: crypto.randomUUID(), time, level, message }
+  })
+
   return (
-    <>
-      {lines.map((l, index) => {
-        const level = l.substring(27, 40).split(':')[0].trim()
-        return (
-          <div key={index} className={styles[level]}>
-            {l}
-          </div>
-        )
-      })}
-    </>
+    <DataTable
+      columns={columns}
+      data={data}
+      initialSortingOrder={[{ key: 'time', direction: 'DESC' }]}
+    />
   )
 }

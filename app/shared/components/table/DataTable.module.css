@@ -2,6 +2,26 @@
   text-align: center;
 }
 
+.sortingButton{
+    background-color: var(--primary-background-color);
+    color: var(--default-background-color);
+    border: none;
+    padding: 0;
+}
+
+.header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-small);
+}
+
+.filter {
+  margin-top: var(--gap-small);
+}
+
+
 @media (min-width: 600px) {
   table.dataTable {
     border-spacing: 0;
@@ -9,12 +29,14 @@
     border-radius: var(--border-radius);
     border: 1px solid var(--primary-border-color);
     width: 100%;
+    table-layout: fixed;
 
     th {
       background-color: var(--primary-background-color);
       color: var(--default-background-color);
       font-weight: bold;
-      padding: var(--gap) var(--gap-small);
+      padding: var(--gap-small) var(--gap-small);
+      vertical-align: top;
       text-align: center;
     }
 
@@ -123,7 +145,7 @@
       width: calc(100% - var(--header-width) - 2 * var(--gap));
       white-space: nowrap;
       font-weight: bold;
-      content: attr(header);
+      content: attr(headers);
     }
   }
 }

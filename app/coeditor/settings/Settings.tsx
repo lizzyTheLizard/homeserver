@@ -1,10 +1,9 @@
 'use client'
-import { DataTable } from '@/app/shared/components/DataTable'
+import { DataTable } from '@/app/shared/components/table/DataTable'
 import { Profile, ProfileInput } from '../Profile'
 import { Template, TemplateInput } from '../Template'
 import { Sidebar, SidebarContainer, SidebarContent } from '@/app/shared/components/sidebar/Sidebar'
 import { Button } from '@/app/shared/components/form/Button'
-import { DateTime } from '@/app/shared/components/DateTime'
 import { ProfileSidebar } from './ProfileSidebar'
 import { TemplateSidebar } from './TemplateSidebar'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
@@ -12,6 +11,7 @@ import { ActionResponse } from '@/app/shared/ActionResponse'
 import { useSidebarState } from '@/app/shared/components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import style from './Settings.module.css'
+import { textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
 export interface SettingsProps {
   profiles: Profile[]
@@ -20,6 +20,17 @@ export interface SettingsProps {
   onDeleteProfile: (id: string) => ActionResponse<void>
   onSaveTemplate: (template: TemplateInput) => ActionResponse<Template>
   onDeleteTemplate: (id: string) => ActionResponse<void>
+}
+
+const profileColumns = {
+  language: textColumn('Language', { style: { width: '15rem' } }),
+  text: textColumn('Text'),
+}
+
+const templateColumns = {
+  language: textColumn('Language', { style: { width: '15rem' } }),
+  name: textColumn('Name', { style: { width: '15rem' } }),
+  text: textColumn('Text'),
 }
 
 export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
@@ -68,49 +79,23 @@ export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, 
       {(profilesState.pending || templatesState.pending) && <LoadingSpinner text="Processing..." />}
       <SidebarContent onClose={closeAllSidebars}>
         <h2>Profiles</h2>
-        <DataTable className={style.table}>
-          <thead>
-            <tr>
-              <th className={style.language}>Language</th>
-              <th className={style.updated}>Last Updated</th>
-              <th>Text</th>
-            </tr>
-          </thead>
-          <tbody>
-            {profilesState.all.map(profile => (
-              <tr key={profile.id} onClick={(e) => { dispatchProfiles({ type: 'SHOW_SIDEBAR', item: profile }); e.stopPropagation() }} className={style.settingsrow}>
-                <td>{profile.language}</td>
-                <td><DateTime hideTime={true} date={profile.updated_at} /></td>
-                <td className={style.text}>{profile.text}</td>
-              </tr>
-            ))}
-          </tbody>
-        </DataTable>
+        <DataTable
+          onRowClick={(e, profile) => { dispatchProfiles({ type: 'SHOW_SIDEBAR', item: profile }); e.stopPropagation() }}
+          columns={profileColumns}
+          data={profilesState.all}
+          initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        />
         <div className={style.createButtonRow + ' row'}>
           <Button className={style.createButton} onClick={(e) => { dispatchProfiles({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
         </div>
 
         <h2>Templates</h2>
-        <DataTable className={style.table}>
-          <thead>
-            <tr>
-              <th className={style.language}>Language</th>
-              <th className={style.name}>Name</th>
-              <th className={style.updated}>Last Updated</th>
-              <th>Text</th>
-            </tr>
-          </thead>
-          <tbody>
-            {templatesState.all.map(template => (
-              <tr key={template.id} onClick={(e) => { dispatchTemplates({ type: 'SHOW_SIDEBAR', item: template }); e.stopPropagation() }} className={style.settingsrow}>
-                <td>{template.language}</td>
-                <td>{template.name}</td>
-                <td><DateTime hideTime={true} date={template.updated_at} /></td>
-                <td className={style.text}>{template.text}</td>
-              </tr>
-            ))}
-          </tbody>
-        </DataTable>
+        <DataTable
+          onRowClick={(e, template) => { dispatchTemplates({ type: 'SHOW_SIDEBAR', item: template }); e.stopPropagation() }}
+          columns={templateColumns}
+          data={templatesState.all}
+          initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        />
         <div className={style.createButtonRow + ' row'}>
           <Button className={style.createButton} onClick={(e) => { dispatchTemplates({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
         </div>

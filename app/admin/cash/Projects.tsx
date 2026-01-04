@@ -1,8 +1,7 @@
 'use client'
 
 import { Project, ProjectInput } from '@/app/cash/Project'
-import { DataTable } from '@/app/shared/components/DataTable'
-import { DateTime } from '@/app/shared/components/DateTime'
+import { DataTable } from '@/app/shared/components/table/DataTable'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { Sidebar, SidebarContainer, SidebarContent } from '@/app/shared/components/sidebar/Sidebar'
 import { Button } from '@/app/shared/components/form/Button'
@@ -13,11 +12,18 @@ import { Input } from '@/app/shared/components/form/Input'
 import { Checkbox } from '@/app/shared/components/form/Checkbox'
 import { useState } from 'react'
 import style from './Projects.module.css'
+import { boolColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
 export interface ProjectsProps {
   projects: Project[]
   onSaveProject: (project: ProjectInput) => ActionResponse<Project>
   onDeleteProject: (id: string) => ActionResponse<void>
+}
+
+const columns = {
+  name: textColumn('Name', { style: { maxWidth: '20rem' } }),
+  owner_id: textColumn('Owner', { style: { maxWidth: '10rem', overflow: 'clip' } }),
+  archived: boolColumn('Archived', { style: { width: '7rem' } }),
 }
 
 export function Projects({ projects, onSaveProject, onDeleteProject }: ProjectsProps) {
@@ -43,26 +49,12 @@ export function Projects({ projects, onSaveProject, onDeleteProject }: ProjectsP
     <SidebarContainer>
       <SidebarContent onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}>
         {state.pending && <LoadingSpinner text="Processing..." />}
-        <DataTable>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Last Updated</th>
-              <th>Owner</th>
-              <th>Archived</th>
-            </tr>
-          </thead>
-          <tbody>
-            {state.all.map(project => (
-              <tr key={project.id} onClick={(e) => { dispatch({ type: 'SHOW_SIDEBAR', item: project }); e.stopPropagation() }} className={style.projectrow}>
-                <td>{project.name}</td>
-                <td><DateTime hideTime={true} date={project.updated_at} /></td>
-                <td>{project.owner_id}</td>
-                <td>{project.archived ? 'Yes' : 'No'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </DataTable>
+        <DataTable
+          columns={columns}
+          initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
+          data={state.all}
+          onRowClick={(e, project) => { dispatch({ type: 'SHOW_SIDEBAR', item: project }); e.stopPropagation() }}
+        />
         <div className={style.createButtonRow + ' row'}>
           <Button className={style.createButton} onClick={(e) => { dispatch({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
         </div>

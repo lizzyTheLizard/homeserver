@@ -3,22 +3,6 @@
     justify-content: flex-end;
 }   
 
-.settingsrow {
-    cursor: pointer;
-}
-
-.settingsrow:hover td {
-    background-color: grey !important
-}
-
-.table{
-    table-layout: fixed;
-}
-
-.text {
-    white-space: pre-wrap;
-}
-
 @media (max-width: 600px) {
     .createButton {
         width: 100%;
@@ -26,18 +10,6 @@
 }
 
 @media (min-width: 600px) {
-    .language {
-        width: 6rem;
-    }
-
-    .updated {
-        width: 6rem;
-    }
-
-    .name {
-        width: 8rem;
-    }
-
     .createButton {
         max-width: 300px;
     }
