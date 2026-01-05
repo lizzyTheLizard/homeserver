@@ -1,5 +1,6 @@
 import { logger } from '@/logger'
 import { PoolClient } from 'pg'
+import { unexpectedError } from '../shared/BackendError'
 
 export interface Project {
   id: string
@@ -37,22 +38,13 @@ export async function findProjectById(client: PoolClient, ownerId: string, id: s
 
 export async function createOrModifyProject(client: PoolClient, project: ProjectInput): Promise<Project> {
   const result1 = await client.query<Project>(`SELECT * FROM project WHERE id = $1`, [project.id])
-  if (result1.rows[0]) {
-    const result = await client.query<Project>(
-      'UPDATE project SET name = $2, owner_id = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *',
-      [project.id, project.name, project.owner_id, project.archived],
-    )
-    logger.info(`Project ${project.id} updated`)
-    return result.rows[0]
-  }
-  else {
-    const result = await client.query<Project>(
-      `INSERT INTO project (id, name, owner_id, archived) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [project.id, project.name, project.owner_id, project.archived],
-    )
-    logger.info(`Project ${project.id} created`)
-    return result.rows[0]
-  }
+  const query = result1.rows[0]
+    ? 'UPDATE project SET name = $2, owner_id = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
+    : 'INSERT INTO project (id, name, owner_id, archived) VALUES ($1, $2, $3, $4) RETURNING *'
+  const result = await client.query<Project>(query, [project.id, project.name, project.owner_id, project.archived])
+  if (!result.rows[0]) throw unexpectedError('Failed to modify project')
+  logger.info(`Modified project '${project.name}' for owner ${project.owner_id}`)
+  return result.rows[0]
 }
 
 export async function removeProject(client: PoolClient, id: string): Promise<void> {
