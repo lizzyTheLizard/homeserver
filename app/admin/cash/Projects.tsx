@@ -15,9 +15,9 @@ import style from './Projects.module.css'
 import { boolColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
 export interface ProjectsProps {
-  projects: Project[]
-  onSaveProject: (project: ProjectInput) => ActionResponse<Project>
-  onDeleteProject: (id: string) => ActionResponse<void>
+  projects?: Project[]
+  onSaveProject?: (project: ProjectInput) => ActionResponse<Project>
+  onDeleteProject?: (id: string) => ActionResponse<void>
 }
 
 const columns = {
@@ -27,20 +27,20 @@ const columns = {
 }
 
 export function Projects({ projects, onSaveProject, onDeleteProject }: ProjectsProps) {
-  const [state, dispatch] = useSidebarState(projects, () => (
+  const [state, dispatch] = useSidebarState(projects ?? [], () => (
     { id: randomUUID(), name: '', archived: false } as ProjectInput
   ))
 
   function deleteProject(input: ProjectInput) {
     dispatch({ type: 'START_ACTION' })
-    onDeleteProject(input.id)
+    onDeleteProject?.(input.id)
       .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
       .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
   }
 
   function saveProject(input: ProjectInput) {
     dispatch({ type: 'START_ACTION' })
-    onSaveProject(input)
+    onSaveProject?.(input)
       .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
       .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
   }

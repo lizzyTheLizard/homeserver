@@ -14,12 +14,12 @@ import style from './Settings.module.css'
 import { textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
 export interface SettingsProps {
-  profiles: Profile[]
-  templates: Template[]
-  onSaveProfile: (profile: ProfileInput) => ActionResponse<Profile>
-  onDeleteProfile: (id: string) => ActionResponse<void>
-  onSaveTemplate: (template: TemplateInput) => ActionResponse<Template>
-  onDeleteTemplate: (id: string) => ActionResponse<void>
+  profiles?: Profile[]
+  templates?: Template[]
+  onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
+  onDeleteProfile?: (id: string) => ActionResponse<void>
+  onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
+  onDeleteTemplate?: (id: string) => ActionResponse<void>
 }
 
 const profileColumns = {
@@ -34,37 +34,37 @@ const templateColumns = {
 }
 
 export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
-  const [profilesState, dispatchProfiles] = useSidebarState(profiles, () => (
+  const [profilesState, dispatchProfiles] = useSidebarState(profiles ?? [], () => (
     { id: randomUUID(), language: '', text: '' } as ProfileInput
   ))
-  const [templatesState, dispatchTemplates] = useSidebarState(templates, () => (
+  const [templatesState, dispatchTemplates] = useSidebarState(templates ?? [], () => (
     { id: randomUUID(), name: '', language: '', text: '' } as TemplateInput
   ))
 
   function deleteProfile(input: ProfileInput) {
     dispatchProfiles({ type: 'START_ACTION' })
-    onDeleteProfile(input.id)
+    onDeleteProfile?.(input.id)
       .then((result) => { dispatchProfiles({ type: 'STOP_ACTION', result }) })
       .catch((error: unknown) => { dispatchProfiles({ type: 'ACTION_ERROR', error }) })
   }
 
   function saveProfile(input: ProfileInput) {
     dispatchProfiles({ type: 'START_ACTION' })
-    onSaveProfile(input)
+    onSaveProfile?.(input)
       .then((result) => { dispatchProfiles({ type: 'STOP_ACTION', result }) })
       .catch((error: unknown) => { dispatchProfiles({ type: 'ACTION_ERROR', error }) })
   }
 
   function deleteTemplate(input: TemplateInput) {
     dispatchTemplates({ type: 'START_ACTION' })
-    onDeleteTemplate(input.id)
+    onDeleteTemplate?.(input.id)
       .then((result) => { dispatchTemplates({ type: 'STOP_ACTION', result }) })
       .catch((error: unknown) => { dispatchTemplates({ type: 'ACTION_ERROR', error }) })
   }
 
   function saveTemplate(input: TemplateInput) {
     dispatchTemplates({ type: 'START_ACTION' })
-    onSaveTemplate(input)
+    onSaveTemplate?.(input)
       .then((result) => { dispatchTemplates({ type: 'STOP_ACTION', result }) })
       .catch((error: unknown) => { dispatchTemplates({ type: 'ACTION_ERROR', error }) })
   }

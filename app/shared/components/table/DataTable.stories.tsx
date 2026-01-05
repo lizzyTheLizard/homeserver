@@ -41,7 +41,7 @@ export const MobileEmpty: StoryObj<typeof meta> = {
 }
 
 type ComplicatedEnum = 'A1' | 'A2' | 'A3'
-type Complicated = Meta<typeof DataTable<{ id: string, text: string, select: ComplicatedEnum, date: Date }>>
+type Complicated = Meta<typeof DataTable<{ id: string, text: string, select: ComplicatedEnum, date: Date, bool: boolean }>>
 
 export const Sorting: StoryObj<Complicated> = {
   args: {
@@ -59,9 +59,9 @@ export const Filtering: StoryObj<Complicated> = {
   args: {
     columns: {
       text: textColumn('Text'),
-      select: selectColumn('Select', ['A1', 'A2', 'A3'], { width: '150px' }),
-      date: dateColumn('Date', { width: '150px' }),
-      bool: boolColumn('Boolean', { width: '150px' }),
+      select: selectColumn('Select', ['A1', 'A2', 'A3'], { style: { width: '150px' } }),
+      date: dateColumn('Date', { style: { width: '150px' } }),
+      bool: boolColumn('Boolean', { style: { width: '150px' } }),
     },
     data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, date: new Date(2020, 0, (i % 30) + 1, 12, 0), bool: i % 2 === 0 })),
   },

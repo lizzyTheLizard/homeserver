@@ -6,7 +6,7 @@ export default function Loading() {
     <main>
       <h1>Projects</h1>
       <LoadingSpinner></LoadingSpinner>
-      <Projects projects={[]} />
+      <Projects />
     </main>
   )
 }
