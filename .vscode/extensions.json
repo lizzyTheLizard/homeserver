@@ -3,6 +3,7 @@
         "dbaeumer.vscode-eslint",
         "github.vscode-github-actions",
         "vitest.explorer",
-        "4ops.terraform"
+        "4ops.terraform",
+        "cweijan.vscode-postgresql-client2"
     ]
 }
