@@ -28,7 +28,6 @@ describe.concurrent('AI Integration Tests', () => {
       custom_command: 'Transform everything to uppercase',
     }
     const result: CommandResult = await aiPort(command, [], { dangerouslyAllowBrowser: true })
-    console.log(result)
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       text: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
@@ -46,7 +45,6 @@ describe.concurrent('AI Integration Tests', () => {
       custom_command: 'Transform everything to uppercase',
     }
     const result: CommandResult = await aiPort(command, [], { dangerouslyAllowBrowser: true })
-    console.log(result)
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       text: expect.stringContaining('THIS IS A SAMPLE TEXT') as string,
@@ -65,7 +63,6 @@ describe.concurrent('AI Integration Tests', () => {
       selection_start: 10,
     }
     const result: CommandResult = await aiPort(command, [], { dangerouslyAllowBrowser: true })
-    console.log(result)
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       text: expect.stringContaining('This is a SAMPLE TEXT') as string,

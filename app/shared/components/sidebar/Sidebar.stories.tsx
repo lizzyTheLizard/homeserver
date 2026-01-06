@@ -16,7 +16,6 @@ const meta = {
   },
   render: (args) => {
     const [open, setOpen] = useState(args.open ?? false)
-    console.log('Rerendering with', open)
     return (
       <SidebarContainer>
         <SidebarContent onClose={() => { setOpen(false) }}>

@@ -46,7 +46,6 @@ export function sidebarStateReducer<T extends { id: string }, TInput extends { i
         return { ...state, sidebarOpen: false, pending: false, all, error: undefined }
       }
     case 'ACTION_ERROR':
-      console.log('Action error', action.error)
       return { ...state, pending: false, error: 'An unexpected error occurred.' }
   }
 }

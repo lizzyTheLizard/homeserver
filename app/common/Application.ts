@@ -18,7 +18,6 @@ export const applications: Application[] = [
       if (split.length < 4) return []
       const projectId = split[2]
       const date = split[3]
-      console.log('projectId', projectId, 'date', date)
       return [
         { text: 'Journal', href: `/cash/${projectId}/${date}/journal` },
         { text: 'Accounts', href: `/cash/${projectId}/${date}/accounts` },
