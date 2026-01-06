@@ -4,12 +4,12 @@ import { dateColumn, textColumn } from '@/app/shared/components/table/DataTableC
 import { useRouter } from 'next/navigation'
 import { Discussion } from '../Discussion'
 
-const columns = {
-  title: textColumn('Title', { style: { width: '20rem' } }),
-  updated_at: dateColumn('Last Updated', { style: { width: '10rem' } }),
-  context: textColumn('Context', { style: { width: '10rem' } }),
-  text: textColumn('Text', { style: { whiteSpace: 'pre-wrap' } }),
-}
+const columns = [
+  textColumn('title', { header: 'Title' }),
+  dateColumn('updated_at', { header: 'Last Updated' }),
+  textColumn('context', { header: 'Context' }),
+  textColumn('text', { style: { whiteSpace: 'pre-wrap' }, header: 'Text' }),
+]
 
 export function History({ discussions }: { discussions: Discussion[] }) {
   const router = useRouter()

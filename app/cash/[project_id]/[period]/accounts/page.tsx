@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export interface AccountPageProps {
   params: Promise<{
     project_id: string
-    date: string
+    period: string
   }>
 }
 

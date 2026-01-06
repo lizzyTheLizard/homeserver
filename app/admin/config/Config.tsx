@@ -2,7 +2,10 @@
 import { DataTable } from '@/app/shared/components/table/DataTable'
 import { textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
-const columns = { key: textColumn('Key', { style: { width: '20rem' } }), value: textColumn('Value') }
+const columns = [
+  textColumn('key', { style: { width: '30rem' }, header: 'Key' }),
+  textColumn('value', { header: 'Value' }),
+]
 
 export function Config({ data}: { data: { id: string, key: string, value: string | undefined }[] }) {
   return (

@@ -20,12 +20,11 @@ export interface ProjectsProps {
   onDeleteProject?: (project: ProjectInput) => ActionResponse<void>
 }
 
-const columns = {
-  name: textColumn('Name', { style: { maxWidth: '20rem' } }),
-  owner_id: textColumn('Owner', { style: { maxWidth: '10rem', overflow: 'clip' } }),
-  archived: boolColumn('Archived', { style: { width: '7rem' } }),
-}
-
+const columns = [
+  textColumn('name', { header: 'Name' }),
+  textColumn('owner_id', { style: { overflow: 'clip' }, header: 'Owner' }),
+  boolColumn('archived', { header: 'Archived' }),
+]
 export function Projects({ projects, onSaveProject, onDeleteProject }: ProjectsProps) {
   const [state, dispatch] = useSidebarState(projects ?? [], () => (
     { id: randomUUID(), name: '', archived: false } as ProjectInput

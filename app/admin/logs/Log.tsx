@@ -1,16 +1,16 @@
 'use client'
 import { DataTable } from '@/app/shared/components/table/DataTable'
-import { dateColumn, selectColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
+import { dateColumn, enumColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 
 export interface LogProps {
   lines: string[]
 }
 
-const columns = {
-  time: dateColumn('Time', { style: { width: '15rem' } }, true),
-  level: selectColumn('Level', ['debug', 'info', 'warn', 'error'], { style: { width: '10rem' } }),
-  message: textColumn('Message'),
-}
+const columns = [
+  dateColumn('time', { style: { width: '15rem' }, showTime: true, header: 'Time' }),
+  enumColumn('level', ['debug', 'info', 'warn', 'error'], { style: { width: '10rem' }, header: 'Level' }),
+  textColumn('message', { header: 'Message' }),
+]
 
 export function Log({ lines }: LogProps) {
   const data = lines.map((line) => {

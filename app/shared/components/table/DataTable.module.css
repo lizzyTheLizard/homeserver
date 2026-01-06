@@ -17,10 +17,22 @@
   gap: var(--gap-small);
 }
 
+.dateFilters {
+  margin-top: var(--gap-small);
+  display: flex;
+  gap: var(--gap-small);
+  flex-wrap: wrap;
+}
+
+.dateFilters >div{
+  flex-grow: 1;
+  width: 10px;
+  min-width: 6rem;
+}
+
 .filter {
   margin-top: var(--gap-small);
 }
-
 
 @media (min-width: 600px) {
   table.dataTable {

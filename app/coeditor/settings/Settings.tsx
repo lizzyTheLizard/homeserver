@@ -22,16 +22,16 @@ export interface SettingsProps {
   onDeleteTemplate?: (template: TemplateInput) => ActionResponse<void>
 }
 
-const profileColumns = {
-  language: textColumn('Language', { style: { width: '15rem' } }),
-  text: textColumn('Text'),
-}
+const profileColumns = [
+  textColumn('language', { header: 'Language' }),
+  textColumn('text', { header: 'Text' }),
+]
 
-const templateColumns = {
-  language: textColumn('Language', { style: { width: '15rem' } }),
-  name: textColumn('Name', { style: { width: '15rem' } }),
-  text: textColumn('Text'),
-}
+const templateColumns = [
+  textColumn('language', { header: 'Language' }),
+  textColumn('name', { header: 'Name' }),
+  textColumn('text', { header: 'Text' }),
+]
 
 export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
   const [profilesState, dispatchProfiles] = useSidebarState(profiles ?? [], () => (

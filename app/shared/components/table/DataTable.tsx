@@ -1,29 +1,37 @@
 'use client'
-import { useMemo, useState } from 'react'
-import { Icon } from '../Icon'
-import { ColumnDefinition, DataTableProps, Filtering, SortingOrder } from './DataTableProps'
+import { CSSProperties, MouseEvent, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
 import style from './DataTable.module.css'
+import { Filtering, sortAndFilter, SortingOrder } from './sortAndFilter'
+import { DataTableHeader } from './DataTableHeader'
+import { DataTableRow } from './DataTableRow'
+
+export interface DataTableProps<T extends { id: string }> extends TableHTMLAttributes<HTMLTableElement> {
+  data: T[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: ColumnDefinition<any, any>[]
+  initialSortingOrder?: SortingOrder[]
+  initialFiltering?: Filtering[]
+  onRowClick?: (e: MouseEvent<HTMLTableRowElement>, item: T) => void
+}
+
+export interface ColumnDefinition<FieldType, FilterValueType> {
+  key: string
+  header: string
+  style?: CSSProperties
+  sort?: (a: FieldType, b: FieldType) => number
+  cell: (value: FieldType) => ReactNode
+  filter?: ColumnFilter<FieldType, FilterValueType>
+}
+
+export interface ColumnFilter<FieldType, FilterValueType> {
+  component: (value: FilterValueType | undefined, onChange: (newValue?: FilterValueType) => void) => ReactNode
+  function: (dataValue: FieldType, filterValue: FilterValueType) => boolean
+}
 
 export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, ...props }: DataTableProps<T>) {
   const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
   const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
-  const [filtering, setFiltering] = useState<Filtering<unknown>[]>(initialFiltering ?? [])
-
-  const sortedAndFilteredData = useMemo(() => {
-    let result = [...data]
-    filtering.forEach((filter) => {
-      const filterDef = get(columns, filter.key as keyof T).filter
-      if (!filterDef) return
-      result = result.filter(row => filterDef.function(row[filter.key as keyof T], filter.value as never))
-    })
-    sortingOrder.forEach((sorting) => {
-      const sort = get(columns, sorting.key as keyof T).sort
-      if (!sort) return
-      const multiplier = sorting.direction === 'DESC' ? -1 : 1
-      result = result.sort((a, b) => multiplier * sort(a[sorting.key as keyof T], b[sorting.key as keyof T]))
-    })
-    return result
-  }, [data, sortingOrder, filtering, columns])
+  const [filtering, setFiltering] = useState<Filtering[]>(initialFiltering ?? [])
 
   function onSort(oldSort: SortingOrder | undefined, key: string) {
     const newOrder = sortingOrder.filter(f => f.key !== key)
@@ -43,39 +51,35 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
     setFiltering(newFiltering)
   }
 
+  const sortedAndFilteredData = useMemo(
+    () => sortAndFilter<T>(data, sortingOrder, filtering, columns),
+    [data, sortingOrder, filtering, columns],
+  )
+
   return (
     <table {...props} className={classNames}>
       <thead>
         <tr>
-          {Object.keys(columns).map((key) => {
-            const column = get(columns, key as keyof T)
-            const sort = sortingOrder.find(f => f.key === key)
-            const icon = sort ? (sort.direction === 'DESC' ? 'up' : 'down') : 'updown'
-            const filterValue = filtering.find(f => f.key === key)?.value
-            return (
-              <th key={key} id={column.header} style={column.style}>
-                <div className={style.header}>
-                  {column.header}
-                  {column.sort && (
-                    <button className={style.sortingButton} onClick={() => { onSort(sort, key) }}>
-                      <Icon style={{ width: '1rem', height: '1rem' }} name={icon} />
-                    </button>
-                  )}
-                </div>
-                {column.filter?.component(filterValue, (newValue) => { onFilter(newValue, key) })}
-              </th>
-            )
-          })}
+          {columns.map(column => (
+            <DataTableHeader
+              key={column.key}
+              column={column}
+              sortingOrder={sortingOrder}
+              filtering={filtering}
+              onSort={onSort}
+              onFilter={onFilter}
+            />
+          ))}
         </tr>
       </thead>
       <tbody>
         {sortedAndFilteredData.map(row => (
-          <tr key={row.id} onClick={(e) => { onRowClick?.(e, row) }}>
-            {Object.keys(columns).map((key) => {
-              const column = get(columns, key as keyof T)
-              return <td key={row.id + key} style={column.style} headers={column.header}>{column.cell(row[key as keyof T])}</td>
-            })}
-          </tr>
+          <DataTableRow
+            key={row.id}
+            row={row}
+            columns={columns}
+            onRowClick={onRowClick}
+          />
         ))}
         {sortedAndFilteredData.length === 0 && (
           <tr className={style.emptyRow}>
@@ -85,10 +89,4 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
       </tbody>
     </table>
   )
-}
-
-function get<T, V, F>(columns: Partial<Record<keyof T, ColumnDefinition<V, F>>>, key: keyof T): ColumnDefinition<V, F> {
-  const column = columns[key]
-  if (!column) throw new Error(`Column definition for key "${key.toString()}" is missing`)
-  return column
 }

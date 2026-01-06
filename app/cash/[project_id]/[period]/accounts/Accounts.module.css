@@ -3,14 +3,6 @@
     justify-content: flex-end;
 }   
 
-.accountrow {
-    cursor: pointer;
-}
-
-.accountrow:hover td {
-    background-color: grey !important
-}
-
 @media (max-width: 600px) {
     .createButton {
         width: 100%;
