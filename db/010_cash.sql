@@ -26,6 +26,7 @@ CREATE INDEX idx_account_project_id ON account(project_id);
 CREATE TABLE transaction (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL,
+    owner_id TEXT NOT NULL,
     credit_account_id UUID NOT NULL,
     debit_account_id UUID NOT NULL,
     amount NUMERIC NOT NULL,
