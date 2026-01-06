@@ -3,10 +3,9 @@ import { Settings } from './Settings'
 
 export default function Loading() {
   return (
-    <main>
-      <h1>Settings</h1>
-      <LoadingSpinner></LoadingSpinner>
+    <>
+      <LoadingSpinner />
       <Settings profiles={[]} templates={[]} />
-    </main>
+    </>
   )
 }

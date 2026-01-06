@@ -14,10 +14,7 @@ export default async function Page() {
   const projects = await nontransactional(c => findAllProjects(c))
 
   return (
-    <main>
-      <h1>Cash Admin</h1>
-      <Projects projects={projects} onDeleteProject={deleteProject} onSaveProject={saveProject} />
-    </main>
+    <Projects projects={projects} onDeleteProject={deleteProject} onSaveProject={saveProject} />
   )
 }
 
@@ -26,7 +23,7 @@ async function saveProject(project: ProjectInput) {
   return toResponse(transactional(tx => createOrModifyProject(tx, project)))
 }
 
-async function deleteProject(id: string) {
+async function deleteProject(project: ProjectInput) {
   'use server'
-  return toResponse(transactional(tx => removeProject(tx, id)))
+  return toResponse(transactional(tx => removeProject(tx, project.id)))
 }

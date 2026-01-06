@@ -5,8 +5,8 @@ import { ActionResponse } from '@/app/shared/ActionResponse'
 import { Button } from '@/app/shared/components/form/Button'
 import { DataTable } from '@/app/shared/components/table/DataTable'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { Sidebar, SidebarContainer, SidebarContent } from '@/app/shared/components/sidebar/Sidebar'
-import { useSidebarState } from '../../../../shared/components/sidebar/SidebarState'
+import { Sidebar, SidebarContent, SidebarMain } from '@/app/shared/components/sidebar/Sidebar'
+import { sidebarAction, useSidebarState } from '../../../../shared/components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { useState } from 'react'
 import { Input } from '@/app/shared/components/form/Input'
@@ -18,7 +18,7 @@ import { boolColumn, selectColumn, textColumn } from '@/app/shared/components/ta
 export interface AccountsProps {
   project_id?: string
   accounts?: Account[]
-  onDeleteAccount?: (id: string) => ActionResponse<void>
+  onDeleteAccount?: (account: AccountInput) => ActionResponse<void>
   onSaveAccount?: (account: AccountInput) => ActionResponse<Account>
 }
 
@@ -33,24 +33,11 @@ export function Accounts({ project_id, accounts, onDeleteAccount, onSaveAccount 
     { id: randomUUID(), project_id, name: '', type: 'Cash', archived: false } as AccountInput
   ))
 
-  function deleteAccount(input: AccountInput) {
-    dispatch({ type: 'START_ACTION' })
-    onDeleteAccount?.(input.id)
-      .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
-      .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
-  }
-
-  function saveAccount(input: AccountInput) {
-    dispatch({ type: 'START_ACTION' })
-    onSaveAccount?.(input)
-      .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
-      .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
-  }
-
   return (
-    <SidebarContainer>
+    <SidebarMain>
       {state.pending && <LoadingSpinner text="Processing..." />}
       <SidebarContent onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}>
+        <h1>Accounts</h1>
         <DataTable
           columns={columns}
           data={state.all}
@@ -71,12 +58,12 @@ export function Accounts({ project_id, accounts, onDeleteAccount, onSaveAccount 
           key={state.current.id}
           account={state.current}
           error={state.error}
-          onDelete={deleteAccount}
-          onSave={saveAccount}
+          onDelete={sidebarAction(dispatch, onDeleteAccount)}
+          onSave={sidebarAction(dispatch, onSaveAccount)}
           onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}
         />
       </Sidebar>
-    </SidebarContainer>
+    </SidebarMain>
   )
 }
 

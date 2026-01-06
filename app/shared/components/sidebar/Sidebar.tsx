@@ -11,6 +11,16 @@ export function SidebarContainer({ children }: PropsWithChildren<object>) {
   )
 }
 
+export function SidebarMain({ children }: PropsWithChildren<object>) {
+  return (
+    <main>
+      <div className={styles.container}>
+        {children}
+      </div>
+    </main>
+  )
+}
+
 export interface SidebarContentProps {
   onClose?: () => void
 }

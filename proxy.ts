@@ -22,3 +22,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   logger.debug(`${request.method} ${request.nextUrl.pathname} for ${session?.email ?? 'unauthenticated user'}`)
   return response
 }
+
+export const config = {
+  matcher: '/(.*)',
+}

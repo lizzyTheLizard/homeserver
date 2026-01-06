@@ -16,9 +16,6 @@ export default async function Page() {
   const lines = logFile.split('\n').slice(-1000)
 
   return (
-    <main>
-      <h1>Logs</h1>
-      <Log lines={lines} />
-    </main>
+    <Log lines={lines} />
   )
 }

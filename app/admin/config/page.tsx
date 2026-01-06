@@ -11,9 +11,6 @@ export default async function Page() {
   const data = Object.keys(process.env).map(key => ({ id: key, key, value: process.env[key] }))
 
   return (
-    <main>
-      <h1>Configuration</h1>
-      <Config data={data} />
-    </main>
+    <Config data={data} />
   )
 }

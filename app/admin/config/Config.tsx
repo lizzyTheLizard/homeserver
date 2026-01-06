@@ -6,6 +6,10 @@ const columns = { key: textColumn('Key', { style: { width: '20rem' } }), value: 
 
 export function Config({ data}: { data: { id: string, key: string, value: string | undefined }[] }) {
   return (
-    <DataTable columns={columns} data={data} initialSortingOrder={[{ key: 'key', direction: 'ASC' }]} />
+    <main>
+      <h1>Configuration</h1>
+      <DataTable columns={columns} data={data} initialSortingOrder={[{ key: 'key', direction: 'ASC' }]} />
+    </main>
+
   )
 }

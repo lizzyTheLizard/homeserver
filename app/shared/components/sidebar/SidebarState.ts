@@ -60,3 +60,12 @@ export function sidebarState<T, TInput>(all: T[], createItem: () => TInput): Sid
     pending: false,
   }
 }
+
+export function sidebarAction<IN, OUT>(dispatch: React.Dispatch<SidebarAction<IN, OUT>>, actionFn?: (input: IN) => Promise<AwaitedActionResponse<OUT> | AwaitedActionResponse<void>>): (input: IN) => void {
+  return (input: IN) => {
+    dispatch({ type: 'START_ACTION' })
+    actionFn?.(input)
+      .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
+      .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
+  }
+}

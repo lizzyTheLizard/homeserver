@@ -30,19 +30,16 @@ export default async function Page({ params }: AccountPageProps) {
   }
   const accounts = await nontransactional(c => findAllAccountsForProject(c, user.sub, paramsResolved.project_id))
   return (
-    <main>
-      <h1>Accounts</h1>
-      <Accounts project_id={paramsResolved.project_id} accounts={accounts} onDeleteAccount={deleteAccount} onSaveAccount={saveAccount} />
-    </main>
+    <Accounts project_id={paramsResolved.project_id} accounts={accounts} onDeleteAccount={deleteAccount} onSaveAccount={saveAccount} />
   )
 }
 
-async function deleteAccount(id: string): ActionResponse<void> {
+async function deleteAccount(input: AccountInput): ActionResponse<void> {
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession()
-    validateString(id)
-    await removeAccount(client, user.sub, id)
+    validateString(input.id)
+    await removeAccount(client, user.sub, input.id)
   }))
 }
 

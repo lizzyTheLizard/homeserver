@@ -3,10 +3,9 @@ import { Projects } from './Projects'
 
 export default function Loading() {
   return (
-    <main>
-      <h1>Projects</h1>
+    <>
       <LoadingSpinner></LoadingSpinner>
       <Projects />
-    </main>
+    </>
   )
 }

@@ -19,26 +19,23 @@ export default async function Page() {
   ]))
 
   return (
-    <main>
-      <h1>Settings</h1>
-      <Settings
-        profiles={profiles}
-        templates={templates}
-        onDeleteProfile={deleteProfile}
-        onSaveProfile={updateProfile}
-        onDeleteTemplate={deleteTemplate}
-        onSaveTemplate={updateTemplate}
-      />
-    </main>
+    <Settings
+      profiles={profiles}
+      templates={templates}
+      onDeleteProfile={deleteProfile}
+      onSaveProfile={updateProfile}
+      onDeleteTemplate={deleteTemplate}
+      onSaveTemplate={updateTemplate}
+    />
   )
 }
 
-async function deleteProfile(id: string): ActionResponse<void> {
+async function deleteProfile(profile: ProfileInput): ActionResponse<void> {
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession()
-    validateString(id)
-    return removeProfile(client, user.sub, id)
+    validateString(profile.id)
+    return removeProfile(client, user.sub, profile.id)
   }))
 }
 
@@ -51,12 +48,12 @@ async function updateProfile(input: ProfileInput): ActionResponse<Profile> {
   }))
 }
 
-async function deleteTemplate(id: string): ActionResponse<void> {
+async function deleteTemplate(template: TemplateInput): ActionResponse<void> {
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession()
-    validateString(id)
-    await removeTemplate(client, user.sub, id)
+    validateString(template.id)
+    await removeTemplate(client, user.sub, template.id)
   }))
 }
 

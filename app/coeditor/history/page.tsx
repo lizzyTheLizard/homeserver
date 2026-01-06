@@ -13,9 +13,6 @@ export default async function Page() {
   const discussions = await nontransactional(c => findDiscussionByOwner(c, user.sub))
 
   return (
-    <main>
-      <h1>History</h1>
-      <History discussions={discussions} />
-    </main>
+    <History discussions={discussions} />
   )
 }

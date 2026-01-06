@@ -22,10 +22,13 @@ export function Log({ lines }: LogProps) {
   })
 
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      initialSortingOrder={[{ key: 'time', direction: 'DESC' }]}
-    />
+    <main>
+      <h1>Logs</h1>
+      <DataTable
+        columns={columns}
+        data={data}
+        initialSortingOrder={[{ key: 'time', direction: 'DESC' }]}
+      />
+    </main>
   )
 }

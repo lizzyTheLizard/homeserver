@@ -3,10 +3,10 @@
 import { Project, ProjectInput } from '@/app/cash/Project'
 import { DataTable } from '@/app/shared/components/table/DataTable'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { Sidebar, SidebarContainer, SidebarContent } from '@/app/shared/components/sidebar/Sidebar'
+import { Sidebar, SidebarContent, SidebarMain } from '@/app/shared/components/sidebar/Sidebar'
 import { Button } from '@/app/shared/components/form/Button'
 import { ActionResponse } from '@/app/shared/ActionResponse'
-import { useSidebarState } from '@/app/shared/components/sidebar/SidebarState'
+import { sidebarAction, useSidebarState } from '@/app/shared/components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/components/form/Input'
 import { Checkbox } from '@/app/shared/components/form/Checkbox'
@@ -17,7 +17,7 @@ import { boolColumn, textColumn } from '@/app/shared/components/table/DataTableC
 export interface ProjectsProps {
   projects?: Project[]
   onSaveProject?: (project: ProjectInput) => ActionResponse<Project>
-  onDeleteProject?: (id: string) => ActionResponse<void>
+  onDeleteProject?: (project: ProjectInput) => ActionResponse<void>
 }
 
 const columns = {
@@ -31,24 +31,11 @@ export function Projects({ projects, onSaveProject, onDeleteProject }: ProjectsP
     { id: randomUUID(), name: '', archived: false } as ProjectInput
   ))
 
-  function deleteProject(input: ProjectInput) {
-    dispatch({ type: 'START_ACTION' })
-    onDeleteProject?.(input.id)
-      .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
-      .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
-  }
-
-  function saveProject(input: ProjectInput) {
-    dispatch({ type: 'START_ACTION' })
-    onSaveProject?.(input)
-      .then((result) => { dispatch({ type: 'STOP_ACTION', result }) })
-      .catch((error: unknown) => { dispatch({ type: 'ACTION_ERROR', error }) })
-  }
-
   return (
-    <SidebarContainer>
+    <SidebarMain>
       <SidebarContent onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}>
         {state.pending && <LoadingSpinner text="Processing..." />}
+        <h1>Cash Admin</h1>
         <DataTable
           columns={columns}
           initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
@@ -69,12 +56,12 @@ export function Projects({ projects, onSaveProject, onDeleteProject }: ProjectsP
           key={state.current.id}
           project={state.current}
           error={state.error}
-          onDelete={deleteProject}
-          onSave={saveProject}
+          onDelete={sidebarAction(dispatch, onDeleteProject)}
+          onSave={sidebarAction(dispatch, onSaveProject)}
           onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}
         />
       </Sidebar>
-    </SidebarContainer>
+    </SidebarMain>
   )
 }
 
