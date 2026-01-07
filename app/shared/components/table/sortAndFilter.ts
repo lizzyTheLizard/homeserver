@@ -10,7 +10,7 @@ export interface Filtering {
   value: unknown
 }
 
-export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], filtering: Filtering[], columns: ColumnDefinition<unknown>[]): Data[] {
+export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], filtering: Filtering[], columns: ColumnDefinition<unknown, unknown>[]): Data[] {
   let result = [...data]
   filtering.forEach((filter) => {
     const filterDef = columns.find(c => c.key === filter.key)?.filter

@@ -4,7 +4,7 @@ import { ColumnDefinition } from './DataTable'
 export interface DataTableRowProps<DataType> {
   row: DataType
   onRowClick?: (e: MouseEvent<HTMLTableRowElement>, item: DataType) => void
-  columns: ColumnDefinition<unknown>[]
+  columns: ColumnDefinition<unknown, unknown>[]
 }
 
 export function DataTableRow<DataType extends { id: string }>({ row, columns, onRowClick }: DataTableRowProps<DataType>) {

@@ -1,11 +1,11 @@
 import { Account } from '@/app/cash/Account'
 import { TransactionInput } from '@/app/cash/Transaction'
 import { useState } from 'react'
-import style from './Journal.module.css'
 import { Input } from '@/app/shared/components/form/Input'
 import { Select } from '@/app/shared/components/form/Select'
 import { Textarea } from '@/app/shared/components/form/Textarea'
 import { Button } from '@/app/shared/components/form/Button'
+import style from './TransactionSidebar.module.css'
 
 export interface TransactionSidebarProps {
   accounts: Account[]

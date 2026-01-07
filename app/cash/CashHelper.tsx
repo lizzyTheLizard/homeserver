@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Select } from '../shared/components/form/Select'
 import { Options } from '../shared/components/table/DataTableColumnBuilders'
 import { Account } from './Account'
-import { Period, periodToString } from './Period'
+import { Period } from './Period'
 import { Input } from '../shared/components/form/Input'
 import style from '../shared/components/table/DataTable.module.css'
 import { Currency } from '../shared/components/Currency'
@@ -25,7 +25,7 @@ export function accountColumn(key: string, accounts: Account[], period: Period, 
     cell: options?.cell ?? ((value) => {
       const account = accounts.find(account => account.id === value)
       if (!account) return value
-      return <Link onClick={(e) => { e.stopPropagation() }} href={`/cash/${account.project_id}/${periodToString(period)}/account?id=${account.id}`}>{account.name}</Link>
+      return <Link onClick={(e) => { e.stopPropagation() }} href={`/cash/${account.project_id}/${period.toString()}/journal?accountId=${account.id}`}>{account.name}</Link>
     }),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,

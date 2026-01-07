@@ -71,7 +71,7 @@ export function Journal({ project_id, period = 'LATEST', accounts = [], transact
         <TransactionSidebar
           key={state.current.id}
           transaction={state.current}
-          accounts={accounts ?? []}
+          accounts={accounts}
           error={state.error}
           onDelete={sidebarAction(dispatch, onDeleteTransaction)}
           onSave={sidebarAction(dispatch, onSaveTransaction)}

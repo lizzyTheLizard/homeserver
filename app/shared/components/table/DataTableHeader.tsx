@@ -6,7 +6,7 @@ import { ColumnDefinition } from './DataTable'
 export interface DataTableHeaderProps<FieldType> {
   sortingOrder: SortingOrder[]
   filtering: Filtering[]
-  column: ColumnDefinition<FieldType>
+  column: ColumnDefinition<FieldType, unknown>
   onSort: (oldSort: SortingOrder | undefined, key: string) => void
   onFilter: (newValue: unknown, key: string) => void
 }
