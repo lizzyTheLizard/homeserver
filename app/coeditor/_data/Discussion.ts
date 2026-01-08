@@ -42,3 +42,17 @@ export async function findNumberOfDiscussions(client: PoolClient, since?: Date):
   const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM discussion WHERE updated_at > $1', [since])
   return parseInt(result.rows[0].count, 10)
 }
+
+export async function createDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {
+  const result = await client.query<Discussion>('INSERT INTO discussion (id, text, title, owner_id, template_id, context, parameters) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [input.id, input.text, input.title, owner, input.template_id, input.context, JSON.stringify(input.parameters)])
+  logger.info(`Started new discussion ${result.rows[0].id} for owner ${owner}`)
+  return result.rows[0]
+}
+
+export async function modifyDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {
+  const result = await client.query<Discussion>('UPDATE discussion SET text = $2, title = $3, template_id = $4, context = $5, parameters = $6, updated_at = NOW() WHERE id = $1 AND owner_id = $7 RETURNING *',
+    [input.id, input.text, input.title, input.template_id, input.context, JSON.stringify(input.parameters), owner])
+  logger.info(`Modified discussion ${result.rows[0].id} for owner ${owner}`)
+  return result.rows[0]
+}

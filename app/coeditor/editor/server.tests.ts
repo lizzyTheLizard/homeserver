@@ -3,12 +3,13 @@ import { nontransactional, transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { CommandInput, executeCommand } from '../_data/Command'
+import { Command, createCommand } from '../_data/Command'
+import { ExecuteCommandInput } from './server'
 import { createOrModifyTemplate } from '../_data/Template'
 import { createOrModifyProfile } from '../_data/Profile'
-import { executeCommandAction, loadEditorData } from './server'
+import { executeCommand, loadEditorData } from './server'
 import { aiPort } from '../_external/AiPort'
-import { findDiscussionByOwner } from '../_data/Discussion'
+import { createDiscussion, DiscussionInput, findDiscussionByOwner } from '../_data/Discussion'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -67,15 +68,15 @@ describe('loadEditorData', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as CommandInput
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      return await executeCommand(tx, task.id, input)
+      await createDiscussion(tx, task.id, input)
     })
 
-    const result = await loadEditorData(input.discussion_id)
+    const result = await loadEditorData(input.id)
 
-    expect(result.discussion).toEqual(expect.objectContaining({ id: input.discussion_id }))
+    expect(result.discussion).toEqual(expect.objectContaining(input))
   })
 
   test('Not existing Discussion', async ({ task }) => {
@@ -89,10 +90,10 @@ describe('loadEditorData', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as CommandInput
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      return await executeCommand(tx, task.id, input)
+      await createDiscussion(tx, task.id, input)
     })
 
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
@@ -101,7 +102,7 @@ describe('loadEditorData', () => {
   })
 })
 
-describe('executeCommandAction', () => {
+describe('executeCommand', () => {
   beforeEach(() => {
     const aiPortMock: Mock = aiPort as Mock
     aiPortMock.mockClear()
@@ -113,8 +114,8 @@ describe('executeCommandAction', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
-    const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
-    const result = await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
+    const result = await executeCommand(input)
 
     if (!result.success) throw new Error('Expected success response')
     expect(result.data).toEqual({
@@ -136,14 +137,14 @@ describe('executeCommandAction', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input1: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'Original text', parameters: {}, predefined_command: 'INITIALIZE' }
+    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      await executeCommand(tx, task.id, input1)
+      await createDiscussion(tx, task.id, input1)
     })
 
-    const input: CommandInput = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' }
-    const result = await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: input1.id, template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' }
+    const result = await executeCommand(input)
 
     if (!result.success) throw new Error('Expected success response')
     expect(result.data).toEqual({
@@ -165,8 +166,8 @@ describe('executeCommandAction', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: randomUUID(), text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
-    const result = await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: randomUUID(), text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
+    const result = await executeCommand(input)
 
     expect(result).toEqual({ success: false, error: `Given template ${input.template_id} not found` })
   })
@@ -179,8 +180,8 @@ describe('executeCommandAction', () => {
 
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
-    const result = await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
+    const result = await executeCommand(input)
 
     expect(result).toEqual({ success: false, error: `Given template ${input.template_id} not found` })
   })
@@ -189,10 +190,10 @@ describe('executeCommandAction', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input1: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'Original text', parameters: {}, predefined_command: 'INITIALIZE' }
+    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      await executeCommand(tx, task.id, input1)
+      await createDiscussion(tx, task.id, input1)
     })
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
@@ -200,8 +201,8 @@ describe('executeCommandAction', () => {
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, otherUser.sub, templateInput2)
     })
-    const input: CommandInput = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput2.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' }
-    const result = await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: input1.id, template_id: templateInput2.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' }
+    const result = await executeCommand(input)
 
     expect(result).toEqual({ success: false, error: expect.any(String) as string })
   })
@@ -213,8 +214,8 @@ describe('executeCommandAction AI integration', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
-    const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
-    await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
+    await executeCommand(input)
 
     expect(aiPort).toHaveBeenCalledWith({
       text: input.text,
@@ -239,8 +240,8 @@ describe('executeCommandAction AI integration', () => {
       await createOrModifyProfile(tx, task.id, profileInput)
     })
 
-    const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
-    await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
+    await executeCommand(input)
 
     expect(aiPort).toHaveBeenCalledWith(expect.objectContaining({
       profile: 'Profile Text',
@@ -253,8 +254,8 @@ describe('executeCommandAction AI integration', () => {
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
-    const input: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE', selection_start: 5, selection_end: 10 }
-    await executeCommandAction(input)
+    const input: ExecuteCommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE', selection_start: 5, selection_end: 10 }
+    await executeCommand(input)
 
     expect(aiPort).toHaveBeenCalledWith(expect.objectContaining({
       selection_start: 5,
@@ -269,7 +270,7 @@ describe('executeCommandAction AI integration', () => {
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, custom_command: 'Custom Command Text' }
-    await executeCommandAction(input)
+    await executeCommand(input)
 
     expect(aiPort).toHaveBeenCalledWith(expect.objectContaining({
       predefined_command: undefined,
@@ -284,7 +285,7 @@ describe('executeCommandAction AI integration', () => {
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, custom_command: 'Custom Command Text' }
-    await executeCommandAction(input)
+    await executeCommand(input)
 
     expect(aiPort).toHaveBeenCalledWith(expect.anything(), [])
   })
@@ -293,31 +294,19 @@ describe('executeCommandAction AI integration', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input1: CommandInput = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' }
+    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const input2: Command = { id: randomUUID(), discussion_id: input1.id, text: 'New text', predefined_command: 'INITIALIZE', context: 'context', language: 'en', result: { text: 'Result text', title: 'Result title', durationMs: 100 } }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      await executeCommand(tx, task.id, input1)
+      await createDiscussion(tx, task.id, input1)
+      await createCommand(tx, input2)
     })
     const aiPortMock: Mock = aiPort as Mock
     aiPortMock.mockClear()
 
-    const input = { id: randomUUID(), discussion_id: input1.discussion_id, template_id: templateInput.id, text: 'New text 2', parameters: {}, custom_command: 'Custom Command Text' }
-    await executeCommandAction(input)
+    const input = { id: randomUUID(), discussion_id: input1.id, template_id: templateInput.id, text: 'New text 2', parameters: {}, custom_command: 'Custom Command Text' }
+    await executeCommand(input)
 
-    expect(aiPort).toHaveBeenCalledWith(expect.anything(), [{
-      id: input1.id,
-      discussion_id: input1.discussion_id,
-      created_at: expect.any(Date) as Date,
-      custom_command: undefined,
-      title: undefined,
-      context: 'A test template',
-      language: 'en',
-      predefined_command: 'INITIALIZE',
-      result: { text: 'Text', title: 'Title', durationMs: 100 },
-      profile: undefined,
-      selection_start: undefined,
-      selection_end: undefined,
-      text: 'New text',
-    }])
+    expect(aiPort).toHaveBeenCalledWith(expect.anything(), [expect.objectContaining(input2)])
   })
 })

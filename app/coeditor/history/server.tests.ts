@@ -3,9 +3,9 @@ import { transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { CommandInput, executeCommand } from '../_data/Command'
 import { createOrModifyTemplate } from '../_data/Template'
 import { loadHistory } from './server'
+import { createDiscussion, DiscussionInput } from '../_data/Discussion'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -37,26 +37,26 @@ describe('loadHistory', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as CommandInput
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      return await executeCommand(tx, task.id, input)
+      await createDiscussion(tx, task.id, input)
     })
 
     const result = await loadHistory()
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual(expect.objectContaining({ id: input.discussion_id, context: templateInput.text, text: 'Text', title: 'Title' }))
+    expect(result[0]).toEqual(expect.objectContaining(input))
   })
 
   test('Discussions from other users not loaded', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as CommandInput
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
-      return await executeCommand(tx, task.id, input)
+      await createDiscussion(tx, task.id, input)
     })
 
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }

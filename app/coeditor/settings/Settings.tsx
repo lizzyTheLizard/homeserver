@@ -24,8 +24,8 @@ const profileColumns = [
 ]
 
 const templateColumns = [
-  textColumn('language', { header: 'Language' }),
   textColumn('name', { header: 'Name' }),
+  textColumn('language', { header: 'Language' }),
   textColumn('text', { header: 'Text' }),
 ]
 

@@ -4,6 +4,7 @@ import { Icon } from '../Icon'
 import styles from './Sidebar.module.css'
 
 export function SidebarContainer({ children }: PropsWithChildren<object>) {
+  // TODO: Open sidebars in main automatically without the need of a sidebar container
   return (
     <div className={styles.container}>
       {children}

@@ -7,7 +7,7 @@ const meta = {
   component: DataTable,
   tags: ['autodocs'],
   args: {
-    columns: [textColumn('row1', { header: 'Header 1' }), textColumn('row2', { header: 'Header 2' })],
+    columns: [textColumn('row1', { header: 'Header 1', filter: false, sort: false }), textColumn('row2', { header: 'Header 2', filter: false, sort: false })],
     data: [
       { id: '1', row1: 'Row 1, Cell 1', row2: 'Row 1, Cell 2' },
       { id: '2', row1: 'Row 2, Cell 1', row2: 'Row 2, Cell 2' },

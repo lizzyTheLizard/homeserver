@@ -5,7 +5,6 @@ import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { createOrModifyTemplate, findTemplateById } from '../_data/Template'
 import { deleteProfile, deleteTemplate, loadSettings, updateProfile, updateTemplate } from './server'
 import { nontransactional, transactional } from '@/app/shared/db'
-import { BackendError } from '@/app/shared/_helper/BackendError'
 import { createOrModifyProfile, findProfileByOwnerAndLanguage } from '../_data/Profile'
 
 // Mock the auth module

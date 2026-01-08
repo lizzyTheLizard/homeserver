@@ -3,10 +3,10 @@ import { Select } from '@/app/shared/_components/form/Select'
 import { Options } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { Account } from '../_data/Account'
 import { Input } from '@/app/shared/_components/form/Input'
-import style from '@/app/shared/shared/_components/table/DataTable.module.css'
 import { Currency } from '@/app/shared/_components/Currency'
 import { ColumnDefinition, ColumnFilter } from '@/app/shared/_components/table/DataTable'
 import { Period } from './Period'
+import style from '@/app/shared/_components/table/DataTable.module.css'
 
 export function accountColumn(key: string, accounts: Account[], period: Period, options?: Options<string>): ColumnDefinition<string, string> {
   const filter: ColumnFilter<string, string> = {

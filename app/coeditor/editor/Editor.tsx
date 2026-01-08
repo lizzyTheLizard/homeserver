@@ -12,7 +12,7 @@ import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { EditorContext } from '../_components/EditorContext'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Button } from '@/app/shared/_components/form/Button'
-import { executeCommandAction } from './server'
+import { executeCommand } from './server'
 import style from './Editor.module.css'
 
 export interface EditorProps {
@@ -41,7 +41,7 @@ export function Editor({ discussion, templates }: EditorProps) {
       custom_command: command ? undefined : customCommand,
       predefined_command: command,
     }
-    executeCommandAction(input).then((result) => {
+    executeCommand(input).then((result) => {
       if (!result.success) {
         setError(result.error)
         setExecutePending(false)

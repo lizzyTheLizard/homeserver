@@ -43,5 +43,6 @@ async function getCoeditorMetrics(): Promise<LineItem[]> {
 }
 
 function getCashMetrics(): LineItem[] {
+  // TODO implement cash metrics. Show important ones in dashboard as well.
   return []
 }

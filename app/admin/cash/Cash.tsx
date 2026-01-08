@@ -11,13 +11,12 @@ import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Checkbox } from '@/app/shared/_components/form/Checkbox'
 import { useState } from 'react'
-import style from './Projects.module.css'
+import style from './Cash.module.css'
 import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { deleteProject, saveProject } from './server'
 
 export interface CashProps {
   projects?: Project[]
-  onSaveProject?: (project: ProjectInput) => ActionResponse<Project>
-  onDeleteProject?: (project: ProjectInput) => ActionResponse<void>
 }
 
 const columns = [
@@ -25,7 +24,7 @@ const columns = [
   textColumn('owner_id', { style: { overflow: 'clip' }, header: 'Owner' }),
   boolColumn('archived', { header: 'Archived' }),
 ]
-export function Cash({ projects, onSaveProject, onDeleteProject }: CashProps) {
+export function Cash({ projects }: CashProps) {
   const [state, dispatch] = useSidebarState(projects ?? [], () => (
     { id: randomUUID(), name: '', archived: false } as ProjectInput
   ))
@@ -55,8 +54,8 @@ export function Cash({ projects, onSaveProject, onDeleteProject }: CashProps) {
           key={state.current.id}
           project={state.current}
           error={state.error}
-          onDelete={sidebarAction(dispatch, onDeleteProject)}
-          onSave={sidebarAction(dispatch, onSaveProject)}
+          onDelete={sidebarAction(dispatch, deleteProject)}
+          onSave={sidebarAction(dispatch, saveProject)}
           onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}
         />
       </Sidebar>
