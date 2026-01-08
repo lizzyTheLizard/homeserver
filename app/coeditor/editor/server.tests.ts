@@ -3,12 +3,12 @@ import { nontransactional, transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { CommandInput, executeCommand } from '../Command'
-import { createOrModifyTemplate } from '../Template'
-import { createOrModifyProfile } from '../Profile'
+import { CommandInput, executeCommand } from '../_data/Command'
+import { createOrModifyTemplate } from '../_data/Template'
+import { createOrModifyProfile } from '../_data/Profile'
 import { executeCommandAction, loadEditorData } from './server'
-import { aiPort } from '../AiPort'
-import { findDiscussionByOwner } from '../Discussion'
+import { aiPort } from '../_external/AiPort'
+import { findDiscussionByOwner } from '../_data/Discussion'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -20,10 +20,8 @@ vi.mock('@/app/common/auth/auth', async () => {
 })
 
 // Mock AI
-vi.mock('../AiPort', async () => {
-  const actual = await vi.importActual('../AiPort')
+vi.mock('../_external/AiPort', () => {
   return {
-    ...actual,
     aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title', durationMs: 100 }),
   }
 })

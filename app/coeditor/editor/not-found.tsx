@@ -1,5 +1,5 @@
 'use client'
-import { ErrorPage } from '@/app/shared/components/ErrorPage'
+import { ErrorPage } from '@/app/shared/_components/ErrorPage'
 import { Metadata } from 'next'
 import { useSearchParams } from 'next/navigation'
 

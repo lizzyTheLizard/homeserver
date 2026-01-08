@@ -1,11 +1,11 @@
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { Projects } from './Projects'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { Cash } from './Cash'
 
 export default function Loading() {
   return (
     <>
       <LoadingSpinner></LoadingSpinner>
-      <Projects />
+      <Cash />
     </>
   )
 }

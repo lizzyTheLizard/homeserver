@@ -1,16 +1,17 @@
 'use client'
-import { DataTable } from '@/app/shared/components/table/DataTable'
-import { Profile, ProfileInput } from '../Profile'
-import { Template, TemplateInput } from '../Template'
-import { Sidebar, SidebarContent, SidebarMain } from '@/app/shared/components/sidebar/Sidebar'
-import { Button } from '@/app/shared/components/form/Button'
-import { ProfileSidebar } from './ProfileSidebar'
-import { TemplateSidebar } from './TemplateSidebar'
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { sidebarAction, useSidebarState } from '@/app/shared/components/sidebar/SidebarState'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { Profile, ProfileInput } from '../_data/Profile'
+import { Template, TemplateInput } from '../_data/Template'
+import { Sidebar, SidebarContent, SidebarMain } from '@/app/shared/_components/sidebar/Sidebar'
+import { Button } from '@/app/shared/_components/form/Button'
+import { ProfileSidebar } from '../_components/ProfileSidebar'
+import { TemplateSidebar } from '../_components/TemplateSidebar'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { sidebarAction, useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import style from './Settings.module.css'
-import { textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
+import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { deleteProfile, deleteTemplate, updateProfile, updateTemplate } from './server'
 
 export interface SettingsProps {
   profiles?: Profile[]
@@ -77,8 +78,8 @@ export function Settings({ profiles = [], templates = [] }: SettingsProps) {
         <ProfileSidebar
           key={profilesState.current.id}
           profile={profilesState.current}
-          onDelete={sidebarAction(dispatchProfiles, onDeleteProfile)}
-          onSave={sidebarAction(dispatchProfiles, onSaveProfile)}
+          onDelete={sidebarAction(dispatchProfiles, deleteProfile)}
+          onSave={sidebarAction(dispatchProfiles, updateProfile)}
           onClose={() => { dispatchProfiles({ type: 'CLOSE_SIDEBAR' }) }}
           error={profilesState.error}
         />
@@ -92,8 +93,8 @@ export function Settings({ profiles = [], templates = [] }: SettingsProps) {
         <TemplateSidebar
           key={templatesState.current.id}
           template={templatesState.current}
-          onDelete={sidebarAction(dispatchTemplates, onDeleteTemplate)}
-          onSave={sidebarAction(dispatchTemplates, onSaveTemplate)}
+          onDelete={sidebarAction(dispatchTemplates, deleteTemplate)}
+          onSave={sidebarAction(dispatchTemplates, updateTemplate)}
           onClose={() => { dispatchTemplates({ type: 'CLOSE_SIDEBAR' }) }}
           error={templatesState.error}
         />

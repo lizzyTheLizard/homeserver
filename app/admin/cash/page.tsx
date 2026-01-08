@@ -1,5 +1,5 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { Projects } from './Projects'
+import { Cash } from './Cash'
 import { loadProjects } from './server'
 
 export const metadata: Metadata = {
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const projects = await loadProjects()
-  return <Projects projects={projects} />
+  return <Cash projects={projects} />
 }

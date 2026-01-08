@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getUserSession, startLogin } from './app/common/auth/auth'
-import { logger } from '@/logger'
+import { logger } from '@/app/shared/logger'
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const session = await getUserSession()

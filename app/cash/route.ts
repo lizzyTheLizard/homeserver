@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/app/shared/logger'
 import { redirect } from 'next/navigation'
 import { loadProjects } from './projects/server'
 

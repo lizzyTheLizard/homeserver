@@ -1,7 +1,7 @@
 import { Metadata } from 'openai/resources/index.js'
 import { getUserSession } from '../auth'
 import { redirect } from 'next/navigation'
-import { config } from '@/app/config'
+import { config } from '@/app/shared/config'
 
 export const metadata: Metadata = {
   title: 'Gutschi.site - Logged Out',

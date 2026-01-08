@@ -1,7 +1,7 @@
-import { logger } from '@/logger'
+import { logger } from '@/app/shared/logger'
 import { logout } from '../auth'
 import { redirect } from 'next/navigation'
-import { config } from '@/app/config'
+import { config } from '@/app/shared/config'
 
 export async function GET() {
   try {

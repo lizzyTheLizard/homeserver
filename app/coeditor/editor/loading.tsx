@@ -1,5 +1,5 @@
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { Template } from '../Template'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { Template } from '../_data/Template'
 import { Editor } from './Editor'
 
 export default function Loading() {

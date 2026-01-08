@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { Header } from './common/components/Header'
+import { Header } from './common/_components/Header'
 import { getUserSession } from './common/auth/auth'
 
 export const metadata: Metadata = {

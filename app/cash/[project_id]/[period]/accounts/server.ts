@@ -1,12 +1,12 @@
 'use server'
 
-import { Account, AccountInput, createOrModifyAccount, findAllAccountsForProject, removeAccount } from '@/app/cash/Account'
-import { ACCOUNT_TYPES } from '@/app/cash/AccountType'
-import { findProjectById } from '@/app/cash/Project'
+import { Account, AccountInput, createOrModifyAccount, findAllAccountsForProject, removeAccount } from '@/app/cash/_data/Account'
+import { ACCOUNT_TYPES } from '@/app/cash/_data/AccountType'
+import { findProjectById } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
+import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/db'
-import { validateObject, validateString } from '@/app/shared/validation'
+import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { notFound } from 'next/navigation'
 
 export async function loadAccounts(projectId: string) {

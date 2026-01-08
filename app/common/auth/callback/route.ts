@@ -1,7 +1,7 @@
-import { logger } from '@/logger'
+import { logger } from '@/app/shared/logger'
 import { callback } from '../auth'
 import { NextRequest } from 'next/server'
-import { config } from '@/app/config'
+import { config } from '@/app/shared/config'
 
 export async function GET(request: NextRequest) {
   try {

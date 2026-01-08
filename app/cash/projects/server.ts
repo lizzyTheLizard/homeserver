@@ -1,6 +1,6 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { findProjectsByOwner } from '../Project'
+import { findProjectsByOwner } from '../_data/Project'
 import { nontransactional } from '@/app/shared/db'
 
 export async function loadProjects() {

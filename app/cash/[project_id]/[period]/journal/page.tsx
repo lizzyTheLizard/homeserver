@@ -1,7 +1,7 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { notFound } from 'next/navigation'
 import { Journal } from './Journal'
-import { stringToPeriod } from '@/app/cash/Period'
+import { stringToPeriod } from '@/app/cash/_helper/Period'
 import { loadJournal } from './server'
 
 export const metadata: Metadata = {

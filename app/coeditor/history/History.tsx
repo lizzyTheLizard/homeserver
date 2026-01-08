@@ -1,8 +1,8 @@
 'use client'
-import { DataTable } from '@/app/shared/components/table/DataTable'
-import { dateColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useRouter } from 'next/navigation'
-import { Discussion } from '../Discussion'
+import { Discussion } from '../_data/Discussion'
 
 const columns = [
   textColumn('title', { header: 'Title' }),
@@ -11,7 +11,11 @@ const columns = [
   textColumn('text', { style: { whiteSpace: 'pre-wrap' }, header: 'Text' }),
 ]
 
-export function History({ discussions }: { discussions: Discussion[] }) {
+export interface HistoryProps {
+  discussions?: Discussion[]
+}
+
+export function History({ discussions = [] }: HistoryProps) {
   const router = useRouter()
 
   return (

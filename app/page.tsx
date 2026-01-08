@@ -1,6 +1,6 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { Card } from './shared/components/Card'
-import { Icon } from './shared/components/Icon'
+import { Card } from './shared/_components/Card'
+import { Icon } from './shared/_components/Icon'
 import { applications } from './common/Application'
 import { getAuthenticatedUserSession } from './common/auth/auth'
 

@@ -1,4 +1,4 @@
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { DashboardCard } from '../DashboardCard'
 
 export default function Loading() {

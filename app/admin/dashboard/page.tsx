@@ -1,10 +1,10 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { randomUUID } from 'crypto'
-import { LineItem, DashboardCard } from '../DashboardCard'
+import { LineItem, DashboardCard } from '../_components/DashboardCard'
 import { nontransactional } from '@/app/shared/db'
-import { findNumberOfCommands } from '@/app/coeditor/Command'
-import { config } from '@/app/config'
+import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
+import { config } from '@/app/shared/config'
 
 const instanceId = randomUUID()
 

@@ -1,13 +1,13 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Discussion, findDiscussionById } from '../Discussion'
-import { findTemplatesByOwner, Template } from '../Template'
+import { Discussion, findDiscussionById } from '../_data/Discussion'
+import { findTemplatesByOwner, Template } from '../_data/Template'
 import { nontransactional, transactional } from '@/app/shared/db'
 import notFound from './not-found'
-import { logger } from '@/logger'
-import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
-import { CommandInput, executeCommand } from '../Command'
-import { validateObject } from '@/app/shared/validation'
+import { logger } from '@/app/shared/logger'
+import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import { CommandInput, executeCommand } from '../_data/Command'
+import { validateObject } from '@/app/shared/_helper/validation'
 
 export interface EditorDate {
   discussion: Discussion | undefined

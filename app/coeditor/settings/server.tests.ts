@@ -2,10 +2,10 @@
 
 import { describe, expect, test } from 'vitest'
 import { nontransactional, transactional } from '@/app/shared/db'
-import { createOrModifyProfile, findProfileByOwnerAndLanguage, findProfilesByOwner, removeProfile } from '../Profile'
-import { createOrModifyTemplate, findNumberOfUsersWithTemplates, findTemplateById, findTemplatesByOwner, removeTemplate } from '../Template'
+import { createOrModifyProfile, findProfileByOwnerAndLanguage, findProfilesByOwner, removeProfile } from '../_data/Profile'
+import { createOrModifyTemplate, findNumberOfUsersWithTemplates, findTemplateById, findTemplatesByOwner, removeTemplate } from '../_data/Template'
 import { v4 as randomUUID } from 'uuid'
-import { BackendError } from '@/app/shared/BackendError'
+import { BackendError } from '@/app/shared/_helper/BackendError'
 
 describe('Find Profiles', () => {
   test('Empty', async ({ task }) => {

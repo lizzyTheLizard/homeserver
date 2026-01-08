@@ -1,11 +1,11 @@
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { Log } from './Log'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { Logs } from './Logs'
 
 export default function Loading() {
   return (
     <>
       <LoadingSpinner />
-      <Log lines={[]} />
+      <Logs />
     </>
   )
 }

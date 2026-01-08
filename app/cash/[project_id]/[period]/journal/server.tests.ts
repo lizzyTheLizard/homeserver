@@ -4,12 +4,12 @@ import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import { loadJournal, saveTransaction, deleteTransaction } from './server'
-import { createOrModifyProject } from '@/app/cash/Project'
-import { AccountInput, createOrModifyAccount } from '@/app/cash/Account'
-import { createOrModifyTransaction } from '@/app/cash/Transaction'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
+import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
+import { createOrModifyTransaction } from '@/app/cash/_data/Transaction'
 import { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Period } from '@/app/cash/Period'
+import { Period } from '@/app/cash/_helper/Period'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {

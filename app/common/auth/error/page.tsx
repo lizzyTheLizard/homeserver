@@ -1,4 +1,4 @@
-import { ErrorPage } from '@/app/shared/components/ErrorPage'
+import { ErrorPage } from '@/app/shared/_components/ErrorPage'
 import { Metadata } from 'openai/resources/index.js'
 
 export const metadata: Metadata = {

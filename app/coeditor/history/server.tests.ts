@@ -3,8 +3,8 @@ import { transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { CommandInput, executeCommand } from '../Command'
-import { createOrModifyTemplate } from '../Template'
+import { CommandInput, executeCommand } from '../_data/Command'
+import { createOrModifyTemplate } from '../_data/Template'
 import { loadHistory } from './server'
 
 // Mock the auth module
@@ -17,10 +17,8 @@ vi.mock('@/app/common/auth/auth', async () => {
 })
 
 // Mock AI
-vi.mock('../AiPort', async () => {
-  const actual = await vi.importActual('../AiPort')
+vi.mock('../_external/AiPort', () => {
   return {
-    ...actual,
     aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title', durationMs: 100 }),
   }
 })

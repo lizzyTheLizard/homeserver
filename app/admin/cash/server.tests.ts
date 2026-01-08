@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import { loadProjects } from './server'
-import { createOrModifyProject } from '@/app/cash/Project'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 

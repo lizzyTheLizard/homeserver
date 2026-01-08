@@ -1,0 +1,649 @@
+Logger Started
+[2026-01-08T10:36:39.119Z] debug: Found no profile 'en' for owner 1949451809_0_0
+[2026-01-08T10:36:39.190Z] debug: Found 0 projects for owner -592356412_0_0
+[2026-01-08T10:36:39.193Z] debug: Found 0 projects in total
+[2026-01-08T10:36:39.197Z] info: Modified project 'Project Alpha' for owner -592356412_0_1
+[2026-01-08T10:36:39.199Z] info: Modified project 'Project Beta' for owner -592356412_0_1
+[2026-01-08T10:36:39.202Z] info: Modified project 'Project Gamma' for owner -592356412_0_1
+[2026-01-08T10:36:39.211Z] debug: Found 3 projects for owner -592356412_0_1
+[2026-01-08T10:36:39.217Z] info: Modified project 'Active Project' for owner -592356412_0_2
+[2026-01-08T10:36:39.220Z] info: Modified project 'Archived Project' for owner -592356412_0_2
+[2026-01-08T10:36:39.221Z] debug: Found 2 projects for owner -592356412_0_2
+[2026-01-08T10:36:39.224Z] info: Modified project 'My Project' for owner -592356412_0_3
+[2026-01-08T10:36:39.226Z] info: Modified project 'Other Project' for owner other-user-id
+[2026-01-08T10:36:39.227Z] debug: Found 1 projects for owner -592356412_0_3
+[2026-01-08T10:36:39.229Z] info: Modified project 'Test Project' for owner -592356412_0_4
+[2026-01-08T10:36:39.230Z] debug: Found 1 projects for owner -592356412_0_4
+[2026-01-08T10:36:39.232Z] info: Modified project 'User 1 Project' for owner -592356412_0_5
+[2026-01-08T10:36:39.234Z] info: Modified project 'User 2 Project' for owner user-2-id
+[2026-01-08T10:36:39.235Z] debug: Found 1 projects for owner -592356412_0_5
+[2026-01-08T10:36:39.236Z] debug: Found 1 projects for owner user-2-id
+[2026-01-08T10:36:39.201Z] info: Modified project 'Project Alpha' for owner -410292757_0_1
+[2026-01-08T10:36:39.204Z] info: Modified project 'Project Beta' for owner -410292757_0_1
+[2026-01-08T10:36:39.210Z] info: Modified project 'Project Gamma' for owner -410292757_0_1
+[2026-01-08T10:36:39.213Z] debug: Found 3 projects in total
+[2026-01-08T10:36:39.230Z] info: Modified project 'Active Project' for owner -410292757_0_2
+[2026-01-08T10:36:39.232Z] info: Modified project 'Archived Project' for owner -410292757_0_2
+[2026-01-08T10:36:39.233Z] debug: Found 2 projects in total
+[2026-01-08T10:36:39.236Z] info: Modified project 'My Project' for owner -410292757_0_3
+[2026-01-08T10:36:39.239Z] info: Modified project 'Other Project' for owner other-user-id
+[2026-01-08T10:36:39.240Z] debug: Found 2 projects in total
+[2026-01-08T10:36:39.244Z] info: Modified project 'Test Project' for owner -410292757_0_4
+[2026-01-08T10:36:39.245Z] debug: Found 1 projects in total
+[2026-01-08T10:36:39.278Z] info: Modified project 'Test Project' for owner 1479169112_0_0
+[2026-01-08T10:36:39.287Z] debug: Found 0 discussions for owner -142865888_0_0
+[2026-01-08T10:36:39.124Z] debug: Found 0 profiles for owner 1949451809_0_0
+[2026-01-08T10:36:39.128Z] debug: Found no profile 'en' for owner 1949451809_0_1
+[2026-01-08T10:36:39.140Z] info: Modified profile 'en' for owner 1949451809_0_1
+[2026-01-08T10:36:39.142Z] debug: Found profile 'en' for owner 1949451809_0_1
+[2026-01-08T10:36:39.151Z] debug: Found no profile 'other' for owner 1949451809_0_1
+[2026-01-08T10:36:39.155Z] debug: Found 1 profiles for owner 1949451809_0_1
+[2026-01-08T10:36:39.162Z] debug: Found no profile 'en' for owner 1949451809_1_0
+[2026-01-08T10:36:39.166Z] info: Modified profile 'en' for owner 1949451809_1_0
+[2026-01-08T10:36:39.170Z] debug: Found profile 'en' for owner 1949451809_1_0
+[2026-01-08T10:36:39.174Z] debug: Found no profile 'en' for owner 1949451809_1_1
+[2026-01-08T10:36:39.176Z] info: Modified profile 'en' for owner 1949451809_1_1
+[2026-01-08T10:36:39.177Z] debug: Found no profile 'de' for owner 1949451809_1_1
+[2026-01-08T10:36:39.180Z] info: Modified profile 'de' for owner 1949451809_1_1
+[2026-01-08T10:36:39.182Z] debug: Found profile 'de' for owner 1949451809_1_1
+[2026-01-08T10:36:39.184Z] debug: Found no profile 'en' for owner ad3590b4-f46d-4bf0-9316-6bf40add4136
+[2026-01-08T10:36:39.186Z] info: Modified profile 'en' for owner ad3590b4-f46d-4bf0-9316-6bf40add4136
+[2026-01-08T10:36:39.187Z] debug: Found no profile 'de' for owner 1949451809_1_2
+[2026-01-08T10:36:39.199Z] debug: Found no profile 'en' for owner 1949451809_1_3
+[2026-01-08T10:36:39.200Z] info: Modified profile 'en' for owner 1949451809_1_3
+[2026-01-08T10:36:39.202Z] debug: Found profile 'en' for owner 1949451809_1_3
+[2026-01-08T10:36:39.203Z] debug: Found no profile 'en' for owner 1949451809_1_4
+[2026-01-08T10:36:39.207Z] info: Modified profile 'en' for owner 1949451809_1_4
+[2026-01-08T10:36:39.208Z] debug: Found no profile 'de' for owner 1949451809_1_4
+[2026-01-08T10:36:39.212Z] info: Modified profile 'de' for owner 1949451809_1_4
+[2026-01-08T10:36:39.214Z] debug: Found profile 'en' for owner 1949451809_1_4
+[2026-01-08T10:36:39.217Z] debug: Found no profile 'en' for owner 1949451809_2_0
+[2026-01-08T10:36:39.220Z] info: Modified profile 'en' for owner 1949451809_2_0
+[2026-01-08T10:36:39.223Z] debug: Found profile 'en' for owner 1949451809_2_0
+[2026-01-08T10:36:39.226Z] info: Deleted profile '41c36eff-af68-4981-821f-1eaddf1dd905' for owner 1949451809_2_0
+[2026-01-08T10:36:39.228Z] debug: Found no profile 'en' for owner 1949451809_2_0
+[2026-01-08T10:36:39.232Z] info: Deleted profile '4e3d26ea-a4e5-4815-98bb-1970a1bc59e9' for owner 1949451809_2_1
+[2026-01-08T10:36:39.233Z] debug: Found no profile 'en' for owner 1949451809_2_1
+[2026-01-08T10:36:39.235Z] debug: Found no profile 'en' for owner a9cbb85d-5cb1-4409-a619-ce8308ae65bc
+[2026-01-08T10:36:39.237Z] info: Modified profile 'en' for owner a9cbb85d-5cb1-4409-a619-ce8308ae65bc
+[2026-01-08T10:36:39.242Z] info: Deleted profile '16b46637-af73-4579-a566-4ba35d598ccc' for owner 1949451809_2_2
+[2026-01-08T10:36:39.245Z] debug: Found profile 'en' for owner a9cbb85d-5cb1-4409-a619-ce8308ae65bc
+[2026-01-08T10:36:39.249Z] info: No templates found, inserting default template
+[2026-01-08T10:36:39.252Z] info: Modified template '67a7aa79-af4a-45e0-b272-a663fcc6097a' for owner 1949451809_3_0
+[2026-01-08T10:36:39.258Z] info: Modified template 'd8c3ac93-599b-4c1f-80dd-168aaf753629' for owner 1949451809_3_0
+[2026-01-08T10:36:39.262Z] info: Modified template 'b515a6f2-45e0-4fed-a042-ee7e777d0a7f' for owner 1949451809_3_1
+[2026-01-08T10:36:39.267Z] debug: Found 1 templates for  owner 1949451809_3_1
+[2026-01-08T10:36:39.275Z] info: Modified template '01978049-fda3-4e94-bd20-0e84118fe52c' for owner 1949451809_3_2
+[2026-01-08T10:36:39.278Z] info: Modified template '25e2b6be-037b-43cf-8758-1b9a1098b136' for owner 1949451809_4_0
+[2026-01-08T10:36:39.280Z] info: Modified template '34459066-53dc-4498-9b99-d3b160808ac0' for owner 1949451809_4_1
+[2026-01-08T10:36:39.293Z] info: Modified template '34459066-53dc-4498-9b99-d3b160808ac0' for owner 1949451809_4_1
+[2026-01-08T10:36:39.299Z] info: Modified template '7fd01261-1a49-46fb-a159-85e130e62497' for owner 24d35194-8c39-4bf6-9869-cb1f9300884e
+[2026-01-08T10:36:39.302Z] info: Modified template '3f393176-8c5c-4b17-86aa-9cea0a655c8a' for owner 1949451809_5_0
+[2026-01-08T10:36:39.304Z] info: Removed 0 discussions for template 3f393176-8c5c-4b17-86aa-9cea0a655c8a
+[2026-01-08T10:36:39.307Z] info: Deleted template 3f393176-8c5c-4b17-86aa-9cea0a655c8a for owner 1949451809_5_0
+[2026-01-08T10:36:39.308Z] info: Removed 0 discussions for template c9ef7356-0463-4d40-9d7c-46363881f538
+[2026-01-08T10:36:39.309Z] info: Deleted template c9ef7356-0463-4d40-9d7c-46363881f538 for owner 1949451809_5_1
+[2026-01-08T10:36:39.311Z] info: Modified template '0070fca3-02e1-4025-a048-016de9cf8327' for owner b5808fe5-bbc1-4f8d-a003-f2a1aa36c443
+[2026-01-08T10:36:39.311Z] info: Removed 0 discussions for template 0070fca3-02e1-4025-a048-016de9cf8327
+[2026-01-08T10:36:39.312Z] info: Deleted template 0070fca3-02e1-4025-a048-016de9cf8327 for owner 1949451809_5_2
+[2026-01-08T10:36:39.296Z] info: Modified template 'aab32330-a02b-4864-97dc-8078c1b2a31a' for owner -142865888_0_1
+[2026-01-08T10:36:39.298Z] debug: Did not find discussion b43c731c-25ba-4966-a789-405aacdd3d34
+[2026-01-08T10:36:39.299Z] debug: Found no profile 'en' for owner -142865888_0_1
+[2026-01-08T10:36:39.302Z] debug: Found 0 existing commands for discussion b43c731c-25ba-4966-a789-405aacdd3d34
+[2026-01-08T10:36:39.303Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.311Z] info: Modified template '4a45871f-a890-430b-b09f-9e0e9f210b4c' for owner -142865888_0_2
+[2026-01-08T10:36:39.313Z] debug: Did not find discussion 0d7c4407-6ee3-4fc4-8b39-50fa7a290800
+[2026-01-08T10:36:39.314Z] debug: Found no profile 'en' for owner -142865888_0_2
+[2026-01-08T10:36:39.316Z] debug: Found 0 existing commands for discussion 0d7c4407-6ee3-4fc4-8b39-50fa7a290800
+[2026-01-08T10:36:39.316Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.389Z] info: No templates found, inserting default template
+[2026-01-08T10:36:39.283Z] debug: Found project 377bdd2e-8cdf-4f99-98c3-9a2132fb9de5 for owner 1479169112_0_0
+[2026-01-08T10:36:39.286Z] debug: Found 0 accounts for project 377bdd2e-8cdf-4f99-98c3-9a2132fb9de5 and owner 1479169112_0_0
+[2026-01-08T10:36:39.290Z] info: Modified project 'Test Project' for owner 1479169112_0_1
+[2026-01-08T10:36:39.301Z] info: Modified account 'Cash' for owner 1479169112_0_1
+[2026-01-08T10:36:39.303Z] info: Modified account 'Revenue' for owner 1479169112_0_1
+[2026-01-08T10:36:39.307Z] info: Modified account 'Bank' for owner 1479169112_0_1
+[2026-01-08T10:36:39.309Z] debug: Found project 9aeb29a2-284e-4dce-a0cb-293da41c194c for owner 1479169112_0_1
+[2026-01-08T10:36:39.311Z] debug: Found 3 accounts for project 9aeb29a2-284e-4dce-a0cb-293da41c194c and owner 1479169112_0_1
+[2026-01-08T10:36:39.326Z] info: Modified project 'Test Project' for owner 1479169112_0_2
+[2026-01-08T10:36:39.329Z] info: Modified account 'Active Account' for owner 1479169112_0_2
+[2026-01-08T10:36:39.331Z] info: Modified account 'Archived Account' for owner 1479169112_0_2
+[2026-01-08T10:36:39.332Z] debug: Found project 8c4f8608-6218-4584-88c8-b035ca056668 for owner 1479169112_0_2
+[2026-01-08T10:36:39.335Z] debug: Found 2 accounts for project 8c4f8608-6218-4584-88c8-b035ca056668 and owner 1479169112_0_2
+[2026-01-08T10:36:39.348Z] debug: Did not find project 579881f8-a8e5-45cc-9d3f-599f1c9e6ad5 for owner 1479169112_0_3
+[2026-01-08T10:36:39.350Z] debug: Found 0 accounts for project 579881f8-a8e5-45cc-9d3f-599f1c9e6ad5 and owner 1479169112_0_3
+[2026-01-08T10:36:39.354Z] info: Modified project 'Test Project' for owner other-user-id
+[2026-01-08T10:36:39.357Z] debug: Did not find project 81ea2273-06e1-430b-bddb-2ecb0acb8706 for owner 1479169112_0_4
+[2026-01-08T10:36:39.363Z] debug: Found 0 accounts for project 81ea2273-06e1-430b-bddb-2ecb0acb8706 and owner 1479169112_0_4
+[2026-01-08T10:36:39.367Z] info: Modified project 'Test Project' for owner 1479169112_1_0
+[2026-01-08T10:36:39.374Z] info: Modified account 'New Account' for owner 1479169112_1_0
+[2026-01-08T10:36:39.377Z] info: Modified project 'Test Project' for owner 1479169112_1_1
+[2026-01-08T10:36:39.383Z] info: Modified account 'Test Asset' for owner 1479169112_1_1
+[2026-01-08T10:36:39.385Z] info: Modified account 'Test Liability' for owner 1479169112_1_1
+[2026-01-08T10:36:39.387Z] info: Modified account 'Test Equity' for owner 1479169112_1_1
+[2026-01-08T10:36:39.390Z] info: Modified account 'Test Income' for owner 1479169112_1_1
+[2026-01-08T10:36:39.391Z] info: Modified account 'Test Expense' for owner 1479169112_1_1
+[2026-01-08T10:36:39.393Z] info: Modified project 'Test Project' for owner 1479169112_1_2
+[2026-01-08T10:36:39.394Z] info: Modified account 'Original Name' for owner 1479169112_1_2
+[2026-01-08T10:36:39.396Z] info: Modified account 'Updated Name' for owner 1479169112_1_2
+[2026-01-08T10:36:39.398Z] info: Modified project 'Test Project' for owner 1479169112_1_3
+[2026-01-08T10:36:39.399Z] info: Modified account 'Original Name' for owner 1479169112_1_3
+[2026-01-08T10:36:39.407Z] error: Unknown error in server action: duplicate key value violates unique constraint "account_pkey"
+error: duplicate key value violates unique constraint "account_pkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:39.413Z] info: Modified project 'Test Project' for owner 1479169112_1_4
+[2026-01-08T10:36:39.415Z] error: Error in server action: Id can't be blank
+[2026-01-08T10:36:39.415Z] error: Error in server action: Id must be a valid UUID
+[2026-01-08T10:36:39.415Z] error: Error in server action: Id can't be blank
+[2026-01-08T10:36:39.416Z] error: Error in server action: Project id can't be blank
+[2026-01-08T10:36:39.416Z] error: Error in server action: Project id must be a valid UUID
+[2026-01-08T10:36:39.419Z] error: Unknown error in server action: insert or update on table "account" violates foreign key constraint "account_project_id_fkey"
+error: insert or update on table "account" violates foreign key constraint "account_project_id_fkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:39.420Z] error: Error in server action: Project id can't be blank
+[2026-01-08T10:36:39.420Z] error: Error in server action: Name can't be blank
+[2026-01-08T10:36:39.421Z] error: Error in server action: Name can't be blank
+[2026-01-08T10:36:39.422Z] error: Error in server action: Type can't be blank
+[2026-01-08T10:36:39.422Z] error: Error in server action: InvalidType is not included in the list
+[2026-01-08T10:36:39.422Z] error: Error in server action: Type can't be blank
+[2026-01-08T10:36:39.423Z] error: Error in server action: Archived must be of type boolean
+[2026-01-08T10:36:39.423Z] error: Error in server action: Archived must be of type boolean
+[2026-01-08T10:36:39.425Z] info: Modified project 'Test Project' for owner 1479169112_2_0
+[2026-01-08T10:36:39.429Z] info: Modified account 'Account to Delete' for owner 1479169112_2_0
+[2026-01-08T10:36:39.432Z] info: Deleted account with id 6f1e4b4c-2535-4b44-a903-f49a07b4e49c for owner 1479169112_2_0
+[2026-01-08T10:36:39.433Z] debug: Found project 70fa7737-6355-4d47-9903-66ba912e0454 for owner 1479169112_2_0
+[2026-01-08T10:36:39.434Z] debug: Found 0 accounts for project 70fa7737-6355-4d47-9903-66ba912e0454 and owner 1479169112_2_0
+[2026-01-08T10:36:39.437Z] info: Modified project 'Test Project' for owner 1479169112_2_1
+[2026-01-08T10:36:39.440Z] info: Modified account 'Account to Delete' for owner 1479169112_2_1
+[2026-01-08T10:36:39.442Z] info: Deleted account with id 891ba8b4-51a9-42eb-9e02-55de6ea67fff for owner other-user-id
+[2026-01-08T10:36:39.444Z] debug: Found project 06fa3a3c-a5bd-4a5c-aca8-e59327638f85 for owner 1479169112_2_1
+[2026-01-08T10:36:39.446Z] debug: Found 1 accounts for project 06fa3a3c-a5bd-4a5c-aca8-e59327638f85 and owner 1479169112_2_1
+[2026-01-08T10:36:39.451Z] info: Modified project 'Test Project' for owner 1479169112_2_2
+[2026-01-08T10:36:39.453Z] info: Deleted account with id 382b4c53-bc6b-41fb-8528-475ad6d8e49b for owner 1479169112_2_2
+[2026-01-08T10:36:39.456Z] info: Modified project 'Test Project' for owner 1479169112_2_3
+[2026-01-08T10:36:39.456Z] error: Error in server action: Input must be a non-empty string
+[2026-01-08T10:36:39.457Z] error: Unknown error in server action: invalid input syntax for type uuid: "invalid-uuid"
+error: invalid input syntax for type uuid: "invalid-uuid"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:39.458Z] error: Error in server action: Input must be a non-empty string
+[2026-01-08T10:36:39.394Z] info: Modified template '753c8229-c549-412f-b28d-b90523071c44' for owner 1370767511_0_0
+[2026-01-08T10:36:39.398Z] info: Modified template '67b4f3fe-c58d-4406-98ce-47aee1718a6a' for owner 1370767511_0_0
+[2026-01-08T10:36:39.404Z] info: Modified template '59375f34-647b-4387-a427-9610fb544276' for owner 1370767511_0_1
+[2026-01-08T10:36:39.405Z] debug: Found 1 templates for  owner 1370767511_0_1
+[2026-01-08T10:36:39.408Z] info: Modified template '78f3e6e8-9b0e-47c6-89c9-63da0c107575' for owner 1370767511_0_2
+[2026-01-08T10:36:39.409Z] info: No templates found, inserting default template
+[2026-01-08T10:36:39.411Z] info: Modified template '77105dfc-5734-4506-a84a-19bbe039ca0c' for owner other-user-id
+[2026-01-08T10:36:39.413Z] info: Modified template '2a7533e3-27e6-4851-b5df-ebf4b6142b04' for owner other-user-id
+[2026-01-08T10:36:39.415Z] info: Modified template 'a3e81bf4-bedc-4aca-bcc8-e5e92ea60a20' for owner 1370767511_0_3
+[2026-01-08T10:36:39.417Z] debug: Did not find discussion a1968c2b-534b-47cf-aaf7-1090c78b23cc
+[2026-01-08T10:36:39.420Z] debug: Found no profile 'en' for owner 1370767511_0_3
+[2026-01-08T10:36:39.423Z] debug: Found 0 existing commands for discussion a1968c2b-534b-47cf-aaf7-1090c78b23cc
+[2026-01-08T10:36:39.423Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.434Z] debug: Did not find discussion 271ad93d-9bf1-4166-aedd-d888c130faa8
+[2026-01-08T10:36:39.436Z] info: No templates found, inserting default template
+[2026-01-08T10:36:39.440Z] info: Modified template '631da882-148c-478f-8f9d-f29f9ee28e6e' for owner 1370767511_0_4
+[2026-01-08T10:36:39.443Z] info: Modified template '6f8dd781-b2bc-4617-bf07-c91ee432ac8c' for owner 1370767511_0_4
+[2026-01-08T10:36:39.444Z] info: Discussion with id 271ad93d-9bf1-4166-aedd-d888c130faa8 not found for user 1370767511_0_4
+[2026-01-08T10:36:39.451Z] info: Modified template '4758253b-746e-469a-affc-d8a56bb61d15' for owner 1370767511_0_5
+[2026-01-08T10:36:39.453Z] debug: Did not find discussion ec7abf28-9363-494d-924e-0050a976e83d
+[2026-01-08T10:36:39.455Z] debug: Found no profile 'en' for owner 1370767511_0_5
+[2026-01-08T10:36:39.456Z] debug: Found 0 existing commands for discussion ec7abf28-9363-494d-924e-0050a976e83d
+[2026-01-08T10:36:39.457Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.467Z] info: Modified template '4ded11b9-bdd7-4797-ba64-14a6eeaeb9df' for owner 1370767511_2_0
+[2026-01-08T10:36:39.473Z] debug: Did not find discussion 17d40c32-851c-4660-8441-1daf680c2f6c
+[2026-01-08T10:36:39.475Z] debug: Found no profile 'en' for owner 1370767511_2_0
+[2026-01-08T10:36:39.476Z] debug: Found 0 existing commands for discussion 17d40c32-851c-4660-8441-1daf680c2f6c
+[2026-01-08T10:36:39.477Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.478Z] error: Unknown error in server action: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+Error: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+    at new OpenAI (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/openai@6.10.0_ws@8.18.3_zod@4.1.13/node_modules/openai/client.mjs:100:19)
+    at aiPort (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_external/AiPort.ts:29:18)
+    at executeCommand (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_data/Command.ts:63:31)
+    at C:/Users/matth/IdeaProjects/homeserver/app/coeditor/editor/server.tests.ts:219:5
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@vitest+runner@4.0.15/node_modules/@vitest/runner/dist/index.js:915:20
+[2026-01-08T10:36:39.491Z] info: Modified template '5ffe1628-8c00-4e7d-808e-90fde83db82d' for owner 1370767511_2_1
+[2026-01-08T10:36:39.494Z] debug: Found no profile 'en' for owner 1370767511_2_1
+[2026-01-08T10:36:39.498Z] info: Modified profile 'en' for owner 1370767511_2_1
+[2026-01-08T10:36:39.500Z] debug: Did not find discussion cdc667b8-0d6d-4f62-89e7-34f0f3ff955a
+[2026-01-08T10:36:39.501Z] debug: Found profile 'en' for owner 1370767511_2_1
+[2026-01-08T10:36:39.501Z] debug: Found 0 existing commands for discussion cdc667b8-0d6d-4f62-89e7-34f0f3ff955a
+[2026-01-08T10:36:39.502Z] debug: AI Port called with message: {"language":"en","profile":"Profile Text","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.502Z] error: Unknown error in server action: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+Error: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+    at new OpenAI (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/openai@6.10.0_ws@8.18.3_zod@4.1.13/node_modules/openai/client.mjs:100:19)
+    at aiPort (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_external/AiPort.ts:29:18)
+    at executeCommand (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_data/Command.ts:63:31)
+    at C:/Users/matth/IdeaProjects/homeserver/app/coeditor/editor/server.tests.ts:245:5
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@vitest+runner@4.0.15/node_modules/@vitest/runner/dist/index.js:915:20
+[2026-01-08T10:36:39.505Z] info: Modified template '282fd261-04e2-4797-b037-81a752a59da9' for owner 1370767511_2_2
+[2026-01-08T10:36:39.507Z] debug: Did not find discussion b8d3cc13-580b-4ceb-82c7-beabdf8f03df
+[2026-01-08T10:36:39.508Z] debug: Found no profile 'en' for owner 1370767511_2_2
+[2026-01-08T10:36:39.509Z] debug: Found 0 existing commands for discussion b8d3cc13-580b-4ceb-82c7-beabdf8f03df
+[2026-01-08T10:36:39.509Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","selection":{"start":5,"end":10,"text":"ext"},"command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:39.510Z] error: Unknown error in server action: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+Error: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+    at new OpenAI (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/openai@6.10.0_ws@8.18.3_zod@4.1.13/node_modules/openai/client.mjs:100:19)
+    at aiPort (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_external/AiPort.ts:29:18)
+    at executeCommand (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_data/Command.ts:63:31)
+    at C:/Users/matth/IdeaProjects/homeserver/app/coeditor/editor/server.tests.ts:259:5
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@vitest+runner@4.0.15/node_modules/@vitest/runner/dist/index.js:915:20
+[2026-01-08T10:36:39.513Z] info: Modified template '581373bc-bc7b-476f-8aa3-a53cbcf77d6d' for owner 1370767511_2_3
+[2026-01-08T10:36:39.514Z] debug: Did not find discussion f03c9b19-5538-48ae-84c4-c23d1ad7dc8e
+[2026-01-08T10:36:39.515Z] debug: Found no profile 'en' for owner 1370767511_2_3
+[2026-01-08T10:36:39.516Z] debug: Found 0 existing commands for discussion f03c9b19-5538-48ae-84c4-c23d1ad7dc8e
+[2026-01-08T10:36:39.516Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"Custom Command Text"}
+[2026-01-08T10:36:39.516Z] error: Unknown error in server action: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+Error: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+    at new OpenAI (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/openai@6.10.0_ws@8.18.3_zod@4.1.13/node_modules/openai/client.mjs:100:19)
+    at aiPort (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_external/AiPort.ts:29:18)
+    at executeCommand (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_data/Command.ts:63:31)
+    at C:/Users/matth/IdeaProjects/homeserver/app/coeditor/editor/server.tests.ts:274:5
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@vitest+runner@4.0.15/node_modules/@vitest/runner/dist/index.js:915:20
+[2026-01-08T10:36:39.519Z] info: Modified template '1407d894-8f96-444e-bab7-4be13ab352b2' for owner 1370767511_2_4
+[2026-01-08T10:36:39.523Z] debug: Did not find discussion 142eb6e4-1e76-4b2e-8ebd-4f6b81e31576
+[2026-01-08T10:36:39.525Z] debug: Found no profile 'en' for owner 1370767511_2_4
+[2026-01-08T10:36:39.525Z] debug: Found 0 existing commands for discussion 142eb6e4-1e76-4b2e-8ebd-4f6b81e31576
+[2026-01-08T10:36:39.526Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"Custom Command Text"}
+[2026-01-08T10:36:39.526Z] error: Unknown error in server action: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+Error: It looks like you're running in a browser-like environment.
+
+This is disabled by default, as it risks exposing your secret API credentials to attackers.
+If you understand the risks and have appropriate mitigations in place,
+you can set the `dangerouslyAllowBrowser` option to `true`, e.g.,
+
+new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+    at new OpenAI (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/openai@6.10.0_ws@8.18.3_zod@4.1.13/node_modules/openai/client.mjs:100:19)
+    at aiPort (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_external/AiPort.ts:29:18)
+    at executeCommand (C:/Users/matth/IdeaProjects/homeserver/app/coeditor/_data/Command.ts:63:31)
+    at C:/Users/matth/IdeaProjects/homeserver/app/coeditor/editor/server.tests.ts:289:5
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@vitest+runner@4.0.15/node_modules/@vitest/runner/dist/index.js:915:20
+[2026-01-08T10:36:39.529Z] info: Modified template '42fc667d-8413-4371-aa42-f06a0a2666b6' for owner 1370767511_2_5
+[2026-01-08T10:36:39.531Z] debug: Did not find discussion 12655217-d6cf-4d22-a0cd-ef3b2c968365
+[2026-01-08T10:36:39.532Z] debug: Found no profile 'en' for owner 1370767511_2_5
+[2026-01-08T10:36:39.534Z] debug: Found 0 existing commands for discussion 12655217-d6cf-4d22-a0cd-ef3b2c968365
+[2026-01-08T10:36:39.534Z] debug: AI Port called with message: {"language":"en","context":"A test template","text":"New text","command":"I want to create a new text. Create an initial draft based on the profile and the context of the whole text."}
+[2026-01-08T10:36:42.548Z] debug: AI Port called with message: {"language":"en","context":"","title":"Story","text":"This is a sample text","command":"Transform everything to uppercase"}
+[2026-01-08T10:36:42.551Z] debug: AI Port called with message: {"language":"en","context":"Always make a fullstop at the end of each sentence.","title":"Story","text":"This is a sample text","command":"Transform everything to uppercase"}
+[2026-01-08T10:36:42.551Z] debug: AI Port called with message: {"language":"en","profile":"Always make a fullstop at the end of each sentence.","context":"","title":"Story","text":"This is a sample text","command":"Transform everything to uppercase"}
+[2026-01-08T10:36:42.552Z] debug: AI Port called with message: {"language":"en","context":"","title":"Story","text":"This is a sample text","selection":{"start":10,"end":21,"text":"sample text"},"command":"Transform everything to uppercase"}
+[2026-01-08T10:36:42.812Z] info: Modified project 'Test Project' for owner 1861779075_0_0
+[2026-01-08T10:36:42.815Z] debug: Found project 50cce168-e9c3-489d-a2f2-59c0e45186dd for owner 1861779075_0_0
+[2026-01-08T10:36:42.816Z] debug: Found 0 accounts for project 50cce168-e9c3-489d-a2f2-59c0e45186dd and owner 1861779075_0_0
+[2026-01-08T10:36:42.819Z] debug: Found 0 projects for project 50cce168-e9c3-489d-a2f2-59c0e45186dd
+[2026-01-08T10:36:42.823Z] info: Modified project 'Test Project' for owner 1861779075_0_1
+[2026-01-08T10:36:42.828Z] info: Modified account 'Cash' for owner 1861779075_0_1
+[2026-01-08T10:36:42.830Z] info: Modified account 'Revenue' for owner 1861779075_0_1
+[2026-01-08T10:36:42.832Z] info: Transaction cb3a23b3-ebc2-4667-9acb-a5efbd8dfc09 created for owner 1861779075_0_1
+[2026-01-08T10:36:42.833Z] debug: Found project a454e026-bd06-4525-8966-b2e2c774c4aa for owner 1861779075_0_1
+[2026-01-08T10:36:42.835Z] debug: Found 2 accounts for project a454e026-bd06-4525-8966-b2e2c774c4aa and owner 1861779075_0_1
+[2026-01-08T10:36:42.836Z] debug: Found 1 projects for project a454e026-bd06-4525-8966-b2e2c774c4aa
+[2026-01-08T10:36:42.838Z] info: Modified project 'Test Project' for owner 1861779075_0_2
+[2026-01-08T10:36:42.840Z] info: Modified account 'Cash' for owner 1861779075_0_2
+[2026-01-08T10:36:42.842Z] info: Modified account 'Revenue' for owner 1861779075_0_2
+[2026-01-08T10:36:42.844Z] info: Transaction a355452b-5ab7-4ea8-a2f6-b2866aabd249 created for owner 1861779075_0_2
+[2026-01-08T10:36:42.846Z] info: Transaction f338d8dc-115d-4518-b4c7-2c1462e780bc created for owner 1861779075_0_2
+[2026-01-08T10:36:42.850Z] debug: Found project 6bbf5c86-6252-4f4b-b859-27ef01fa38e3 for owner 1861779075_0_2
+[2026-01-08T10:36:42.851Z] debug: Found 2 accounts for project 6bbf5c86-6252-4f4b-b859-27ef01fa38e3 and owner 1861779075_0_2
+[2026-01-08T10:36:42.852Z] debug: Found 1 projects for project 6bbf5c86-6252-4f4b-b859-27ef01fa38e3
+[2026-01-08T10:36:42.852Z] debug: Found project 6bbf5c86-6252-4f4b-b859-27ef01fa38e3 for owner 1861779075_0_2
+[2026-01-08T10:36:42.853Z] debug: Found 2 accounts for project 6bbf5c86-6252-4f4b-b859-27ef01fa38e3 and owner 1861779075_0_2
+[2026-01-08T10:36:42.854Z] debug: Found 1 projects for project 6bbf5c86-6252-4f4b-b859-27ef01fa38e3
+[2026-01-08T10:36:42.856Z] debug: Did not find project 428ad75d-3d0f-4cc5-8d77-fb0c78197a90 for owner 1861779075_0_3
+[2026-01-08T10:36:42.857Z] debug: Found 0 accounts for project 428ad75d-3d0f-4cc5-8d77-fb0c78197a90 and owner 1861779075_0_3
+[2026-01-08T10:36:42.858Z] debug: Found 0 projects for project 428ad75d-3d0f-4cc5-8d77-fb0c78197a90
+[2026-01-08T10:36:42.861Z] info: Modified project 'Test Project' for owner 1861779075_1_0
+[2026-01-08T10:36:42.862Z] info: Modified account 'Cash' for owner 1861779075_1_0
+[2026-01-08T10:36:42.864Z] info: Modified account 'Revenue' for owner 1861779075_1_0
+[2026-01-08T10:36:42.867Z] info: Transaction 259dcb4a-5686-4560-9ff5-5020c9b6d9b2 created for owner 1861779075_1_0
+[2026-01-08T10:36:42.870Z] info: Modified project 'Test Project' for owner 1861779075_1_1
+[2026-01-08T10:36:42.872Z] info: Modified account 'Cash' for owner 1861779075_1_1
+[2026-01-08T10:36:42.874Z] info: Modified account 'Revenue' for owner 1861779075_1_1
+[2026-01-08T10:36:42.877Z] info: Transaction 063a0b94-6cf7-42dc-a635-ae8c0d5af680 created for owner 1861779075_1_1
+[2026-01-08T10:36:42.880Z] info: Transaction 063a0b94-6cf7-42dc-a635-ae8c0d5af680 updated for owner 1861779075_1_1
+[2026-01-08T10:36:42.882Z] info: Modified project 'Test Project' for owner 1861779075_1_2
+[2026-01-08T10:36:42.884Z] info: Modified account 'Cash' for owner 1861779075_1_2
+[2026-01-08T10:36:42.886Z] info: Modified account 'Revenue' for owner 1861779075_1_2
+[2026-01-08T10:36:42.888Z] info: Transaction 0d17e0e1-13f5-4963-b496-de6bcc2e5666 created for owner 1861779075_1_2
+[2026-01-08T10:36:42.894Z] error: Unknown error in server action: duplicate key value violates unique constraint "transaction_pkey"
+error: duplicate key value violates unique constraint "transaction_pkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:42.899Z] info: Modified project 'Test Project' for owner 1861779075_1_3
+[2026-01-08T10:36:42.901Z] info: Modified account 'Cash' for owner 1861779075_1_3
+[2026-01-08T10:36:42.902Z] info: Modified account 'Revenue' for owner 1861779075_1_3
+[2026-01-08T10:36:42.904Z] error: Error in server action: Id can't be blank
+[2026-01-08T10:36:42.905Z] error: Error in server action: Project id can't be blank
+[2026-01-08T10:36:42.907Z] error: Unknown error in server action: insert or update on table "transaction" violates foreign key constraint "transaction_project_id_fkey"
+error: insert or update on table "transaction" violates foreign key constraint "transaction_project_id_fkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:42.908Z] error: Error in server action: Credit account id can't be blank
+[2026-01-08T10:36:42.910Z] error: Unknown error in server action: insert or update on table "transaction" violates foreign key constraint "transaction_credit_account_id_fkey"
+error: insert or update on table "transaction" violates foreign key constraint "transaction_credit_account_id_fkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:42.911Z] error: Error in server action: Debit account id can't be blank
+[2026-01-08T10:36:42.913Z] error: Unknown error in server action: insert or update on table "transaction" violates foreign key constraint "transaction_debit_account_id_fkey"
+error: insert or update on table "transaction" violates foreign key constraint "transaction_debit_account_id_fkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:42.916Z] error: Error in server action: Amount can't be blank
+[2026-01-08T10:36:42.917Z] error: Error in server action: Date can't be blank
+[2026-01-08T10:36:42.917Z] error: Error in server action: Description can't be blank
+[2026-01-08T10:36:42.919Z] info: Modified project 'Test Project' for owner 1861779075_2_0
+[2026-01-08T10:36:42.920Z] info: Modified account 'Cash' for owner 1861779075_2_0
+[2026-01-08T10:36:42.921Z] info: Modified account 'Revenue' for owner 1861779075_2_0
+[2026-01-08T10:36:42.924Z] info: Transaction 9cedbc4c-85a4-4c2f-9e33-3e31b488d58a created for owner 1861779075_2_0
+[2026-01-08T10:36:42.926Z] info: Transaction 9cedbc4c-85a4-4c2f-9e33-3e31b488d58a deleted for owner 1861779075_2_0
+[2026-01-08T10:36:42.927Z] debug: Found project 970ebdd8-965a-4dcc-a94e-520a3576f179 for owner 1861779075_2_0
+[2026-01-08T10:36:42.929Z] debug: Found 2 accounts for project 970ebdd8-965a-4dcc-a94e-520a3576f179 and owner 1861779075_2_0
+[2026-01-08T10:36:42.929Z] debug: Found 0 projects for project 970ebdd8-965a-4dcc-a94e-520a3576f179
+[2026-01-08T10:36:42.931Z] info: Modified project 'Test Project' for owner 1861779075_2_1
+[2026-01-08T10:36:42.932Z] info: Modified account 'Cash' for owner 1861779075_2_1
+[2026-01-08T10:36:42.934Z] info: Modified account 'Revenue' for owner 1861779075_2_1
+[2026-01-08T10:36:42.936Z] info: Transaction e232ab32-6638-4e22-a654-32465e4c2805 created for owner 1861779075_2_1
+[2026-01-08T10:36:42.937Z] info: Transaction e232ab32-6638-4e22-a654-32465e4c2805 not found for owner other-user-id, nothing to delete
+[2026-01-08T10:36:42.938Z] debug: Found project d46a0069-f3ee-430b-8770-ca14d2a1a853 for owner 1861779075_2_1
+[2026-01-08T10:36:42.939Z] debug: Found 2 accounts for project d46a0069-f3ee-430b-8770-ca14d2a1a853 and owner 1861779075_2_1
+[2026-01-08T10:36:42.940Z] debug: Found 1 projects for project d46a0069-f3ee-430b-8770-ca14d2a1a853
+[2026-01-08T10:36:42.942Z] info: Modified project 'Test Project' for owner 1861779075_2_2
+[2026-01-08T10:36:42.943Z] info: Transaction 0299045e-d275-4f19-868e-e9c09db6c834 not found for owner 1861779075_2_2, nothing to delete
+[2026-01-08T10:36:42.946Z] info: Modified project 'Test Project' for owner 1861779075_2_3
+[2026-01-08T10:36:42.948Z] info: Modified account 'Cash' for owner 1861779075_2_3
+[2026-01-08T10:36:42.949Z] info: Modified account 'Revenue' for owner 1861779075_2_3
+[2026-01-08T10:36:42.949Z] error: Error in server action: Input must be a non-empty string
+[2026-01-08T10:36:42.951Z] error: Unknown error in server action: invalid input syntax for type uuid: "invalid-uuid"
+error: invalid input syntax for type uuid: "invalid-uuid"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:36:42.951Z] error: Error in server action: Input must be a non-empty string
+[2026-01-08T10:36:43.697Z] debug: AI Port got response: {"text":"THIS IS A SAMPLE TEXT","title":"Story"}
+[2026-01-08T10:36:44.109Z] debug: AI Port got response: {"text":"SAMPLE TEXT","title":"Story"}
+[2026-01-08T10:36:44.127Z] debug: AI Port got response: {"text":"THIS IS A SAMPLE TEXT.","title":"Story"}
+[2026-01-08T10:36:44.417Z] debug: AI Port got response: {"text":"THIS IS A SAMPLE TEXT.","title":"Story"}
+[2026-01-08T10:37:35.015Z] info: No templates found, inserting default template
+[2026-01-08T10:37:35.022Z] info: Modified template '6026b586-2f3f-44a6-9d1b-8c109136c200' for owner 1370767511_0_0
+[2026-01-08T10:37:35.026Z] info: Modified template 'f40d7303-18cf-4caa-86e6-63b20d63faa7' for owner 1370767511_0_0
+[2026-01-08T10:37:35.029Z] info: Modified template '1c35b5c5-38ee-48a7-8afd-479be8b2a659' for owner 1370767511_0_1
+[2026-01-08T10:37:35.030Z] debug: Found 1 templates for  owner 1370767511_0_1
+[2026-01-08T10:37:35.032Z] info: Modified template '923a5ba0-351f-490d-bca8-220946195121' for owner 1370767511_0_2
+[2026-01-08T10:37:35.033Z] info: No templates found, inserting default template
+[2026-01-08T10:37:35.034Z] info: Modified template '09d7f2c0-8428-4e09-b020-a3fc137543db' for owner other-user-id
+[2026-01-08T10:37:35.036Z] info: Modified template 'c288a4ea-fd4e-4f3a-b1d0-b6d82a2576a8' for owner other-user-id
+[2026-01-08T10:37:35.039Z] info: Modified template 'e98170ea-94e8-4503-87c1-579ba20eec6c' for owner 1370767511_0_3
+[2026-01-08T10:37:35.041Z] debug: Did not find discussion 64af4b41-5a1e-44f2-89d9-5ad0fd98508f
+[2026-01-08T10:37:35.042Z] debug: Found no profile 'en' for owner 1370767511_0_3
+[2026-01-08T10:37:35.043Z] debug: Found 0 existing commands for discussion 64af4b41-5a1e-44f2-89d9-5ad0fd98508f
+[2026-01-08T10:37:35.048Z] info: Started new discussion 64af4b41-5a1e-44f2-89d9-5ad0fd98508f for owner 1370767511_0_3
+[2026-01-08T10:37:35.049Z] info: Inserted command 069b257f-d799-4c1f-bb4b-2d5923830ea7 for discussion 64af4b41-5a1e-44f2-89d9-5ad0fd98508f
+[2026-01-08T10:37:35.050Z] debug: Found discussion 64af4b41-5a1e-44f2-89d9-5ad0fd98508f
+[2026-01-08T10:37:35.050Z] debug: Found 1 templates for  owner 1370767511_0_3
+[2026-01-08T10:37:35.052Z] debug: Did not find discussion a9e219af-0fad-4839-9c80-da9f29f76c8d
+[2026-01-08T10:37:35.053Z] info: No templates found, inserting default template
+[2026-01-08T10:37:35.055Z] info: Modified template '16260829-18c9-40a4-8a34-b4cf624ff2bd' for owner 1370767511_0_4
+[2026-01-08T10:37:35.059Z] info: Modified template '3b7b1e7c-5c4d-4360-808a-0c05f673408f' for owner 1370767511_0_4
+[2026-01-08T10:37:35.059Z] info: Discussion with id a9e219af-0fad-4839-9c80-da9f29f76c8d not found for user 1370767511_0_4
+[2026-01-08T10:37:35.065Z] info: Modified template '76701d65-c05f-4c74-a73b-7588bc87fb53' for owner 1370767511_0_5
+[2026-01-08T10:37:35.066Z] debug: Did not find discussion 707573f8-90f0-4d03-a067-4324fa91a3ad
+[2026-01-08T10:37:35.067Z] debug: Found no profile 'en' for owner 1370767511_0_5
+[2026-01-08T10:37:35.068Z] debug: Found 0 existing commands for discussion 707573f8-90f0-4d03-a067-4324fa91a3ad
+[2026-01-08T10:37:35.069Z] info: Started new discussion 707573f8-90f0-4d03-a067-4324fa91a3ad for owner 1370767511_0_5
+[2026-01-08T10:37:35.070Z] info: Inserted command 8d7605a1-0bf8-4590-8822-fb85cdf0a045 for discussion 707573f8-90f0-4d03-a067-4324fa91a3ad
+[2026-01-08T10:37:35.072Z] debug: Did not find discussion 79b59db2-1a4e-471d-874c-521080ec4a9a
+[2026-01-08T10:37:35.073Z] debug: Found 2 templates for  owner other-user-id
+[2026-01-08T10:37:35.074Z] info: Discussion with id 79b59db2-1a4e-471d-874c-521080ec4a9a not found for user other-user-id
+[2026-01-08T10:37:35.077Z] info: Modified template '1210f1f6-0577-4e01-93b3-6f3a36af5dc7' for owner 1370767511_1_0
+[2026-01-08T10:37:35.080Z] debug: Did not find discussion 3130e23c-ec59-416d-ac32-6a86f378a5ac
+[2026-01-08T10:37:35.081Z] debug: Found no profile 'en' for owner 1370767511_1_0
+[2026-01-08T10:37:35.082Z] debug: Found 0 existing commands for discussion 3130e23c-ec59-416d-ac32-6a86f378a5ac
+[2026-01-08T10:37:35.084Z] info: Started new discussion 3130e23c-ec59-416d-ac32-6a86f378a5ac for owner 1370767511_1_0
+[2026-01-08T10:37:35.085Z] info: Inserted command ef2ab054-3e62-4e41-8926-ebaf3211591f for discussion 3130e23c-ec59-416d-ac32-6a86f378a5ac
+[2026-01-08T10:37:35.090Z] debug: Found 1 discussions for owner 1370767511_1_0
+[2026-01-08T10:37:35.093Z] info: Modified template '6373148e-41ed-49f1-bf7a-67488fd6cacf' for owner 1370767511_1_1
+[2026-01-08T10:37:35.094Z] debug: Did not find discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf
+[2026-01-08T10:37:35.095Z] debug: Found no profile 'en' for owner 1370767511_1_1
+[2026-01-08T10:37:35.096Z] debug: Found 0 existing commands for discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf
+[2026-01-08T10:37:35.097Z] info: Started new discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf for owner 1370767511_1_1
+[2026-01-08T10:37:35.098Z] info: Inserted command ffd28f0b-fea9-49d3-9241-3432ec3cdb0c for discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf
+[2026-01-08T10:37:35.099Z] debug: Found discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf
+[2026-01-08T10:37:35.101Z] debug: Found no profile 'en' for owner 1370767511_1_1
+[2026-01-08T10:37:35.102Z] debug: Found 1 existing commands for discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf
+[2026-01-08T10:37:35.103Z] info: Modified discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf for owner 1370767511_1_1
+[2026-01-08T10:37:35.104Z] info: Inserted command eb2d01e8-4298-486f-97e3-6852668aed69 for discussion fa011fb8-e7e3-44e9-b149-3c04dabc6adf
+[2026-01-08T10:37:35.105Z] debug: Found 1 discussions for owner 1370767511_1_1
+[2026-01-08T10:37:35.107Z] info: Given template e6ff1758-4397-41f4-89e0-5b3462623553 not found for owner 1370767511_1_2
+[2026-01-08T10:37:35.108Z] error: Error in server action: Given template e6ff1758-4397-41f4-89e0-5b3462623553 not found
+[2026-01-08T10:37:35.111Z] info: Modified template '6a005bc0-40b4-4570-ab52-c71f05e8e35d' for owner 1370767511_1_3
+[2026-01-08T10:37:35.111Z] info: Given template 6a005bc0-40b4-4570-ab52-c71f05e8e35d not found for owner other-user-id
+[2026-01-08T10:37:35.112Z] error: Error in server action: Given template 6a005bc0-40b4-4570-ab52-c71f05e8e35d not found
+[2026-01-08T10:37:35.113Z] info: Modified template '5c46cbc5-7e8e-4f49-ab87-588780001b28' for owner 1370767511_1_4
+[2026-01-08T10:37:35.114Z] debug: Did not find discussion 1ba469c9-7c81-4c6b-ba6e-8600cf993c5f
+[2026-01-08T10:37:35.115Z] debug: Found no profile 'en' for owner 1370767511_1_4
+[2026-01-08T10:37:35.116Z] debug: Found 0 existing commands for discussion 1ba469c9-7c81-4c6b-ba6e-8600cf993c5f
+[2026-01-08T10:37:35.118Z] info: Started new discussion 1ba469c9-7c81-4c6b-ba6e-8600cf993c5f for owner 1370767511_1_4
+[2026-01-08T10:37:35.120Z] info: Inserted command b8255daf-1e35-4929-8c12-92926bb658bc for discussion 1ba469c9-7c81-4c6b-ba6e-8600cf993c5f
+[2026-01-08T10:37:35.122Z] info: Modified template 'd94fc192-a64d-4d57-977f-da94ad429909' for owner other-user-id
+[2026-01-08T10:37:35.123Z] debug: Did not find discussion 1ba469c9-7c81-4c6b-ba6e-8600cf993c5f
+[2026-01-08T10:37:35.124Z] debug: Found no profile 'en' for owner other-user-id
+[2026-01-08T10:37:35.125Z] debug: Found 1 existing commands for discussion 1ba469c9-7c81-4c6b-ba6e-8600cf993c5f
+[2026-01-08T10:37:35.129Z] error: Unknown error in server action: duplicate key value violates unique constraint "discussion_pkey"
+error: duplicate key value violates unique constraint "discussion_pkey"
+    at ye.Ve (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:17554)
+    at ye.nt (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:14941)
+    at ye.parse (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/chunk-3WWIVTCY.js:1:13693)
+    at file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:191801
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2608820)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:2609707)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:5283125)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:366694)
+    at invoke_v (file:///C:/Users/matth/IdeaProjects/homeserver/node_modules/.pnpm/@electric-sql+pglite@0.3.14/node_modules/@electric-sql/pglite/dist/index.js:3:176458)
+    at null.<anonymous> (wasm://wasm/021cbcb2:1:368811)
+[2026-01-08T10:37:35.133Z] info: Modified template '1f7dd18d-5f42-4dc7-a4ff-45982578bce8' for owner 1370767511_2_0
+[2026-01-08T10:37:35.135Z] debug: Did not find discussion 23e272bf-156c-4a3d-91f6-346749b74433
+[2026-01-08T10:37:35.136Z] debug: Found no profile 'en' for owner 1370767511_2_0
+[2026-01-08T10:37:35.137Z] debug: Found 0 existing commands for discussion 23e272bf-156c-4a3d-91f6-346749b74433
+[2026-01-08T10:37:35.138Z] info: Started new discussion 23e272bf-156c-4a3d-91f6-346749b74433 for owner 1370767511_2_0
+[2026-01-08T10:37:35.140Z] info: Inserted command a5f7f460-310b-45cd-9524-5648505f67c7 for discussion 23e272bf-156c-4a3d-91f6-346749b74433
+[2026-01-08T10:37:35.143Z] info: Modified template '8bc52bcb-7611-4aa5-bd6f-ba27af3a76ae' for owner 1370767511_2_1
+[2026-01-08T10:37:35.144Z] debug: Found no profile 'en' for owner 1370767511_2_1
+[2026-01-08T10:37:35.146Z] info: Modified profile 'en' for owner 1370767511_2_1
+[2026-01-08T10:37:35.147Z] debug: Did not find discussion bf9a60ad-d4bd-4485-a5c2-7a1b87c6bd86
+[2026-01-08T10:37:35.148Z] debug: Found profile 'en' for owner 1370767511_2_1
+[2026-01-08T10:37:35.148Z] debug: Found 0 existing commands for discussion bf9a60ad-d4bd-4485-a5c2-7a1b87c6bd86
+[2026-01-08T10:37:35.149Z] info: Started new discussion bf9a60ad-d4bd-4485-a5c2-7a1b87c6bd86 for owner 1370767511_2_1
+[2026-01-08T10:37:35.150Z] info: Inserted command 754f6e2a-0780-48fb-94a5-bbfe88cdc7b9 for discussion bf9a60ad-d4bd-4485-a5c2-7a1b87c6bd86
+[2026-01-08T10:37:35.153Z] info: Modified template '903022ca-c154-468a-8f9c-aa5a5909f70b' for owner 1370767511_2_2
+[2026-01-08T10:37:35.156Z] debug: Did not find discussion 5b19b99d-7aea-4e2b-8ce0-5f9eee3cdd31
+[2026-01-08T10:37:35.157Z] debug: Found no profile 'en' for owner 1370767511_2_2
+[2026-01-08T10:37:35.157Z] debug: Found 0 existing commands for discussion 5b19b99d-7aea-4e2b-8ce0-5f9eee3cdd31
+[2026-01-08T10:37:35.158Z] info: Started new discussion 5b19b99d-7aea-4e2b-8ce0-5f9eee3cdd31 for owner 1370767511_2_2
+[2026-01-08T10:37:35.160Z] info: Inserted command aff115dc-7423-4e2e-b8a5-0b0b3682076e for discussion 5b19b99d-7aea-4e2b-8ce0-5f9eee3cdd31
+[2026-01-08T10:37:35.162Z] info: Modified template '4a196ee6-d38d-4437-95aa-9aa03b8781e2' for owner 1370767511_2_3
+[2026-01-08T10:37:35.163Z] debug: Did not find discussion 07ed7d83-db35-4a3d-9e8f-c6a4f94110ce
+[2026-01-08T10:37:35.164Z] debug: Found no profile 'en' for owner 1370767511_2_3
+[2026-01-08T10:37:35.165Z] debug: Found 0 existing commands for discussion 07ed7d83-db35-4a3d-9e8f-c6a4f94110ce
+[2026-01-08T10:37:35.165Z] info: Started new discussion 07ed7d83-db35-4a3d-9e8f-c6a4f94110ce for owner 1370767511_2_3
+[2026-01-08T10:37:35.166Z] info: Inserted command 5147a74b-cb97-4fcc-ad7e-559978d39fd5 for discussion 07ed7d83-db35-4a3d-9e8f-c6a4f94110ce
+[2026-01-08T10:37:35.170Z] info: Modified template 'a0cdc021-6262-4d19-bd34-37cf0ce9d916' for owner 1370767511_2_4
+[2026-01-08T10:37:35.173Z] debug: Did not find discussion 936562b0-eba8-4f56-b3bc-1cc06182f89d
+[2026-01-08T10:37:35.173Z] debug: Found no profile 'en' for owner 1370767511_2_4
+[2026-01-08T10:37:35.174Z] debug: Found 0 existing commands for discussion 936562b0-eba8-4f56-b3bc-1cc06182f89d
+[2026-01-08T10:37:35.175Z] info: Started new discussion 936562b0-eba8-4f56-b3bc-1cc06182f89d for owner 1370767511_2_4
+[2026-01-08T10:37:35.176Z] info: Inserted command 220db2d9-0577-48ab-96e7-7919653b5dde for discussion 936562b0-eba8-4f56-b3bc-1cc06182f89d
+[2026-01-08T10:37:35.179Z] info: Modified template '301cdb91-8709-49d9-afb3-6fe4873ab5e6' for owner 1370767511_2_5
+[2026-01-08T10:37:35.180Z] debug: Did not find discussion 7757ef86-c663-4863-a20e-52537454f151
+[2026-01-08T10:37:35.181Z] debug: Found no profile 'en' for owner 1370767511_2_5
+[2026-01-08T10:37:35.182Z] debug: Found 0 existing commands for discussion 7757ef86-c663-4863-a20e-52537454f151
+[2026-01-08T10:37:35.183Z] info: Started new discussion 7757ef86-c663-4863-a20e-52537454f151 for owner 1370767511_2_5
+[2026-01-08T10:37:35.183Z] info: Inserted command 5e1c1c60-a1f8-4592-b84c-4857c6351d6c for discussion 7757ef86-c663-4863-a20e-52537454f151
+[2026-01-08T10:37:35.185Z] debug: Found discussion 7757ef86-c663-4863-a20e-52537454f151
+[2026-01-08T10:37:35.185Z] debug: Found no profile 'en' for owner 1370767511_2_5
+[2026-01-08T10:37:35.186Z] debug: Found 1 existing commands for discussion 7757ef86-c663-4863-a20e-52537454f151
+[2026-01-08T10:37:35.187Z] info: Modified discussion 7757ef86-c663-4863-a20e-52537454f151 for owner 1370767511_2_5
+[2026-01-08T10:37:35.188Z] info: Inserted command 90101dde-5aad-494b-873f-549b8c01db34 for discussion 7757ef86-c663-4863-a20e-52537454f151
+[2026-01-08T10:37:52.874Z] debug: Found 0 discussions for owner -142865888_0_0
+[2026-01-08T10:37:52.879Z] info: Modified template '65e7057c-a78e-4849-b8ae-08fc885b7684' for owner -142865888_0_1
+[2026-01-08T10:37:52.881Z] debug: Did not find discussion e9fb4c5e-48a4-45c7-83db-fb668abf0d7b
+[2026-01-08T10:37:52.882Z] debug: Found no profile 'en' for owner -142865888_0_1
+[2026-01-08T10:37:52.885Z] debug: Found 0 existing commands for discussion e9fb4c5e-48a4-45c7-83db-fb668abf0d7b
+[2026-01-08T10:37:52.889Z] info: Started new discussion e9fb4c5e-48a4-45c7-83db-fb668abf0d7b for owner -142865888_0_1
+[2026-01-08T10:37:52.891Z] info: Inserted command d646b5d8-141e-49cc-bfdb-f541ffe67529 for discussion e9fb4c5e-48a4-45c7-83db-fb668abf0d7b
+[2026-01-08T10:37:52.892Z] debug: Found 1 discussions for owner -142865888_0_1
+[2026-01-08T10:37:52.895Z] info: Modified template 'df4c51ba-54c2-4c83-84a5-3b3ed6c900b8' for owner -142865888_0_2
+[2026-01-08T10:37:52.897Z] debug: Did not find discussion da7b89c8-c74b-47db-aa11-25c686e3fdf2
+[2026-01-08T10:37:52.898Z] debug: Found no profile 'en' for owner -142865888_0_2
+[2026-01-08T10:37:52.899Z] debug: Found 0 existing commands for discussion da7b89c8-c74b-47db-aa11-25c686e3fdf2
+[2026-01-08T10:37:52.900Z] info: Started new discussion da7b89c8-c74b-47db-aa11-25c686e3fdf2 for owner -142865888_0_2
+[2026-01-08T10:37:52.901Z] info: Inserted command 7a6c1b92-5a8e-4266-b45b-09461705730b for discussion da7b89c8-c74b-47db-aa11-25c686e3fdf2
+[2026-01-08T10:37:52.903Z] debug: Found 0 discussions for owner other-user-id

@@ -1,11 +1,11 @@
 'use server'
 
-import { ActionResponse, toResponse } from '@/app/shared/ActionResponse'
-import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../Profile'
+import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../_data/Profile'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/shared/db'
-import { validateObject, validateString } from '@/app/shared/validation'
-import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../Template'
+import { validateObject, validateString } from '@/app/shared/_helper/validation'
+import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
 
 export interface SettingsData {
   profiles: Profile[]

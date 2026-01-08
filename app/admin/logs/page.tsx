@@ -2,8 +2,8 @@ import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { promises as fs } from 'fs'
 
-import { logFilePath } from '@/logger'
-import { Log } from './Log'
+import { logFilePath } from '@/app/shared/logger'
+import { Logs } from './Logs'
 
 export const metadata: Metadata = {
   title: 'Admin - Log',
@@ -16,6 +16,6 @@ export default async function Page() {
   const lines = logFile.split('\n').slice(-1000)
 
   return (
-    <Log lines={lines} />
+    <Logs lines={lines} />
   )
 }

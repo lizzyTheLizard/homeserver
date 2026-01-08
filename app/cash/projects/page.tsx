@@ -1,7 +1,7 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { Card } from '@/app/shared/components/Card'
+import { Card } from '@/app/shared/_components/Card'
 import { loadProjects } from './server'
-import { Project } from '../Project'
+import { Project } from '../_data/Project'
 
 export const metadata: Metadata = {
   title: 'Cash - Projects',
