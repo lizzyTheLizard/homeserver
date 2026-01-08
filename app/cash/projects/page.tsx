@@ -1,16 +1,18 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { nontransactional } from '@/app/shared/db'
 import { Card } from '@/app/shared/components/Card'
-import { findProjectsByOwner, Project } from '../Project'
+import { loadProjects } from './server'
+import { Project } from '../Project'
 
 export const metadata: Metadata = {
   title: 'Cash - Projects',
 }
 
 export default async function Page() {
-  const user = await getAuthenticatedUserSession('cash')
-  const projects = await nontransactional(c => findProjectsByOwner(c, user.sub))
+  const projects = await loadProjects()
+
+  function getLink(project: Project): string {
+    return `/cash/${project.id}/LATEST/journal`
+  }
 
   return (
     <main>
@@ -24,8 +26,4 @@ export default async function Page() {
       </div>
     </main>
   )
-}
-
-function getLink(project: Project): string {
-  return `/cash/${project.id}/LATEST/journal`
 }

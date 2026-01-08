@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <>
       <LoadingSpinner />
-      <Settings profiles={[]} templates={[]} />
+      <Settings />
     </>
   )
 }

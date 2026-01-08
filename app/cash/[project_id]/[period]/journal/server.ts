@@ -1,5 +1,4 @@
 'use server'
-// TODO: Move all functionallity to a server.ts file instead of mixing business layer with page layer
 import { findProjectById, Project } from '@/app/cash/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/db'

@@ -17,7 +17,7 @@ export default function Loading() {
   return (
     <>
       <LoadingSpinner></LoadingSpinner>
-      <Editor discussion={undefined} templates={[dummyTemplate]} />
+      <Editor templates={[dummyTemplate]} />
     </>
   )
 }

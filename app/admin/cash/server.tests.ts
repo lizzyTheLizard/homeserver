@@ -1,0 +1,112 @@
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { transactional } from '@/app/shared/db'
+import { v4 as randomUUID } from 'uuid'
+import { loadProjects } from './server'
+import { createOrModifyProject } from '@/app/cash/Project'
+import type { UserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+
+// Mock the auth module
+vi.mock('@/app/common/auth/auth', async () => {
+  const actual = await vi.importActual('@/app/common/auth/auth')
+  return {
+    ...actual,
+    getAuthenticatedUserSession: vi.fn(),
+  }
+})
+
+describe('loadProjects', () => {
+  afterEach(async () => {
+    // Clean up all projects after each test
+    await transactional(async (tx) => {
+      await tx.query('DELETE FROM project')
+    })
+  })
+
+  test('Empty projects list', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const result = await loadProjects()
+
+    expect(result).toEqual([])
+  })
+
+  test('Load projects for user', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project1 = { id: randomUUID(), name: 'Project Alpha', owner_id: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'Project Beta', owner_id: task.id, archived: false }
+    const project3 = { id: randomUUID(), name: 'Project Gamma', owner_id: task.id, archived: false }
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project1)
+      await createOrModifyProject(tx, project2)
+      await createOrModifyProject(tx, project3)
+    })
+
+    const result = await loadProjects()
+
+    expect(result).toHaveLength(3)
+    expect(result.map(p => p.name).sort()).toEqual(['Project Alpha', 'Project Beta', 'Project Gamma'])
+    expect(result.every(p => p.owner_id === task.id)).toBe(true)
+  })
+
+  test('Load projects includes archived projects', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project1 = { id: randomUUID(), name: 'Active Project', owner_id: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'Archived Project', owner_id: task.id, archived: true }
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project1)
+      await createOrModifyProject(tx, project2)
+    })
+
+    const result = await loadProjects()
+
+    expect(result).toHaveLength(2)
+    expect(result.find(p => p.name === 'Active Project')?.archived).toBe(false)
+    expect(result.find(p => p.name === 'Archived Project')?.archived).toBe(true)
+  })
+
+  test('Load projects for all users', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const ownProject = { id: randomUUID(), name: 'My Project', owner_id: task.id, archived: false }
+    const otherProject = { id: randomUUID(), name: 'Other Project', owner_id: 'other-user-id', archived: false }
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, ownProject)
+      await createOrModifyProject(tx, otherProject)
+    })
+
+    const result = await loadProjects()
+
+    expect(result).toHaveLength(2)
+    expect(result[0].name).toBe('My Project')
+    expect(result[0].owner_id).toBe(task.id)
+    expect(result[1].name).toBe('Other Project')
+    expect(result[1].owner_id).toBe('other-user-id')
+  })
+
+  test('Returns all project fields', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    await transactional(tx => createOrModifyProject(tx, project))
+
+    const result = await loadProjects()
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual(expect.objectContaining({
+      id: project.id,
+      name: project.name,
+      owner_id: task.id,
+      archived: false,
+    }))
+    expect(result[0].created_at).toBeInstanceOf(Date)
+    expect(result[0].updated_at).toBeInstanceOf(Date)
+  })
+})

@@ -1,7 +1,6 @@
 'use client'
 import { Account, AccountInput } from '@/app/cash/Account'
 import { ACCOUNT_TYPES } from '@/app/cash/AccountType'
-import { ActionResponse } from '@/app/shared/ActionResponse'
 import { Button } from '@/app/shared/components/form/Button'
 import { DataTable } from '@/app/shared/components/table/DataTable'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
@@ -11,12 +10,11 @@ import { v4 as randomUUID } from 'uuid'
 import { boolColumn, enumColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 import { AccountSidebar } from './AccountSidebar'
 import style from './Accounts.module.css'
+import { deleteAccount, saveAccount } from './server'
+import { useParams } from 'next/navigation'
 
 export interface AccountsProps {
-  project_id?: string
   accounts?: Account[]
-  onDeleteAccount?: (account: AccountInput) => ActionResponse<void>
-  onSaveAccount?: (account: AccountInput) => ActionResponse<Account>
 }
 
 const columns = [
@@ -25,8 +23,10 @@ const columns = [
   boolColumn('archived', { header: 'Archived' }),
 ]
 
-export function Accounts({ project_id, accounts, onDeleteAccount, onSaveAccount }: AccountsProps) {
-  const [state, dispatch] = useSidebarState(accounts ?? [], () => (
+export function Accounts({ accounts = [] }: AccountsProps) {
+  const params = useParams()
+  const project_id = params.project_id as string
+  const [state, dispatch] = useSidebarState(accounts, () => (
     { id: randomUUID(), project_id, name: '', type: 'Cash', archived: false } as AccountInput
   ))
 
@@ -55,8 +55,8 @@ export function Accounts({ project_id, accounts, onDeleteAccount, onSaveAccount 
           key={state.current.id}
           account={state.current}
           error={state.error}
-          onDelete={sidebarAction(dispatch, onDeleteAccount)}
-          onSave={sidebarAction(dispatch, onSaveAccount)}
+          onDelete={sidebarAction(dispatch, deleteAccount)}
+          onSave={sidebarAction(dispatch, saveAccount)}
           onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}
         />
       </Sidebar>

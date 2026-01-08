@@ -5,12 +5,6 @@ import { PoolClient } from 'pg'
 
 const pglite = new PGlite()
 
-let user = 'test-user'
-
-export function setUser(id: string) {
-  user = id
-}
-
 beforeAll(async () => {
   const names = await fs.readdir('./db')
   for (const name of names) {
@@ -23,8 +17,5 @@ beforeAll(async () => {
   vi.mock('@/app/shared/db', () => ({
     transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
     nontransactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
-  }))
-  vi.mock('@/app/common/auth/auth', () => ({
-    getUserSession() { return Promise.resolve({ sub: user, email: user + '@example.com' }) },
   }))
 })

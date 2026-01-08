@@ -2,7 +2,7 @@ import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { notFound } from 'next/navigation'
 import { Journal } from './Journal'
 import { stringToPeriod } from '@/app/cash/Period'
-import { deleteTransaction, loadJournal, saveTransaction } from './server'
+import { loadJournal } from './server'
 
 export const metadata: Metadata = {
   title: 'Cash - Journal',
@@ -13,14 +13,14 @@ export interface JournalPageProps {
     project_id: string
     period: string
   }>
-  searchParams: { accountId: string | undefined }
+  searchParams: Promise<{ accountId: string | undefined }>
 }
 
 export default async function Page({ params, searchParams }: JournalPageProps) {
   const paramsResolved = await params
   const period = stringToPeriod(paramsResolved.period)
   const projectId = paramsResolved.project_id
-  const accountId = searchParams.accountId
+  const accountId = (await searchParams).accountId
   if (accountId) {
     // TODO: Show account specific journal
     notFound()
@@ -28,14 +28,7 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
   else {
     const journalData = await loadJournal(period, projectId)
     return (
-      <Journal
-        project_id={journalData.project.id}
-        period={period}
-        accounts={journalData.accounts}
-        transactions={journalData.transactions}
-        onDeleteTransaction={deleteTransaction}
-        onSaveTransaction={saveTransaction}
-      />
+      <Journal accounts={journalData.accounts} transactions={journalData.transactions} />
     )
   }
 }

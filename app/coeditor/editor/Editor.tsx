@@ -3,25 +3,24 @@
 import { useCallback, useReducer, useState } from 'react'
 import { editorStateReducer, initialState } from './EditorState'
 import { Discussion } from '../Discussion'
-import { CommandInput, PredefinedCommandType } from '../Command'
+import { PredefinedCommandType } from '../Command'
 import { Textarea, Selection } from '@/app/shared/components/form/Textarea'
 import { Template } from '../Template'
 import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
-import { ActionResponse } from '@/app/shared/ActionResponse'
-import style from './Editor.module.css'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
 import { EditorContext } from './EditorContext'
 import { Input } from '@/app/shared/components/form/Input'
 import { Button } from '@/app/shared/components/form/Button'
+import { executeCommandAction } from './server'
+import style from './Editor.module.css'
 
 export interface EditorProps {
-  discussion: Discussion | undefined
+  discussion?: Discussion
   templates: Template[]
-  executeCommand?: (input: CommandInput) => ActionResponse<Discussion>
 }
 
-export function Editor({ discussion, templates, executeCommand }: EditorProps) {
+export function Editor({ discussion, templates }: EditorProps) {
   const [state, dispatch] = useReducer(editorStateReducer, initialState(discussion, templates))
   const [customCommand, setCustomCommand] = useState('')
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
@@ -30,7 +29,6 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
   const router = useRouter()
 
   function execute(command?: PredefinedCommandType, restart?: boolean) {
-    if (!executeCommand) return
     setExecutePending(true)
     const input = {
       id: randomUUID(),
@@ -43,7 +41,7 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
       custom_command: command ? undefined : customCommand,
       predefined_command: command,
     }
-    executeCommand(input).then((result) => {
+    executeCommandAction(input).then((result) => {
       if (!result.success) {
         setError(result.error)
         setExecutePending(false)

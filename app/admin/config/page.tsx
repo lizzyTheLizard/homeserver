@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   await getAuthenticatedUserSession('admin')
-  const data = Object.keys(process.env).map(key => ({ id: key, key, value: process.env[key] }))
+  const data = Object.keys(process.env)
+    .map(key => ({ id: key, key, value: process.env[key] }))
 
   return (
     <Config data={data} />

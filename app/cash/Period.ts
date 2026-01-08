@@ -25,8 +25,10 @@ export class Period {
   }
 }
 
+export const all = new Period()
+
 export function stringToPeriod(s: string): Period {
-  if (s === 'ALL') return new Period()
+  if (s === 'ALL') return all
   if (s === 'LATEST') {
     const date = new Date()
     return new Period(true, date.getFullYear(), date.getMonth() + 1)

@@ -7,7 +7,6 @@ import { Button } from '@/app/shared/components/form/Button'
 import { ProfileSidebar } from './ProfileSidebar'
 import { TemplateSidebar } from './TemplateSidebar'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { ActionResponse } from '@/app/shared/ActionResponse'
 import { sidebarAction, useSidebarState } from '@/app/shared/components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import style from './Settings.module.css'
@@ -16,10 +15,6 @@ import { textColumn } from '@/app/shared/components/table/DataTableColumnBuilder
 export interface SettingsProps {
   profiles?: Profile[]
   templates?: Template[]
-  onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
-  onDeleteProfile?: (profile: ProfileInput) => ActionResponse<void>
-  onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
-  onDeleteTemplate?: (template: TemplateInput) => ActionResponse<void>
 }
 
 const profileColumns = [
@@ -33,11 +28,11 @@ const templateColumns = [
   textColumn('text', { header: 'Text' }),
 ]
 
-export function Settings({ profiles, templates, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
-  const [profilesState, dispatchProfiles] = useSidebarState(profiles ?? [], () => (
+export function Settings({ profiles = [], templates = [] }: SettingsProps) {
+  const [profilesState, dispatchProfiles] = useSidebarState(profiles, () => (
     { id: randomUUID(), language: '', text: '' } as ProfileInput
   ))
-  const [templatesState, dispatchTemplates] = useSidebarState(templates ?? [], () => (
+  const [templatesState, dispatchTemplates] = useSidebarState(templates, () => (
     { id: randomUUID(), name: '', language: '', text: '' } as TemplateInput
   ))
 

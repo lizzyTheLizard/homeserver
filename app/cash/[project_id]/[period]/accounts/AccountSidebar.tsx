@@ -5,7 +5,7 @@ import { Select } from '@/app/shared/components/form/Select'
 import { Input } from '@/app/shared/components/form/Input'
 import { Checkbox } from '@/app/shared/components/form/Checkbox'
 import { Button } from '@/app/shared/components/form/Button'
-import style from './Accounts.module.css'
+import style from './AccountSidebar.module.css'
 
 export interface AccountSidebarProps {
   account: AccountInput

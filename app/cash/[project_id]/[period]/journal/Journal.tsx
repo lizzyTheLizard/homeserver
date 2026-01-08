@@ -1,6 +1,5 @@
 'use client'
 import { Account } from '@/app/cash/Account'
-import { ActionResponse } from '@/app/shared/ActionResponse'
 import { Button } from '@/app/shared/components/form/Button'
 import { DataTable } from '@/app/shared/components/table/DataTable'
 import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
@@ -9,22 +8,23 @@ import { sidebarAction, useSidebarState } from '../../../../shared/components/si
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/components/table/DataTableColumnBuilders'
 import { Transaction, TransactionInput } from '@/app/cash/Transaction'
-import { Period } from '@/app/cash/Period'
+import { stringToPeriod } from '@/app/cash/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/CashHelper'
-import style from './Journal.module.css'
 import { TransactionSidebar } from './TransactionSidebar'
 import { useMemo } from 'react'
+import style from './Journal.module.css'
+import { deleteTransaction, saveTransaction } from './server'
+import { useParams } from 'next/navigation'
 
 export interface JournalProps {
-  project_id?: string
-  period?: Period
   accounts?: Account[]
   transactions?: Transaction[]
-  onDeleteTransaction?: (transaction: TransactionInput) => ActionResponse<void>
-  onSaveTransaction?: (transaction: TransactionInput) => ActionResponse<Transaction>
 }
 
-export function Journal({ project_id, period = 'LATEST', accounts = [], transactions = [], onDeleteTransaction, onSaveTransaction }: JournalProps) {
+export function Journal({ accounts = [], transactions = [] }: JournalProps) {
+  const params = useParams()
+  const project_id = params.project_id as string
+  const period = stringToPeriod(params.period as string)
   const [state, dispatch] = useSidebarState(transactions, () => (
     { id: randomUUID(), project_id, credit_account_id: '', debit_account_id: '', amount: 0, date: new Date(), description: '' } as TransactionInput
   ))
@@ -73,8 +73,8 @@ export function Journal({ project_id, period = 'LATEST', accounts = [], transact
           transaction={state.current}
           accounts={accounts}
           error={state.error}
-          onDelete={sidebarAction(dispatch, onDeleteTransaction)}
-          onSave={sidebarAction(dispatch, onSaveTransaction)}
+          onDelete={sidebarAction(dispatch, deleteTransaction)}
+          onSave={sidebarAction(dispatch, saveTransaction)}
           onClose={() => { dispatch({ type: 'CLOSE_SIDEBAR' }) }}
         />
       </Sidebar>
