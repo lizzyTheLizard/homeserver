@@ -6,7 +6,7 @@ import winston from 'winston'
 function getLogFilePath(): string {
   const filename = fileURLToPath(import.meta.url)
   const currentDir = dirname(filename)
-  return path.join(currentDir, 'logs', 'app.log')
+  return path.join(currentDir, '../../logs', 'app.log')
 }
 
 function createLogger(logFile: string) {
