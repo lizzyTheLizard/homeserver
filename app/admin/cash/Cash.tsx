@@ -1,11 +1,9 @@
 'use client'
-
 import { Project, ProjectInput } from '@/app/cash/_data/Project'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { Sidebar, SidebarContent, SidebarMain } from '@/app/shared/_components/sidebar/Sidebar'
 import { Button } from '@/app/shared/_components/form/Button'
-import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
 import { sidebarAction, useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
