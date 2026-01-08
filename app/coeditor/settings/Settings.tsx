@@ -1,131 +1,104 @@
 'use client'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { Profile, ProfileInput } from '../_data/Profile'
+import { Template, TemplateInput } from '../_data/Template'
+import { Sidebar, SidebarContent, SidebarMain } from '@/app/shared/_components/sidebar/Sidebar'
+import { Button } from '@/app/shared/_components/form/Button'
+import { ProfileSidebar } from '../_components/ProfileSidebar'
+import { TemplateSidebar } from '../_components/TemplateSidebar'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { sidebarAction, useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
+import { v4 as randomUUID } from 'uuid'
 import style from './Settings.module.css'
-import { DataTable } from '@/app/shared/components/DataTable'
-import { Profile, ProfileInput } from '../Profile'
-import { Template, TemplateInput } from '../Template'
-import { Sidebar } from '@/app/shared/components/Sidebar'
-import Button from '@/app/shared/components/Button'
-import { DateTime } from '@/app/shared/components/DateTime'
-import { MouseEvent, startTransition, useState } from 'react'
-import { ProfileSidebar } from './ProfileSidebar'
-import { TemplateSidebar } from './TemplateSidebar'
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { ActionResponse, AwaitedActionResponse } from '@/app/shared/ActionResponse'
+import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { deleteProfile, deleteTemplate, updateProfile, updateTemplate } from './server'
 
 export interface SettingsProps {
-  profiles: Profile[]
-  templates: Template[]
-  onSaveProfile?: (profile: ProfileInput) => ActionResponse<Profile>
-  onDeleteProfile?: (language: string) => ActionResponse<void>
-  onSaveTemplate?: (template: TemplateInput) => ActionResponse<Template>
-  onDeleteTemplate?: (id: string) => ActionResponse<void>
+  profiles?: Profile[]
+  templates?: Template[]
 }
 
-export function Settings({ profiles: pin, templates: tin, onSaveProfile, onDeleteProfile, onSaveTemplate, onDeleteTemplate }: SettingsProps) {
-  const [profiles, setProfiles] = useState<Profile[]>(pin)
-  const [templates, setTemplates] = useState<Template[]>(tin)
-  const [open, setOpen] = useState(false)
-  const [sidebar, setSidebar] = useState<React.ReactNode>(null)
-  const [title, setTitle] = useState<string>('New')
-  const [type, setType] = useState<string | undefined>(undefined)
-  const [pending, setPending] = useState<boolean>(false)
+const profileColumns = [
+  textColumn('language', { header: 'Language' }),
+  textColumn('text', { header: 'Text' }),
+]
 
-  function openTemplateSidebar(e: MouseEvent, item?: Template) {
-    setOpen(true)
-    setTitle(item ? (item.name + ' (' + item.language + ')') : 'New Template')
-    setType('Template')
-    setSidebar(<TemplateSidebar key={item?.id} template={item} onDelete={deleteTemplate} onSave={saveTemplate} onClose={() => { setOpen(false) }} />)
-    e.stopPropagation()
-  }
+const templateColumns = [
+  textColumn('name', { header: 'Name' }),
+  textColumn('language', { header: 'Language' }),
+  textColumn('text', { header: 'Text' }),
+]
 
-  function openProfileSidebar(e: MouseEvent, item?: Profile) {
-    setOpen(true)
-    setTitle(item?.language ?? 'New Profile')
-    setType('Profile')
-    setSidebar(<ProfileSidebar key={item?.language} profile={item} onDelete={deleteProfile} onSave={saveProfile} onClose={() => { setOpen(false) }} />)
-    e.stopPropagation()
-  }
+export function Settings({ profiles = [], templates = [] }: SettingsProps) {
+  const [profilesState, dispatchProfiles] = useSidebarState(profiles, () => (
+    { id: randomUUID(), language: '', text: '' } as ProfileInput
+  ))
+  const [templatesState, dispatchTemplates] = useSidebarState(templates, () => (
+    { id: randomUUID(), name: '', language: '', text: '' } as TemplateInput
+  ))
 
-  function saveTemplate(input: TemplateInput, callback: (response: AwaitedActionResponse<Template>) => void): void {
-    wrap(onSaveTemplate, input, callback, (result) => { setTemplates([...templates.filter(t => input.id !== t.id), result]) })
-  }
-
-  function deleteTemplate(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
-    wrap(onDeleteTemplate, input, callback, () => { setTemplates([...templates.filter(t => input !== t.id)]) })
-  }
-
-  function saveProfile(input: ProfileInput, callback: (response: AwaitedActionResponse<Profile>) => void): void {
-    wrap(onSaveProfile, input, callback, (result) => { setProfiles([...profiles.filter(p => input.id !== p.id), result]) })
-  }
-
-  function deleteProfile(input: string, callback: (response: AwaitedActionResponse<void>) => void): void {
-    wrap(onDeleteProfile, input, callback, () => { setProfiles([...profiles.filter(p => p.id !== input)]) })
-  }
-
-  function wrap<IN, OUT>(action: undefined | ((input: IN) => ActionResponse<OUT>), input: IN, callback: (result: AwaitedActionResponse<OUT>) => void, merge: (result: OUT) => void) {
-    if (!action) return
-    setPending(true)
-    startTransition(async () => {
-      const result = await action(input)
-      callback(result)
-      if (result.success) {
-        merge(result.data)
-        setOpen(false)
-      }
-      setPending(false)
-    })
+  function closeAllSidebars() {
+    dispatchProfiles({ type: 'CLOSE_SIDEBAR' })
+    dispatchTemplates({ type: 'CLOSE_SIDEBAR' })
   }
 
   return (
-    <Sidebar open={open} onClose={() => { setOpen(false) }} sidebar={sidebar} title={title} type={type}>
-      {pending && <LoadingSpinner text="Processing..." />}
-      <h2>Profiles</h2>
-      <DataTable className={style.table}>
-        <thead>
-          <tr>
-            <th className={style.language}>Language</th>
-            <th className={style.updated}>Last Updated</th>
-            <th>Text</th>
-          </tr>
-        </thead>
-        <tbody>
-          {profiles.map(profile => (
-            <tr key={profile.language} onClick={(e) => { openProfileSidebar(e, profile) }} className={style.settingsrow}>
-              <td>{profile.language}</td>
-              <td><DateTime hideTime={true} date={profile.updated_at} /></td>
-              <td className={style.text}>{profile.text}</td>
-            </tr>
-          ))}
-        </tbody>
-      </DataTable>
-      <div className={style.createButtonRow + ' row'}>
-        <Button className={style.createButton} onClick={(e) => { openProfileSidebar(e) }}>Add</Button>
-      </div>
+    <SidebarMain>
+      {(profilesState.pending || templatesState.pending) && <LoadingSpinner text="Processing..." />}
+      <SidebarContent onClose={closeAllSidebars}>
+        <h1>Settings</h1>
+        <h2>Profiles</h2>
+        <DataTable
+          onRowClick={(e, profile) => { dispatchProfiles({ type: 'SHOW_SIDEBAR', item: profile }); e.stopPropagation() }}
+          columns={profileColumns}
+          data={profilesState.all}
+          initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        />
+        <div className={style.createButtonRow + ' row'}>
+          <Button className={style.createButton} onClick={(e) => { dispatchProfiles({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
+        </div>
 
-      <h2>Templates</h2>
-      <DataTable className={style.table}>
-        <thead>
-          <tr>
-            <th className={style.language}>Language</th>
-            <th className={style.name}>Name</th>
-            <th className={style.updated}>Last Updated</th>
-            <th>Text</th>
-          </tr>
-        </thead>
-        <tbody>
-          {templates.map(template => (
-            <tr key={template.id} onClick={(e) => { openTemplateSidebar(e, template) }} className={style.settingsrow}>
-              <td>{template.language}</td>
-              <td>{template.name}</td>
-              <td><DateTime hideTime={true} date={template.updated_at} /></td>
-              <td className={style.text}>{template.text}</td>
-            </tr>
-          ))}
-        </tbody>
-      </DataTable>
-      <div className={style.createButtonRow + ' row'}>
-        <Button className={style.createButton} onClick={(e) => { openTemplateSidebar(e) }}>Add</Button>
-      </div>
-    </Sidebar>
+        <h2>Templates</h2>
+        <DataTable
+          onRowClick={(e, template) => { dispatchTemplates({ type: 'SHOW_SIDEBAR', item: template }); e.stopPropagation() }}
+          columns={templateColumns}
+          data={templatesState.all}
+          initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        />
+        <div className={style.createButtonRow + ' row'}>
+          <Button className={style.createButton} onClick={(e) => { dispatchTemplates({ type: 'SHOW_SIDEBAR' }); e.stopPropagation() }}>Add</Button>
+        </div>
+      </SidebarContent>
+      <Sidebar
+        open={profilesState.sidebarOpen}
+        type="Profile"
+        title={profilesState.current.language === '' ? 'New Profile' : profilesState.current.language}
+        onClose={() => { dispatchProfiles({ type: 'CLOSE_SIDEBAR' }) }}
+      >
+        <ProfileSidebar
+          key={profilesState.current.id}
+          profile={profilesState.current}
+          onDelete={sidebarAction(dispatchProfiles, deleteProfile)}
+          onSave={sidebarAction(dispatchProfiles, updateProfile)}
+          onClose={() => { dispatchProfiles({ type: 'CLOSE_SIDEBAR' }) }}
+          error={profilesState.error}
+        />
+      </Sidebar>
+      <Sidebar
+        open={templatesState.sidebarOpen}
+        type="Template"
+        title={templatesState.current.language === '' ? 'New Template' : templatesState.current.name + ' (' + templatesState.current.language + ')'}
+        onClose={() => { dispatchTemplates({ type: 'CLOSE_SIDEBAR' }) }}
+      >
+        <TemplateSidebar
+          key={templatesState.current.id}
+          template={templatesState.current}
+          onDelete={sidebarAction(dispatchTemplates, deleteTemplate)}
+          onSave={sidebarAction(dispatchTemplates, updateTemplate)}
+          onClose={() => { dispatchTemplates({ type: 'CLOSE_SIDEBAR' }) }}
+          error={templatesState.error}
+        />
+      </Sidebar>
+    </SidebarMain>
   )
 }

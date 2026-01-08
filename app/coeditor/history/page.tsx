@@ -1,22 +1,12 @@
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { getUserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/shared/db'
-import { findDiscussionByOwner } from '../Discussion'
 import { History } from './History'
+import { loadHistory } from './server'
 
 export const metadata: Metadata = {
   title: 'CoEditor - History',
 }
 
 export default async function Page() {
-  const user = await getUserSession()
-  if (!user) throw new Error('User not authenticated')
-  const discussions = await transactional(client => findDiscussionByOwner(client, user.sub))
-
-  return (
-    <main>
-      <h1>History</h1>
-      <History discussions={discussions} />
-    </main>
-  )
+  const discussions = await loadHistory()
+  return <History discussions={discussions} />
 }

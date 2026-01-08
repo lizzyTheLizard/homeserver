@@ -1,6 +1,7 @@
-import { logger } from '@/logger'
+import { logger } from '@/app/shared/logger'
 import { callback } from '../auth'
 import { NextRequest } from 'next/server'
+import { config } from '@/app/shared/config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +10,6 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logger.error('Error during login callback', error)
-    if (!process.env.APP_URL) throw new Error('APP_URL is not defined in environment variables')
-    return Response.redirect(process.env.APP_URL + '/common/auth/error')
+    return Response.redirect(config.APP_URL + '/common/auth/error')
   }
 }

@@ -1,19 +1,17 @@
-import { getUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
-import { findNumberOfDiscussions } from '@/app/coeditor/Discussion'
-import { transactional } from '@/app/shared/db'
-import { findNumberOfCommands } from '@/app/coeditor/Command'
-import { findNumberOfUsersWithTemplates } from '@/app/coeditor/Template'
-import { DashboardCard, LineItem } from '../DashboardCard'
+import { findNumberOfDiscussions } from '@/app/coeditor/_data/Discussion'
+import { nontransactional } from '@/app/shared/db'
+import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
+import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
+import { DashboardCard, LineItem } from '../_components/DashboardCard'
 
 export const metadata: Metadata = {
   title: 'Admin - Metrics',
 }
 
 export default async function Page() {
-  const session = await getUserSession()
-  if (!session) throw new Error('Not authenticated')
-  if (!session.applications.includes('admin')) throw new Error('Not authorized')
+  await getAuthenticatedUserSession('admin')
 
   return (
     <main>
@@ -35,15 +33,16 @@ function getGeneralMetrics(): LineItem[] {
 }
 
 async function getCoeditorMetrics(): Promise<LineItem[]> {
-  return transactional(async client => ([
-    { name: 'Coeditor Users', value: await findNumberOfUsersWithTemplates(client) },
-    { name: 'Discussions (Total)', value: await findNumberOfDiscussions(client) },
-    { name: 'Discussions (day)', value: await findNumberOfDiscussions(client, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
-    { name: 'Commands (Total)', value: await findNumberOfCommands(client) },
-    { name: 'Commands (day)', value: await findNumberOfCommands(client, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+  return nontransactional(async c => ([
+    { name: 'Coeditor Users', value: await findNumberOfUsersWithTemplates(c) },
+    { name: 'Discussions (Total)', value: await findNumberOfDiscussions(c) },
+    { name: 'Discussions (day)', value: await findNumberOfDiscussions(c, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+    { name: 'Commands (Total)', value: await findNumberOfCommands(c) },
+    { name: 'Commands (day)', value: await findNumberOfCommands(c, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
   ] as LineItem[]))
 }
 
 function getCashMetrics(): LineItem[] {
+  // TODO implement cash metrics. Show important ones in dashboard as well.
   return []
 }

@@ -4,21 +4,32 @@ export interface Application {
   name: string
   link: string
   description: string
-  links: { text: string, href: string }[]
+  getLinks: (path: string) => { text: string, href: string }[]
 }
 
 export const applications: Application[] = [
   {
-    key: 'app', link: '/cash', icon: 'cash', name: 'Cash',
+    key: 'cash', link: '/cash/', icon: 'cash', name: 'Cash',
     description: 'Double bookkeeping application for privates',
-    links: [
-      { text: 'Home', href: '/coeditor/' },
-    ],
+    getLinks: (path: string) => {
+      if (path.startsWith('/cash/projects/')) return []
+      if (!path.startsWith('/cash/')) return []
+      const split = path.split('/')
+      if (split.length < 4) return []
+      const projectId = split[2]
+      const date = split[3]
+      return [
+        { text: 'Journal', href: `/cash/${projectId}/${date}/journal` },
+        { text: 'Accounts', href: `/cash/${projectId}/${date}/accounts` },
+        { text: 'Reports', href: `/cash/${projectId}/${date}/reports` },
+        { text: 'Closing', href: `/cash/${projectId}/${date}/closing` },
+      ]
+    },
   },
   {
     key: 'admin', link: '/admin/dashboard', icon: 'admin', name: 'Admin',
     description: 'General server admin',
-    links: [
+    getLinks: () => [
       { text: 'Dashboard', href: '/admin/dashboard' },
       { text: 'Metrics', href: '/admin/metrics' },
       { text: 'Config', href: '/admin/config' },
@@ -29,7 +40,7 @@ export const applications: Application[] = [
   {
     key: 'coeditor', link: '/coeditor/editor', icon: 'coeditor', name: 'CoEditor',
     description: 'Customizable AI-driven Editor',
-    links: [
+    getLinks: () => [
       { text: 'Editor', href: '/coeditor/editor' },
       { text: 'Settings', href: '/coeditor/settings' },
       { text: 'History', href: '/coeditor/history' },

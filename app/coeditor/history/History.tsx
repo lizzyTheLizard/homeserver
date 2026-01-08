@@ -1,34 +1,32 @@
-import { Discussion } from '../Discussion'
-import { DateTime } from '@/app/shared/components/DateTime'
-import Link from 'next/dist/client/link'
-import { DataTable } from '@/app/shared/components/DataTable'
-import style from './History.module.css'
+'use client'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { useRouter } from 'next/navigation'
+import { Discussion } from '../_data/Discussion'
+
+const columns = [
+  textColumn('title', { header: 'Title' }),
+  dateColumn('updated_at', { header: 'Last Updated' }),
+  textColumn('context', { header: 'Context' }),
+  textColumn('text', { style: { whiteSpace: 'pre-wrap' }, header: 'Text' }),
+]
 
 export interface HistoryProps {
-  discussions: Discussion[]
-
+  discussions?: Discussion[]
 }
-export function History({ discussions }: HistoryProps) {
+
+export function History({ discussions = [] }: HistoryProps) {
+  const router = useRouter()
+
   return (
-    <DataTable className={style.table}>
-      <thead>
-        <tr>
-          <th className={style.title}>Title</th>
-          <th className={style.updated}>Last Updated</th>
-          <th>Text</th>
-          <th>Context</th>
-        </tr>
-      </thead>
-      <tbody>
-        {discussions.map(discussion => (
-          <tr key={discussion.id}>
-            <td><Link href={`/coeditor/editor?id=${discussion.id}`}>{discussion.title}</Link></td>
-            <td><DateTime date={discussion.updated_at} /></td>
-            <td className={style.text}>{discussion.text}</td>
-            <td className={style.text}>{discussion.context}</td>
-          </tr>
-        ))}
-      </tbody>
-    </DataTable>
+    <main>
+      <h1>History</h1>
+      <DataTable
+        columns={columns}
+        data={discussions}
+        initialSortingOrder={[{ key: 'updated_at', direction: 'DESC' }]}
+        onRowClick={(e, discussion) => { router.push(`/coeditor/editor?id=${discussion.id}`) }}
+      />
+    </main>
   )
 }

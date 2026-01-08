@@ -35,8 +35,16 @@ export default defineConfig({
     }, {
       extends: true,
       test: {
+        name: 'integration',
+        include: ['**/server.tests.ts'],
+        setupFiles: ['vitest.setup.ts'],
+      },
+    }, {
+      extends: true,
+      test: {
         name: 'unit',
-        include: ['**/*.tests.ts', '**/*.tests.tsx'],
+        include: ['**/*.tests.ts'],
+        exclude: ['**/server.tests.ts'],
         setupFiles: ['vitest.setup.ts'],
       },
     }],

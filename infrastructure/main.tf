@@ -53,6 +53,7 @@ resource "scaleway_container" "www_gutschi_site" {
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
     COOKIE_NAME="session",
+    ADMIN_EMAIL=var.admin_email
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
@@ -81,6 +82,7 @@ resource "scaleway_container" "test_gutschi_site" {
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
     COOKIE_NAME="session"
+    ADMIN_EMAIL=var.admin_email
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,

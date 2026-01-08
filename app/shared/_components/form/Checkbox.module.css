@@ -1,0 +1,30 @@
+.container {
+    display: flex;
+}
+
+.container.center {
+    justify-content: center;
+}
+
+.input{
+    width: 1.2rem;
+    margin: 0;
+    height: var(--input-height);
+}
+
+.input:disabled {
+    background-color: var(--disabled-transparent-color);
+    color: var(--default-text-color);
+    cursor: not-allowed;
+}
+
+.label {
+    color: rgba(0, 0, 0, 0.6);
+    align-content: center;
+    padding-left: var(--gap-small);
+}
+
+.input.small{
+    height: calc(var(--input-height) / 2);
+    width: 0.9rem
+}

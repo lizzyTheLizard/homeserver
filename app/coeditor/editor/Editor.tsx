@@ -1,27 +1,26 @@
 'use client'
 
-import { startTransition, useCallback, useReducer, useState } from 'react'
-import { editorStateReducer, initialState } from './EditorState'
-import { Discussion } from '../Discussion'
-import { CommandInput, PredefinedCommandType } from '../Command'
-import { Textarea, Selection } from '@/app/shared/components/Textarea'
-import { Template } from '../Template'
+import { useCallback, useReducer, useState } from 'react'
+import { editorStateReducer, initialState } from './Editor.state'
+import { Discussion } from '../_data/Discussion'
+import { PredefinedCommandType } from '../_data/Command'
+import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
+import { Template } from '../_data/Template'
 import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
-import { ActionResponse } from '@/app/shared/ActionResponse'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { EditorContext } from '../_components/EditorContext'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Button } from '@/app/shared/_components/form/Button'
+import { executeCommand } from './server'
 import style from './Editor.module.css'
-import { LoadingSpinner } from '@/app/shared/components/LoadingSpinner'
-import { EditorContext } from './EditorContext'
-import { Input } from '@/app/shared/components/Input'
-import Button from '@/app/shared/components/Button'
 
 export interface EditorProps {
-  discussion: Discussion | undefined
+  discussion?: Discussion
   templates: Template[]
-  executeCommand?: (input: CommandInput) => ActionResponse<Discussion>
 }
 
-export function Editor({ discussion, templates, executeCommand }: EditorProps) {
+export function Editor({ discussion, templates }: EditorProps) {
   const [state, dispatch] = useReducer(editorStateReducer, initialState(discussion, templates))
   const [customCommand, setCustomCommand] = useState('')
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
@@ -42,18 +41,22 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
       custom_command: command ? undefined : customCommand,
       predefined_command: command,
     }
-    startTransition(async () => {
-      const result = await executeCommand?.(input)
-      setExecutePending(false)
-      if (!result?.success) {
-        setError(result?.error)
+    executeCommand(input).then((result) => {
+      if (!result.success) {
+        setError(result.error)
+        setExecutePending(false)
         return
       }
       dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
       setCustomCommand('')
       setError(undefined)
+      setExecutePending(false)
       if (result.data.id !== discussion?.id)
         router.replace(`/coeditor/editor?id=${result.data.id}`)
+    }).catch((error: unknown) => {
+      console.error('Error executing command:', error)
+      setExecutePending(false)
+      setError(error instanceof Error ? error.message : String(error))
     })
   }
 
@@ -79,7 +82,8 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
   }
 
   return (
-    <>
+    <main>
+      <h1>CoEditor</h1>
       {executePending && <LoadingSpinner text="Executing command..." />}
       <EditorContext
         templates={templates}
@@ -121,6 +125,6 @@ export function Editor({ discussion, templates, executeCommand }: EditorProps) {
         <Button onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length}>Redo</Button>
         <Button onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id}>New</Button>
       </div>
-    </>
+    </main>
   )
 }
