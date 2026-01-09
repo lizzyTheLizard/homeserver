@@ -9,13 +9,13 @@ describe.concurrent('AI Integration Tests', () => {
       title: 'Story',
       context: '',
       language: 'en',
-      custom_command: 'Transform everything to uppercase',
+      custom_command: 'Transform text and title to uppercase',
     }
     const result: CommandResult = await aiPort(command, [], { dangerouslyAllowBrowser: true })
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       text: 'THIS IS A SAMPLE TEXT',
-      title: 'Story',
+      title: 'STORY',
     })
   }, 10000)
 
