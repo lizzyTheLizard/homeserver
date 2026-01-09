@@ -21,6 +21,7 @@ resource "scaleway_iam_policy" "gutschi_site" {
   }
 }
 
+
 resource "scaleway_sdb_sql_database" "www_gutschi_site" {
   name            = "www-gutschi-site"
   min_cpu         = 0
@@ -38,6 +39,7 @@ resource "scaleway_container_namespace" "gutschi_site" {
   description     = "Gutschi.site Homeserver"
 }
 
+/* TODO: create www.gutschi.site container
 resource "scaleway_container" "www_gutschi_site" {
   name            = "www-gutschi-site"
   description     = "React-Application incl. backend"
@@ -66,6 +68,7 @@ resource "scaleway_container" "www_gutschi_site" {
     OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key    
   }
 }
+*/
 
 resource "scaleway_container" "test_gutschi_site" {
   name            = "test-gutschi-site"
@@ -94,11 +97,12 @@ resource "scaleway_container" "test_gutschi_site" {
     ),
     OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key     }
 }
-
+/* TODO: create www.gutschi.site container
 resource scaleway_container_domain "www_gutschi_site" {
   container_id = scaleway_container.www_gutschi_site.id
   hostname     = "www-scaleway.gutschi.site"
 }
+*/
 
 resource scaleway_container_domain "test_gutschi_site" {
   container_id = scaleway_container.test_gutschi_site.id
