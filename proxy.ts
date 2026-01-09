@@ -25,6 +25,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     response = new NextResponse('Forbidden', { status: 403 })
   }
   else {
+    logger.info(`Unauthenticated access from user agent '${request.headers.get('User-Agent') ?? 'unknown'}'`)
     const redirectTo = await startLogin(request)
     response = NextResponse.redirect(redirectTo.href)
   }
