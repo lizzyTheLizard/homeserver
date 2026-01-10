@@ -24,8 +24,19 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     logger.info(`Blocked crawler '${crawlerName}' access to ${request.nextUrl.pathname}`)
     response = new NextResponse('Forbidden', { status: 403 })
   }
+  else if (request.headers.get('User-Agent')?.includes('(Windows NT 6.1; WOW64)')) {
+    logger.info(`Unauthenticated access from Win7 client`)
+    logger.info(`Request details:`)
+    logger.info(`IP: ${request.url}`)
+    logger.info(`Path: ${request.nextUrl.pathname}`)
+    logger.info(`Method: ${request.method}`)
+    logger.info(`Headers:`)
+    request.headers.forEach((value, key) => {
+      logger.info(`Header: ${key} = ${value}`)
+    })
+    response = new NextResponse('Forbidden', { status: 403 })
+  }
   else {
-    logger.info(`Unauthenticated access from user agent '${request.headers.get('User-Agent') ?? 'unknown'}'`)
     const redirectTo = await startLogin(request)
     response = NextResponse.redirect(redirectTo.href)
   }
