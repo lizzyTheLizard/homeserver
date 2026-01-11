@@ -4,7 +4,8 @@ import { logger } from '@/app/shared/logger'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
-import { getApplicationsForUser } from '../Application'
+import { findProjectsByOwner } from '@/app/cash/_data/Project'
+import { nontransactional } from '@/app/shared/db'
 
 export interface UserSession {
   sub: string
@@ -123,3 +124,16 @@ async function getClientConfig(): Promise<client.Configuration> {
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
+
+export async function getApplicationsForUser(sub: string, email: string): Promise<string[]> {
+  // Everyone can access coeditor
+  const result = ['coeditor']
+  // Only the admin can access admin pages
+  if (email === config.ADMIN_EMAIL) result.push('admin')
+  // Only if you have a project you can access cash
+  const projects = await nontransactional(c => findProjectsByOwner(c, sub))
+  if (projects.length > 0) {
+    result.push('cash')
+  }
+  return result
+}

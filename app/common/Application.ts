@@ -1,7 +1,3 @@
-import { findProjectsByOwner } from '../cash/_data/Project'
-import { config } from '../shared/config'
-import { nontransactional } from '../shared/db'
-
 export interface Application {
   key: string
   icon: string
@@ -51,16 +47,3 @@ export const applications: Application[] = [
     ],
   },
 ]
-
-export async function getApplicationsForUser(sub: string, email: string): Promise<string[]> {
-  // Everyone can access coeditor
-  const result = ['coeditor']
-  // Only the admin can access admin pages
-  if (email === config.ADMIN_EMAIL) result.push('admin')
-  // Only if you have a project you can access cash
-  const projects = await nontransactional(c => findProjectsByOwner(c, sub))
-  if (projects.length > 0) {
-    result.push('cash')
-  }
-  return result
-}
