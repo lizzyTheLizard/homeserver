@@ -1,11 +1,10 @@
-import { findProjectsByOwner } from '@/app/cash/_data/Project'
 import { config } from '@/app/shared/config'
 import { unexpectedError } from '@/app/shared/_helper/BackendError'
-import { nontransactional } from '@/app/shared/db'
 import { logger } from '@/app/shared/logger'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
+import { getApplicationsForUser } from '../Application'
 
 export interface UserSession {
   sub: string
@@ -69,7 +68,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   const sub = claims.sub
   const name = claims.given_name as string
   const email = claims.email as string
-  const applications = await getApplications(sub, email)
+  const applications = await getApplicationsForUser(sub, email)
   const result = session.originalUrlRelative ?? '/'
   session.code_verifier = undefined
   session.state = undefined
@@ -124,17 +123,3 @@ async function getClientConfig(): Promise<client.Configuration> {
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
-
-// TODO: Move to applications?
-async function getApplications(sub: string, email: string): Promise<string[]> {
-  // Everyone can access coeditor
-  const result = ['coeditor']
-  // Only the admin can access admin pages
-  if (email === config.ADMIN_EMAIL) result.push('admin')
-  // Only if you have a project you can access cash
-  const projects = await nontransactional(c => findProjectsByOwner(c, sub))
-  if (projects.length > 0) {
-    result.push('cash')
-  }
-  return result
-}

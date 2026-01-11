@@ -4,7 +4,14 @@ import { Icon } from '../Icon'
 import styles from './Sidebar.module.css'
 
 export function SidebarContainer({ children }: PropsWithChildren<object>) {
-  // TODO: Open sidebars in main automatically without the need of a sidebar container
+  // TODO: Refactor Sidebar system
+  // Open the sidebars in main using https://react.dev/reference/react-dom/createPortal.
+  // <main> is "always" the sidebar holder, removing the need for a dedicted one.
+  // You can then have a generic sidbar component holding the form as child and having the state in the main component, removing the need for dedicted components
+  // All the page setup (title, main etc.) will go back to the "page.tsx" file, the components will only be the "dynamic" parts again
+  // For settings, there will be two components with their own sidebar, one for profiles and one for templates.
+  // A nice way of syncing the sidebar state over multiple sidebars must be found, e.g. ad a const in the sidebar component file
+
   return (
     <div className={styles.container}>
       {children}
