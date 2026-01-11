@@ -16,7 +16,6 @@
     "chromatic": "npx chromatic --build-script-name build-storybook"
   },
   "dependencies": {
-    "es6-crawler-detect": "^4.0.2",
     "iron-session": "^8.0.4",
     "next": "16.0.7",
     "openai": "^6.10.0",
