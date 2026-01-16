@@ -69,7 +69,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   const sub = claims.sub
   const name = claims.given_name as string
   const email = claims.email as string
-  const applications = await getApplicationsForUser(sub, email)
+  const applications = await getApplications(sub, email)
   const result = session.originalUrlRelative ?? '/'
   session.code_verifier = undefined
   session.state = undefined
@@ -111,8 +111,8 @@ interface SessionData {
 async function getSession(): Promise<IronSession<SessionData>> {
   const cookiesList = await cookies()
   const settings = {
-    cookieName: config.COOKIE_NAME,
-    password: config.SESSION_PASSWORD,
+    cookieName: config.SESSION.COOKIE_NAME,
+    password: config.SESSION.SESSION_PASSWORD,
     ttl: 604800, // 1 week in seconds
     cookieOptions: { secure: process.env.NODE_ENV === 'development' ? false : true },
   }
@@ -120,12 +120,12 @@ async function getSession(): Promise<IronSession<SessionData>> {
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
-  clientConfigCache ??= client.discovery(new URL(config.ISSUER), config.CLIENT_ID, config.CLIENT_SECRET)
+  clientConfigCache ??= client.discovery(new URL(config.OIDC.ISSUER), config.OIDC.CLIENT_ID, config.OIDC.CLIENT_SECRET)
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
 
-export async function getApplicationsForUser(sub: string, email: string): Promise<string[]> {
+async function getApplications(sub: string, email: string): Promise<string[]> {
   // Everyone can access coeditor
   const result = ['coeditor']
   // Only the admin can access admin pages
