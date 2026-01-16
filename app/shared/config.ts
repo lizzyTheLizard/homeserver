@@ -25,7 +25,7 @@ export const config: Config = {
   AI: {
     BASE_URL: 'https://api.scaleway.ai/0e73b082-b389-4c17-9bc1-62b013f1f0d1/v1',
     API_KEY: process.env.OPENAI_API_KEY ?? '',
-    MODEL: 'gpt-oss-120b',
+    MODEL: 'mistral-small-3.2-24b-instruct-2506',
   },
   OIDC: {
     CLIENT_ID: process.env.CLIENT_ID ?? 'coeditor-client',
