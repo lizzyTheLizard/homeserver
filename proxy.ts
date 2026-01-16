@@ -5,7 +5,6 @@ import { logger } from '@/app/shared/logger'
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const session = await getUserSession()
-
   let response: NextResponse
   if (request.nextUrl.pathname.startsWith('/_next/')) {
     return NextResponse.next()
