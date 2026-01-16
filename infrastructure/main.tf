@@ -46,7 +46,8 @@ resource "scaleway_container" "www_gutschi_site" {
   port            = 3000
   min_scale       = 0
   max_scale       = 1
-  privacy         = "public"
+  // TODO: set containers to public again
+  privacy         = "private"
   deploy          = true
   environment_variables = {
     APP_URL="https://www-scaleway.gutschi.site",
@@ -75,7 +76,8 @@ resource "scaleway_container" "test_gutschi_site" {
   port            = 3000
   min_scale       = 0
   max_scale       = 1
-  privacy         = "public"
+  // TODO: set containers to public again
+  privacy         = "private"
   deploy          = false
   environment_variables = {
     APP_URL="https://test-scaleway.gutschi.site",

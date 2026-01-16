@@ -125,7 +125,6 @@ async function getClientConfig(): Promise<client.Configuration> {
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
 
-// TODO: Move to applications?
 async function getApplications(sub: string, email: string): Promise<string[]> {
   // Everyone can access coeditor
   const result = ['coeditor']

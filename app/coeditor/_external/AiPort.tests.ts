@@ -3,21 +3,21 @@ import { CommandResult } from '../_data/Command'
 import { aiPort, AiPortInput } from './AiPort'
 
 describe.concurrent('AI Integration Tests', () => {
-  test('Smoke test', async () => {
+  test('Smoke test', { retry: 5, timeout: 10000 }, async () => {
     const command: AiPortInput = {
       text: 'This is a sample text',
       title: 'Story',
       context: '',
       language: 'en',
-      custom_command: 'Transform everything to uppercase',
+      custom_command: 'Transform text and title to uppercase',
     }
     const result: CommandResult = await aiPort(command, [], { dangerouslyAllowBrowser: true })
     expect(result).toEqual({
       durationMs: expect.any(Number) as number,
       text: 'THIS IS A SAMPLE TEXT',
-      title: 'Story',
+      title: 'STORY',
     })
-  }, 10000)
+  })
 
   test('Context', async () => {
     const command: AiPortInput = {
