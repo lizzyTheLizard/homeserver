@@ -5,6 +5,7 @@ import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
 import { logger } from '@/app/shared/logger'
 import { ClientOptions } from 'openai'
 import { validateObject } from '@/app/shared/_helper/validation'
+import { config } from '@/app/shared/config'
 
 export interface TextAndSelection {
   text?: string
@@ -26,9 +27,9 @@ export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?
   const nextMessage = createNextMessage(input)
   logger.debug(`AI Port called with message: ${nextMessage.content}`)
   const start = performance.now()
-  const client = new OpenAI({ ...opts, baseURL: 'https://api.scaleway.ai/v1' })
+  const client = new OpenAI({ ...opts, baseURL: config.AI.BASE_URL, apiKey: config.AI.API_KEY })
   const response = await client.responses.create({
-    model: 'gpt-oss-120b',
+    model: config.AI.MODEL,
     input: [systemMessage, ...messagesSoFar, nextMessage as ResponseInputItem],
   })
   const end = performance.now()
@@ -46,14 +47,14 @@ You can answer questions about the text, execute commands and replace text. You 
 - profile: The profile of the user, which contains information about the user and their preferences. Might not be given, then just assume a generic profile.
 - context: The context of the discussion, which contains the text of the document and other relevant information. Might not be given, then just assume an empty context.
 - title: The current title of the document, if any. It is not given, the document has no title.
-- text: The whole text of the document so far. If not given, no text is present.
+  - text: The whole text of the document so far. If not given, no text is present.
 - selection: The selected part of the text that the user wants to edit, if any. It contains the start and end index and the text itself. It not given, edit the whole text.
 - command: The command that the user wants to execute. It contains the message of the messagePredefinedCommand.
 
 You will answer with a JSON object with the following fields:
-- text: The text as changed by the command. If a selection has been send, this only has to be the replacement of the selected text. This field has to be present.
-- title: The new title of the document. The title must be max 256 characters long. For short texts, the title can be the text itself, for longer texts, it should be a summary of the text. If the old title still fits you can keep it. This field has to be present.
-- error: If an error occurred, this field contains the error message. If no error occurred, this field is not present.
+  - text: The text as changed by the command. If a selection has been send, this only has to be the replacement of the selected text. This field has to be present.
+  - title: The new title of the document. The title must be max 256 characters long. For short texts, the title can be the text itself, for longer texts, it should be a summary of the text. If the old title still fits you can keep it. This field has to be present.
+  - error: If an error occurred, this field contains the error message. If no error occurred, this field is not present.
 You will never change the profile or context of the discussion, only the text. Do not response any other text that this JSON object.` }
 
 function mapCommandsSoFar(command: Command): ResponseInputItem[] {
