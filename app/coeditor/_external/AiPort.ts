@@ -1,10 +1,10 @@
 import OpenAI from 'openai'
-import type { ResponseInputItem } from 'openai/resources/responses/responses.mjs'
 import { invalidInput, unexpectedError } from '@/app/shared/_helper/BackendError'
 import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
 import { logger } from '@/app/shared/logger'
 import { ClientOptions } from 'openai'
 import { validateObject } from '@/app/shared/_helper/validation'
+import { ChatCompletionMessageParam, ResponseFormatJSONSchema } from 'openai/resources'
 import { config } from '@/app/shared/config'
 
 export interface TextAndSelection {
@@ -25,23 +25,25 @@ export interface AiPortInput extends TextAndSelection {
 export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?: ClientOptions): Promise<CommandResult> {
   const messagesSoFar = commandsSoFar.flatMap(command => mapCommandsSoFar(command))
   const nextMessage = createNextMessage(input)
-  logger.debug(`AI Port called with message: ${nextMessage.content}`)
+  logger.debug(`AI called with message: ${JSON.stringify(JSON.parse(nextMessage.content as string), null, 2)}`)
   const start = performance.now()
   const client = new OpenAI({ ...opts, baseURL: config.AI.BASE_URL, apiKey: config.AI.API_KEY })
-  const response = await client.responses.create({
+  const completion = await client.chat.completions.create({
     model: config.AI.MODEL,
-    input: [systemMessage, ...messagesSoFar, nextMessage as ResponseInputItem],
+    messages: [systemMessage, ...messagesSoFar, nextMessage],
+    response_format: responseFormat,
   })
   const end = performance.now()
-  const output = JSON.parse(response.output_text) as { text: string, title: string, error?: string }
-  validateObject(output, OpenAiOutputContraints)
-  logger.debug(`AI Port got response: ${JSON.stringify(output)}`)
+  const output = JSON.parse(completion.choices[0].message.content ?? '') as { text: string, title: string, error?: string }
+  validateObject(output, responseFormatConstraint)
+  logger.debug(`AI Port call took ${((end - start) / 1000).toString()} seconds`)
+  logger.debug(`AI response : ${JSON.stringify(output, null, 2)}`)
   if (output.error) throw unexpectedError(`AI Port error: ${output.error}`, 'AI Port Error')
   const newText = getFullNewText(input, output.text)
   return { title: output.title, text: newText, durationMs: end - start }
 }
 
-const systemMessage: ResponseInputItem = { role: 'developer', content: `You are an AI editor that helps users to edit text documents.
+const systemMessage: ChatCompletionMessageParam = { role: 'developer', content: `You are an AI editor that helps users to edit text documents.
 You can answer questions about the text, execute commands and replace text. You will get your input in the form of a JSON object with the following fields:
 - language: The language of the text document, which is used to determine the language model to use.
 - profile: The profile of the user, which contains information about the user and their preferences. Might not be given, then just assume a generic profile.
@@ -57,7 +59,7 @@ You will answer with a JSON object with the following fields:
   - error: If an error occurred, this field contains the error message. If no error occurred, this field is not present.
 You will never change the profile or context of the discussion, only the text. Do not response any other text that this JSON object.` }
 
-function mapCommandsSoFar(command: Command): ResponseInputItem[] {
+function mapCommandsSoFar(command: Command): ChatCompletionMessageParam[] {
   const message = {
     language: command.language,
     profile: command.profile,
@@ -75,7 +77,7 @@ function mapCommandsSoFar(command: Command): ResponseInputItem[] {
   ]
 }
 
-function createNextMessage(input: AiPortInput) {
+function createNextMessage(input: AiPortInput): ChatCompletionMessageParam {
   return { role: 'user', content: JSON.stringify({
     language: input.language,
     profile: input.profile,
@@ -135,7 +137,23 @@ function getCommand(custom_command: string | undefined, predefined_command: Pred
   return command
 }
 
-const OpenAiOutputContraints = {
+const responseFormat: ResponseFormatJSONSchema = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'CoEditor Response Schema',
+    schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string', description: 'The edited text or the replacement for the selected text' },
+        title: { type: 'string', description: 'The new title of the document' },
+        error: { type: 'string', description: 'An optional error message if an error occurred' },
+      },
+      required: ['text', 'title'],
+    },
+  },
+}
+
+const responseFormatConstraint = {
   text: {
     presence: { allowEmpty: false },
     type: 'string',
