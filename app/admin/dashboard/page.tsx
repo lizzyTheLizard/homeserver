@@ -60,6 +60,6 @@ function getConfigInfo(): LineItem[] {
   return [
     { name: 'Database', value: dbId, url: dbId ? 'https://console.scaleway.com/serverless-db/fr-par/databases/' + dbId + '/overview' : undefined },
     { name: 'AppUrl', value: config.APP_URL, url: config.APP_URL },
-    { name: 'ClientId', value: config.CLIENT_ID, url: config.CLIENT_ID ? 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/' + config.CLIENT_ID + '/isMSAApp~/false' : undefined },
+    { name: 'ClientId', value: config.OIDC.CLIENT_ID, url: config.OIDC.CLIENT_ID ? 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/' + config.OIDC.CLIENT_ID + '/isMSAApp~/false' : undefined },
   ]
 }

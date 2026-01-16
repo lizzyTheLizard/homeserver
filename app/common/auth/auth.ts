@@ -111,8 +111,8 @@ interface SessionData {
 async function getSession(): Promise<IronSession<SessionData>> {
   const cookiesList = await cookies()
   const settings = {
-    cookieName: config.COOKIE_NAME,
-    password: config.SESSION_PASSWORD,
+    cookieName: config.SESSION.COOKIE_NAME,
+    password: config.SESSION.SESSION_PASSWORD,
     ttl: 604800, // 1 week in seconds
     cookieOptions: { secure: process.env.NODE_ENV === 'development' ? false : true },
   }
@@ -120,7 +120,7 @@ async function getSession(): Promise<IronSession<SessionData>> {
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
-  clientConfigCache ??= client.discovery(new URL(config.ISSUER), config.CLIENT_ID, config.CLIENT_SECRET)
+  clientConfigCache ??= client.discovery(new URL(config.OIDC.ISSUER), config.OIDC.CLIENT_ID, config.OIDC.CLIENT_SECRET)
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
