@@ -76,7 +76,6 @@ resource "scaleway_container" "test_gutschi_site" {
   port            = 3000
   min_scale       = 0
   max_scale       = 1
-  // TODO: set containers to public again
   privacy         = "private"
   deploy          = false
   environment_variables = {
