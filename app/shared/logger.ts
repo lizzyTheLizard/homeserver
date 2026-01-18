@@ -2,7 +2,7 @@ import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
 import winston from 'winston'
-import { File, Console } from 'winston/lib/winston/transports'
+import { Console } from 'winston/lib/winston/transports'
 
 function getLogFilePath(): string {
   const filename = fileURLToPath(import.meta.url)
@@ -15,25 +15,19 @@ function createLogger(logFile: string) {
   return winston.createLogger({
     level: 'debug',
     transports: [
-      new File({
-        handleExceptions: true,
-        handleRejections: true,
-        format: winston.format.combine(
-          winston.format.errors({ stack: true }),
-          winston.format.timestamp(),
-          winston.format.json()),
-        filename: logFilePath,
-      }),
       new Console({
         handleExceptions: true,
         handleRejections: true,
-        format: winston.format.combine(
-          winston.format.errors({ stack: true }),
-          winston.format.colorize({ all: true }),
-          process.env.NODE_ENV === 'development'
-            ? winston.format.printf(info => toConsoleString(info))
-            : winston.format.json(),
-        ),
+        format: process.env.NODE_ENV === 'development'
+          ? winston.format.combine(
+              winston.format.errors({ stack: true }),
+              winston.format.colorize({ all: true }),
+              winston.format.printf(info => toConsoleString(info)),
+            )
+          : winston.format.combine(
+              winston.format.errors({ stack: true }),
+              winston.format.json(),
+            ),
       }),
     ],
   })
