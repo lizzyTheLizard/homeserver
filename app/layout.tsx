@@ -1,13 +1,12 @@
-import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Header } from './common/_components/Header'
 import { getUserSession } from './common/auth/auth'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Gutschi.site',
 }
 
-export const viewport: Viewport = {
+export const viewport = {
   width: 'device-width',
   initialScale: 1,
   interactiveWidget: 'resizes-content',

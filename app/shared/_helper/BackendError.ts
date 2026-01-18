@@ -1,4 +1,4 @@
-export class BackendError extends Error {
+class BackendError extends Error {
   constructor(message: string, public readonly userMessage: string, public readonly statusCode: StatusCode, public readonly showStack: boolean) {
     super(message)
     this.name = statusCodeToString(statusCode)
@@ -16,7 +16,7 @@ export class BackendError extends Error {
   }
 }
 
-export type StatusCode = 400 | 401 | 403 | 404 | 500
+type StatusCode = 400 | 401 | 403 | 404 | 500
 
 function statusCodeToString(statusCode: StatusCode): string {
   switch (statusCode) {
@@ -32,6 +32,18 @@ export function invalidInput(message: string): BackendError {
   return new BackendError(message, message, 400, false)
 }
 
-export function unexpectedError(message: string, userMessage?: string): BackendError {
-  return new BackendError(message, userMessage ?? message, 500, true)
+export function notFound(message: string): BackendError {
+  return new BackendError(message, message, 404, false)
+}
+
+export function authhenticationFailed(message: string): BackendError {
+  return new BackendError('Authentication Failed', message, 401, false)
+}
+
+export function databaseError(message: string): BackendError {
+  return new BackendError('Database Error', message, 500, true)
+}
+
+export function isBackendError(error: unknown): error is BackendError {
+  return error instanceof BackendError
 }

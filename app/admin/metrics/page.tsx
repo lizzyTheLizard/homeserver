@@ -1,28 +1,30 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { findNumberOfDiscussions } from '@/app/coeditor/_data/Discussion'
 import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
 import { DashboardCard, LineItem } from '../_components/DashboardCard'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Admin - Metrics',
 }
 
 export default async function Page() {
-  await getAuthenticatedUserSession('admin')
+  return serverPageFunction(metadata.title, async () => {
+    await getAuthenticatedUserSession('admin')
 
-  return (
-    <main>
-      <h1>Metrics</h1>
-      <div className="row">
-        <DashboardCard header="General" items={getGeneralMetrics()}></DashboardCard>
-        <DashboardCard header="CoEditor" items={await getCoeditorMetrics()}></DashboardCard>
-        <DashboardCard header="Cash" items={getCashMetrics()}></DashboardCard>
-      </div>
-    </main>
-  )
+    return (
+      <main>
+        <h1>Metrics</h1>
+        <div className="row">
+          <DashboardCard header="General" items={getGeneralMetrics()}></DashboardCard>
+          <DashboardCard header="CoEditor" items={await getCoeditorMetrics()}></DashboardCard>
+          <DashboardCard header="Cash" items={getCashMetrics()}></DashboardCard>
+        </div>
+      </main>
+    )
+  })
 }
 
 function getGeneralMetrics(): LineItem[] {

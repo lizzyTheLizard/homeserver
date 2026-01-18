@@ -1,6 +1,5 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
-import { unexpectedError } from '../../shared/_helper/BackendError'
 
 export interface Project {
   id: string
@@ -42,7 +41,7 @@ export async function createOrModifyProject(client: PoolClient, project: Project
     ? 'UPDATE project SET name = $2, owner_id = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
     : 'INSERT INTO project (id, name, owner_id, archived) VALUES ($1, $2, $3, $4) RETURNING *'
   const result = await client.query<Project>(query, [project.id, project.name, project.owner_id, project.archived])
-  if (!result.rows[0]) throw unexpectedError('Failed to modify project')
+  if (!result.rows[0]) throw new Error('Failed to modify project')
   logger.info(`Modified project '${project.name}' for owner ${project.owner_id}`)
   return result.rows[0]
 }

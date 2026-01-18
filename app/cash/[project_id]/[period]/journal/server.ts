@@ -23,7 +23,6 @@ export async function loadJournal(period: Period, projectId: string): Promise<Jo
     await findAllTransactions(c, user.sub, projectId, period),
   ]))
   if (!project) {
-    console.log(`Project with id ${projectId} not found for user ${user.sub}`)
     return notFound()
   }
   return { project, accounts, transactions }

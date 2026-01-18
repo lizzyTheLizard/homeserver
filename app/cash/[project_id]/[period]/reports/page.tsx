@@ -1,10 +1,12 @@
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Cash - Reports',
 }
 
 export default function Page() {
+  return serverPageFunction(metadata.title, () => {
   // TODO: Implement reports page
-  return 'To be implemented'
+    return 'To be implemented'
+  })
 }

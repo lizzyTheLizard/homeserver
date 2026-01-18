@@ -1,6 +1,6 @@
 import { findProjectsByOwner } from '@/app/cash/_data/Project'
+import { authhenticationFailed } from '@/app/shared/_helper/BackendError'
 import { config } from '@/app/shared/config'
-import { unexpectedError } from '@/app/shared/_helper/BackendError'
 import { nontransactional } from '@/app/shared/db'
 import { logger } from '@/app/shared/logger'
 import { IronSession, getIronSession } from 'iron-session'
@@ -22,12 +22,10 @@ export async function getUserSession(): Promise<UserSession | undefined> {
 export async function getAuthenticatedUserSession(app?: string): Promise<UserSession> {
   const user = await getUserSession()
   if (!user) {
-    logger.warn(`No user session found when accessing application: ${app ?? 'unknown'}`)
-    throw unexpectedError(`No user session found`)
+    throw authhenticationFailed(`No user session found when accessing application: ${app ?? 'unknown'}`)
   }
   if (app && !user.applications.includes(app)) {
-    logger.warn(`User ${user.email} attempted to access unauthorized application: ${app}`)
-    throw unexpectedError(`Not authorized for application ${app}`, 'Authentication Failed')
+    throw authhenticationFailed(`User ${user.email} attempted to access unauthorized application: ${app}`)
   }
   return user
 }
@@ -63,8 +61,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   })
   const claims = tokenSet.claims()
   if (!claims) {
-    logger.error('No claims found in token set during callback')
-    throw unexpectedError('Invalid token set received from identity provider', 'Authentication Failed')
+    throw authhenticationFailed(`No claims found in token set during callback`)
   }
   const sub = claims.sub
   const name = claims.given_name as string

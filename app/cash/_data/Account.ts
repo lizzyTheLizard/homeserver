@@ -1,6 +1,5 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
-import { unexpectedError } from '../../shared/_helper/BackendError'
 import { AccountType } from './AccountType'
 
 export interface Account {
@@ -44,7 +43,7 @@ export async function createOrModifyAccount(client: PoolClient, ownerId: string,
     ? 'UPDATE account SET name = $3, type = $4, archived = $6, updated_at = NOW() WHERE id = $1 AND owner_id = $5 AND project_id=$2 RETURNING *'
     : 'INSERT INTO account (id, project_id, name, type, owner_id, archived, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *'
   const result = await client.query<Account>(query, [input.id, input.project_id, input.name, input.type, ownerId, input.archived])
-  if (!result.rows[0]) throw unexpectedError('Failed to modify account')
+  if (!result.rows[0]) throw new Error('Failed to modify account')
   logger.info(`Modified account '${input.name}' for owner ${ownerId}`)
   return result.rows[0]
 }

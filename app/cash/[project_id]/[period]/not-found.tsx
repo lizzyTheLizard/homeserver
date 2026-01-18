@@ -1,9 +1,8 @@
 'use client'
 import { ErrorPage } from '@/app/shared/_components/ErrorPage'
-import { Metadata } from 'next'
 import { useParams } from 'next/navigation'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Cash - Project Not Found',
 }
 

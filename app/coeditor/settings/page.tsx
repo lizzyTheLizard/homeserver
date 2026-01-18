@@ -1,12 +1,14 @@
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { Settings } from './Settings'
 import { loadSettings } from './server'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'CoEditor - Settings',
 }
 
 export default async function Page() {
-  const settingsData = await loadSettings()
-  return <Settings profiles={settingsData.profiles} templates={settingsData.templates} />
+  return serverPageFunction(metadata.title, async () => {
+    const settingsData = await loadSettings()
+    return <Settings profiles={settingsData.profiles} templates={settingsData.templates} />
+  })
 }

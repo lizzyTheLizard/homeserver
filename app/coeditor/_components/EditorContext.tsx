@@ -5,6 +5,7 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { Collapse } from '@/app/shared/_components/Collapse'
 import { Select } from '@/app/shared/_components/form/Select'
+import { notFound } from '@/app/shared/_helper/BackendError'
 
 interface Props {
   templates: Template[]
@@ -20,7 +21,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
     const id = e.currentTarget.value
     const result = templates.find(t => t.id === id)
     if (result === undefined) {
-      throw new Error(`Template with id "${id}" not found.`)
+      throw notFound(`Template with id "${id}" not found.`)
     }
     onTemplateChange?.(result)
   }
@@ -29,7 +30,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
     const language = e.currentTarget.value
     const result = templates.find(t => t.language === language)
     if (result === undefined) {
-      throw new Error(`No template found for language "${language}".`)
+      throw notFound(`No template found for language "${language}".`)
     }
     onTemplateChange?.(result)
   }

@@ -1,7 +1,7 @@
 import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/app/shared/logger'
-import { invalidInput, unexpectedError } from '../../shared/_helper/BackendError'
+import { invalidInput } from '../../shared/_helper/BackendError'
 
 export interface Template {
   id: string
@@ -59,7 +59,7 @@ export async function createOrModifyTemplate(client: PoolClient, owner: string, 
     : 'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
   const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
 
-  if (!result.rows[0]) throw unexpectedError('Failed to modify template')
+  if (!result.rows[0]) throw new Error('Failed to modify template')
   logger.info(`Modified template '${input.id}' for owner ${owner}`)
   return result.rows[0]
 }

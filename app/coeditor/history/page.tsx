@@ -1,12 +1,14 @@
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { History } from './History'
 import { loadHistory } from './server'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'CoEditor - History',
 }
 
 export default async function Page() {
-  const discussions = await loadHistory()
-  return <History discussions={discussions} />
+  return serverPageFunction(metadata.title, async () => {
+    const discussions = await loadHistory()
+    return <History discussions={discussions} />
+  })
 }

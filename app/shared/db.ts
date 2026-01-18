@@ -6,7 +6,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { logger } from '@/app/shared/logger'
 import { config } from './config'
-import { unexpectedError } from './_helper/BackendError'
+import { databaseError } from './_helper/BackendError'
 
 export async function nontransactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const pool = await getPool()
@@ -50,7 +50,7 @@ async function testConnection(pool: Pool): Promise<void> {
   try {
     const res = await client.query<{ result: number }>('SELECT 1 + 1 as result;')
     if (res.rows[0]?.result !== 2) {
-      throw unexpectedError('Database connection test failed', 'Database Error')
+      throw databaseError('Database connection test failed')
     }
   }
   finally {
@@ -116,8 +116,8 @@ function validateExistingMigrations(existing: DatabaseMigration[], planned: Plan
   // Check if there is a problem with the existing migrations
   for (const e of existing) {
     const p = planned.find(m => m.name === e.name)
-    if (!p) throw unexpectedError(`Migration ${e.name} has been executed but the file does not exist any more, aborting!`, 'Database Error')
-    if (p.hash !== e.hash) throw unexpectedError(`Migration ${e.name} has been executed but the file has changed, aborting!`, 'Database Error')
+    if (!p) throw databaseError(`Migration ${e.name} has been executed but the file does not exist any more, aborting!`)
+    if (p.hash !== e.hash) throw databaseError(`Migration ${e.name} has been executed but the file has changed, aborting!`)
   }
 }
 
@@ -126,7 +126,7 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
   let lastMigrationToRun: string | undefined = undefined
   for (const p of planned) {
     const e = existing.find(m => m.name === p.name)
-    if (e && lastMigrationToRun) throw unexpectedError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`, 'Database Error')
+    if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
       logger.debug(`Migration ${p.name} has already run on ${e.run_on.toISOString()}`)
       continue
