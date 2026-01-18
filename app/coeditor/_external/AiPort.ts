@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { invalidInput, unexpectedError } from '@/app/shared/_helper/BackendError'
+import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
 import { logger } from '@/app/shared/logger'
 import { ClientOptions } from 'openai'
@@ -37,7 +37,7 @@ export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?
   validateObject(output, responseFormatConstraint)
   logger.debug(`AI Port call took ${((end - start) / 1000).toString()} seconds`)
   logger.debug(`AI response : ${JSON.stringify(output, null, 2)}`)
-  if (output.error) throw unexpectedError(`AI Port error: ${output.error}`, 'AI Port Error')
+  if (output.error) throw new Error('AI Communication Error', { cause: output.error })
   const newText = getFullNewText(input, output.text)
   return { title: output.title, text: newText, durationMs: end - start }
 }

@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg'
-import { invalidInput, unexpectedError } from '../../shared/_helper/BackendError'
+import { invalidInput } from '../../shared/_helper/BackendError'
 import { logger } from '@/app/shared/logger'
 
 export interface Profile {
@@ -42,7 +42,7 @@ export async function createOrModifyProfile(client: PoolClient, owner: string, i
     ? 'UPDATE profile SET text = $2, language=$3, updated_at = NOW() WHERE owner_id = $4 AND id = $1 RETURNING *'
     : 'INSERT INTO profile (id,text, language, owner_id) VALUES ($1, $2, $3, $4) RETURNING *'
   const result = await client.query<Profile>(query, [input.id, input.text, input.language, owner])
-  if (!result.rows[0]) throw unexpectedError('Failed to modify profile')
+  if (!result.rows[0]) throw new Error('Failed to modify profile')
   logger.info(`Modified profile '${input.language}' for owner ${owner}`)
   return result.rows[0]
 }

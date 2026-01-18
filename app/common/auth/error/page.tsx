@@ -1,10 +1,12 @@
 import { ErrorPage } from '@/app/shared/_components/ErrorPage'
-import { Metadata } from 'openai/resources/index.js'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Gutschi.site - Auth Error',
 }
 
 export default function Page() {
-  return ErrorPage({ name: 'Authentication Failed', message: 'The authentication process failed. Please try again.' })
+  return serverPageFunction(metadata.title, () => {
+    return ErrorPage({ name: 'Authentication Failed', message: 'The authentication process failed. Please try again.' })
+  })
 }

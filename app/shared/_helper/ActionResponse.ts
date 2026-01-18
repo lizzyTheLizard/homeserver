@@ -1,5 +1,5 @@
 import { logger } from '@/app/shared/logger'
-import { BackendError } from './BackendError'
+import { isBackendError } from './BackendError'
 
 export type ActionResponse<T> = Promise<AwaitedActionResponse<T>>
 export type AwaitedActionResponse<T> = ErrorResponse | SuccessResponse<T>
@@ -12,10 +12,6 @@ export interface ErrorResponse {
 export interface SuccessResponse<T> {
   success: true
   data: T
-}
-
-function isBackendError(error: unknown): error is BackendError {
-  return error instanceof BackendError
 }
 
 export async function toResponse<T>(promise: Promise<T>): ActionResponse<T> {
@@ -31,7 +27,6 @@ export async function toResponse<T>(promise: Promise<T>): ActionResponse<T> {
         return { success: false, error: error.userMessage } as ErrorResponse
       }
       logger.error('Unknown error in server action:', error)
-      console.error(error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' } as ErrorResponse
     })
 }

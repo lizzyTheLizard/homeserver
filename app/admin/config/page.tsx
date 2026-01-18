@@ -1,17 +1,19 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { Config } from './Config'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Admin - Configuration',
 }
 
 export default async function Page() {
-  await getAuthenticatedUserSession('admin')
-  const data = Object.keys(process.env)
-    .map(key => ({ id: key, key, value: process.env[key] }))
+  return serverPageFunction(metadata.title, async () => {
+    await getAuthenticatedUserSession('admin')
+    const data = Object.keys(process.env)
+      .map(key => ({ id: key, key, value: process.env[key] }))
 
-  return (
-    <Config data={data} />
-  )
+    return (
+      <Config data={data} />
+    )
+  })
 }

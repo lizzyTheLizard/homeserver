@@ -1,9 +1,8 @@
 'use client'
 import { ErrorPage } from '@/app/shared/_components/ErrorPage'
-import { Metadata } from 'next'
 import { useSearchParams } from 'next/navigation'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'CoEditor - Discussion Not Found',
 }
 

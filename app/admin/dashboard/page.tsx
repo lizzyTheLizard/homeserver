@@ -1,31 +1,33 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface'
 import { randomUUID } from 'crypto'
 import { LineItem, DashboardCard } from '../_components/DashboardCard'
 import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { config } from '@/app/shared/config'
+import { serverPageFunction } from '@/app/shared/PageFunction'
 
 const instanceId = randomUUID()
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Admin - Dashboard',
 }
 
 export default async function Page() {
-  await getAuthenticatedUserSession('admin')
+  return serverPageFunction(metadata.title, async () => {
+    await getAuthenticatedUserSession('admin')
 
-  return (
-    <main>
-      <h1>Admin Dashboard</h1>
-      <div className="row">
-        <DashboardCard header="Build" items={getBuildInfo()}></DashboardCard>
-        <DashboardCard header="Run" items={getRunInfo()}></DashboardCard>
-        <DashboardCard header="Config" url="/admin/config" items={getConfigInfo()}></DashboardCard>
-        <DashboardCard header="Metrics" url="/admin/metrics" items={await getMetricsInfo()}></DashboardCard>
-      </div>
-    </main>
-  )
+    return (
+      <main>
+        <h1>Admin Dashboard</h1>
+        <div className="row">
+          <DashboardCard header="Build" items={getBuildInfo()}></DashboardCard>
+          <DashboardCard header="Run" items={getRunInfo()}></DashboardCard>
+          <DashboardCard header="Config" url="/admin/config" items={getConfigInfo()}></DashboardCard>
+          <DashboardCard header="Metrics" url="/admin/metrics" items={await getMetricsInfo()}></DashboardCard>
+        </div>
+      </main>
+    )
+  })
 }
 
 function getBuildInfo(): LineItem[] {

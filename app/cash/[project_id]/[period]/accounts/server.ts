@@ -8,6 +8,7 @@ import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/db'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { notFound } from 'next/navigation'
+import { logger } from '@/app/shared/logger'
 
 export async function loadAccounts(projectId: string) {
   const user = await getAuthenticatedUserSession('cash')
@@ -16,7 +17,7 @@ export async function loadAccounts(projectId: string) {
     await findAllAccountsForProject(c, user.sub, projectId),
   ]))
   if (!project) {
-    console.log(`Project with id ${projectId} not found for user ${user.sub}`)
+    logger.info(`Project with id ${projectId} not found for user ${user.sub}`)
     return notFound()
   }
   return accounts
