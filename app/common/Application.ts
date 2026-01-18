@@ -33,7 +33,6 @@ export const applications: Application[] = [
       { text: 'Dashboard', href: '/admin/dashboard' },
       { text: 'Metrics', href: '/admin/metrics' },
       { text: 'Config', href: '/admin/config' },
-      { text: 'Logs', href: '/admin/logs' },
       { text: 'Cash', href: '/admin/cash' },
     ],
   },
