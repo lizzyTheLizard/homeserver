@@ -12,22 +12,23 @@ function getLogFilePath(): string {
 
 function createLogger(logFile: string) {
   ensureLogDirectoryExists(logFile)
+  const format = process.env.NODE_ENV === 'development'
+    ? winston.format.combine(
+        winston.format.errors({ stack: true }),
+        winston.format.colorize({ all: true }),
+        winston.format.printf(info => toConsoleString(info)),
+      )
+    : winston.format.combine(
+        winston.format.errors({ stack: true }),
+        winston.format.json(),
+      )
   return winston.createLogger({
     level: 'debug',
     transports: [
       new Console({
         handleExceptions: true,
         handleRejections: true,
-        format: process.env.NODE_ENV === 'development'
-          ? winston.format.combine(
-              winston.format.errors({ stack: true }),
-              winston.format.colorize({ all: true }),
-              winston.format.printf(info => toConsoleString(info)),
-            )
-          : winston.format.combine(
-              winston.format.errors({ stack: true }),
-              winston.format.json(),
-            ),
+        format: format,
       }),
     ],
   })
