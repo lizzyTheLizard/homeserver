@@ -1,6 +1,6 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { Config } from './Config'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Admin - Configuration',

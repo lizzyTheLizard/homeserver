@@ -30,7 +30,7 @@ export async function loadJournal(period: Period, projectId: string): Promise<Jo
 
 export async function deleteTransaction(input: TransactionInput): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession()
+    const user = await getAuthenticatedUserSession('cash')
     validateString(input.id)
     await removeTransaction(client, user.sub, input.id)
   }))
@@ -38,7 +38,7 @@ export async function deleteTransaction(input: TransactionInput): ActionResponse
 
 export async function saveTransaction(input: TransactionInput): ActionResponse<Transaction> {
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession()
+    const user = await getAuthenticatedUserSession('cash')
     validateObject(input, TransactionInputConstraints)
     return createOrModifyTransaction(client, user.sub, input)
   }))

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
-import { isBackendError } from './_helper/BackendError'
-import { logger } from './logger'
+import { isBackendError } from './BackendError'
+import { logger } from '../logger'
 
 export async function serverPageFunction(name: string, fn: () => Promise<ReactNode> | ReactNode): Promise<ReactNode> {
   const start = Date.now()
@@ -13,7 +13,7 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
     const time = Date.now() - start
     if (isBackendError(error)) {
       if (error.showStack) logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)
-      else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.message}`)
+      else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)
       throw error
     }
     const code = httpAccessResponseCode(error)

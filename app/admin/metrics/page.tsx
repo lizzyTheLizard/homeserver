@@ -4,7 +4,7 @@ import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
 import { DashboardCard, LineItem } from '../_components/DashboardCard'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Admin - Metrics',

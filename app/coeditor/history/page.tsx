@@ -1,6 +1,6 @@
 import { History } from './History'
 import { loadHistory } from './server'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'CoEditor - History',

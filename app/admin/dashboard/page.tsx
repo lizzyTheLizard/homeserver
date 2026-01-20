@@ -4,7 +4,7 @@ import { LineItem, DashboardCard } from '../_components/DashboardCard'
 import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { config } from '@/app/shared/config'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 const instanceId = randomUUID()
 

@@ -1,7 +1,7 @@
 import { Card } from '@/app/shared/_components/Card'
 import { loadProjects } from './server'
 import { Project } from '../_data/Project'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Cash - Projects',

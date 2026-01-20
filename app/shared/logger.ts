@@ -55,3 +55,9 @@ function toConsoleString(info: winston.Logform.TransformableInfo) {
 
 export const logFilePath = getLogFilePath()
 export const logger = createLogger(logFilePath)
+
+console.log = () => { /* empty */ }
+console.error = () => { /* empty */ }
+console.warn = () => { /* empty */ }
+console.info = () => { /* empty */ }
+console.debug = () => { /* empty */ }

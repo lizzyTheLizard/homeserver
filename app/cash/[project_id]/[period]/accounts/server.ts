@@ -25,7 +25,7 @@ export async function loadAccounts(projectId: string) {
 
 export async function deleteAccount(input: AccountInput): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession()
+    const user = await getAuthenticatedUserSession('cash')
     validateString(input.id)
     await removeAccount(client, user.sub, input.id)
   }))
@@ -33,7 +33,7 @@ export async function deleteAccount(input: AccountInput): ActionResponse<void> {
 
 export async function saveAccount(input: AccountInput): ActionResponse<Account> {
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession()
+    const user = await getAuthenticatedUserSession('cash')
     validateObject(input, AccountInputConstraints)
     return createOrModifyAccount(client, user.sub, input)
   }))

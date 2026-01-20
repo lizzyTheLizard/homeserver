@@ -36,7 +36,7 @@ export function notFound(message: string): BackendError {
   return new BackendError(message, message, 404, false)
 }
 
-export function authhenticationFailed(message: string): BackendError {
+export function authenticationFailed(message: string): BackendError {
   return new BackendError('Authentication Failed', message, 401, false)
 }
 

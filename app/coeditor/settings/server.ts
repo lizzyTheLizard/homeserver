@@ -13,7 +13,7 @@ export interface SettingsData {
 }
 
 export async function loadSettings(): Promise<SettingsData> {
-  const user = await getAuthenticatedUserSession('cash')
+  const user = await getAuthenticatedUserSession('coeditor')
   const [templates, profiles] = await transactional(async tx => ([
     await findTemplatesByOwner(tx, user.sub),
     await findProfilesByOwner(tx, user.sub),
@@ -23,7 +23,7 @@ export async function loadSettings(): Promise<SettingsData> {
 
 export async function deleteProfile(profile: ProfileInput): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession('cash')
+    const user = await getAuthenticatedUserSession('coeditor')
     validateString(profile.id)
     return removeProfile(client, user.sub, profile.id)
   }))
@@ -32,7 +32,7 @@ export async function deleteProfile(profile: ProfileInput): ActionResponse<void>
 export async function updateProfile(input: ProfileInput): ActionResponse<Profile> {
   'use server'
   return toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession('cash')
+    const user = await getAuthenticatedUserSession('coeditor')
     validateObject(input, ProfileInputConstraints)
     return createOrModifyProfile(client, user.sub, input)
   }))
@@ -40,7 +40,7 @@ export async function updateProfile(input: ProfileInput): ActionResponse<Profile
 
 export async function deleteTemplate(template: TemplateInput): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession('cash')
+    const user = await getAuthenticatedUserSession('coeditor')
     validateString(template.id)
     await removeTemplate(client, user.sub, template.id)
   }))
@@ -49,7 +49,7 @@ export async function deleteTemplate(template: TemplateInput): ActionResponse<vo
 export async function updateTemplate(input: TemplateInput): ActionResponse<Template> {
   'use server'
   return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession('cash')
+    const user = await getAuthenticatedUserSession('coeditor')
     validateObject(input, TemplateInputConstraints)
     return createOrModifyTemplate(client, user.sub, input)
   }))

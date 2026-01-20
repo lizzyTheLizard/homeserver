@@ -1,5 +1,5 @@
 import { findProjectsByOwner } from '@/app/cash/_data/Project'
-import { authhenticationFailed } from '@/app/shared/_helper/BackendError'
+import { authenticationFailed } from '@/app/shared/_helper/BackendError'
 import { config } from '@/app/shared/config'
 import { nontransactional } from '@/app/shared/db'
 import { logger } from '@/app/shared/logger'
@@ -22,10 +22,10 @@ export async function getUserSession(): Promise<UserSession | undefined> {
 export async function getAuthenticatedUserSession(app?: string): Promise<UserSession> {
   const user = await getUserSession()
   if (!user) {
-    throw authhenticationFailed(`No user session found when accessing application: ${app ?? 'unknown'}`)
+    throw authenticationFailed(`No user session found`)
   }
   if (app && !user.applications.includes(app)) {
-    throw authhenticationFailed(`User ${user.email} attempted to access unauthorized application: ${app}`)
+    throw authenticationFailed(`User ${user.email} attempted to access unauthorized application ${app}`)
   }
   return user
 }
@@ -61,7 +61,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   })
   const claims = tokenSet.claims()
   if (!claims) {
-    throw authhenticationFailed(`No claims found in token set during callback`)
+    throw authenticationFailed(`No claims found in token set during callback`)
   }
   const sub = claims.sub
   const name = claims.given_name as string

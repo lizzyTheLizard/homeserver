@@ -18,7 +18,7 @@ export interface EditorData {
 }
 
 export async function loadEditorData(discussionId?: string): Promise<EditorData> {
-  const user = await getAuthenticatedUserSession('cash')
+  const user = await getAuthenticatedUserSession('coeditor')
   const [discussion, templates] = await nontransactional(async c => ([
     discussionId ? await findDiscussionById(c, user.sub, discussionId) : undefined,
     await findTemplatesByOwner(c, user.sub),
@@ -48,7 +48,7 @@ export interface ExecuteCommandInput {
 
 export async function executeCommand(input: ExecuteCommandInput): ActionResponse<Discussion> {
   return toResponse(transactional(async (tx) => {
-    const user = await getAuthenticatedUserSession('cash')
+    const user = await getAuthenticatedUserSession('coeditor')
     validateObject(input, ExecuteCommandInputConstraints)
     const template = await findTemplateById(tx, user.sub, input.template_id)
     if (!template) {

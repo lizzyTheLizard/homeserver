@@ -4,7 +4,7 @@ import { nontransactional } from '@/app/shared/db'
 import { Discussion, findDiscussionByOwner } from '../_data/Discussion'
 
 export async function loadHistory(): Promise<Discussion[]> {
-  const user = await getAuthenticatedUserSession()
+  const user = await getAuthenticatedUserSession('coeditor')
   const discussions = await nontransactional(c => findDiscussionByOwner(c, user.sub))
   return discussions
 }

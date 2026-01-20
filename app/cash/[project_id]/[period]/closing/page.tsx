@@ -1,4 +1,4 @@
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Cash - Closing',

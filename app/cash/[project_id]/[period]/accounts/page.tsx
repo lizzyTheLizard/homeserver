@@ -1,6 +1,6 @@
 import { Accounts } from './Accounts'
 import { loadAccounts } from './server'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Cash - Accounts',

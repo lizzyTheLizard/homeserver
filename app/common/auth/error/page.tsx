@@ -1,5 +1,5 @@
 import { ErrorPage } from '@/app/shared/_components/ErrorPage'
-import { serverPageFunction } from '@/app/shared/PageFunction'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Gutschi.site - Auth Error',

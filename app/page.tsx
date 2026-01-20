@@ -2,7 +2,7 @@ import { Card } from './shared/_components/Card'
 import { Icon } from './shared/_components/Icon'
 import { applications } from './common/Application'
 import { getAuthenticatedUserSession } from './common/auth/auth'
-import { serverPageFunction } from './shared/PageFunction'
+import { serverPageFunction } from './shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Gutschi.site - Dashboard',
