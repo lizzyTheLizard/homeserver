@@ -24,6 +24,7 @@ export default async function Page() {
           <DashboardCard header="Run" items={getRunInfo()}></DashboardCard>
           <DashboardCard header="Config" url="/admin/config" items={getConfigInfo()}></DashboardCard>
           <DashboardCard header="Metrics" url="/admin/metrics" items={await getMetricsInfo()}></DashboardCard>
+          <DashboardCard header="Logs" url={config.GRAFANA_URL} items={[]}></DashboardCard>
         </div>
       </main>
     )
