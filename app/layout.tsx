@@ -1,6 +1,7 @@
 import './globals.css'
 import { Header } from './common/_components/Header'
 import { getUserSession } from './common/auth/auth'
+import { SidebarContainer } from './shared/_components/sidebar/Sidebar'
 
 export const metadata = {
   title: 'Gutschi.site',
@@ -18,7 +19,9 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
     <html lang="en">
       <body>
         <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
-        {children}
+        <SidebarContainer>
+          {children}
+        </SidebarContainer>
       </body>
     </html>
   )

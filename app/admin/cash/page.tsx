@@ -9,6 +9,11 @@ export const metadata = {
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
     const projects = await loadProjects()
-    return <Cash projects={projects} />
+    return (
+      <main>
+        <h1>Cash Admin</h1>
+        <Cash projects={projects} />
+      </main>
+    )
   })
 }

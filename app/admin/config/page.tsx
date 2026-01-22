@@ -13,7 +13,10 @@ export default async function Page() {
       .map(key => ({ id: key, key, value: process.env[key] }))
 
     return (
-      <Config data={data} />
+      <main>
+        <h1>Configuration</h1>
+        <Config data={data} />
+      </main>
     )
   })
 }

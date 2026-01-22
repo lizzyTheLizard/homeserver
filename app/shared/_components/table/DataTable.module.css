@@ -34,6 +34,15 @@
   margin-top: var(--gap-small);
 }
 
+.createButtonRow {
+    margin-top: var(--gap);
+    justify-content: flex-end;
+}   
+
+.rowWithClick:hover td {
+    background-color: grey !important
+}
+
 @media (min-width: 600px) {
   table.dataTable {
     border-spacing: 0;
@@ -96,8 +105,13 @@
     tr:last-child td:last-child{
       border-bottom-right-radius: var(--border-radius);
     }
+
+  }
+  .createButton {
+      max-width: 300px;
   }
 }
+
 
 @media (max-width: 600px) {
   table.dataTable{
@@ -160,4 +174,7 @@
       content: attr(headers);
     }
   }
+  .createButton {
+      width: 100%;
+  }    
 }

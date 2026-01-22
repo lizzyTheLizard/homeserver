@@ -28,11 +28,11 @@ export async function loadJournal(period: Period, projectId: string): Promise<Jo
   return { project, accounts, transactions }
 }
 
-export async function deleteTransaction(input: TransactionInput): ActionResponse<void> {
+export async function deleteTransaction(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
-    validateString(input.id)
-    await removeTransaction(client, user.sub, input.id)
+    validateString(id)
+    await removeTransaction(client, user.sub, id)
   }))
 }
 

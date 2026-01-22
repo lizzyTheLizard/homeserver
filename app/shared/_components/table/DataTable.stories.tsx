@@ -66,3 +66,9 @@ export const Filtering: StoryObj<Complicated> = {
     data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, date: new Date(2020, 0, (i % 30) + 1, 12, 0), bool: i % 2 === 0 })),
   },
 }
+
+export const AddButton: StoryObj<typeof meta> = {
+  args: {
+    onAddClick: () => { alert('Add button clicked') },
+  },
+}

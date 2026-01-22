@@ -210,7 +210,7 @@ describe('deleteTransaction', () => {
       await createOrModifyTransaction(tx, task.id, transaction)
     })
 
-    const result = await deleteTransaction(transaction)
+    const result = await deleteTransaction(transaction.id)
 
     if (!result.success) throw new Error('Expected success response')
 
@@ -236,7 +236,7 @@ describe('deleteTransaction', () => {
 
     const otherUser: UserSession = { ...user, sub: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const result = await deleteTransaction(transaction)
+    const result = await deleteTransaction(transaction.id)
 
     if (!result.success) throw new Error('Expected success response')
 
@@ -254,7 +254,7 @@ describe('deleteTransaction', () => {
     await transactional(tx => createOrModifyProject(tx, project))
 
     const nonExistentTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: randomUUID(), debit_account_id: randomUUID(), amount: 150.25, date: new Date('2023-07-10'), description: 'Does not exist' }
-    await expect(deleteTransaction(nonExistentTransaction)).resolves.toEqual({ success: true })
+    await expect(deleteTransaction(nonExistentTransaction.id)).resolves.toEqual({ success: true })
   })
 
   test('Invalid input', async ({ task }) => {
@@ -270,9 +270,7 @@ describe('deleteTransaction', () => {
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: new Date('2023-07-10'), description: 'Transaction' }
-    await expect(deleteTransaction({ ...transactionInput, id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(deleteTransaction({ ...transactionInput, id: 'invalid-uuid' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(deleteTransaction({ ...transactionInput, id: undefined as any })).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(deleteTransaction('')).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(deleteTransaction('invalid-uuid')).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 })

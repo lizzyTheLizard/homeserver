@@ -1,9 +1,10 @@
 'use client'
-import { CSSProperties, MouseEvent, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
-import style from './DataTable.module.css'
+import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
 import { Filtering, sortAndFilter, SortingOrder } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
+import { Button } from '../form/Button'
+import style from './DataTable.module.css'
 
 export interface DataTableProps<T extends { id: string }> extends TableHTMLAttributes<HTMLTableElement> {
   data: T[]
@@ -11,7 +12,8 @@ export interface DataTableProps<T extends { id: string }> extends TableHTMLAttri
   columns: ColumnDefinition<any, any>[]
   initialSortingOrder?: SortingOrder[]
   initialFiltering?: Filtering[]
-  onRowClick?: (e: MouseEvent<HTMLTableRowElement>, item: T) => void
+  onRowClick?: (item: T) => void
+  onAddClick?: () => void
 }
 
 export interface ColumnDefinition<FieldType, FilterValueType> {
@@ -28,7 +30,7 @@ export interface ColumnFilter<FieldType, FilterValueType> {
   function: (dataValue: FieldType, filterValue: FilterValueType) => boolean
 }
 
-export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, ...props }: DataTableProps<T>) {
+export function DataTable<T extends { id: string }>({ columns, onRowClick, onAddClick, data, initialFiltering, initialSortingOrder, ...props }: DataTableProps<T>) {
   const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
   const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
   const [filtering, setFiltering] = useState<Filtering[]>(initialFiltering ?? [])
@@ -57,36 +59,43 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
   )
 
   return (
-    <table {...props} className={classNames}>
-      <thead>
-        <tr>
-          {columns.map(column => (
-            <DataTableHeader
-              key={column.key}
-              column={column}
-              sortingOrder={sortingOrder}
-              filtering={filtering}
-              onSort={onSort}
-              onFilter={onFilter}
+    <>
+      <table {...props} className={classNames}>
+        <thead>
+          <tr>
+            {columns.map(column => (
+              <DataTableHeader
+                key={column.key}
+                column={column}
+                sortingOrder={sortingOrder}
+                filtering={filtering}
+                onSort={onSort}
+                onFilter={onFilter}
+              />
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sortedAndFilteredData.map(row => (
+            <DataTableRow
+              key={row.id}
+              row={row}
+              columns={columns}
+              onRowClick={onRowClick}
             />
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {sortedAndFilteredData.map(row => (
-          <DataTableRow
-            key={row.id}
-            row={row}
-            columns={columns}
-            onRowClick={onRowClick}
-          />
-        ))}
-        {sortedAndFilteredData.length === 0 && (
-          <tr className={style.emptyRow}>
-            <td colSpan={Object.keys(columns).length}>No Data</td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+          {sortedAndFilteredData.length === 0 && (
+            <tr className={style.emptyRow}>
+              <td colSpan={Object.keys(columns).length}>No Data</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      { onAddClick && (
+        <div className={style.createButtonRow + ' row'}>
+          <Button className={style.createButton} onClick={(e) => { onAddClick(); e.stopPropagation() }}>Add</Button>
+        </div>
+      )}
+    </>
   )
 }

@@ -110,3 +110,5 @@ describe('loadProjects', () => {
     expect(result[0].updated_at).toBeInstanceOf(Date)
   })
 })
+
+// TODO: Add tests for saveProject and deleteProject functions

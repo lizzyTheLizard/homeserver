@@ -1,6 +1,6 @@
 import { type FormEvent } from 'react'
 import style from './EditorContext.module.css'
-import { Template } from '../_data/Template'
+import { Template } from '../../_data/Template'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { Collapse } from '@/app/shared/_components/Collapse'
