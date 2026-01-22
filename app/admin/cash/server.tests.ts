@@ -189,7 +189,7 @@ describe('deleteProject', () => {
     expect(response.success).toBe(true)
   })
 
-  test('Requires admin authentication', async ({ task }) => {
+  test('Requires admin authentication', async () => {
     vi.mocked(getAuthenticatedUserSession).mockRejectedValue(new Error('Unauthorized'))
 
     const response = await deleteProject(randomUUID())
