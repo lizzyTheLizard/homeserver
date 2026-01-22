@@ -210,7 +210,7 @@ describe('deleteAccount', () => {
       await createOrModifyAccount(tx, task.id, account)
     })
 
-    const result = await deleteAccount(account)
+    const result = await deleteAccount(account.id)
 
     if (!result.success) throw new Error('Expected success response')
 
@@ -232,7 +232,7 @@ describe('deleteAccount', () => {
 
     const otherUser: UserSession = { ...user, sub: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const result = await deleteAccount(account)
+    const result = await deleteAccount(account.id)
 
     if (!result.success) throw new Error('Expected success response')
 
@@ -250,7 +250,7 @@ describe('deleteAccount', () => {
     await transactional(tx => createOrModifyProject(tx, project))
 
     const nonExistentAccount = { id: randomUUID(), project_id: project.id, name: 'Does not exist', type: 'Asset', archived: false } as AccountInput
-    await expect(deleteAccount(nonExistentAccount)).resolves.toEqual({ success: true })
+    await expect(deleteAccount(nonExistentAccount.id)).resolves.toEqual({ success: true })
   })
 
   test('Invalid input', async ({ task }) => {
@@ -260,9 +260,7 @@ describe('deleteAccount', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
-    const accountInput = { id: randomUUID(), project_id: project.id, name: 'Test Account', type: 'Asset', archived: false } as AccountInput
-    await expect(deleteAccount({ ...accountInput, id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(deleteAccount({ ...accountInput, id: 'invalid-uuid' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(deleteAccount({ ...accountInput, id: undefined as any })).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(deleteAccount('')).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(deleteAccount('invalid-uuid')).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 })

@@ -1,141 +1,225 @@
+import { renderHook, act } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { sidebarState, sidebarStateReducer } from './SidebarState'
+import { useSidebarState } from './SidebarState'
+import { AwaitedActionResponse } from '../../_helper/ActionResponse'
 
-describe.concurrent('Initialize State', () => {
-  test('Initial', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length, name: `Item ${createItem.mock.calls.length.toString()}` }))
+describe.concurrent('useSidebarState', () => {
+  test('Initial state', () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
 
-    const initialState = sidebarState([{ id: 132, name: 'Existing', additional: 'field' }], createItem)
+    const [state] = result.current
 
-    expect(initialState).toEqual({
-      sidebarOpen: false,
-      all: [{ id: 132, name: 'Existing', additional: 'field' }],
-      current: expect.any(Object) as { id: number, name: string },
+    expect(state).toEqual({
+      open: false,
       pending: false,
+      error: undefined,
+      title: undefined,
+      type: 'test-type',
     })
   })
 })
 
-describe.concurrent('Actions', () => {
-  test('SHOW_SIDEBAR with item', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
+describe.concurrent('openSidebar', () => {
+  test('Open', () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
 
-    const newState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR', item: { id: '132', name: 'Existing' } }, createItem)
+    act(() => {
+      const [, actions] = result.current
+      actions.openSidebar('New Item')
+    })
 
-    expect(newState).toEqual({
-      sidebarOpen: true,
-      all: [{ id: '132', name: 'Existing', additional: 'field' }],
-      current: { id: '132', name: 'Existing' },
+    const [state] = result.current
+    expect(state).toEqual({
+      open: true,
       pending: false,
+      error: undefined,
+      title: 'New Item',
+      type: 'test-type',
     })
   })
 
-  test('SHOW_SIDEBAR without item', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
+  test('Open New Title', () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
 
-    const newState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR' }, createItem)
+    act(() => {
+      const [, actions] = result.current
+      actions.openSidebar('New Item')
+      actions.openSidebar('New Item 2')
+    })
 
-    expect(newState).toEqual({
-      sidebarOpen: true,
-      all: [{ id: '132', name: 'Existing', additional: 'field' }],
-      current: { id: '2', name: 'Item 2' },
+    const [state] = result.current
+    expect(state).toEqual({
+      open: true,
       pending: false,
+      error: undefined,
+      title: 'New Item 2',
+      type: 'test-type',
+    })
+  })
+})
+
+describe.concurrent('closeSidebar', () => {
+  test('close', () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
+
+    act(() => {
+      const [, actions] = result.current
+      actions.openSidebar('New Item')
+      actions.closeSidebar()
+    })
+
+    const [state] = result.current
+    expect(state).toEqual({
+      open: false,
+      pending: false,
+      error: undefined,
+      title: expect.any(String) as string,
+      type: 'test-type',
     })
   })
 
-  test('CLOSE_SIDEBAR', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
-    const showSidebarState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR' }, createItem)
+  test('close already closed makes no change', () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
 
-    const newState = sidebarStateReducer(showSidebarState, { type: 'CLOSE_SIDEBAR' }, createItem)
+    act(() => {
+      const [, actions] = result.current
+      actions.openSidebar('New Item')
+      actions.closeSidebar()
+      actions.closeSidebar()
+      actions.closeSidebar()
+    })
 
-    expect(newState).toEqual({
-      sidebarOpen: false,
-      all: [{ id: '132', name: 'Existing', additional: 'field' }],
-      current: expect.any(Object) as { id: string, name: string },
+    const [state] = result.current
+    expect(state).toEqual({
+      open: false,
       pending: false,
+      error: undefined,
+      title: expect.any(String) as string,
+      type: 'test-type',
     })
   })
+})
 
-  test('START_ACTION', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
-    const showSidebarState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR' }, createItem)
+describe('execute', () => {
+  test('Execute sets Pending', () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
+    const onSuccess = vi.fn()
+    const response = new Promise<AwaitedActionResponse<string>>(() => { /* never resolves */ })
 
-    const newState = sidebarStateReducer(showSidebarState, { type: 'START_ACTION' }, createItem)
+    act(() => {
+      const [, actions] = result.current
+      actions.openSidebar('Test')
+      actions.execute(response, onSuccess)
+    })
 
-    expect(newState).toEqual({
-      sidebarOpen: true,
-      all: [{ id: '132', name: 'Existing', additional: 'field' }],
-      current: { id: '2', name: 'Item 2' },
+    const [state] = result.current
+    expect(state).toEqual({
+      open: true,
       pending: true,
+      error: undefined,
+      title: expect.any(String) as string,
+      type: 'test-type',
     })
   })
 
-  test('STOP_ACTION added', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
-    const showSidebarState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR' }, createItem)
-    const startActionState = sidebarStateReducer(showSidebarState, { type: 'START_ACTION' }, createItem)
+  test('Successfull Execution', async () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
+    const onSuccess = vi.fn()
+    let onResolve: (value: AwaitedActionResponse<string>) => void
+    const response = new Promise<AwaitedActionResponse<string>>(r => onResolve = r)
 
-    const newState = sidebarStateReducer(startActionState, { type: 'STOP_ACTION', result: { success: true, data: { id: '133', name: 'Updated', additional: 'field' } } }, createItem)
-    expect(newState).toEqual({
-      sidebarOpen: false,
-      all: [{ id: '132', name: 'Existing', additional: 'field' }, { id: '133', name: 'Updated', additional: 'field' }],
-      current: expect.any(Object) as { id: string, name: string },
-      pending: false,
+    await act(async () => {
+      const [, actions] = result.current
+      actions.openSidebar('Test')
+      actions.execute(response, onSuccess)
+      onResolve({ success: true, data: 'Result' })
+      await response
     })
+
+    const [state] = result.current
+    expect(state).toEqual({
+      open: false,
+      pending: false,
+      error: undefined,
+      title: expect.any(String) as string,
+      type: 'test-type',
+    })
+    expect(onSuccess).toHaveBeenCalledWith('Result')
   })
 
-  test('STOP_ACTION modified', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
-    const showSidebarState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR', item: { id: '132', name: 'Existing' } }, createItem)
-    const startActionState = sidebarStateReducer(showSidebarState, { type: 'START_ACTION' }, createItem)
+  test('Failed Execution', async () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
+    const onSuccess = vi.fn()
+    let onResolve: (value: AwaitedActionResponse<string>) => void
+    const response = new Promise<AwaitedActionResponse<string>>(r => onResolve = r)
 
-    const newState = sidebarStateReducer(startActionState, { type: 'STOP_ACTION', result: { success: true, data: { id: '132', name: 'Updated', additional: 'field' } } }, createItem)
-
-    expect(newState).toEqual({
-      sidebarOpen: false,
-      all: [{ id: '132', name: 'Updated', additional: 'field' }],
-      current: expect.any(Object) as { id: string, name: string },
-      pending: false,
+    await act(async () => {
+      const [, actions] = result.current
+      actions.openSidebar('Test')
+      actions.execute(response, onSuccess)
+      onResolve({ success: false, error: 'Error' })
+      await response
     })
+
+    const [state] = result.current
+    expect(state).toEqual({
+      open: true,
+      pending: false,
+      error: 'Error',
+      title: expect.any(String) as string,
+      type: 'test-type',
+    })
+    expect(onSuccess).not.toHaveBeenCalled()
   })
 
-  test('STOP_ACTION deleted', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
-    const showSidebarState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR', item: { id: '132', name: 'Existing' } }, createItem)
-    const startActionState = sidebarStateReducer(showSidebarState, { type: 'START_ACTION' }, createItem)
+  test('Execution with exception', async () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
+    const onSuccess = vi.fn()
+    let onReject: (reason: unknown) => void
+    const response = new Promise<AwaitedActionResponse<string>>((r, r2) => onReject = r2)
 
-    const newState = sidebarStateReducer(startActionState, { type: 'STOP_ACTION', result: { success: true, data: undefined } }, createItem)
-
-    expect(newState).toEqual({
-      sidebarOpen: false,
-      all: [],
-      current: expect.any(Object) as { id: number, name: string },
-      pending: false,
+    await act(async () => {
+      const [, actions] = result.current
+      actions.openSidebar('Test')
+      actions.execute(response, onSuccess)
+      onReject('Network error')
+      await response.catch(() => { /* ignore */ })
     })
+
+    const [state] = result.current
+    expect(state).toEqual({
+      open: true,
+      pending: false,
+      error: 'An unexpected error occurred.',
+      title: expect.any(String) as string,
+      type: 'test-type',
+    })
+    expect(onSuccess).not.toHaveBeenCalled()
   })
 
-  test('STOP_ACTION failure', () => {
-    const createItem = vi.fn(() => ({ id: createItem.mock.calls.length.toString(), name: `Item ${createItem.mock.calls.length.toString()}` }))
-    const initialState = sidebarState([{ id: '132', name: 'Existing', additional: 'field' }], createItem)
-    const showSidebarState = sidebarStateReducer(initialState, { type: 'SHOW_SIDEBAR' }, createItem)
-    const startActionState = sidebarStateReducer(showSidebarState, { type: 'START_ACTION' }, createItem)
+  test('Execute resets error', async () => {
+    const { result } = renderHook(() => useSidebarState('test-type'))
+    const onSuccess = vi.fn()
+    let onResolve: (value: AwaitedActionResponse<string>) => void
+    const response1 = new Promise<AwaitedActionResponse<string>>(r => onResolve = r)
+    const response = new Promise<AwaitedActionResponse<string>>(() => { /* never resolves */ })
 
-    const newState = sidebarStateReducer(startActionState, { type: 'STOP_ACTION', result: { success: false, error: 'failed' } }, createItem)
+    await act(async () => {
+      const [, actions] = result.current
+      actions.openSidebar('Test')
+      actions.execute(response1, onSuccess)
+      onResolve({ success: false, error: 'Error' })
+      await response1
+      actions.execute(response, onSuccess)
+    })
 
-    expect(newState).toEqual({
-      sidebarOpen: true,
-      all: [{ id: '132', name: 'Existing', additional: 'field' }],
-      current: { id: '2', name: 'Item 2' },
-      error: 'failed',
-      pending: false,
+    const [state] = result.current
+    expect(state).toEqual({
+      open: true,
+      pending: true,
+      error: undefined,
+      title: expect.any(String) as string,
+      type: 'test-type',
     })
   })
 })

@@ -1,54 +1,25 @@
 'use client'
-import { PropsWithChildren, useEffect, useRef } from 'react'
+import { HTMLAttributes, PropsWithChildren, useEffect, useRef, useState } from 'react'
 import { Icon } from '../Icon'
-import styles from './Sidebar.module.css'
+import { createPortal } from 'react-dom'
+import { LoadingSpinner } from '../LoadingSpinner'
+import style from './Sidebar.module.css'
+import { Button } from '../form/Button'
+import { SidebarState } from './SidebarState'
+import { v4 as randomUUID } from 'uuid'
 
-export function SidebarContainer({ children }: PropsWithChildren<object>) {
-  // TODO: Refactor Sidebar system
-  // Open the sidebars in main using https://react.dev/reference/react-dom/createPortal.
-  // <main> is "always" the sidebar holder, removing the need for a dedicted one.
-  // You can then have a generic sidbar component holding the form as child and having the state in the main component, removing the need for dedicted components
-  // All the page setup (title, main etc.) will go back to the "page.tsx" file, the components will only be the "dynamic" parts again
-  // For settings, there will be two components with their own sidebar, one for profiles and one for templates.
-  // A nice way of syncing the sidebar state over multiple sidebars must be found, e.g. ad a const in the sidebar component file
-
-  return (
-    <div className={styles.container}>
-      {children}
-    </div>
-  )
-}
-
-export function SidebarMain({ children }: PropsWithChildren<object>) {
-  return (
-    <main>
-      <div className={styles.container}>
-        {children}
-      </div>
-    </main>
-  )
-}
-
-export interface SidebarContentProps {
-  onClose?: () => void
-}
-
-export function SidebarContent({ children, onClose }: PropsWithChildren<SidebarContentProps>) {
-  return (
-    <div className={styles.content} onClick={() => { onClose?.() }}>
-      {children}
-    </div>
-  )
-}
+let openSidebar: { id: string, onClose: () => void } | undefined = undefined
 
 export interface SidebarProps {
-  open?: boolean
-  title?: string
-  type?: string
-  onClose?: () => void
+  state: SidebarState
+  container?: HTMLDivElement
+  onClose: () => void
+  onDelete?: () => void
+  onSave?: () => void
 }
 
-export function Sidebar({ children, open, title, type, onClose }: PropsWithChildren<SidebarProps>) {
+export function Sidebar({ children, state: { open, pending, type, title, error }, onClose, onDelete, onSave, container }: PropsWithChildren<SidebarProps>) {
+  const [id] = useState(randomUUID())
   const ref = useRef<HTMLElement | null>(null)
 
   function adjustHeight() {
@@ -69,14 +40,45 @@ export function Sidebar({ children, open, title, type, onClose }: PropsWithChild
     adjustHeight()
   }, [ref, open])
 
-  return (
-    <aside className={styles.sidebar + ' ' + (open ? styles.open : styles.closed)} ref={ref}>
-      <div className={styles.titlebar}>
-        <h1 className={styles.title}>{title}</h1>
-        <Icon className={styles.closebutton} name="close" onClick={() => { onClose?.() }} />
+  useEffect(() => {
+    if (open && openSidebar && openSidebar.id !== id) openSidebar.onClose()
+    if (open) openSidebar = { id, onClose }
+    return () => { if (openSidebar?.id === id) openSidebar = undefined }
+  }, [open, id, onClose])
+
+  const content = (
+    <aside className={style.sidebar + ' ' + (open ? style.open : style.closed)} ref={ref}>
+      <div className={style.titlebar}>
+        <h1 className={style.title}>{title}</h1>
+        <Icon className={style.closebutton} name="close" onClick={onClose} />
       </div>
-      {type !== undefined && <div className={styles.type}>{type}</div>}
-      {children}
+      {type !== undefined && <div className={style.type}>{type}</div>}
+      {pending && <LoadingSpinner text="Processing..." />}
+      <form className={style.form}>
+        {children}
+        {error && <div className={style.error}>{error}</div>}
+        {onSave && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}
+        {onDelete && <Button type="button" variant="danger" onClick={onDelete}>Delete</Button>}
+        <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+      </form>
     </aside>
+  )
+
+  const parent = container === undefined
+    ? document.getElementsByClassName(style.sidebarContainer)
+    : container.getElementsByClassName(style.sidebarContainer)
+
+  if (parent.length === 0) return content
+  return createPortal(content, parent[0])
+}
+
+export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
+  const className = style.sidebarContainer + ' ' + (props.className ?? '')
+  return (
+    <div className={className} {...props}>
+      <div className={style.sidebarContent} onClick={() => { openSidebar?.onClose() }}>
+        {children}
+      </div>
+    </div>
   )
 }

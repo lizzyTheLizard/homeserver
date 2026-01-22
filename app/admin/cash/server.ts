@@ -16,9 +16,9 @@ export async function saveProject(project: ProjectInput) {
   }))
 }
 
-export async function deleteProject(project: ProjectInput) {
+export async function deleteProject(id: string) {
   return toResponse(transactional(async (tx) => {
     await getAuthenticatedUserSession('admin')
-    return removeProject(tx, project.id)
+    return removeProject(tx, id)
   }))
 }

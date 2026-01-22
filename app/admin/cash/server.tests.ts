@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
-import { loadProjects } from './server'
+import { deleteProject, loadProjects, saveProject } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
@@ -108,5 +108,92 @@ describe('loadProjects', () => {
     }))
     expect(result[0].created_at).toBeInstanceOf(Date)
     expect(result[0].updated_at).toBeInstanceOf(Date)
+  })
+})
+
+describe('saveProject', () => {
+  afterEach(async () => {
+    // Clean up all projects after each test
+    await transactional(async (tx) => {
+      await tx.query('DELETE FROM project')
+    })
+  })
+
+  test('Create a new project', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const projectInput = { id: randomUUID(), name: 'New Project', owner_id: task.id, archived: false }
+    const response = await saveProject(projectInput)
+
+    if (!response.success) throw new Error('Expected success response')
+    expect(response.data).toEqual(expect.objectContaining(projectInput))
+  })
+
+  test('Update an existing project', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const projectId = randomUUID()
+    const originalProject = { id: projectId, name: 'Original Name', owner_id: task.id, archived: false }
+    await transactional(tx => createOrModifyProject(tx, originalProject))
+
+    const updatedProject = { id: projectId, name: 'Updated Name', owner_id: task.id, archived: true }
+    const response = await saveProject(updatedProject)
+
+    if (!response.success) throw new Error('Expected success response')
+    expect(response.data).toEqual(expect.objectContaining(updatedProject))
+  })
+
+  test('Requires admin authentication', async ({ task }) => {
+    vi.mocked(getAuthenticatedUserSession).mockRejectedValue(new Error('Unauthorized'))
+
+    const projectInput = { id: randomUUID(), name: 'New Project', owner_id: task.id, archived: false }
+    const response = await saveProject(projectInput)
+
+    expect(response).toEqual({ success: false, error: expect.any(String) as string })
+  })
+})
+
+describe('deleteProject', () => {
+  afterEach(async () => {
+    // Clean up all projects after each test
+    await transactional(async (tx) => {
+      await tx.query('DELETE FROM project')
+    })
+  })
+
+  test('Delete an existing project', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Project to Delete', owner_id: task.id, archived: false }
+    await transactional(tx => createOrModifyProject(tx, project))
+
+    const response = await deleteProject(project.id)
+
+    expect(response.success).toBe(true)
+
+    // Verify the project was actually deleted
+    const projects = await loadProjects()
+    expect(projects.find(p => p.id === project.id)).toBeUndefined()
+  })
+
+  test('Delete non-existent project succeeds', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const nonExistentId = randomUUID()
+    const response = await deleteProject(nonExistentId)
+
+    expect(response.success).toBe(true)
+  })
+
+  test('Requires admin authentication', async () => {
+    vi.mocked(getAuthenticatedUserSession).mockRejectedValue(new Error('Unauthorized'))
+
+    const response = await deleteProject(randomUUID())
+
+    expect(response).toEqual({ success: false, error: expect.any(String) as string })
   })
 })

@@ -23,11 +23,11 @@ export async function loadAccounts(projectId: string) {
   return accounts
 }
 
-export async function deleteAccount(input: AccountInput): ActionResponse<void> {
+export async function deleteAccount(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
-    validateString(input.id)
-    await removeAccount(client, user.sub, input.id)
+    validateString(id)
+    await removeAccount(client, user.sub, id)
   }))
 }
 

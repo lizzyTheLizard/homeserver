@@ -9,6 +9,11 @@ export const metadata = {
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
     const discussions = await loadHistory()
-    return <History discussions={discussions} />
+    return (
+      <main>
+        <h1>History</h1>
+        <History discussions={discussions} />
+      </main>
+    )
   })
 }

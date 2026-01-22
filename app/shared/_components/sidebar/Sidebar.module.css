@@ -28,17 +28,22 @@
     height: 1.5rem;
 }
 
+.form {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.form>* {
+    margin: var(--gap-small) 0;
+}
+
+.error {
+    color: var(--danger-background-color);
+}
+
 @media (min-width: 600px) {
-    .container {
-        display: flex;
-    }
-
-    .content {
-        width: 0;
-        flex-grow: 1;
-        transition: width 1s;
-    }
-
     .sidebar {
         position: sticky;
         top: var(--gap-small);
@@ -62,6 +67,16 @@
         border: 0 solid black;
         padding: 0;
         margin-left: 0;
+    }
+
+    .sidebarContainer {
+        display: flex;
+    }
+
+    .sidebarContent {
+        width: 0;
+        flex-grow: 1;
+        transition: width 1s;
     }
 }
 

@@ -21,15 +21,15 @@ export async function loadSettings(): Promise<SettingsData> {
   return { profiles, templates }
 }
 
-export async function deleteProfile(profile: ProfileInput): ActionResponse<void> {
+export async function deleteProfile(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
-    validateString(profile.id)
-    return removeProfile(client, user.sub, profile.id)
+    validateString(id)
+    return removeProfile(client, user.sub, id)
   }))
 }
 
-export async function updateProfile(input: ProfileInput): ActionResponse<Profile> {
+export async function saveProfile(input: ProfileInput): ActionResponse<Profile> {
   'use server'
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
@@ -38,15 +38,15 @@ export async function updateProfile(input: ProfileInput): ActionResponse<Profile
   }))
 }
 
-export async function deleteTemplate(template: TemplateInput): ActionResponse<void> {
+export async function deleteTemplate(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
-    validateString(template.id)
-    await removeTemplate(client, user.sub, template.id)
+    validateString(id)
+    await removeTemplate(client, user.sub, id)
   }))
 }
 
-export async function updateTemplate(input: TemplateInput): ActionResponse<Template> {
+export async function saveTemplate(input: TemplateInput): ActionResponse<Template> {
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
