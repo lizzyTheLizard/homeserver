@@ -47,7 +47,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
   }, [open, id, onClose])
 
   const content = (
-    <aside className={style.sidebar + ' ' + (open ? style.open : style.closed)} ref={ref}>
+    <aside className={style.sidebar + ' ' + (open ? style.open : style.closed)} ref={ref} onClick={(e) => { e.stopPropagation() }}>
       <div className={style.titlebar}>
         <h1 className={style.title}>{title}</h1>
         <Icon className={style.closebutton} name="close" onClick={onClose} />
@@ -64,12 +64,11 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
     </aside>
   )
 
-  const parent = container === undefined
-    ? document.getElementsByClassName(style.sidebarContainer)
-    : container.getElementsByClassName(style.sidebarContainer)
-
-  if (parent.length === 0) return content
-  return createPortal(content, parent[0])
+  if (container !== undefined)
+    return createPortal(content, container.getElementsByClassName(style.sidebarContainer)[0])
+  if (typeof document === 'undefined')
+    return content
+  return createPortal(content, document.getElementsByClassName(style.sidebarContainer)[0])
 }
 
 export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
