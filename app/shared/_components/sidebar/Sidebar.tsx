@@ -68,7 +68,10 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
     return createPortal(content, container.getElementsByClassName(style.sidebarContainer)[0])
   if (typeof document === 'undefined')
     return content
-  return createPortal(content, document.getElementsByClassName(style.sidebarContainer)[0])
+  const sidebarContainers = document.getElementsByClassName(style.sidebarContainer)
+  if (sidebarContainers.length === 0)
+    return content
+  return createPortal(content, sidebarContainers[0])
 }
 
 export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {

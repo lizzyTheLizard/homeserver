@@ -1,11 +1,11 @@
 export class Period {
   constructor(
-    private readonly latest = false,
+    private readonly current = false,
     private readonly year?: number,
     private readonly month?: number) {}
 
   toString(): string {
-    if (this.latest) return 'LATEST'
+    if (this.current) return 'CURRENT'
     if (this.year === undefined) return 'ALL'
     if (this.month === undefined) return this.year.toString().padStart(4, '0')
     return `${this.year.toString().padStart(4, '0')}-${this.month.toString().padStart(2, '0')}`
@@ -29,7 +29,7 @@ export const all = new Period()
 
 export function stringToPeriod(s: string): Period {
   if (s === 'ALL') return all
-  if (s === 'LATEST') {
+  if (s === 'CURRENT') {
     const date = new Date()
     return new Period(true, date.getFullYear(), date.getMonth() + 1)
   }

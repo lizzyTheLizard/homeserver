@@ -24,7 +24,7 @@ export interface CommandResult {
   durationMs: number
 }
 
-export async function findNumberOfCommands(client: PoolClient, since?: Date): Promise<number> {
+export async function findNumberOfCommands(client: PoolClient, since?: string): Promise<number> {
   if (since === undefined) {
     const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM command')
     return parseInt(result.rows[0].count, 10)

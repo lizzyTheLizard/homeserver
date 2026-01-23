@@ -5,6 +5,8 @@ import { nontransactional } from '@/app/shared/db'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { config } from '@/app/shared/config'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
+import { get24HoursAgo, get30DaysAgo } from '@/app/cash/_helper/Dates'
 
 const instanceId = randomUUID()
 
@@ -54,7 +56,10 @@ function getRunInfo(): LineItem[] {
 async function getMetricsInfo(): Promise<LineItem[]> {
   return nontransactional(async c => [
     { name: 'Memory (MB)', value: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) },
-    { name: 'CoEditor Commands', value: await findNumberOfCommands(c, new Date(Date.now() - 24 * 60 * 60 * 1000)) },
+    { name: 'CoEditor Commands (Day)', value: await findNumberOfCommands(c, get24HoursAgo()) },
+    { name: 'CoEditor Commands (30-Days)', value: await findNumberOfCommands(c, get30DaysAgo()) },
+    { name: 'Cash Transactions (Day)', value: await findNumberOfTransactions(c, get24HoursAgo()) },
+    { name: 'Cash Transactions (30-Days)', value: await findNumberOfTransactions(c, get30DaysAgo()) },
   ] as LineItem[])
 }
 
