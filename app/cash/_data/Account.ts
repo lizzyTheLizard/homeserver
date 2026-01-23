@@ -47,3 +47,8 @@ export async function createOrModifyAccount(client: PoolClient, ownerId: string,
   logger.info(`Modified account '${input.name}' for owner ${ownerId}`)
   return result.rows[0]
 }
+
+export async function findNumberOfAccounts(client: PoolClient): Promise<number> {
+  const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM account')
+  return parseInt(result.rows[0].count, 10)
+}

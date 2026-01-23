@@ -50,3 +50,13 @@ export async function removeProject(client: PoolClient, id: string): Promise<voi
   await client.query(`DELETE FROM project WHERE id = $1`, [id])
   logger.info(`Project ${id} deleted`)
 }
+
+export async function findNumberOfProjects(client: PoolClient): Promise<number> {
+  const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM project')
+  return parseInt(result.rows[0].count, 10)
+}
+
+export async function findNumberOfUsersWithProjects(client: PoolClient): Promise<number> {
+  const result = await client.query<{ count: string }>('SELECT COUNT(DISTINCT owner_id) AS count FROM project')
+  return parseInt(result.rows[0].count, 10)
+}

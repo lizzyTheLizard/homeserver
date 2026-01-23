@@ -34,7 +34,7 @@ export async function findDiscussionByOwner(client: PoolClient, owner: string): 
   return result.rows
 }
 
-export async function findNumberOfDiscussions(client: PoolClient, since?: Date): Promise<number> {
+export async function findNumberOfDiscussions(client: PoolClient, since?: string): Promise<number> {
   if (since === undefined) {
     const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM discussion')
     return parseInt(result.rows[0].count, 10)

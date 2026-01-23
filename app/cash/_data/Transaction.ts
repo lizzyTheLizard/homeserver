@@ -73,6 +73,15 @@ export async function removeTransaction(client: PoolClient, ownerId: string, id:
   }
 }
 
+export async function findNumberOfTransactions(client: PoolClient, since?: string): Promise<number> {
+  if (since === undefined) {
+    const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM transaction')
+    return parseInt(result.rows[0].count, 10)
+  }
+  const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM transaction WHERE created_at > $1', [since])
+  return parseInt(result.rows[0].count, 10)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ensureNotClosed(projectId: string, date: Date[]) {
   // TODO: Implement checking for closed periods
