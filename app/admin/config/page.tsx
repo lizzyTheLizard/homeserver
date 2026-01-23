@@ -1,6 +1,6 @@
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { Config } from './Config'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { loadConfig } from './server'
 
 export const metadata = {
   title: 'Admin - Configuration',
@@ -8,14 +8,11 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    await getAuthenticatedUserSession('admin')
-    const data = Object.keys(process.env)
-      .map(key => ({ id: key, key, value: process.env[key] }))
-
+    const config = await loadConfig()
     return (
       <main>
         <h1>Configuration</h1>
-        <Config data={data} />
+        <Config data={config} />
       </main>
     )
   })
