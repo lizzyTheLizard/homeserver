@@ -2,9 +2,9 @@ import { describe, expect, test } from 'vitest'
 import { stringToPeriod } from './Period'
 
 describe('Period', () => {
-  test('LATEST', () => {
-    const period = stringToPeriod('LATEST')
-    expect(period.toString()).toBe('LATEST')
+  test('CURRENT', () => {
+    const period = stringToPeriod('CURRENT')
+    expect(period.toString()).toBe('CURRENT')
     const today = new Date()
     expect(period.startDate()).toEqual(`${today.getFullYear().toString().padStart(4, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-01`)
   })

@@ -12,7 +12,7 @@ export default async function Page() {
     const projects = await loadProjects()
 
     function getLink(project: Project): string {
-      return `/cash/${project.id}/LATEST/journal`
+      return `/cash/${project.id}/CURRENT/journal`
     }
 
     return (
