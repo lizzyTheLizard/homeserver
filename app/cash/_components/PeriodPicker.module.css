@@ -1,0 +1,26 @@
+.container {
+    display:flex;
+    flex-direction: row;
+}
+
+@media (min-width: 600px) {
+    .container{
+        position:absolute;
+        top:var(--gap);
+        right:var(--gap);
+    }
+    .container > * {
+        min-width: 5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .container{
+        display: flex;
+        margin-bottom: var(--gap);
+    }
+
+    .container > * {
+        flex-grow: 1;
+    }
+}

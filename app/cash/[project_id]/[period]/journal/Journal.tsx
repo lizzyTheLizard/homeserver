@@ -15,6 +15,7 @@ import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 
 export interface JournalProps {
   accounts?: Account[]
@@ -64,6 +65,7 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
 
   return (
     <>
+      <PeriodPicker period={period} project_id={project_id} />
       <DataTable
         columns={columns}
         data={transactions}
