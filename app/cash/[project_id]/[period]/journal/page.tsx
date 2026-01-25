@@ -21,7 +21,6 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
     const period = stringToPeriod((await params).period)
     const projectId = (await params).project_id
     const accountId = (await searchParams).accountId
-    // TODO: Implement period picker
     if (accountId) {
     // TODO: Show account specific journal
       throw new Error('Account specific journal not implemented yet')
