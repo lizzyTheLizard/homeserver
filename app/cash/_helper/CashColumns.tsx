@@ -5,7 +5,7 @@ import { Account } from '../_data/Account'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Currency } from '@/app/shared/_components/Currency'
 import { ColumnDefinition, ColumnFilter } from '@/app/shared/_components/table/DataTable'
-import { Period } from './Period'
+import { Period, periodToString } from './Period'
 import style from '@/app/shared/_components/table/DataTable.module.css'
 
 export function accountColumn(key: string, accounts: Account[], period: Period, options?: Options<string>): ColumnDefinition<string, string> {
@@ -25,7 +25,7 @@ export function accountColumn(key: string, accounts: Account[], period: Period, 
     cell: options?.cell ?? ((value) => {
       const account = accounts.find(account => account.id === value)
       if (!account) return value
-      return <Link onClick={(e) => { e.stopPropagation() }} href={`/cash/${account.project_id}/${period.toString()}/journal?accountId=${account.id}`}>{account.name}</Link>
+      return <Link onClick={(e) => { e.stopPropagation() }} href={`/cash/${account.project_id}/${periodToString(period)}/journal?accountId=${account.id}`}>{account.name}</Link>
     }),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,

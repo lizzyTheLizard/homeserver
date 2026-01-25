@@ -19,11 +19,14 @@ export function History({ discussions = [] }: HistoryProps) {
   const router = useRouter()
 
   return (
-    <DataTable
-      columns={columns}
-      data={discussions}
-      initialSortingOrder={[{ key: 'updated_at', direction: 'DESC' }]}
-      onRowClick={(discussion) => { router.push(`/coeditor/editor?id=${discussion.id}`) }}
-    />
+    <>
+      <h1>History</h1>
+      <DataTable
+        columns={columns}
+        data={discussions}
+        initialSortingOrder={[{ key: 'updated_at', direction: 'DESC' }]}
+        onRowClick={(discussion) => { router.push(`/coeditor/editor?id=${discussion.id}`) }}
+      />
+    </>
   )
 }

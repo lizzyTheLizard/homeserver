@@ -1,32 +1,32 @@
 import { describe, expect, test } from 'vitest'
-import { stringToPeriod } from './Period'
+import { endDate, periodToString, startDate, stringToPeriod } from './Period'
 
 describe('Period', () => {
   test('CURRENT', () => {
     const period = stringToPeriod('CURRENT')
-    expect(period.toString()).toBe('CURRENT')
+    expect(periodToString(period)).toBe('CURRENT')
     const today = new Date()
-    expect(period.startDate()).toEqual(`${today.getFullYear().toString().padStart(4, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-01`)
+    expect(startDate(period)).toEqual(`${today.getFullYear().toString().padStart(4, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-01`)
   })
 
   test('ALL', () => {
     const period = stringToPeriod('ALL')
-    expect(period.toString()).toBe('ALL')
-    expect(period.startDate()).toBe('0001-01-01')
-    expect(period.endDate()).toBe('9999-12-31')
+    expect(periodToString(period)).toBe('ALL')
+    expect(startDate(period)).toBe('0001-01-01')
+    expect(endDate(period)).toBe('9999-12-31')
   })
 
   test('Year only', () => {
     const period = stringToPeriod('2023')
-    expect(period.toString()).toBe('2023')
-    expect(period.startDate()).toBe('2023-01-01')
-    expect(period.endDate()).toBe('2024-01-01')
+    expect(periodToString(period)).toBe('2023')
+    expect(startDate(period)).toBe('2023-01-01')
+    expect(endDate(period)).toBe('2024-01-01')
   })
 
   test('Year and month', () => {
     const period = stringToPeriod('2023-05')
-    expect(period.toString()).toBe('2023-05')
-    expect(period.startDate()).toBe('2023-05-01')
-    expect(period.endDate()).toBe('2023-06-01')
+    expect(periodToString(period)).toBe('2023-05')
+    expect(startDate(period)).toBe('2023-05-01')
+    expect(endDate(period)).toBe('2023-06-01')
   })
 })

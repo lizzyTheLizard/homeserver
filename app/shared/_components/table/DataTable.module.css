@@ -34,11 +34,6 @@
   margin-top: var(--gap-small);
 }
 
-.createButtonRow {
-    margin-top: var(--gap);
-    justify-content: flex-end;
-}   
-
 .rowWithClick:hover td {
     background-color: grey !important
 }
@@ -107,9 +102,6 @@
     }
 
   }
-  .createButton {
-      max-width: 300px;
-  }
 }
 
 
@@ -174,7 +166,4 @@
       content: attr(headers);
     }
   }
-  .createButton {
-      width: 100%;
-  }    
-}
+} 

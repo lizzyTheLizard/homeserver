@@ -9,7 +9,6 @@ import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
 import { createOrModifyTransaction } from '@/app/cash/_data/Transaction'
 import { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Period } from '@/app/cash/_helper/Period'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -27,7 +26,7 @@ describe('loadJournal', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
-    const result = await loadJournal(new Period(true, 2023, 5), project.id)
+    const result = await loadJournal({ current: true, year: 2023, month: 5 }, project.id)
 
     expect(result.project).toEqual(expect.objectContaining(project))
     expect(result.accounts).toEqual([])
@@ -49,7 +48,7 @@ describe('loadJournal', () => {
       await createOrModifyTransaction(tx, task.id, transaction)
     })
 
-    const result = await loadJournal(new Period(true, 2023, 5), project.id)
+    const result = await loadJournal({ current: true, year: 2023, month: 5 }, project.id)
 
     expect(result.project).toEqual(expect.objectContaining(project))
     expect(result.accounts).toHaveLength(2)
@@ -75,8 +74,8 @@ describe('loadJournal', () => {
       await createOrModifyTransaction(tx, task.id, transaction2)
     })
 
-    const resultMay = await loadJournal(new Period(true, 2023, 5), project.id)
-    const resultJune = await loadJournal(new Period(true, 2023, 6), project.id)
+    const resultMay = await loadJournal({ current: true, year: 2023, month: 5 }, project.id)
+    const resultJune = await loadJournal({ current: true, year: 2023, month: 6 }, project.id)
 
     expect(resultMay.transactions).toHaveLength(1)
     expect(resultMay.transactions[0].description).toEqual('May transaction')
@@ -89,7 +88,7 @@ describe('loadJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const projectId = randomUUID()
 
-    await expect(loadJournal(new Period(true, 2023, 7), projectId)).rejects.toThrow()
+    await expect(loadJournal({ current: true, year: 2023, month: 7 }, projectId)).rejects.toThrow()
   })
 })
 
@@ -215,7 +214,7 @@ describe('deleteTransaction', () => {
     if (!result.success) throw new Error('Expected success response')
 
     // Verify transaction is deleted
-    const journal = await loadJournal(new Period(true, 2023, 7), project.id)
+    const journal = await loadJournal({ current: true, year: 2023, month: 7 }, project.id)
     expect(journal.transactions).toHaveLength(0)
   })
 
@@ -242,7 +241,7 @@ describe('deleteTransaction', () => {
 
     // Verify transaction is not deleted
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const journal = await loadJournal(new Period(true, 2023, 7), project.id)
+    const journal = await loadJournal({ current: true, year: 2023, month: 7 }, project.id)
     expect(journal.transactions).toHaveLength(1)
   })
 

@@ -19,7 +19,6 @@ export default async function Page({ params }: AccountPageProps) {
     const accounts = await loadAccounts(paramsResolved.project_id)
     return (
       <main>
-        <h1>Accounts</h1>
         <Accounts accounts={accounts} />
       </main>
     )

@@ -1,11 +1,10 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { DataTableSkeleton } from '@/app/shared/_components/table/DataTableSkeleton'
+import { Config } from './Config'
 
 export default function Loading() {
   return (
     <main>
-      <h1>Configuration</h1>
-      <DataTableSkeleton hasAddButton={false} />
+      <Config data={[]} />
       <LoadingSpinner></LoadingSpinner>
     </main>
   )

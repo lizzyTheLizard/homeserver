@@ -3,7 +3,6 @@ import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from
 import { Filtering, sortAndFilter, SortingOrder } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
-import { Button } from '../form/Button'
 import style from './DataTable.module.css'
 
 export interface DataTableProps<T extends { id: string }> extends TableHTMLAttributes<HTMLTableElement> {
@@ -13,7 +12,6 @@ export interface DataTableProps<T extends { id: string }> extends TableHTMLAttri
   initialSortingOrder?: SortingOrder[]
   initialFiltering?: Filtering[]
   onRowClick?: (item: T) => void
-  onAddClick?: () => void
 }
 
 export interface ColumnDefinition<FieldType, FilterValueType> {
@@ -30,7 +28,7 @@ export interface ColumnFilter<FieldType, FilterValueType> {
   function: (dataValue: FieldType, filterValue: FilterValueType) => boolean
 }
 
-export function DataTable<T extends { id: string }>({ columns, onRowClick, onAddClick, data, initialFiltering, initialSortingOrder, ...props }: DataTableProps<T>) {
+export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, ...props }: DataTableProps<T>) {
   const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
   const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
   const [filtering, setFiltering] = useState<Filtering[]>(initialFiltering ?? [])
@@ -91,11 +89,6 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, onAdd
           )}
         </tbody>
       </table>
-      { onAddClick && (
-        <div className={style.createButtonRow + ' row'}>
-          <Button className={style.createButton} onClick={(e) => { onAddClick(); e.stopPropagation() }}>Add</Button>
-        </div>
-      )}
     </>
   )
 }

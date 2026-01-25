@@ -1,7 +1,7 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 import { invalidInput } from '../../shared/_helper/BackendError'
-import { Period } from '../_helper/Period'
+import { endDate, Period, startDate } from '../_helper/Period'
 
 export interface Transaction {
   id: string
@@ -27,8 +27,8 @@ export interface TransactionInput {
 }
 
 export async function findAllTransactions(client: PoolClient, owner: string, projectId: string, period: Period): Promise<Transaction[]> {
-  const from = period.startDate()
-  const to = period.endDate()
+  const from = startDate(period)
+  const to = endDate(period)
   const result = await client.query<Transaction>(`SELECT * FROM transaction WHERE project_id = $1 AND date >= $2 AND date < $3 AND owner_id = $4`, [projectId, from, to, owner])
   logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId}`)
   return result.rows.map(row => ({ ...row, amount: parseFloat(row.amount.toString()) }))

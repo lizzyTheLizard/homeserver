@@ -1,11 +1,10 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { DataTableSkeleton } from '@/app/shared/_components/table/DataTableSkeleton'
+import { Journal } from './Journal'
 
 export default function Loading() {
   return (
     <main>
-      <h1>Journal</h1>
-      <DataTableSkeleton hasAddButton={true} />
+      <Journal accounts={[]} transactions={[]} />
       <LoadingSpinner />
     </main>
   )
