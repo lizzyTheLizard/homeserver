@@ -1,7 +1,6 @@
 'use client'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Period, periodToString } from '../_helper/Period'
-import style from './PeriodPicker.module.css'
 
 export interface PeriodPickerProps {
   period: Period

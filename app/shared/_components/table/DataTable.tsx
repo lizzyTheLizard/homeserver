@@ -3,7 +3,6 @@ import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from
 import { Filtering, sortAndFilter, SortingOrder } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
-import { Button } from '../form/Button'
 import style from './DataTable.module.css'
 
 export interface DataTableProps<T extends { id: string }> extends TableHTMLAttributes<HTMLTableElement> {

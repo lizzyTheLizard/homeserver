@@ -14,6 +14,11 @@ const meta = {
 export default meta
 
 export const Normal: StoryObj<typeof meta> = {
+  args: {
+    children: [
+      <h1>Action Title</h1>,
+    ],
+  },
 }
 
 export const ButtonStory: StoryObj<typeof meta> = {

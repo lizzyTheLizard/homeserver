@@ -2,7 +2,6 @@ import { Journal } from './Journal'
 import { stringToPeriod } from '@/app/cash/_helper/Period'
 import { loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Cash - Journal',
