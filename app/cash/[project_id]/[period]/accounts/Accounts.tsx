@@ -13,6 +13,8 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Checkbox } from '@/app/shared/_components/form/Checkbox'
 import { useState } from 'react'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Button } from '@/app/shared/_components/form/Button'
 
 export interface AccountsProps {
   accounts?: Account[]
@@ -43,12 +45,15 @@ export function Accounts({ accounts: accountsIn = [] }: AccountsProps) {
   }
   return (
     <>
+      <ActionTitle>
+        <h1>Accounts</h1>
+        <Button onClick={(e) => { showAccount(); e.stopPropagation() }}>Add</Button>
+      </ActionTitle>
       <DataTable
         columns={columns}
         data={accounts}
         initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
         onRowClick={(account) => { showAccount(account) }}
-        onAddClick={() => { showAccount() }}
       />
       <Sidebar
         state={sidebarState}

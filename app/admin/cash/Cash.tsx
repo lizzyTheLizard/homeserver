@@ -10,6 +10,8 @@ import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTable
 import { deleteProject, saveProject } from './server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Button } from '@/app/shared/_components/form/Button'
 
 export interface CashProps {
   projects?: Project[]
@@ -39,12 +41,15 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
 
   return (
     <>
+      <ActionTitle>
+        <h1>Cash Admin</h1>
+        <Button onClick={() => { showProject() }}>Add</Button>
+      </ActionTitle>
       <DataTable
         columns={columns}
         initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
         data={projects}
         onRowClick={(project) => { showProject(project) }}
-        onAddClick={() => { showProject() }}
       />
       <Sidebar
         state={sidebarState}

@@ -2,6 +2,7 @@ import { Journal } from './Journal'
 import { stringToPeriod } from '@/app/cash/_helper/Period'
 import { loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Cash - Journal',
@@ -29,7 +30,6 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
       const journalData = await loadJournal(period, projectId)
       return (
         <main>
-          <h1>Journal</h1>
           <Journal accounts={journalData.accounts} transactions={journalData.transactions} />
         </main>
       )

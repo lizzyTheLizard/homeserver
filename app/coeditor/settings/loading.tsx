@@ -1,15 +1,13 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { DataTableSkeleton } from '@/app/shared/_components/table/DataTableSkeleton'
+import { Profiles } from './Profiles'
+import { Templates } from './Templates'
 
 export default function Loading() {
   return (
     <main>
-      <h1>CoEditor Settings</h1>
       <LoadingSpinner />
-      <h2>Profiles</h2>
-      <DataTableSkeleton hasAddButton={true} />
-      <h2>Templates</h2>
-      <DataTableSkeleton hasAddButton={true} />
+      <Profiles profiles={[]} />
+      <Templates templates={[]} />
     </main>
   )
 }

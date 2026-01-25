@@ -1,11 +1,10 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { DataTableSkeleton } from '@/app/shared/_components/table/DataTableSkeleton'
+import { Cash } from './Cash'
 
 export default function Loading() {
   return (
     <main>
-      <h1>Cash Admin</h1>
-      <DataTableSkeleton hasAddButton={true} />
+      <Cash projects={[]} />
       <LoadingSpinner></LoadingSpinner>
     </main>
   )

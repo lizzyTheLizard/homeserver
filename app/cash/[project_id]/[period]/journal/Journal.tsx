@@ -16,6 +16,8 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Button } from '@/app/shared/_components/form/Button'
 
 export interface JournalProps {
   accounts?: Account[]
@@ -65,13 +67,16 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
 
   return (
     <>
-      <PeriodPicker period={period} project_id={project_id} />
+      <ActionTitle>
+        <h1>Journal</h1>
+        <Button onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add</Button>
+        <PeriodPicker period={period} project_id={project_id} />
+      </ActionTitle>
       <DataTable
         columns={columns}
         data={transactions}
         initialSortingOrder={[{ key: 'date', direction: 'DESC' }]}
         onRowClick={(transaction) => { showTransaction(transaction) }}
-        onAddClick={() => { showTransaction() }}
       />
       <Sidebar
         state={sidebarState}

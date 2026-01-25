@@ -3,7 +3,7 @@ import { Select } from '@/app/shared/_components/form/Select'
 import { Period, periodToString } from '../_helper/Period'
 import style from './PeriodPicker.module.css'
 
-export interface PeriodPickerProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface PeriodPickerProps {
   period: Period
   onPeriodChange?: (period: Period) => void
   project_id?: string
@@ -12,7 +12,7 @@ export interface PeriodPickerProps extends React.HTMLAttributes<HTMLSpanElement>
 const maxYear = new Date().getFullYear()
 const minYear = 2020
 
-export function PeriodPicker({ period, onPeriodChange, project_id, ...props }: PeriodPickerProps) {
+export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPickerProps) {
   function defaultOnPeriodChange(p: Period) {
     const split = window.location.pathname.split('/')
     const href = `/cash/${project_id ?? ''}/${periodToString(p)}` + '/' + split.slice(4).join('/')
@@ -41,14 +41,14 @@ export function PeriodPicker({ period, onPeriodChange, project_id, ...props }: P
   console.log('Rendering PeriodPicker with period:', periodToString(period), year, month)
 
   return (
-    <span {...props} className={style.container + ' ' + (props.className ?? '')}>
-      <Select label="Year" emptyLabel="All" value={year} onChange={(e) => { setYear(e.target.value) }}>
+    <>
+      <Select id="year" onClick={(e) => { e.stopPropagation() }} label="Year" emptyLabel="All" value={year} onChange={(e) => { setYear(e.target.value) }}>
         {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map(y => (
           <option key={y} value={y.toString()}>{y}</option>
         ))}
       </Select>
 
-      <Select label="Month" emptyLabel="All" value={month} onChange={(e) => { setMonth(e.target.value) }} disabled={!period.year}>
+      <Select id="month" onClick={(e) => { e.stopPropagation() }} label="Month" emptyLabel="All" value={month} onChange={(e) => { setMonth(e.target.value) }} disabled={!period.year}>
         <option value="01">January</option>
         <option value="02">February</option>
         <option value="03">March</option>
@@ -62,6 +62,6 @@ export function PeriodPicker({ period, onPeriodChange, project_id, ...props }: P
         <option value="11">November</option>
         <option value="12">December</option>
       </Select>
-    </span>
+    </>
   )
 }

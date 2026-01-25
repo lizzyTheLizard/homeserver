@@ -11,7 +11,6 @@ export default async function Page() {
     const config = await loadConfig()
     return (
       <main>
-        <h1>Configuration</h1>
         <Config data={config} />
       </main>
     )

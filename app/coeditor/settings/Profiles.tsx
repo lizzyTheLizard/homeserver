@@ -10,6 +10,8 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Button } from '@/app/shared/_components/form/Button'
 
 export interface ProfilesProps {
   profiles?: Profile[]
@@ -37,9 +39,12 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
 
   return (
     <>
+      <ActionTitle>
+        <h1>Profiles</h1>
+        <Button onClick={() => { showProfile() }}>Add</Button>
+      </ActionTitle>
       <DataTable
         onRowClick={(profile) => { showProfile(profile) }}
-        onAddClick={() => { showProfile() }}
         columns={profileColumns}
         data={profiles}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}

@@ -10,6 +10,8 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Button } from '@/app/shared/_components/form/Button'
 
 export interface TemplatesProps {
   templates?: Template[]
@@ -39,9 +41,12 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
 
   return (
     <>
+      <ActionTitle>
+        <h1>Templates</h1>
+        <Button onClick={() => { showTemplate() }}>Add</Button>
+      </ActionTitle>
       <DataTable
         onRowClick={(template) => { showTemplate(template) }}
-        onAddClick={() => { showTemplate() }}
         columns={templateColumns}
         data={templates}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}

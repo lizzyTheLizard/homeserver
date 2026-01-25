@@ -1,12 +1,11 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { DataTableSkeleton } from '@/app/shared/_components/table/DataTableSkeleton'
+import { History } from './History'
 
 export default function Loading() {
   return (
     <main>
-      <h1>History</h1>
+      <History discussions={[]} />
       <LoadingSpinner />
-      <DataTableSkeleton />
     </main>
   )
 }

@@ -11,7 +11,6 @@ export default async function Page() {
     const discussions = await loadHistory()
     return (
       <main>
-        <h1>History</h1>
         <History discussions={discussions} />
       </main>
     )

@@ -11,7 +11,6 @@ export default async function Page() {
     const projects = await loadProjects()
     return (
       <main>
-        <h1>Cash Admin</h1>
         <Cash projects={projects} />
       </main>
     )
