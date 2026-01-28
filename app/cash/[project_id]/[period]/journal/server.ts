@@ -4,10 +4,12 @@ import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/db'
 import { notFound } from 'next/navigation'
 import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
-import { createOrModifyTransaction, findAllTransactions, removeTransaction, Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
+import { createTransaction, findAllTransactions, findTransactionsById, modifyTransaction, removeTransaction, Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
 import { Period } from '@/app/cash/_helper/Period'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
+import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
+import { invalidInput } from '@/app/shared/_helper/BackendError'
 
 export interface JournalData {
   project: Project
@@ -32,7 +34,12 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateString(id)
+    const existingTransaction = await findTransactionsById(client, user.sub, id)
+    if (!existingTransaction) return
+    const lastClosing = await findLastClosing(client, user.sub, existingTransaction.project_id)
+    if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot delete transaction from closed period')
     await removeTransaction(client, user.sub, id)
+    // TODO: Update account transaction summaries
   }))
 }
 
@@ -40,8 +47,27 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateObject(input, TransactionInputConstraints)
-    return createOrModifyTransaction(client, user.sub, input)
+    const lastClosing = await findLastClosing(client, user.sub, input.project_id)
+    if (isClosed(lastClosing, input.date)) throw invalidInput('Cannot modify transaction in closed period')
+    const existingTransaction = await findTransactionsById(client, user.sub, input.id)
+    if (existingTransaction) {
+      if (existingTransaction.project_id !== input.project_id) throw invalidInput('Cannot change project of existing transaction')
+      if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot modify transaction from closed period')
+      // TODO: Update account transaction summaries
+      return modifyTransaction(client, user.sub, input)
+    }
+    else {
+      const project = await findProjectById(client, user.sub, input.project_id)
+      if (!project) throw invalidInput('Cannot create transaction for non-existing project')
+      // TODO: Update account transaction summaries
+      return createTransaction(client, user.sub, input)
+    }
   }))
+}
+
+function isClosed(lastClosing: Closing | undefined, transactionDate: Date): boolean {
+  if (!lastClosing) return false
+  return transactionDate <= lastClosing.date
 }
 
 const TransactionInputConstraints = {
