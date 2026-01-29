@@ -10,6 +10,7 @@ import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
+import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 
 export interface JournalData {
   project: Project
@@ -39,7 +40,7 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
     const lastClosing = await findLastClosing(client, user.sub, existingTransaction.project_id)
     if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot delete transaction from closed period')
     await removeTransaction(client, user.sub, id)
-    // TODO: Update account transaction summaries
+    await recalculateTransactions(client, user.sub, existingTransaction.project_id, existingTransaction.date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
   }))
 }
 
@@ -53,14 +54,16 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
     if (existingTransaction) {
       if (existingTransaction.project_id !== input.project_id) throw invalidInput('Cannot change project of existing transaction')
       if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot modify transaction from closed period')
-      // TODO: Update account transaction summaries
-      return modifyTransaction(client, user.sub, input)
+      const result = modifyTransaction(client, user.sub, input)
+      await recalculateTransactions(client, user.sub, input.project_id, min(input.date, existingTransaction.date), [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+      return result
     }
     else {
       const project = await findProjectById(client, user.sub, input.project_id)
       if (!project) throw invalidInput('Cannot create transaction for non-existing project')
-      // TODO: Update account transaction summaries
-      return createTransaction(client, user.sub, input)
+      const result = createTransaction(client, user.sub, input)
+      await recalculateTransactions(client, user.sub, input.project_id, input.date, [input.credit_account_id, input.debit_account_id])
+      return result
     }
   }))
 }
@@ -68,6 +71,10 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
 function isClosed(lastClosing: Closing | undefined, transactionDate: Date): boolean {
   if (!lastClosing) return false
   return transactionDate <= lastClosing.date
+}
+
+function min(date1: Date, date2: Date): Date {
+  return date1 < date2 ? date1 : date2
 }
 
 const TransactionInputConstraints = {

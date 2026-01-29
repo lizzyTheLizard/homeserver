@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, expect, test, vi, beforeEach } from 'vitest'
-import { transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
 import { loadJournal, saveTransaction, deleteTransaction } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
@@ -10,6 +10,7 @@ import { createTransaction } from '@/app/cash/_data/Transaction'
 import { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { createClosing } from '@/app/cash/_data/Closing'
+import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -114,7 +115,7 @@ describe('saveTransaction', () => {
     const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: new Date('2023-07-10'), description: 'New transaction' }
     const result = await saveTransaction(transactionInput)
 
-    if (!result.success) throw new Error('Expected success response')
+    if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
     expect(result.data).toEqual(expect.objectContaining(transactionInput))
     expect(result.data.owner_id).toEqual(task.id)
   })
@@ -247,6 +248,78 @@ describe('saveTransaction', () => {
     const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: new Date('2023-07-10'), description: 'New transaction' }
     await expect(saveTransaction(transactionInput)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
+
+  test('Create account transaction', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account1)
+      await createOrModifyAccount(tx, task.id, account2)
+    })
+
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: new Date('2023-07-10'), description: 'New transaction' }
+    await saveTransaction(transactionInput)
+
+    const result = await nontransactional(c => findLatestAccountTransactionBefore(c, task.id, project.id, account1.id, { year: 2023, month: 8, openEnded: true }))
+
+    expect(result).toEqual({
+      id: expect.any(String),
+      project_id: project.id,
+      owner_id: task.id,
+      ordering: expect.any(Number),
+      account_id: account1.id,
+      other_account_id: account2.id,
+      amount: transactionInput.amount,
+      total_balance: transactionInput.amount,
+      date: transactionInput.date,
+      transaction_id: transactionInput.id,
+      description: transactionInput.description,
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
+    })
+  })
+
+  test('Update existing account transaction', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: new Date('2023-07-10'), description: 'New transaction' }
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account1)
+      await createOrModifyAccount(tx, task.id, account2)
+      await createTransaction(tx, task.id, transaction)
+    })
+
+    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
+    await saveTransaction(updatedTransaction)
+
+    const result = await nontransactional(c => findLatestAccountTransactionBefore(c, task.id, project.id, account2.id, { year: 2023, month: 8, openEnded: true }))
+
+    expect(result).toEqual({
+      id: expect.any(String),
+      project_id: project.id,
+      owner_id: task.id,
+      ordering: expect.any(Number),
+      account_id: account2.id,
+      other_account_id: account1.id,
+      amount: -updatedTransaction.amount,
+      total_balance: -updatedTransaction.amount,
+      date: updatedTransaction.date,
+      transaction_id: updatedTransaction.id,
+      description: updatedTransaction.description,
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
+    })
+  })
 })
 
 describe('deleteTransaction', () => {
@@ -351,5 +424,27 @@ describe('deleteTransaction', () => {
     })
 
     await expect(deleteTransaction(transaction.id)).resolves.toEqual({ success: false, error: expect.any(String) as string })
+  })
+
+  test('Delete account transaction', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account1)
+      await createOrModifyAccount(tx, task.id, account2)
+    })
+
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: new Date('2023-07-10'), description: 'New transaction' }
+    await saveTransaction(transactionInput)
+    await deleteTransaction(transactionInput.id)
+
+    const result = await nontransactional(c => findLatestAccountTransactionBefore(c, task.id, project.id, account1.id, { year: 2023, month: 8, openEnded: true }))
+
+    expect(result).toBeUndefined()
   })
 })

@@ -1,6 +1,6 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
-import { endDate, Period, startDate } from '../_helper/Period'
+import { endDate, Period, periodToString, startDate } from '../_helper/Period'
 
 export interface Transaction {
   id: string
@@ -29,7 +29,15 @@ export async function findAllTransactions(client: PoolClient, owner: string, pro
   const from = startDate(period)
   const to = endDate(period)
   const result = await client.query<Transaction>(`SELECT * FROM transaction WHERE project_id = $1 AND date >= $2 AND date < $3 AND owner_id = $4`, [projectId, from, to, owner])
-  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId}`)
+  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId} in period ${periodToString(period)}`)
+  return result.rows.map(row => ({ ...row, amount: parseFloat(row.amount.toString()) }))
+}
+
+export async function findAllTransactionsByAccount(client: PoolClient, owner: string, projectId: string, accountId: string, period: Period): Promise<Transaction[]> {
+  const from = startDate(period)
+  const to = endDate(period)
+  const result = await client.query<Transaction>(`SELECT * FROM transaction WHERE project_id = $1 AND date >= $2 AND date < $3 AND owner_id = $4 AND (credit_account_id = $5 OR debit_account_id = $5)`, [projectId, from, to, owner, accountId])
+  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId} and account ${accountId} in period ${periodToString(period)}`)
   return result.rows.map(row => ({ ...row, amount: parseFloat(row.amount.toString()) }))
 }
 
