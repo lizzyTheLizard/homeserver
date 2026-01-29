@@ -6,7 +6,6 @@ import { createOrModifyProject } from '../_data/Project'
 import { createTransaction } from '../_data/Transaction'
 import { recalculateTransactions } from './RecalculateAccountTransactions'
 import { createAccountTransaction, findAllAccountTransactionsInPeriod } from '../_data/AccountTransaction'
-import { Temporal } from '@js-temporal/polyfill'
 
 describe('loadJournal', () => {
   test('No Transactions', async ({ task }) => {
