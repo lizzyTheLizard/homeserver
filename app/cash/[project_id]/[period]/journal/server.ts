@@ -1,5 +1,5 @@
 'use server'
-import { findProjectById, Project } from '@/app/cash/_data/Project'
+import { findProjectById } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/db'
 import { notFound } from 'next/navigation'
@@ -11,11 +11,34 @@ import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
+import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 
 export interface JournalData {
-  project: Project
   accounts: Account[]
   transactions: Transaction[]
+}
+
+export interface AccountJournalData {
+  account: Account
+  accounts: Account[]
+  transactions: AccountTransaction[]
+  lastTransaction: AccountTransaction | undefined
+}
+
+export async function loadAccountJournal(period: Period, projectId: string, accountId: string): Promise<AccountJournalData> {
+  const user = await getAuthenticatedUserSession('cash')
+  const [project, accounts, transactions, lastTransaction] = await nontransactional(async c => ([
+    await findProjectById(c, user.sub, projectId),
+    await findAllAccountsForProject(c, user.sub, projectId),
+    await findAllAccountTransactionsInPeriod(c, user.sub, projectId, accountId, period),
+    await findLatestAccountTransactionBefore(c, user.sub, projectId, accountId, period),
+  ]))
+  if (!project) {
+    return notFound()
+  }
+  const account = accounts.find(acc => acc.id === accountId)
+  if (!account) throw invalidInput(`Account ${accountId} not found`)
+  return { account, accounts, transactions, lastTransaction }
 }
 
 export async function loadJournal(period: Period, projectId: string): Promise<JournalData> {
@@ -28,7 +51,7 @@ export async function loadJournal(period: Period, projectId: string): Promise<Jo
   if (!project) {
     return notFound()
   }
-  return { project, accounts, transactions }
+  return { accounts, transactions }
 }
 
 export async function deleteTransaction(id: string): ActionResponse<void> {
