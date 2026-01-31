@@ -13,11 +13,6 @@ import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 
-export interface JournalData {
-  accounts: Account[]
-  transactions: Transaction[]
-}
-
 export interface AccountJournalData {
   account: Account
   accounts: Account[]
@@ -33,12 +28,15 @@ export async function loadAccountJournal(period: Period, projectId: string, acco
     await findAllAccountTransactionsInPeriod(c, user.sub, projectId, accountId, period),
     await findLatestAccountTransactionBefore(c, user.sub, projectId, accountId, period),
   ]))
-  if (!project) {
-    return notFound()
-  }
+  if (!project) return notFound()
   const account = accounts.find(acc => acc.id === accountId)
   if (!account) throw invalidInput(`Account ${accountId} not found`)
   return { account, accounts, transactions, lastTransaction }
+}
+
+export interface JournalData {
+  accounts: Account[]
+  transactions: Transaction[]
 }
 
 export async function loadJournal(period: Period, projectId: string): Promise<JournalData> {
@@ -48,9 +46,7 @@ export async function loadJournal(period: Period, projectId: string): Promise<Jo
     await findAllAccountsForProject(c, user.sub, projectId),
     await findAllTransactions(c, user.sub, projectId, period),
   ]))
-  if (!project) {
-    return notFound()
-  }
+  if (!project) return notFound()
   return { accounts, transactions }
 }
 
@@ -77,14 +73,14 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
     if (existingTransaction) {
       if (existingTransaction.project_id !== input.project_id) throw invalidInput('Cannot change project of existing transaction')
       if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot modify transaction from closed period')
-      const result = modifyTransaction(client, user.sub, input)
+      const result = await modifyTransaction(client, user.sub, input)
       await recalculateTransactions(client, user.sub, input.project_id, min(input.date, existingTransaction.date), [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
       return result
     }
     else {
       const project = await findProjectById(client, user.sub, input.project_id)
       if (!project) throw invalidInput('Cannot create transaction for non-existing project')
-      const result = createTransaction(client, user.sub, input)
+      const result = await createTransaction(client, user.sub, input)
       await recalculateTransactions(client, user.sub, input.project_id, input.date, [input.credit_account_id, input.debit_account_id])
       return result
     }

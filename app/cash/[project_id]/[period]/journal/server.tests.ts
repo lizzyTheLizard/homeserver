@@ -3,7 +3,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { nontransactional, transactional } from '@/app/shared/db'
 import { v4 as randomUUID } from 'uuid'
-import { loadJournal, saveTransaction, deleteTransaction } from './server'
+import { loadJournal, saveTransaction, deleteTransaction, loadAccountJournal } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
 import { createTransaction } from '@/app/cash/_data/Transaction'
@@ -11,6 +11,7 @@ import { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { createClosing } from '@/app/cash/_data/Closing'
 import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
+import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -19,6 +20,120 @@ vi.mock('@/app/common/auth/auth', async () => {
     ...actual,
     getAuthenticatedUserSession: vi.fn(),
   }
+})
+
+describe('loadAccountJournal', () => {
+  test('Empty journal', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account)
+    })
+
+    const result = await loadAccountJournal({ current: true, year: 2023, month: 5 }, project.id, account.id)
+
+    expect(result.accounts).toEqual([expect.objectContaining(account)])
+    expect(result.transactions).toEqual([])
+    expect(result.account).toEqual(expect.objectContaining(account))
+    expect(result.lastTransaction).toBeUndefined()
+  })
+
+  test('Journal with accounts and transactions', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
+    const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
+    const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
+    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: new Date('2023-05-15'), description: 'Test transaction' }
+    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: new Date('2023-06-20'), description: 'Second transaction' }
+    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: new Date('2022-05-01'), description: 'Before date transaction' }
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account1)
+      await createOrModifyAccount(tx, task.id, account2)
+      await createOrModifyAccount(tx, task.id, account3)
+      await createTransaction(tx, task.id, transaction1)
+      await createTransaction(tx, task.id, transaction2)
+      await createTransaction(tx, task.id, beforeDateTransaction)
+      await recalculateTransactions(tx, task.id, project.id, new Date('2022-01-01'), [account1.id, account2.id, account3.id])
+    })
+
+    const result = await loadAccountJournal({ current: true, year: 2023 }, project.id, account1.id)
+
+    expect(result.accounts).toHaveLength(3)
+    expect(result.transactions).toEqual([
+      expect.objectContaining({ amount: -50.25, total_balance: -450.75, date: transaction2.date, transaction_id: transaction2.id }),
+      expect.objectContaining({ amount: -100.50, total_balance: -400.50, date: transaction1.date, transaction_id: transaction1.id }),
+    ])
+    expect(result.lastTransaction).toEqual(expect.objectContaining({ amount: -300.00, total_balance: -300.00, date: beforeDateTransaction.date, transaction_id: beforeDateTransaction.id }))
+    expect(result.account).toEqual(expect.objectContaining(account1))
+  })
+
+  test('Filter transactions by period', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
+    const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
+    const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
+    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: new Date('2023-05-15'), description: 'Test transaction' }
+    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: new Date('2023-06-20'), description: 'Second transaction' }
+    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: new Date('2022-05-01'), description: 'Before date transaction' }
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account1)
+      await createOrModifyAccount(tx, task.id, account2)
+      await createOrModifyAccount(tx, task.id, account3)
+      await createTransaction(tx, task.id, transaction1)
+      await createTransaction(tx, task.id, transaction2)
+      await createTransaction(tx, task.id, beforeDateTransaction)
+      await recalculateTransactions(tx, task.id, project.id, new Date('2023-05-01'), [account1.id, account2.id, account3.id])
+    })
+
+    const result = await loadAccountJournal({ current: true, year: 2023, month: 6 }, project.id, account1.id)
+
+    expect(result.accounts).toHaveLength(3)
+    expect(result.transactions).toEqual([
+      expect.objectContaining({ amount: -50.25, total_balance: -150.75, date: transaction2.date, transaction_id: transaction2.id }),
+    ])
+    expect(result.lastTransaction).toEqual(expect.objectContaining({ amount: -100.50, total_balance: -100.50, date: transaction1.date, transaction_id: transaction1.id }))
+    expect(result.account).toEqual(expect.objectContaining(account1))
+  })
+
+  test('Non-existent project returns notFound', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account)
+    })
+
+    await expect(loadAccountJournal({ current: true, year: 2023, month: 7 }, randomUUID(), account.id)).rejects.toThrow()
+  })
+
+  test('Non-existent account returns notFound', async ({ task }) => {
+    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    await transactional(async (tx) => {
+      await createOrModifyProject(tx, project)
+      await createOrModifyAccount(tx, task.id, account)
+    })
+
+    await expect(loadAccountJournal({ current: true, year: 2023, month: 7 }, project.id, randomUUID())).rejects.toThrow()
+  })
 })
 
 describe('loadJournal', () => {
@@ -30,7 +145,6 @@ describe('loadJournal', () => {
 
     const result = await loadJournal({ current: true, year: 2023, month: 5 }, project.id)
 
-    expect(result.project).toEqual(expect.objectContaining(project))
     expect(result.accounts).toEqual([])
     expect(result.transactions).toEqual([])
   })
@@ -52,7 +166,6 @@ describe('loadJournal', () => {
 
     const result = await loadJournal({ current: true, year: 2023, month: 5 }, project.id)
 
-    expect(result.project).toEqual(expect.objectContaining(project))
     expect(result.accounts).toHaveLength(2)
     expect(result.accounts.map(a => a.name).sort()).toEqual(['Cash', 'Revenue'])
     expect(result.transactions).toHaveLength(1)

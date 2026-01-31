@@ -29,26 +29,16 @@ export interface AccountJournalProps {
   lastTransaction?: AccountTransaction
 }
 
-interface OpeningBalanceTransaction {
-  id: string
-  total_balance: number
-  description: string
-}
-
 export function AccountJournal({ account, accounts = [], transactions: transactionsIn = [], lastTransaction }: AccountJournalProps) {
   const params = useParams()
   const project_id = params.project_id as string
   const period = stringToPeriod(params.period as string)
   const router = useRouter()
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
-  const [id, setId] = useState(randomUUID())
-  const [other_account_id, setOtherAccountId] = useState('')
-  const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date())
-  const [description, setDescription] = useState('')
+  const [current, setCurrent] = useState<SidebarInput>(initialInput)
 
   const transactions = useMemo(() => isSummationAccount(account.type) && lastTransaction
-    ? [...transactionsIn, { id: '0', total_balance: lastTransaction.total_balance, description: 'Opening Balance' }]
+    ? [...transactionsIn, getOpeningBalanceTransaction(lastTransaction)]
     : transactionsIn, [account.type, lastTransaction, transactionsIn])
 
   const otherAccounts = useMemo(() => Array.from(new Set((transactionsIn).map(t => t.other_account_id)))
@@ -78,27 +68,28 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
   }
 
   function showTransaction(transaction?: AccountTransaction | OpeningBalanceTransaction): void {
-    if (transaction && !('amount' in transaction)) return
-    if (transaction && transaction.transaction_id === undefined) return
-    const amount = transaction ? ((isCreditAccount(account.type) ? -1 : 1) * transaction.amount).toString() : ''
-    setId(transaction?.transaction_id ?? randomUUID())
-    setOtherAccountId(transaction?.other_account_id ?? '')
-    setAmount(amount)
-    setDate(transaction ? new Date(transaction.date) : new Date())
-    setDescription(transaction?.description ?? '')
-    sidebarStateModifier.openSidebar(transaction ? `Edit Transaction` : 'New Transaction')
+    if (!transaction) {
+      setCurrent(initialInput)
+      sidebarStateModifier.openSidebar('New Transaction')
+      return
+    }
+    // Check if this is opnening balance. If so, cannot edit
+    if (!('amount' in transaction)) return
+    // Check if this is a closing transaction. If so, cannot edit
+    if (!transaction.transaction_id) return
+    setCurrent({ ...transaction, id: transaction.transaction_id, description: transaction.description ?? '' })
+    sidebarStateModifier.openSidebar('Edit Transaction')
   }
 
   function onSave(): void {
-    const amountN = parseFloat(amount) * (isCreditAccount(account.type) ? -1 : 1)
-    const credit_account_id = amountN < 0 ? account.id : other_account_id
-    const debit_account_id = amountN > 0 ? account.id : other_account_id
+    const credit_account_id = current.amount < 0 ? account.id : current.other_account_id
+    const debit_account_id = current.amount > 0 ? account.id : current.other_account_id
     const transaction: TransactionInput = {
-      id, date, description,
+      ...current,
       project_id,
       credit_account_id,
       debit_account_id,
-      amount: Math.abs(amountN),
+      amount: Math.abs(current.amount),
     }
     sidebarStateModifier.execute(
       saveTransaction(transaction),
@@ -107,10 +98,17 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
   }
 
   function onDelete(): void {
-    sidebarStateModifier.execute(
-      deleteTransaction(id),
-      () => { router.refresh() },
-    )
+    sidebarStateModifier.execute(deleteTransaction(current.id), () => { router.refresh() })
+  }
+
+  function getAmountInput(): string {
+    const adjustedValue = (isCreditAccount(account.type) ? -1 : 1) * current.amount
+    return adjustedValue.toString()
+  }
+
+  function setAmountInput(value: string): void {
+    const amount = parseFloat(value) * (isCreditAccount(account.type) ? -1 : 1)
+    setCurrent({ ...current, amount })
   }
 
   return (
@@ -131,13 +129,43 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
         onSave={onSave}
         onDelete={onDelete}
       >
-        <Input type="date" label="Date" value={date.toISOString().split('T')[0]} onChange={(e) => { setDate(new Date(e.target.value)) }} />
-        <Select label="Other Account" value={other_account_id} onChange={(e) => { setOtherAccountId(e.target.value) }}>
+        <Input type="date" label="Date" value={current.date.toISOString().split('T')[0]} onChange={(e) => { setCurrent({ ...current, date: new Date(e.target.value) }) }} />
+        <Select label="Other Account" value={current.other_account_id} onChange={(e) => { setCurrent({ ...current, other_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
-        <Input type="number" label="Amount" value={amount} onChange={(e) => { setAmount(e.target.value) }} />
-        <Textarea style={{ flexGrow: 1 }} label="Description" value={description} onChange={(e) => { setDescription(e.target.value) }} />
+        <Input type="number" label="Amount" value={getAmountInput()} onChange={(e) => { setAmountInput(e.target.value) }} />
+        <Textarea style={{ flexGrow: 1 }} label="Description" value={current.description} onChange={(e) => { setCurrent({ ...current, description: e.target.value }) }} />
       </Sidebar>
     </>
   )
+}
+
+interface SidebarInput {
+  id: string
+  other_account_id: string
+  amount: number
+  date: Date
+  description: string
+}
+
+const initialInput: SidebarInput = {
+  id: randomUUID(),
+  other_account_id: '',
+  amount: 0,
+  date: new Date(),
+  description: '',
+}
+
+interface OpeningBalanceTransaction {
+  id: string
+  total_balance: number
+  description: string
+}
+
+function getOpeningBalanceTransaction(last: AccountTransaction): OpeningBalanceTransaction {
+  return {
+    id: '0',
+    total_balance: last.total_balance,
+    description: 'Opening Balance',
+  }
 }
