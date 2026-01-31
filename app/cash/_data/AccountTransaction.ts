@@ -44,7 +44,7 @@ export async function findAllAccountTransactionsInPeriod(client: PoolClient, own
     [accountId, owner, projectId, startDate(period), endDate(period)],
   )
   logger.debug(`Finding ${result.rows.length.toString()} account transactions for account ${accountId} in period ${periodToString(period)}`)
-  return result.rows.map(row => ({ ...row, amount: parseFloat(row.amount.toString()), total_balance: parseFloat(row.total_balance.toString()), ordering: parseInt(row.ordering.toString(), 10) }))
+  return result.rows.map(row => mapAccountTransactionRow(row))
 }
 
 export async function findLatestAccountTransactionBefore(client: PoolClient, owner: string, projectId: string, accountId: string, period: Period): Promise<AccountTransaction | undefined> {
@@ -54,7 +54,7 @@ export async function findLatestAccountTransactionBefore(client: PoolClient, own
   )
   if (result.rows.length === 0) return undefined
   logger.debug(`Finding last account transaction before period ${periodToString(period)} for account ${accountId}`)
-  return { ...result.rows[0], amount: parseFloat(result.rows[0].amount.toString()), total_balance: parseFloat(result.rows[0].total_balance.toString()), ordering: parseInt(result.rows[0].ordering.toString(), 10) }
+  return mapAccountTransactionRow(result.rows[0])
 }
 
 export async function createAccountTransaction(client: PoolClient, owner: string, projectId: string, input: AccountTransactionInput): Promise<AccountTransaction> {
@@ -64,5 +64,15 @@ export async function createAccountTransaction(client: PoolClient, owner: string
   )
   if (!result.rows[0]) throw new Error('Failed to create account transaction')
   logger.debug(`Creating account transaction for account ${input.account_id} on date ${input.date.toISOString()}`)
-  return { ...result.rows[0], amount: parseFloat(result.rows[0].amount.toString()), total_balance: parseFloat(result.rows[0].total_balance.toString()), ordering: parseInt(result.rows[0].ordering.toString(), 10) }
+  return mapAccountTransactionRow(result.rows[0])
+}
+
+function mapAccountTransactionRow(row: AccountTransaction): AccountTransaction {
+  return {
+    ...row,
+    amount: parseFloat(row.amount.toString()),
+    total_balance: parseFloat(row.total_balance.toString()),
+    ordering: parseInt(row.ordering.toString(), 10),
+    transaction_id: row.transaction_id ?? undefined,
+  }
 }
