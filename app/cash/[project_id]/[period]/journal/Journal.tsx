@@ -5,7 +5,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '../../../../shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { Transaction } from '@/app/cash/_data/Transaction'
+import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
 import { stringToPeriod } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { useMemo, useState } from 'react'
@@ -30,12 +30,7 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
   const period = stringToPeriod(params.period as string)
   const [transactions, addTransaction, removeTransaction] = useListState(transactionsIn)
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
-  const [id, setId] = useState(randomUUID())
-  const [credit_account_id, setCreditAccountId] = useState('')
-  const [debit_account_id, setDebitAccountId] = useState('')
-  const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date())
-  const [description, setDescription] = useState('')
+  const [current, setCurrent] = useState(initialInput)
 
   const creditAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.credit_account_id)))
     .map(accountId => accounts.find(a => a.id === accountId))
@@ -56,12 +51,7 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
   ]
 
   function showTransaction(transaction?: Transaction) {
-    setId(transaction ? transaction.id : randomUUID())
-    setCreditAccountId(transaction ? transaction.credit_account_id : '')
-    setDebitAccountId(transaction ? transaction.debit_account_id : '')
-    setAmount(transaction ? transaction.amount.toString() : '')
-    setDate(transaction ? new Date(transaction.date) : new Date())
-    setDescription(transaction ? transaction.description : '')
+    setCurrent(transaction ?? initialInput)
     sidebarStateModifier.openSidebar(transaction ? `Edit Transaction` : 'New Transaction')
   }
 
@@ -81,19 +71,29 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
       <Sidebar
         state={sidebarState}
         onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={() => { sidebarStateModifier.execute(saveTransaction({ project_id, id, credit_account_id, debit_account_id, amount: parseFloat(amount), date, description }), addTransaction) }}
-        onDelete={() => { sidebarStateModifier.execute(deleteTransaction(id), () => { removeTransaction(id) }) }}
+        onSave={() => { sidebarStateModifier.execute(saveTransaction(current), addTransaction) }}
+        onDelete={() => { sidebarStateModifier.execute(deleteTransaction(current.id), () => { removeTransaction(current.id) }) }}
       >
-        <Input type="date" label="Date" value={date.toISOString().split('T')[0]} onChange={(e) => { setDate(new Date(e.target.value)) }} />
-        <Select label="Credit Account" value={credit_account_id} onChange={(e) => { setCreditAccountId(e.target.value) }}>
+        <Input type="date" label="Date" value={current.date.toISOString().split('T')[0]} onChange={(e) => { setCurrent({ ...current, date: new Date(e.target.value) }) }} />
+        <Select label="Credit Account" value={current.credit_account_id} onChange={(e) => { setCurrent({ ...current, credit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
-        <Select label="Debit Account" value={debit_account_id} onChange={(e) => { setDebitAccountId(e.target.value) }}>
+        <Select label="Debit Account" value={current.debit_account_id} onChange={(e) => { setCurrent({ ...current, debit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
-        <Input type="number" label="Amount" value={amount} onChange={(e) => { setAmount(e.target.value) }} />
-        <Textarea style={{ flexGrow: 1 }} label="Description" value={description} onChange={(e) => { setDescription(e.target.value) }} />
+        <Input type="number" label="Amount" value={current.amount.toString()} onChange={(e) => { setCurrent({ ...current, amount: parseFloat(e.target.value) }) }} />
+        <Textarea style={{ flexGrow: 1 }} label="Description" value={current.description} onChange={(e) => { setCurrent({ ...current, description: e.target.value }) }} />
       </Sidebar>
     </>
   )
+}
+
+const initialInput: TransactionInput = {
+  id: randomUUID(),
+  project_id: '',
+  credit_account_id: '',
+  debit_account_id: '',
+  amount: 0,
+  date: new Date(),
+  description: '',
 }

@@ -1,3 +1,5 @@
+// TODO: Use temporal everywhere
+
 export function getStartOfMonth(): string {
   const now = new Date()
   return `${String(now.getUTCFullYear())}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-01T00:00:00.000Z`

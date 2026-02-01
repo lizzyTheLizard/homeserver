@@ -29,4 +29,18 @@ describe('Period', () => {
     expect(startDate(period)).toBe('2023-05-01')
     expect(endDate(period)).toBe('2023-06-01')
   })
+
+  test('Year and month and day', () => {
+    const period = stringToPeriod('2023-05-03')
+    expect(periodToString(period)).toBe('2023-05-03')
+    expect(startDate(period)).toBe('2023-05-03')
+    expect(endDate(period)).toBe('2023-05-04')
+  })
+
+  test('Open Ended', () => {
+    const period = stringToPeriod('2023-05-03+')
+    expect(periodToString(period)).toBe('2023-05-03+')
+    expect(startDate(period)).toBe('2023-05-03')
+    expect(endDate(period)).toBe('9999-12-31')
+  })
 })

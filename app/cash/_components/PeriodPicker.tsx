@@ -14,7 +14,8 @@ const minYear = 2020
 export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPickerProps) {
   function defaultOnPeriodChange(p: Period) {
     const split = window.location.pathname.split('/')
-    const href = `/cash/${project_id ?? ''}/${periodToString(p)}` + '/' + split.slice(4).join('/')
+    const s = window.location.search
+    const href = `/cash/${project_id ?? ''}/${periodToString(p)}` + '/' + split.slice(4).join('/') + s
     window.location.href = href
   }
 
