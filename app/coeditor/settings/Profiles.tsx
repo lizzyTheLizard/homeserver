@@ -20,7 +20,7 @@ export interface ProfilesProps {
 
 const profileColumns = [
   textColumn('language', { header: 'Language' }),
-  textColumn('text', { header: 'Text' }),
+  textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } }),
 ]
 
 export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {

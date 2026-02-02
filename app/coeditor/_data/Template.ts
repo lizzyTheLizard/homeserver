@@ -2,15 +2,13 @@ import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '../../shared/_helper/BackendError'
+import { BaseEntity, BaseInput, BaseRow, CountResult, countResultToNumber, mapRowToType, mapRowToTypeOptional } from '@/app/shared/_helper/DB'
 
-export interface Template {
+export interface Template extends BaseEntity {
   id: string
   name: string
   language: string
   text: string
-  owner_id: string
-  created_at: Date
-  updated_at: Date
   parameters: TemplateParameter[]
 }
 
@@ -22,15 +20,13 @@ export interface TemplateParameter {
   endPosition: number
 }
 
-export interface TemplateInput {
-  id: string
-  name: string
-  language: string
-  text: string
-}
+export type TemplateInput = Omit<BaseInput<Template>, 'parameters'>
 
 export async function findTemplatesByOwner(client: PoolClient, owner: string): Promise<Template[]> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1', [owner])
+  const result = await client.query<BaseRow<Template>>(
+    'SELECT * FROM template WHERE owner_id = $1',
+    [owner],
+  )
   if (result.rows.length === 0) {
     logger.info('No templates found, inserting default template')
     return [
@@ -39,17 +35,20 @@ export async function findTemplatesByOwner(client: PoolClient, owner: string): P
     ]
   }
   logger.debug(`Found ${result.rows.length.toString()} templates for  owner ${owner}`)
-  return result.rows
+  return result.rows.map(row => mapRowToType(row))
 }
 
 export async function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
-  const result = await client.query<{ count: string }>('SELECT COUNT(DISTINCT owner_id) AS count FROM template')
-  return parseInt(result.rows[0].count, 10)
+  const result = await client.query<CountResult>('SELECT COUNT(DISTINCT owner_id) AS count FROM template')
+  return countResultToNumber(result)
 }
 
 export async function findTemplateById(client: PoolClient, owner: string, id: string): Promise<Template | undefined> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1 AND id=$2', [owner, id])
-  return result.rows[0]
+  const result = await client.query<BaseRow<Template>>(
+    'SELECT * FROM template WHERE owner_id = $1 AND id=$2',
+    [owner, id],
+  )
+  return mapRowToTypeOptional(result.rows[0])
 }
 
 export async function createOrModifyTemplate(client: PoolClient, owner: string, input: TemplateInput): Promise<Template> {
@@ -57,11 +56,10 @@ export async function createOrModifyTemplate(client: PoolClient, owner: string, 
   const query = await findTemplateById(client, owner, input.id)
     ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_id = $5 RETURNING *'
     : 'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
-  const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
-
+  const result = await client.query<BaseRow<Template>>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
   if (!result.rows[0]) throw new Error('Failed to modify template')
   logger.info(`Modified template '${input.id}' for owner ${owner}`)
-  return result.rows[0]
+  return mapRowToType(result.rows[0])
 }
 
 function extractParameters(text: string): TemplateParameter[] {

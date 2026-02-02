@@ -1,6 +1,7 @@
 'use client'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Period, periodToString } from '../_helper/Period'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface PeriodPickerProps {
   period: Period
@@ -8,7 +9,7 @@ export interface PeriodPickerProps {
   project_id?: string
 }
 
-const maxYear = new Date().getFullYear()
+const maxYear = Temporal.Now.plainDateISO().year
 const minYear = 2020
 
 export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPickerProps) {

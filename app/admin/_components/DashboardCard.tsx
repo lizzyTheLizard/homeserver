@@ -3,10 +3,11 @@ import styles from './DashboardCard.module.css'
 import { ReactNode } from 'react'
 import { Card } from '@/app/shared/_components/Card'
 import Link from 'next/link'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface LineItem {
   name: string
-  value: string | Date | number | undefined
+  value: string | Temporal.Instant | number | undefined
   url?: string
 }
 
@@ -34,14 +35,12 @@ function Line({ item }: { item: LineItem }) {
   let value: ReactNode = ''
   if (item.value === undefined)
     value = '-'
-  else if (item.value instanceof Date)
+  else if (item.value instanceof Temporal.Instant)
     value = (<DateTime date={item.value}></DateTime>)
   else
     value = item.value
-
   if (item.url)
     value = (<a href={item.url}>{value}</a>)
-
   return (
     <tr>
       <td className={styles.key}>{item.name + ':'}</td>

@@ -18,6 +18,7 @@ import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Button } from '@/app/shared/_components/form/Button'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface JournalProps {
   accounts?: Account[]
@@ -51,8 +52,13 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
   ]
 
   function showTransaction(transaction?: Transaction) {
-    setCurrent(transaction ?? initialInput)
+    setCurrent(transaction ? { ...transaction, amount: transaction.amount.toString() } : initialInput)
     sidebarStateModifier.openSidebar(transaction ? `Edit Transaction` : 'New Transaction')
+  }
+
+  function onSave() {
+    const transaction = { ...current, amount: parseFloat(current.amount) }
+    sidebarStateModifier.execute(saveTransaction(transaction), addTransaction)
   }
 
   return (
@@ -71,29 +77,29 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
       <Sidebar
         state={sidebarState}
         onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={() => { sidebarStateModifier.execute(saveTransaction(current), addTransaction) }}
+        onSave={onSave}
         onDelete={() => { sidebarStateModifier.execute(deleteTransaction(current.id), () => { removeTransaction(current.id) }) }}
       >
-        <Input type="date" label="Date" value={current.date.toISOString().split('T')[0]} onChange={(e) => { setCurrent({ ...current, date: new Date(e.target.value) }) }} />
+        <Input type="date" label="Date" value={current.date.toString()} onChange={(e) => { setCurrent({ ...current, date: Temporal.PlainDate.from(e.target.value) }) }} />
         <Select label="Credit Account" value={current.credit_account_id} onChange={(e) => { setCurrent({ ...current, credit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
         <Select label="Debit Account" value={current.debit_account_id} onChange={(e) => { setCurrent({ ...current, debit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
-        <Input type="number" label="Amount" value={current.amount.toString()} onChange={(e) => { setCurrent({ ...current, amount: parseFloat(e.target.value) }) }} />
+        <Input type="number" label="Amount" value={current.amount} onChange={(e) => { setCurrent({ ...current, amount: e.target.value }) }} />
         <Textarea style={{ flexGrow: 1 }} label="Description" value={current.description} onChange={(e) => { setCurrent({ ...current, description: e.target.value }) }} />
       </Sidebar>
     </>
   )
 }
 
-const initialInput: TransactionInput = {
+const initialInput: Omit<TransactionInput, 'amount'> & { amount: string } = {
   id: randomUUID(),
   project_id: '',
   credit_account_id: '',
   debit_account_id: '',
-  amount: 0,
-  date: new Date(),
+  amount: '0',
+  date: Temporal.Now.plainDateISO(),
   description: '',
 }

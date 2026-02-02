@@ -18,6 +18,7 @@ main {
   display: flex;
   flex-direction: column;
   position: relative;
+  min-height: 100%;
 }
 
 h1 {

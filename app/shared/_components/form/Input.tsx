@@ -1,6 +1,7 @@
 'use client'
 import { useId, useState } from 'react'
 import style from './Input.module.css'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'placeholder' | 'children'> {
   label?: string
@@ -18,7 +19,7 @@ export function Input({ label, small, ...props }: InputProps) {
   const id = props.id ?? fallbackId
   const preFormatedValue = props.value ?? internalValue
   const value = props.type === 'date' && !focus && preFormatedValue
-    ? new Date(preFormatedValue).toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+    ? Temporal.PlainDate.from(preFormatedValue).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
     : preFormatedValue
   const type = props.type === 'date' && !focus ? 'text' : props.type
   const inputClasses = [

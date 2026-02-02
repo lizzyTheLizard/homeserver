@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import { endDate, periodToString, startDate, stringToPeriod } from './Period'
+import { Temporal } from '@js-temporal/polyfill'
 
 describe('Period', () => {
   test('CURRENT', () => {
     const period = stringToPeriod('CURRENT')
     expect(periodToString(period)).toBe('CURRENT')
-    const today = new Date()
-    expect(startDate(period)).toEqual(`${today.getFullYear().toString().padStart(4, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-01`)
+    const today = Temporal.Now.plainDateISO()
+    expect(startDate(period)).toEqual(`${today.year.toString().padStart(4, '0')}-${today.month.toString().padStart(2, '0')}-01`)
   })
 
   test('ALL', () => {

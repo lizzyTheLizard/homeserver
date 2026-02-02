@@ -5,6 +5,7 @@ import { deleteProject, loadProjects, saveProject } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { Temporal } from '@js-temporal/polyfill'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -83,11 +84,21 @@ describe('loadProjects', () => {
 
     const result = await loadProjects()
 
-    expect(result).toHaveLength(2)
-    expect(result[0].name).toBe('My Project')
-    expect(result[0].owner_id).toBe(task.id)
-    expect(result[1].name).toBe('Other Project')
-    expect(result[1].owner_id).toBe('other-user-id')
+    expect(result).toEqual([{
+      id: ownProject.id,
+      name: ownProject.name,
+      owner_id: task.id,
+      archived: false,
+      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
+      updated_at: expect.any(Temporal.Instant) as Temporal.Instant,
+    }, {
+      id: otherProject.id,
+      name: otherProject.name,
+      owner_id: 'other-user-id',
+      archived: false,
+      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
+      updated_at: expect.any(Temporal.Instant) as Temporal.Instant,
+    }])
   })
 
   test('Returns all project fields', async ({ task }) => {
@@ -99,15 +110,14 @@ describe('loadProjects', () => {
 
     const result = await loadProjects()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toEqual(expect.objectContaining({
+    expect(result).toEqual([{
       id: project.id,
       name: project.name,
       owner_id: task.id,
       archived: false,
-    }))
-    expect(result[0].created_at).toBeInstanceOf(Date)
-    expect(result[0].updated_at).toBeInstanceOf(Date)
+      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
+      updated_at: expect.any(Temporal.Instant) as Temporal.Instant,
+    }])
   })
 })
 

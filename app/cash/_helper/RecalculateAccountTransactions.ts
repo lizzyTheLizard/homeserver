@@ -5,10 +5,11 @@ import { Period, periodToString } from './Period'
 import { AccountTransaction, AccountTransactionInput, createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
 import { v4 as randomUUID } from 'uuid'
 import { Closing, findAllClosingsByAccount } from '../_data/Closing'
+import { Temporal } from '@js-temporal/polyfill'
 
-export async function recalculateTransactions(client: PoolClient, owner: string, projectId: string, from: Date, accountIds: string[]): Promise<void> {
+export async function recalculateTransactions(client: PoolClient, owner: string, projectId: string, from: Temporal.PlainDate, accountIds: string[]): Promise<void> {
   const uniqueAccountIds = Array.from(new Set(accountIds))
-  const period: Period = { year: from.getFullYear(), month: from.getMonth() + 1, day: from.getDate(), openEnded: true }
+  const period: Period = { year: from.year, month: from.month, day: from.day, openEnded: true }
   for (const accountId of uniqueAccountIds) {
     await recalculateTransactionsForAccount(client, owner, projectId, accountId, period)
   }
@@ -16,13 +17,13 @@ export async function recalculateTransactions(client: PoolClient, owner: string,
 
 async function recalculateTransactionsForAccount(client: PoolClient, owner: string, projectId: string, accountId: string, period: Period): Promise<void> {
   logger.debug(`Recalculating transactions for account ${accountId} for ${periodToString(period)}`)
-  await deleteAccountTransactions(client, owner, projectId, accountId, period)
+  await deleteAccountTransactions(client, owner, accountId, period)
   const transactions = await findAllTransactionsByAccount(client, owner, projectId, accountId, period)
-  const closings = await findAllClosingsByAccount(client, owner, projectId, accountId, period)
-  const items = [...transactions, ...closings].sort((a, b) => a.date.getTime() - b.date.getTime())
-  let previous = await findLatestAccountTransactionBefore(client, owner, projectId, accountId, period)
+  const closings = await findAllClosingsByAccount(client, owner, accountId, period)
+  const items = [...transactions, ...closings].sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
+  let previous = await findLatestAccountTransactionBefore(client, owner, accountId, period)
   for (const item of items) {
-    const c = { client, owner, projectId, accountId, period, previous, item }
+    const c = { client, owner, accountId, period, previous, item }
     previous = await recalculateSingleTransaction(c)
   }
 }
@@ -39,7 +40,7 @@ async function recalculateSingleTransaction(c: Context): Promise<AccountTransact
     ordering: (c.previous?.ordering ?? 0) + 1,
     ...details,
   }
-  return await createAccountTransaction(c.client, c.owner, c.projectId, accountTransaction)
+  return await createAccountTransaction(c.client, c.owner, accountTransaction)
 }
 
 function getTransactionDetails(c: Context<Transaction>) {
@@ -65,7 +66,7 @@ function getClosingDetails(c: Context<Closing>) {
   const amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.profit : c.item.profit)
   const total_balance = c.previous ? c.previous.total_balance + amount : amount
   return {
-    description: 'Closing on ' + c.item.date.toISOString().split('T')[0],
+    description: 'Closing on ' + c.item.date.toString(),
     other_account_id,
     amount,
     total_balance,
@@ -75,7 +76,6 @@ function getClosingDetails(c: Context<Closing>) {
 interface Context<T = Transaction | Closing> {
   client: PoolClient
   owner: string
-  projectId: string
   accountId: string
   period: Period
   item: T

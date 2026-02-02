@@ -12,6 +12,7 @@ import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface AccountJournalData {
   account: Account
@@ -25,8 +26,8 @@ export async function loadAccountJournal(period: Period, projectId: string, acco
   const [project, accounts, transactions, lastTransaction] = await nontransactional(async c => ([
     await findProjectById(c, user.sub, projectId),
     await findAllAccountsForProject(c, user.sub, projectId),
-    await findAllAccountTransactionsInPeriod(c, user.sub, projectId, accountId, period),
-    await findLatestAccountTransactionBefore(c, user.sub, projectId, accountId, period),
+    await findAllAccountTransactionsInPeriod(c, user.sub, accountId, period),
+    await findLatestAccountTransactionBefore(c, user.sub, accountId, period),
   ]))
   if (!project) return notFound()
   const account = accounts.find(acc => acc.id === accountId)
@@ -47,6 +48,7 @@ export async function loadJournal(period: Period, projectId: string): Promise<Jo
     await findAllTransactions(c, user.sub, projectId, period),
   ]))
   if (!project) return notFound()
+
   return { accounts, transactions }
 }
 
@@ -87,13 +89,13 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
   }))
 }
 
-function isClosed(lastClosing: Closing | undefined, transactionDate: Date): boolean {
+function isClosed(lastClosing: Closing | undefined, transactionDate: Temporal.PlainDate): boolean {
   if (!lastClosing) return false
   return transactionDate <= lastClosing.date
 }
 
-function min(date1: Date, date2: Date): Date {
-  return date1 < date2 ? date1 : date2
+function min(date1: Temporal.PlainDate, date2: Temporal.PlainDate): Temporal.PlainDate {
+  return Temporal.PlainDate.compare(date1, date2) < 0 ? date1 : date2
 }
 
 const TransactionInputConstraints = {
@@ -134,8 +136,7 @@ const TransactionInputConstraints = {
     type: 'number',
   },
   date: {
-    presence: { allowEmpty: false },
-    type: 'date',
+    presence: { allowEmpty: true },
   },
   description: {
     presence: { allowEmpty: false },

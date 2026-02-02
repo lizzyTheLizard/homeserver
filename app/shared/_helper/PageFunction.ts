@@ -1,16 +1,17 @@
 import { ReactNode } from 'react'
 import { isBackendError } from './BackendError'
 import { logger } from '../logger'
+import { Temporal } from '@js-temporal/polyfill'
 
 export async function serverPageFunction(name: string, fn: () => Promise<ReactNode> | ReactNode): Promise<ReactNode> {
-  const start = Date.now()
+  const start = Temporal.Now.instant().epochMilliseconds
   logger.debug(`Rendering page '${name}'`)
   return Promise.resolve(fn()).then((result) => {
-    const time = Date.now() - start
+    const time = Temporal.Now.instant().epochMilliseconds - start
     logger.debug(`Rendered page '${name}' in ${time.toString()} ms successfully`)
     return result
   }).catch((error: unknown) => {
-    const time = Date.now() - start
+    const time = Temporal.Now.instant().epochMilliseconds - start
     if (isBackendError(error)) {
       if (error.showStack) logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)
       else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)

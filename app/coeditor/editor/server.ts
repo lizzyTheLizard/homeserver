@@ -6,7 +6,7 @@ import { nontransactional, transactional } from '@/app/shared/db'
 import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { Command, CommandResult, createCommand, findCommandsByDiscussion, PredefinedCommandType } from '../_data/Command'
+import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PredefinedCommandType } from '../_data/Command'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { findProfileByOwnerAndLanguage, Profile } from '../_data/Profile'
@@ -65,7 +65,7 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
       ? await modifyDiscussion(tx, user.sub, updatedDiscussion)
       : await createDiscussion(tx, user.sub, updatedDiscussion)
     const command = toCommand(input, aiPortInput, commandResult)
-    await createCommand(tx, command)
+    await createCommand(tx, user.sub, command)
     return result
   }))
 }
@@ -108,7 +108,7 @@ function createContextString(template: Template, values: Record<string, string>)
   return result
 }
 
-function toCommand(input: ExecuteCommandInput, aiInput: AiPortInput, commandResult: CommandResult): Command {
+function toCommand(input: ExecuteCommandInput, aiInput: AiPortInput, commandResult: CommandResult): CommandInput {
   return {
     ...input,
     context: aiInput.context,
