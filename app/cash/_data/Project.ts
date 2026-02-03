@@ -1,14 +1,6 @@
+import { count, Entity } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
-
-export interface Project {
-  id: string
-  name: string
-  archived: boolean
-  owner_id: string
-  created_at: Date
-  updated_at: Date
-}
 
 export interface ProjectInput {
   id: string
@@ -16,27 +8,39 @@ export interface ProjectInput {
   archived: boolean
   owner_id: string
 }
+export type Project = Entity<ProjectInput>
 
 export async function findAllProjects(client: PoolClient): Promise<Project[]> {
-  const result = await client.query<Project>(`SELECT * FROM project`)
+  const result = await client.query<Project>(
+    `SELECT * FROM project`,
+  )
   logger.debug(`Found ${result.rows.length.toString()} projects in total`)
   return result.rows
 }
 
 export async function findProjectsByOwner(client: PoolClient, ownerId: string): Promise<Project[]> {
-  const result = await client.query<Project>(`SELECT * FROM project WHERE owner_id = $1`, [ownerId])
+  const result = await client.query<Project>(
+    `SELECT * FROM project WHERE owner_id = $1`,
+    [ownerId],
+  )
   logger.debug(`Found ${result.rows.length.toString()} projects for owner ${ownerId}`)
   return result.rows
 }
 
 export async function findProjectById(client: PoolClient, ownerId: string, id: string): Promise<Project | undefined> {
-  const result = await client.query<Project>(`SELECT * FROM project WHERE owner_id = $1 AND id = $2`, [ownerId, id])
+  const result = await client.query<Project>(
+    `SELECT * FROM project WHERE owner_id = $1 AND id = $2`,
+    [ownerId, id],
+  )
   logger.debug(`${result.rows[0] ? 'Found' : 'Did not find'} project ${id} for owner ${ownerId}`)
   return result.rows[0]
 }
 
 export async function createOrModifyProject(client: PoolClient, project: ProjectInput): Promise<Project> {
-  const result1 = await client.query<Project>(`SELECT * FROM project WHERE id = $1`, [project.id])
+  const result1 = await client.query<Project>(
+    `SELECT * FROM project WHERE id = $1`,
+    [project.id],
+  )
   const query = result1.rows[0]
     ? 'UPDATE project SET name = $2, owner_id = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
     : 'INSERT INTO project (id, name, owner_id, archived) VALUES ($1, $2, $3, $4) RETURNING *'
@@ -47,16 +51,17 @@ export async function createOrModifyProject(client: PoolClient, project: Project
 }
 
 export async function removeProject(client: PoolClient, id: string): Promise<void> {
-  await client.query(`DELETE FROM project WHERE id = $1`, [id])
+  await client.query(
+    `DELETE FROM project WHERE id = $1`,
+    [id],
+  )
   logger.info(`Project ${id} deleted`)
 }
 
 export async function findNumberOfProjects(client: PoolClient): Promise<number> {
-  const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM project')
-  return parseInt(result.rows[0].count, 10)
+  return await count(client, 'SELECT COUNT(*) AS count FROM project')
 }
 
 export async function findNumberOfUsersWithProjects(client: PoolClient): Promise<number> {
-  const result = await client.query<{ count: string }>('SELECT COUNT(DISTINCT owner_id) AS count FROM project')
-  return parseInt(result.rows[0].count, 10)
+  return await count(client, 'SELECT COUNT(DISTINCT owner_id) AS count FROM project')
 }

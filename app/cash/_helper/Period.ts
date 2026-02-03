@@ -13,8 +13,8 @@ export const all: Period = { }
 export function stringToPeriod(s: string): Period {
   if (s === 'ALL') return all
   if (s === 'CURRENT') {
-    const date = new Date()
-    return { current: true, year: date.getFullYear(), month: date.getMonth() + 1 }
+    const date = Temporal.Now.plainDateISO()
+    return { current: true, year: date.year, month: date.month }
   }
   const parts = s.split('-').map(part => parseInt(part))
   return { current: false, year: parts[0], month: parts[1], day: parts[2], openEnded: s.endsWith('+') }

@@ -1,18 +1,21 @@
-// TODO: Use temporal everywhere
+import { Temporal } from '@js-temporal/polyfill'
 
 export function getStartOfMonth(): string {
-  const now = new Date()
-  return `${String(now.getUTCFullYear())}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-01T00:00:00.000Z`
+  return Temporal.Now.plainDateISO('UTC')
+    .with({ day: 1 })
+    .toPlainDateTime({ hour: 0, minute: 0, second: 0, millisecond: 0 })
+    .toString({ fractionalSecondDigits: 3 }) + 'Z'
 }
 
 export function get30DaysAgo(): string {
-  const now = new Date()
-  const past = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-  return `${String(past.getUTCFullYear())}-${String(past.getUTCMonth() + 1).padStart(2, '0')}-${String(past.getUTCDate()).padStart(2, '0')}T00:00:00.000Z`
+  return Temporal.Now.plainDateISO('UTC')
+    .subtract({ days: 30 })
+    .toPlainDateTime({ hour: 0, minute: 0, second: 0, millisecond: 0 })
+    .toString({ fractionalSecondDigits: 3 }) + 'Z'
 }
 
 export function get24HoursAgo(): string {
-  const now = new Date()
-  const past = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-  return `${String(past.getUTCFullYear())}-${String(past.getUTCMonth() + 1).padStart(2, '0')}-${String(past.getUTCDate()).padStart(2, '0')}T${String(past.getUTCHours()).padStart(2, '0')}:${String(past.getUTCMinutes()).padStart(2, '0')}:${String(past.getUTCSeconds()).padStart(2, '0')}.000Z`
+  return Temporal.Now.plainDateTimeISO('UTC')
+    .subtract({ hours: 24 })
+    .toString({ fractionalSecondDigits: 3 }) + 'Z'
 }

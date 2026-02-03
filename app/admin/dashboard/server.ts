@@ -2,10 +2,11 @@ import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { config } from '@/app/shared/config'
 import { v4 as randomUUID } from 'uuid'
 import { LineItem } from '../_components/DashboardCard'
-import { nontransactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/_external/db/access'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
 import { get24HoursAgo, get30DaysAgo } from '@/app/cash/_helper/Dates'
+import { Temporal } from '@js-temporal/polyfill'
 
 const instanceId = randomUUID()
 
@@ -36,7 +37,7 @@ export async function loadBuildInfo(): Promise<LineItem[]> {
     { name: 'Commit', value: process.env.GIT_COMMIT_HASH, url: getCommitUrl(process.env.GIT_COMMIT_HASH) },
     { name: 'Action', value: process.env.GITHUB_RUN_ID, url: getActionUrl(process.env.GITHUB_RUN_ID) },
     { name: 'Origin', value: process.env.GITHUB_RUN_ID ? 'GitHub' : 'Local' },
-    { name: 'Built', value: process.env.BUILD_TIME ? new Date(process.env.BUILD_TIME) : undefined },
+    { name: 'Built', value: process.env.BUILD_TIME ? Temporal.Instant.from(process.env.BUILD_TIME) : undefined },
 
   ]
 }
@@ -60,7 +61,7 @@ export async function loadRunInfo(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
   return [
     { name: 'Instance', value: instanceId },
-    { name: 'Started', value: new Date(Date.now() - process.uptime() * 1000) },
+    { name: 'Started', value: Temporal.Now.instant().subtract(Temporal.Duration.from({ seconds: Math.floor(process.uptime()) })).toString() },
     { name: 'Uptime (s)', value: process.uptime().toFixed(0) },
     { name: 'Environment', value: process.env.NODE_ENV },
   ]

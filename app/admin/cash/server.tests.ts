@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/db'
+import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { deleteProject, loadProjects, saveProject } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
@@ -83,11 +83,21 @@ describe('loadProjects', () => {
 
     const result = await loadProjects()
 
-    expect(result).toHaveLength(2)
-    expect(result[0].name).toBe('My Project')
-    expect(result[0].owner_id).toBe(task.id)
-    expect(result[1].name).toBe('Other Project')
-    expect(result[1].owner_id).toBe('other-user-id')
+    expect(result).toEqual([{
+      id: ownProject.id,
+      name: ownProject.name,
+      owner_id: task.id,
+      archived: false,
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    }, {
+      id: otherProject.id,
+      name: otherProject.name,
+      owner_id: 'other-user-id',
+      archived: false,
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    }])
   })
 
   test('Returns all project fields', async ({ task }) => {
@@ -99,15 +109,14 @@ describe('loadProjects', () => {
 
     const result = await loadProjects()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toEqual(expect.objectContaining({
+    expect(result).toEqual([{
       id: project.id,
       name: project.name,
       owner_id: task.id,
       archived: false,
-    }))
-    expect(result[0].created_at).toBeInstanceOf(Date)
-    expect(result[0].updated_at).toBeInstanceOf(Date)
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    }])
   })
 })
 

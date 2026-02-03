@@ -1,17 +1,7 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 import { AccountType } from './AccountType'
-
-export interface Account {
-  id: string
-  project_id: string
-  name: string
-  type: AccountType
-  owner_id: string
-  archived: boolean
-  created_at: Date
-  updated_at: Date
-}
+import { count, Entity } from '@/app/shared/_external/db/access'
 
 export interface AccountInput {
   id: string
@@ -20,9 +10,11 @@ export interface AccountInput {
   type: AccountType
   archived: boolean
 }
+export type Account = Entity<AccountInput>
 
 export async function findAllAccountsForProject(client: PoolClient, ownerId: string, projectId: string): Promise<Account[]> {
-  const result = await client.query<Account>('SELECT * FROM account WHERE project_id = $1 AND owner_id = $2 ORDER BY name ASC',
+  const result = await client.query<Account>(
+    'SELECT * FROM account WHERE project_id = $1 AND owner_id = $2 ORDER BY name ASC',
     [projectId, ownerId],
   )
   logger.debug(`Found ${result.rows.length.toString()} accounts for project ${projectId} and owner ${ownerId}`)
@@ -30,7 +22,10 @@ export async function findAllAccountsForProject(client: PoolClient, ownerId: str
 }
 
 export async function removeAccount(client: PoolClient, ownerId: string, accountId: string): Promise<void> {
-  await client.query('DELETE FROM account WHERE id = $1 AND owner_id = $2', [accountId, ownerId])
+  await client.query(
+    'DELETE FROM account WHERE id = $1 AND owner_id = $2',
+    [accountId, ownerId],
+  )
   logger.info(`Deleted account with id ${accountId} for owner ${ownerId}`)
 }
 
@@ -49,6 +44,5 @@ export async function createOrModifyAccount(client: PoolClient, ownerId: string,
 }
 
 export async function findNumberOfAccounts(client: PoolClient): Promise<number> {
-  const result = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM account')
-  return parseInt(result.rows[0].count, 10)
+  return await count(client, 'SELECT COUNT(*) AS count FROM account')
 }

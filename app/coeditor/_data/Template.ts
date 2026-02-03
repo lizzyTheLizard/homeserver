@@ -2,17 +2,15 @@ import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '../../shared/_helper/BackendError'
+import { count, Entity } from '@/app/shared/_external/db/access'
 
-export interface Template {
+export interface TemplateInput {
   id: string
   name: string
   language: string
   text: string
-  owner_id: string
-  created_at: Date
-  updated_at: Date
-  parameters: TemplateParameter[]
 }
+export type Template = Entity<TemplateInput & { parameters: TemplateParameter[] }>
 
 export interface TemplateParameter {
   name: string
@@ -22,15 +20,11 @@ export interface TemplateParameter {
   endPosition: number
 }
 
-export interface TemplateInput {
-  id: string
-  name: string
-  language: string
-  text: string
-}
-
 export async function findTemplatesByOwner(client: PoolClient, owner: string): Promise<Template[]> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1', [owner])
+  const result = await client.query<Template>(
+    'SELECT * FROM template WHERE owner_id = $1',
+    [owner],
+  )
   if (result.rows.length === 0) {
     logger.info('No templates found, inserting default template')
     return [
@@ -43,12 +37,14 @@ export async function findTemplatesByOwner(client: PoolClient, owner: string): P
 }
 
 export async function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
-  const result = await client.query<{ count: string }>('SELECT COUNT(DISTINCT owner_id) AS count FROM template')
-  return parseInt(result.rows[0].count, 10)
+  return await count(client, 'SELECT COUNT(DISTINCT owner_id) AS count FROM template')
 }
 
 export async function findTemplateById(client: PoolClient, owner: string, id: string): Promise<Template | undefined> {
-  const result = await client.query<Template>('SELECT * FROM template WHERE owner_id = $1 AND id=$2', [owner, id])
+  const result = await client.query<Template>(
+    'SELECT * FROM template WHERE owner_id = $1 AND id=$2',
+    [owner, id],
+  )
   return result.rows[0]
 }
 
@@ -58,7 +54,6 @@ export async function createOrModifyTemplate(client: PoolClient, owner: string, 
     ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_id = $5 RETURNING *'
     : 'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
   const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
-
   if (!result.rows[0]) throw new Error('Failed to modify template')
   logger.info(`Modified template '${input.id}' for owner ${owner}`)
   return result.rows[0]

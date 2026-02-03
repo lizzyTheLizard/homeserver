@@ -1,6 +1,6 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { LineItem } from '../_components/DashboardCard'
-import { nontransactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/_external/db/access'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
 import { findNumberOfDiscussions } from '@/app/coeditor/_data/Discussion'
 import { get24HoursAgo, getStartOfMonth, get30DaysAgo } from '@/app/cash/_helper/Dates'

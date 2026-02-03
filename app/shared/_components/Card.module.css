@@ -1,7 +1,7 @@
 .container {
     display: flex;
     margin: var(--gap);
-    width: 15rem;
+    width: 20rem;
     max-width: calc(var(--mobile-breakpoint) - 4 * var(--gap));
     border: 1px solid var(--default-border-color);
     border-radius: var(--border-radius);

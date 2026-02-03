@@ -2,7 +2,7 @@
 import { createOrModifyProject, findAllProjects, ProjectInput, removeProject } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { toResponse } from '@/app/shared/_helper/ActionResponse'
-import { nontransactional, transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 
 export async function loadProjects() {
   await getAuthenticatedUserSession('admin')

@@ -20,7 +20,7 @@ export interface TemplatesProps {
 const templateColumns = [
   textColumn('name', { header: 'Name' }),
   textColumn('language', { header: 'Language' }),
-  textColumn('text', { header: 'Text' }),
+  textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } }),
 ]
 
 export function Templates({ templates: templatesIn = [] }: TemplatesProps) {

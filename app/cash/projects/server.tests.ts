@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/db'
+import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { loadProjects } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
@@ -76,9 +76,14 @@ describe('loadProjects', () => {
 
     const result = await loadProjects()
 
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('My Project')
-    expect(result[0].owner_id).toBe(task.id)
+    expect(result).toEqual([{
+      id: ownProject.id,
+      name: 'My Project',
+      owner_id: task.id,
+      archived: false,
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    }])
   })
 
   test('Returns all project fields', async ({ task }) => {
@@ -96,9 +101,9 @@ describe('loadProjects', () => {
       name: project.name,
       owner_id: task.id,
       archived: false,
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
     }))
-    expect(result[0].created_at).toBeInstanceOf(Date)
-    expect(result[0].updated_at).toBeInstanceOf(Date)
   })
 
   test('Multiple users have separate project lists', async ({ task }) => {

@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation'
 import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
 import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo, useState } from 'react'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface AccountJournalProps {
   account: Account
@@ -35,7 +36,7 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
   const period = stringToPeriod(params.period as string)
   const router = useRouter()
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
-  const [current, setCurrent] = useState<SidebarInput>(initialInput)
+  const [current, setCurrent] = useState(initialInput)
 
   const transactions = useMemo(() => isSummationAccount(account.type) && lastTransaction
     ? [...transactionsIn, getOpeningBalanceTransaction(lastTransaction)]
@@ -77,19 +78,21 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
     if (!('amount' in transaction)) return
     // Check if this is a closing transaction. If so, cannot edit
     if (!transaction.transaction_id) return
-    setCurrent({ ...transaction, id: transaction.transaction_id, description: transaction.description ?? '' })
+    setCurrent({ ...transaction, id: transaction.transaction_id, description: transaction.description ?? '', amount: ((isCreditAccount(account.type) ? -1 : 1) * transaction.amount).toString() })
     sidebarStateModifier.openSidebar('Edit Transaction')
   }
 
   function onSave(): void {
-    const credit_account_id = current.amount < 0 ? account.id : current.other_account_id
-    const debit_account_id = current.amount > 0 ? account.id : current.other_account_id
+    const currentAmmount = (isCreditAccount(account.type) ? -1 : 1) * parseFloat(current.amount)
+    const credit_account_id = currentAmmount < 0 ? account.id : current.other_account_id
+    const debit_account_id = currentAmmount > 0 ? account.id : current.other_account_id
+    const amount = Math.abs(currentAmmount)
     const transaction: TransactionInput = {
       ...current,
       project_id,
       credit_account_id,
       debit_account_id,
-      amount: Math.abs(current.amount),
+      amount,
     }
     sidebarStateModifier.execute(
       saveTransaction(transaction),
@@ -99,16 +102,6 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
 
   function onDelete(): void {
     sidebarStateModifier.execute(deleteTransaction(current.id), () => { router.refresh() })
-  }
-
-  function getAmountInput(): string {
-    const adjustedValue = (isCreditAccount(account.type) ? -1 : 1) * current.amount
-    return adjustedValue.toString()
-  }
-
-  function setAmountInput(value: string): void {
-    const amount = parseFloat(value) * (isCreditAccount(account.type) ? -1 : 1)
-    setCurrent({ ...current, amount })
   }
 
   return (
@@ -129,11 +122,11 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
         onSave={onSave}
         onDelete={onDelete}
       >
-        <Input type="date" label="Date" value={current.date.toISOString().split('T')[0]} onChange={(e) => { setCurrent({ ...current, date: new Date(e.target.value) }) }} />
+        <Input type="date" label="Date" value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Other Account" value={current.other_account_id} onChange={(e) => { setCurrent({ ...current, other_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
-        <Input type="number" label="Amount" value={getAmountInput()} onChange={(e) => { setAmountInput(e.target.value) }} />
+        <Input type="number" label="Amount" value={current.amount} onChange={(e) => { setCurrent({ ...current, amount: e.target.value }) }} />
         <Textarea style={{ flexGrow: 1 }} label="Description" value={current.description} onChange={(e) => { setCurrent({ ...current, description: e.target.value }) }} />
       </Sidebar>
     </>
@@ -144,15 +137,15 @@ interface SidebarInput {
   id: string
   other_account_id: string
   amount: number
-  date: Date
+  date: string
   description: string
 }
 
-const initialInput: SidebarInput = {
+const initialInput: Omit<SidebarInput, 'amount'> & { amount: string } = {
   id: randomUUID(),
   other_account_id: '',
-  amount: 0,
-  date: new Date(),
+  amount: '0',
+  date: Temporal.Now.plainDateISO().toString(),
   description: '',
 }
 

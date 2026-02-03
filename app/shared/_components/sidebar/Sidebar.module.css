@@ -71,12 +71,14 @@
 
     .sidebarContainer {
         display: flex;
+        flex-grow: 1;
     }
 
     .sidebarContent {
         width: 0;
         flex-grow: 1;
         transition: width 1s;
+        min-height: 100%;
     }
 }
 

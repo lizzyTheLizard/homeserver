@@ -3,7 +3,7 @@
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../_data/Profile'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/shared/db'
+import { transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
 
