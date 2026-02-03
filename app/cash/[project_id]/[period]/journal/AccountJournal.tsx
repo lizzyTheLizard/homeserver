@@ -122,7 +122,7 @@ export function AccountJournal({ account, accounts = [], transactions: transacti
         onSave={onSave}
         onDelete={onDelete}
       >
-        <Input type="date" label="Date" value={current.date.toString()} onChange={(e) => { setCurrent({ ...current, date: Temporal.PlainDate.from(e.target.value) }) }} />
+        <Input type="date" label="Date" value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Other Account" value={current.other_account_id} onChange={(e) => { setCurrent({ ...current, other_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
@@ -137,7 +137,7 @@ interface SidebarInput {
   id: string
   other_account_id: string
   amount: number
-  date: Temporal.PlainDate
+  date: string
   description: string
 }
 
@@ -145,7 +145,7 @@ const initialInput: Omit<SidebarInput, 'amount'> & { amount: string } = {
   id: randomUUID(),
   other_account_id: '',
   amount: '0',
-  date: Temporal.Now.plainDateISO(),
+  date: Temporal.Now.plainDateISO().toString(),
   description: '',
 }
 
