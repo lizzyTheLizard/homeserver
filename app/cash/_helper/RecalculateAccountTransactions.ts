@@ -65,8 +65,9 @@ function getClosingDetails(c: Context<Closing>) {
   const other_account_id = isCredit ? c.item.profit_account_id : c.item.capital_account_id
   const amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.profit : c.item.profit)
   const total_balance = c.previous ? c.previous.total_balance + amount : amount
+  const description = 'Closing ' + Temporal.PlainDate.from(c.item.date).toPlainYearMonth().toString()
   return {
-    description: 'Closing on ' + c.item.date.toString(),
+    description,
     other_account_id,
     amount,
     total_balance,

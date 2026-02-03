@@ -2,7 +2,7 @@
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { createDiscussion, Discussion, DiscussionInput, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
 import { findTemplateById, findTemplatesByOwner, Template } from '../_data/Template'
-import { nontransactional, transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'

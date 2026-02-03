@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest'
-import { nontransactional, transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
@@ -10,7 +10,6 @@ import { createOrModifyProfile, ProfileInput } from '../_data/Profile'
 import { executeCommand, loadEditorData } from './server'
 import { aiPort } from '../_external/AiPort'
 import { createDiscussion, DiscussionInput, findDiscussionByOwner } from '../_data/Discussion'
-import { Temporal } from '@js-temporal/polyfill'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -126,9 +125,9 @@ describe('executeCommand', () => {
       parameters: {},
       owner_id: task.id,
       context: 'A test template',
-      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
-      updated_at: expect.any(Temporal.Instant) as Temporal.Instant },
-    )
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    })
     const discussions = await nontransactional(c => findDiscussionByOwner(c, task.id))
     expect(discussions.length).toBe(1)
     expect(discussions[0]).toEqual(result.data)
@@ -155,9 +154,9 @@ describe('executeCommand', () => {
       parameters: {},
       owner_id: task.id,
       context: 'A test template',
-      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
-      updated_at: expect.any(Temporal.Instant) as Temporal.Instant },
-    )
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    })
     const discussions = await nontransactional(c => findDiscussionByOwner(c, task.id))
     expect(discussions.length).toBe(1)
     expect(discussions[0]).toEqual(result.data)

@@ -4,7 +4,7 @@ import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { createOrModifyTemplate, findTemplateById } from '../_data/Template'
 import { deleteProfile, deleteTemplate, loadSettings, saveProfile, saveTemplate } from './server'
-import { nontransactional, transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { createOrModifyProfile, findProfileByOwnerAndLanguage } from '../_data/Profile'
 
 // Mock the auth module

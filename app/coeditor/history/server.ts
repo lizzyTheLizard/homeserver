@@ -1,6 +1,6 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { nontransactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/_external/db/access'
 import { Discussion, findDiscussionByOwner } from '../_data/Discussion'
 
 export async function loadHistory(): Promise<Discussion[]> {

@@ -37,11 +37,11 @@ export function notFound(message: string): BackendError {
 }
 
 export function authenticationFailed(message: string): BackendError {
-  return new BackendError('Authentication Failed', message, 401, false)
+  return new BackendError(message, 'Authentication Failed', 401, false)
 }
 
 export function databaseError(message: string): BackendError {
-  return new BackendError('Database Error', message, 500, true)
+  return new BackendError(message, 'Database Error', 500, true)
 }
 
 export function isBackendError(error: unknown): error is BackendError {

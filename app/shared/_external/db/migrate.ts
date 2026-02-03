@@ -1,39 +1,13 @@
 import { Pool, PoolClient } from 'pg'
-import { promises as fs } from 'fs'
-import { createHash } from 'crypto'
+import { logger } from '../../logger'
+import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import path from 'path'
-import { fileURLToPath } from 'url'
-import { logger } from '@/app/shared/logger'
-import { config } from './config'
-import { databaseError } from './_helper/BackendError'
+import { promises as fs } from 'fs'
+import { createHash } from 'crypto'
+import { databaseError } from '../../_helper/BackendError'
 
-export async function nontransactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const pool = await getPool()
-  const client = await pool.connect()
-  try {
-    const result = await fn(client)
-    return result
-  }
-  finally {
-    client.release()
-  }
-}
-
-export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  return inTransaction(await getPool(), fn)
-}
-
-let pool: Promise<Pool> | undefined = undefined
-async function getPool(): Promise<Pool> {
-  pool ??= setupPool()
-  return pool
-}
-
-async function setupPool(): Promise<Pool> {
-  logger.debug('Setting up database connection')
-  const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING })
-  await testConnection(pool)
+export async function migrateDatabase(pool: Pool, inTransaction: (pool: Pool, fn: (client: PoolClient) => Promise<unknown>) => Promise<unknown>): Promise<void> {
   await inTransaction(pool, async (client) => {
     logger.debug('Starting Database Migrations')
     const planned = await getAllPlannedMigrations()
@@ -41,38 +15,6 @@ async function setupPool(): Promise<Pool> {
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned)
   })
-  logger.info('Database successfully connected and migrations complete')
-  return pool
-}
-
-async function testConnection(pool: Pool): Promise<void> {
-  const client = await pool.connect()
-  try {
-    const res = await client.query<{ result: number }>('SELECT 1 + 1 as result;')
-    if (res.rows[0]?.result !== 2) {
-      throw databaseError('Database connection test failed')
-    }
-  }
-  finally {
-    client.release()
-  }
-}
-
-async function inTransaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const result = await fn(client)
-    await client.query('COMMIT')
-    return result
-  }
-  catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  }
-  finally {
-    client.release()
-  }
 }
 
 async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMigration[]> {
@@ -91,7 +33,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
   const filename = fileURLToPath(import.meta.url)
   const currentDir = dirname(filename)
-  const migrationsDir = path.resolve(currentDir, '../../../db')
+  const migrationsDir = path.resolve(currentDir, '../../../../../db')
   const names = await fs.readdir(migrationsDir)
   const result: PlannedDatabaseMigration[] = []
   for (const name of names) {
@@ -128,7 +70,7 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
     const e = existing.find(m => m.name === p.name)
     if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
-      logger.debug(`Migration ${p.name} has already run on ${e.run_on.toISOString()}`)
+      logger.debug(`Migration ${p.name} has already run on ${e.run_on}`)
       continue
     }
     await runMigration(client, p)
@@ -139,7 +81,7 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
 interface DatabaseMigration {
   name: string
   hash: string
-  run_on: Date
+  run_on: string
 }
 
 interface PlannedDatabaseMigration {

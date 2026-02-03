@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, expect, test, vi, beforeEach } from 'vitest'
-import { transactional } from '@/app/shared/db'
+import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { loadAccounts, saveAccount, deleteAccount } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'

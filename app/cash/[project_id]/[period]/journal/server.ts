@@ -1,7 +1,7 @@
 'use server'
 import { findProjectById } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { nontransactional, transactional } from '@/app/shared/db'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { notFound } from 'next/navigation'
 import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
 import { createTransaction, findAllTransactions, findTransactionsById, modifyTransaction, removeTransaction, Transaction, TransactionInput } from '@/app/cash/_data/Transaction'

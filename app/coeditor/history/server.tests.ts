@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/db'
+import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'

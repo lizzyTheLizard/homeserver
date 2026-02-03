@@ -1,0 +1,3 @@
+ALTER TABLE transaction ALTER COLUMN date TYPE DATE;
+ALTER TABLE account_transaction ALTER COLUMN date TYPE DATE;
+ALTER TABLE closing ALTER COLUMN date TYPE DATE;

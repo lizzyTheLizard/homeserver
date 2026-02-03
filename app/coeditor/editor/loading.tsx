@@ -7,8 +7,8 @@ export default function Loading() {
   const dummyTemplate: Template = {
     id: 'dummy-template',
     name: '',
-    created_at: Temporal.Now.instant(),
-    updated_at: Temporal.Now.instant(),
+    created_at: Temporal.Now.instant().toString(),
+    updated_at: Temporal.Now.instant().toString(),
     language: '',
     text: 'This is a dummy template used during loading state.',
     parameters: [],

@@ -1,7 +1,7 @@
 import { findProjectsByOwner } from '@/app/cash/_data/Project'
 import { authenticationFailed } from '@/app/shared/_helper/BackendError'
 import { config } from '@/app/shared/config'
-import { nontransactional } from '@/app/shared/db'
+import { nontransactional } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'

@@ -80,7 +80,7 @@ export function Journal({ accounts = [], transactions: transactionsIn = [] }: Jo
         onSave={onSave}
         onDelete={() => { sidebarStateModifier.execute(deleteTransaction(current.id), () => { removeTransaction(current.id) }) }}
       >
-        <Input type="date" label="Date" value={current.date.toString()} onChange={(e) => { setCurrent({ ...current, date: Temporal.PlainDate.from(e.target.value) }) }} />
+        <Input type="date" label="Date" value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Credit Account" value={current.credit_account_id} onChange={(e) => { setCurrent({ ...current, credit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
@@ -100,6 +100,6 @@ const initialInput: Omit<TransactionInput, 'amount'> & { amount: string } = {
   credit_account_id: '',
   debit_account_id: '',
   amount: '0',
-  date: Temporal.Now.plainDateISO(),
+  date: Temporal.Now.plainDateISO().toString(),
   description: '',
 }

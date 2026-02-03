@@ -1,11 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/db'
+import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { loadProjects } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { Temporal } from '@js-temporal/polyfill'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -82,8 +81,8 @@ describe('loadProjects', () => {
       name: 'My Project',
       owner_id: task.id,
       archived: false,
-      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
-      updated_at: expect.any(Temporal.Instant) as Temporal.Instant,
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
     }])
   })
 
@@ -102,8 +101,8 @@ describe('loadProjects', () => {
       name: project.name,
       owner_id: task.id,
       archived: false,
-      created_at: expect.any(Temporal.Instant) as Temporal.Instant,
-      updated_at: expect.any(Temporal.Instant) as Temporal.Instant,
+      created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
     }))
   })
 
