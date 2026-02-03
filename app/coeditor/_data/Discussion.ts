@@ -1,8 +1,8 @@
 import type { PoolClient } from 'pg'
 import { logger } from '@/app/shared/logger'
-import { BaseEntity, BaseInput, CountResult, countResultToNumber } from '@/app/shared/_external/db/types'
+import { count, Entity } from '@/app/shared/_external/db/access'
 
-export interface Discussion extends BaseEntity {
+export interface DiscussionInput {
   id: string
   text: string
   title: string
@@ -10,15 +10,14 @@ export interface Discussion extends BaseEntity {
   context: string
   parameters: Record<string, string>
 }
-
-export type DiscussionInput = BaseInput<Discussion>
+export type Discussion = Entity<DiscussionInput>
 
 export async function findDiscussionById(client: PoolClient, owner: string, discussion_id: string): Promise<Discussion | undefined> {
   const result = await client.query<Discussion>(
     'SELECT * FROM discussion WHERE id = $1 and owner_id = $2',
     [discussion_id, owner],
   )
-  logger.debug(`${result.rows.length ? 'Found' : 'Did not find'} discussion ${discussion_id}`)
+  logger.debug(`${result.rows.length ? 'Found' : 'Did not find'} discussion ${discussion_id} for owner ${owner}`)
   return result.rows[0]
 }
 
@@ -33,11 +32,9 @@ export async function findDiscussionByOwner(client: PoolClient, owner: string): 
 
 export async function findNumberOfDiscussions(client: PoolClient, since?: string): Promise<number> {
   if (since === undefined) {
-    const result = await client.query<CountResult>('SELECT COUNT(*) AS count FROM discussion')
-    return countResultToNumber(result)
+    return await count(client, 'SELECT COUNT(*) AS count FROM discussion')
   }
-  const result = await client.query<CountResult>('SELECT COUNT(*) AS count FROM discussion WHERE updated_at > $1', [since])
-  return countResultToNumber(result)
+  return await count(client, 'SELECT COUNT(*) AS count FROM discussion WHERE updated_at > $1', [since])
 }
 
 export async function createDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {

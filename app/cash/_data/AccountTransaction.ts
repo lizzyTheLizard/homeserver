@@ -1,9 +1,9 @@
 import { PoolClient } from 'pg'
 import { endDate, Period, periodToString, startDate } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
-import { BaseEntity, BaseInput, removeNull } from '@/app/shared/_external/db/types'
+import { Entity, removeNull } from '@/app/shared/_external/db/access'
 
-export interface AccountTransaction extends BaseEntity {
+export interface AccountTransactionInput {
   id: string
   ordering: number
   account_id: string
@@ -14,8 +14,7 @@ export interface AccountTransaction extends BaseEntity {
   transaction_id?: string
   description?: string
 }
-
-export type AccountTransactionInput = BaseInput<AccountTransaction>
+export type AccountTransaction = Entity<AccountTransactionInput>
 
 export async function deleteAccountTransactions(client: PoolClient, owner: string, accountId: string, period: Period): Promise<void> {
   await client.query(

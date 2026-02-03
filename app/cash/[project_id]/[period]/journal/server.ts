@@ -61,7 +61,8 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
     const lastClosing = await findLastClosing(client, user.sub, existingTransaction.project_id)
     if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot delete transaction from closed period')
     await removeTransaction(client, user.sub, id)
-    await recalculateTransactions(client, user.sub, existingTransaction.project_id, existingTransaction.date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+    const date = Temporal.PlainDate.from(existingTransaction.date)
+    await recalculateTransactions(client, user.sub, existingTransaction.project_id, date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
   }))
 }
 
@@ -76,26 +77,28 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
       if (existingTransaction.project_id !== input.project_id) throw invalidInput('Cannot change project of existing transaction')
       if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot modify transaction from closed period')
       const result = await modifyTransaction(client, user.sub, input)
-      await recalculateTransactions(client, user.sub, input.project_id, min(input.date, existingTransaction.date), [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+      const date = Temporal.PlainDate.from(min(input.date, existingTransaction.date))
+      await recalculateTransactions(client, user.sub, input.project_id, date, [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
       return result
     }
     else {
       const project = await findProjectById(client, user.sub, input.project_id)
       if (!project) throw invalidInput('Cannot create transaction for non-existing project')
       const result = await createTransaction(client, user.sub, input)
-      await recalculateTransactions(client, user.sub, input.project_id, input.date, [input.credit_account_id, input.debit_account_id])
+      const date = Temporal.PlainDate.from(input.date)
+      await recalculateTransactions(client, user.sub, input.project_id, date, [input.credit_account_id, input.debit_account_id])
       return result
     }
   }))
 }
 
-function isClosed(lastClosing: Closing | undefined, transactionDate: Temporal.PlainDate): boolean {
+function isClosed(lastClosing: Closing | undefined, transactionDate: string): boolean {
   if (!lastClosing) return false
   return transactionDate <= lastClosing.date
 }
 
-function min(date1: Temporal.PlainDate, date2: Temporal.PlainDate): Temporal.PlainDate {
-  return Temporal.PlainDate.compare(date1, date2) < 0 ? date1 : date2
+function min(date1: string, date2: string): string {
+  return date1 < date2 ? date1 : date2
 }
 
 const TransactionInputConstraints = {

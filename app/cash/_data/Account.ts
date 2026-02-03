@@ -1,17 +1,16 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 import { AccountType } from './AccountType'
-import { BaseEntity, BaseInput, CountResult, countResultToNumber } from '@/app/shared/_external/db/types'
+import { count, Entity } from '@/app/shared/_external/db/access'
 
-export interface Account extends BaseEntity {
+export interface AccountInput {
   id: string
   project_id: string
   name: string
   type: AccountType
   archived: boolean
 }
-
-export type AccountInput = BaseInput<Account>
+export type Account = Entity<AccountInput>
 
 export async function findAllAccountsForProject(client: PoolClient, ownerId: string, projectId: string): Promise<Account[]> {
   const result = await client.query<Account>(
@@ -45,6 +44,5 @@ export async function createOrModifyAccount(client: PoolClient, ownerId: string,
 }
 
 export async function findNumberOfAccounts(client: PoolClient): Promise<number> {
-  const result = await client.query<CountResult>('SELECT COUNT(*) AS count FROM account')
-  return countResultToNumber(result)
+  return await count(client, 'SELECT COUNT(*) AS count FROM account')
 }

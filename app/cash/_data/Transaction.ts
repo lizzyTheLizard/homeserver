@@ -1,9 +1,9 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 import { endDate, Period, periodToString, startDate } from '../_helper/Period'
-import { BaseEntity, BaseInput } from '@/app/shared/_external/db/types'
+import { Entity } from '@/app/shared/_external/db/access'
 
-export interface Transaction extends BaseEntity {
+export interface TransactionInput {
   id: string
   project_id: string
   credit_account_id: string
@@ -12,8 +12,7 @@ export interface Transaction extends BaseEntity {
   date: string
   description: string
 }
-
-export type TransactionInput = BaseInput<Transaction>
+export type Transaction = Entity<TransactionInput>
 
 export async function findAllTransactions(client: PoolClient, owner: string, projectId: string, period: Period): Promise<Transaction[]> {
   const result = await client.query<Transaction>(

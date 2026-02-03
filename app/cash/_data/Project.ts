@@ -1,16 +1,14 @@
-import { BaseEntity, BaseInput, CountResult, countResultToNumber } from '@/app/shared/_external/db/types'
+import { count, Entity } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 
-export interface Project extends BaseEntity {
+export interface ProjectInput {
   id: string
   name: string
   archived: boolean
-}
-
-export interface ProjectInput extends BaseInput<Project> {
   owner_id: string
 }
+export type Project = Entity<ProjectInput>
 
 export async function findAllProjects(client: PoolClient): Promise<Project[]> {
   const result = await client.query<Project>(
@@ -61,11 +59,9 @@ export async function removeProject(client: PoolClient, id: string): Promise<voi
 }
 
 export async function findNumberOfProjects(client: PoolClient): Promise<number> {
-  const result = await client.query<CountResult>('SELECT COUNT(*) AS count FROM project')
-  return countResultToNumber(result)
+  return await count(client, 'SELECT COUNT(*) AS count FROM project')
 }
 
 export async function findNumberOfUsersWithProjects(client: PoolClient): Promise<number> {
-  const result = await client.query<CountResult>('SELECT COUNT(DISTINCT owner_id) AS count FROM project')
-  return countResultToNumber(result)
+  return await count(client, 'SELECT COUNT(DISTINCT owner_id) AS count FROM project')
 }

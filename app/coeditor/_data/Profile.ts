@@ -1,15 +1,14 @@
 import { PoolClient } from 'pg'
 import { invalidInput } from '../../shared/_helper/BackendError'
 import { logger } from '@/app/shared/logger'
-import { BaseEntity, BaseInput } from '@/app/shared/_external/db/types'
+import { Entity } from '@/app/shared/_external/db/access'
 
-export interface Profile extends BaseEntity {
+export interface ProfileInput {
   id: string
   language: string
   text: string
 }
-
-export type ProfileInput = BaseInput<Profile>
+export type Profile = Entity<ProfileInput>
 
 export async function findProfilesByOwner(client: PoolClient, owner: string): Promise<Profile[]> {
   const result = await client.query<Profile>(

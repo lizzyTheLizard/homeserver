@@ -7,14 +7,29 @@ import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
 
-export async function migrateDatabase(pool: Pool, inTransaction: (pool: Pool, fn: (client: PoolClient) => Promise<unknown>) => Promise<unknown>): Promise<void> {
-  await inTransaction(pool, async (client) => {
+/**
+ * Migrate the DB to the latest version. This function should be called through setup only.
+ * @param pool The DB connection pool
+ */
+export async function migrateDatabase(pool: Pool): Promise<void> {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
     logger.debug('Starting Database Migrations')
     const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned)
-  })
+    await client.query('COMMIT')
+  }
+  catch (error) {
+    await client.query('ROLLBACK')
+    logger.warn('Database migration failed')
+    throw error
+  }
+  finally {
+    client.release()
+  }
 }
 
 async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMigration[]> {

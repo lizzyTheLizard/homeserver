@@ -16,8 +16,12 @@ beforeAll(async () => {
       await pglite.query(command)
     }
   }
-  vi.mock('@/app/shared/_external/db/access', () => ({
-    transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
-    nontransactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
-  }))
+  vi.mock('@/app/shared/_external/db/access', async (importOriginal: () => Promise<typeof import('@/app/shared/_external/db/access')>) => {
+    const actual = await importOriginal()
+    return {
+      ...actual,
+      transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
+      nontransactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
+    }
+  })
 })

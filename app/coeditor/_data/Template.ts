@@ -2,15 +2,15 @@ import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '../../shared/_helper/BackendError'
-import { BaseEntity, BaseInput, CountResult, countResultToNumber } from '@/app/shared/_external/db/types'
+import { count, Entity } from '@/app/shared/_external/db/access'
 
-export interface Template extends BaseEntity {
+export interface TemplateInput {
   id: string
   name: string
   language: string
   text: string
-  parameters: TemplateParameter[]
 }
+export type Template = Entity<TemplateInput & { parameters: TemplateParameter[] }>
 
 export interface TemplateParameter {
   name: string
@@ -19,8 +19,6 @@ export interface TemplateParameter {
   startPosition: number
   endPosition: number
 }
-
-export type TemplateInput = Omit<BaseInput<Template>, 'parameters'>
 
 export async function findTemplatesByOwner(client: PoolClient, owner: string): Promise<Template[]> {
   const result = await client.query<Template>(
@@ -39,8 +37,7 @@ export async function findTemplatesByOwner(client: PoolClient, owner: string): P
 }
 
 export async function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
-  const result = await client.query<CountResult>('SELECT COUNT(DISTINCT owner_id) AS count FROM template')
-  return countResultToNumber(result)
+  return await count(client, 'SELECT COUNT(DISTINCT owner_id) AS count FROM template')
 }
 
 export async function findTemplateById(client: PoolClient, owner: string, id: string): Promise<Template | undefined> {

@@ -1,9 +1,9 @@
 import { PoolClient } from 'pg'
 import { logger } from 'storybook/internal/node-logger'
 import { endDate, Period, periodToString, startDate } from '../_helper/Period'
-import { BaseEntity, BaseInput } from '@/app/shared/_external/db/types'
+import { Entity } from '@/app/shared/_external/db/access'
 
-export interface Closing extends BaseEntity {
+export interface ClosingInput {
   id: string
   project_id: string
   date: string
@@ -11,8 +11,7 @@ export interface Closing extends BaseEntity {
   profit_account_id: string
   profit: number
 }
-
-export type ClosingInput = BaseInput <Closing>
+export type Closing = Entity<ClosingInput>
 
 export async function findAllClosingsByAccount(client: PoolClient, owner: string, accountId: string, period: Period): Promise<Closing[]> {
   const result = await client.query<Closing>(

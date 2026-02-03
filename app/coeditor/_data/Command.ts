@@ -1,8 +1,8 @@
 import { PoolClient } from 'pg'
 import { logger } from '@/app/shared/logger'
-import { BaseEntity, BaseInput, CountResult, countResultToNumber, removeNull } from '@/app/shared/_external/db/types'
+import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
 
-export interface Command extends BaseEntity {
+export interface CommandInput {
   id: string
   discussion_id: string
   text?: string
@@ -16,8 +16,7 @@ export interface Command extends BaseEntity {
   custom_command?: string
   predefined_command?: PredefinedCommandType
 }
-
-export type CommandInput = BaseInput<Command>
+export type Command = Entity<CommandInput>
 
 export type PredefinedCommandType = 'INITIALIZE' | 'IMPROVE' | 'REFORMULATE' | 'SUMMARIZE' | 'EXTEND'
 
@@ -29,11 +28,9 @@ export interface CommandResult {
 
 export async function findNumberOfCommands(client: PoolClient, since?: string): Promise<number> {
   if (since === undefined) {
-    const result = await client.query<CountResult>('SELECT COUNT(*) AS count FROM command')
-    return countResultToNumber(result)
+    return await count(client, 'SELECT COUNT(*) AS count FROM command')
   }
-  const result = await client.query<CountResult>('SELECT COUNT(*) AS count FROM command WHERE created_at > $1', [since])
-  return countResultToNumber(result)
+  return await count(client, 'SELECT COUNT(*) AS count FROM command WHERE created_at > $1', [since])
 }
 
 export async function findCommandsByDiscussion(client: PoolClient, discussionId: string): Promise<Command[]> {

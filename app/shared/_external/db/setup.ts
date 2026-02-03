@@ -1,4 +1,4 @@
-import PG, { Pool, PoolClient } from 'pg'
+import PG, { Pool } from 'pg'
 import { logger } from '../../logger'
 import { config } from '../../config'
 import { databaseError, isBackendError } from '../../_helper/BackendError'
@@ -14,13 +14,18 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
   1700: value => parseFloat(value), // NUMERIC
 }
 
-export async function setupPool(inTransaction: (pool: Pool, fn: (client: PoolClient) => Promise<unknown>) => Promise<unknown>): Promise<Pool> {
+/**
+ * Setup the Postgres connection pool, test the connection and run migrations. This function should
+ * be called once on server start.
+ * @returns The Postgres connection pool
+ */
+export async function setupPool(): Promise<Pool> {
   try {
     logger.debug('Setting up database connection')
     const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING })
     Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
     await testConnection(pool)
-    await migrateDatabase(pool, inTransaction)
+    await migrateDatabase(pool)
     logger.info('Database successfully connected and migrations complete')
     return pool
   }
