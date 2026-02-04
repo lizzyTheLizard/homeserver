@@ -1,4 +1,4 @@
-// TODO: Remove import inlucing mongodb package and import script in package.json
+// TODO: Remove this script, import-azure in package.json and the packages "mongodb" and "tsx" from dependencies
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Db, MongoClient } from 'mongodb'
@@ -104,9 +104,6 @@ export async function importDatabaseFromAzure() {
     sqlClient.release()
     await mongoClient.close()
   }
-
-  // CashNeonImport
-  // CashMonatAbrechnung
 }
 
 importDatabaseFromAzure()
