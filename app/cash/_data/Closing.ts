@@ -1,7 +1,7 @@
 import { PoolClient } from 'pg'
-import { logger } from 'storybook/internal/node-logger'
 import { endDate, Period, periodToString, startDate } from '../_helper/Period'
 import { Entity } from '@/app/shared/_external/db/access'
+import { logger } from '@/app/shared/logger'
 
 export interface ClosingInput {
   id: string

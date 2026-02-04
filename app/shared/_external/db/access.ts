@@ -1,7 +1,7 @@
-import { PoolClient } from 'pg'
+import { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
-const poolPromise = setupPool()
+let poolPromise: Promise<Pool> | undefined = undefined
 
 /**
  * Executes a function without a transaction. No rollback is possible.
@@ -9,6 +9,7 @@ const poolPromise = setupPool()
  * @returns The result of the function
  */
 export async function nontransactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  poolPromise ??= setupPool()
   const pool = await poolPromise
   const client = await pool.connect()
   try {
@@ -26,6 +27,7 @@ export async function nontransactional<T>(fn: (client: PoolClient) => Promise<T>
  * @returns The result of the function
  */
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  poolPromise ??= setupPool()
   const pool = await poolPromise
   const client = await pool.connect()
   try {
