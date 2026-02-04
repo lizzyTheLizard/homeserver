@@ -19,14 +19,14 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
  * be called once on server start.
  * @returns The Postgres connection pool
  */
-export async function setupPool(): Promise<Pool> {
+export async function setupPool(performMigration = true): Promise<Pool> {
   try {
     logger.debug('Setting up database connection')
     const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING })
     Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
     await testConnection(pool)
-    await migrateDatabase(pool)
-    logger.info('Database successfully connected and migrations complete')
+    if (performMigration) await migrateDatabase(pool)
+    logger.info('Database successfully connected')
     return pool
   }
   catch (error) {

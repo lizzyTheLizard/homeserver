@@ -13,7 +13,8 @@
     "clean": "rimraf .next storybook-static",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "chromatic": "npx chromatic --build-script-name build-storybook"
+    "chromatic": "npx chromatic --build-script-name build-storybook",
+    "import-azure": "cd app && node --import tsx --env-file ../.env ./import.ts"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
@@ -55,9 +56,11 @@
     "eslint-plugin-storybook": "^10.1.4",
     "globals": "^16.5.0",
     "jsdom": "^27.2.0",
+    "mongodb": "^7.1.0",
     "playwright": "^1.57.0",
     "rimraf": "^6.1.2",
     "storybook": "^10.1.4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "typescript-eslint": "^8.48.1",
     "vite": "^7.2.6",
