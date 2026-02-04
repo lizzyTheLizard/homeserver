@@ -63,6 +63,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   if (!claims) {
     throw authenticationFailed(`No claims found in token set during callback`)
   }
+  // TODO: Use email instead of sub to identify users?
   const sub = claims.sub
   const name = claims.given_name as string
   const email = claims.email as string
