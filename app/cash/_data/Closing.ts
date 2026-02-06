@@ -41,3 +41,12 @@ export async function createClosing(client: PoolClient, owner: string, closing: 
   logger.info(`Closing created for project ${closing.project_id} and owner ${owner}`)
   return result.rows[0]
 }
+
+export async function removeClosingAfter(client: PoolClient, owner_id: string, projectId: string, fromDate: string): Promise<Closing[]> {
+  const result = await client.query<Closing>(
+    `DELETE FROM closing WHERE project_id = $1 AND date >= $2 AND owner_id = $3 RETURNING *`,
+    [projectId, fromDate, owner_id],
+  )
+  logger.info(`Removed ${result.rows.length.toString()} closings for project ${projectId} after ${fromDate}`)
+  return result.rows
+}

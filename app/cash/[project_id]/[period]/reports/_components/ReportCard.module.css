@@ -1,0 +1,32 @@
+.key {
+    font-weight: bold;
+    text-align: left;
+}
+
+.value {
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.table {
+    width: 100%;
+}
+
+.table td {
+    border-bottom: 1px solid #ddd;
+    padding-top: var(--gap);
+}
+
+.table th {
+    border-bottom: 1px solid black;
+    padding-top: var(--gap);
+}
+
+.table td a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.link {
+    padding-top: 1rem;
+}

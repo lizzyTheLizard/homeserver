@@ -42,6 +42,16 @@ export async function findTransactionsById(client: PoolClient, owner: string, id
   return result.rows[0]
 }
 
+export async function findOldestTransaction(client: PoolClient, owner: string, projectId: string): Promise<Transaction | undefined> {
+  const result = await client.query<Transaction>(
+    `SELECT * FROM transaction WHERE project_id = $1 AND owner_id = $2 ORDER BY date ASC LIMIT 1`,
+    [projectId, owner],
+  )
+  if (result.rows.length === 0) logger.debug(`No transactions found for project ${projectId} and owner ${owner}`)
+  else logger.debug(`Found oldest transaction for project ${projectId} and owner ${owner}`)
+  return result.rows[0]
+}
+
 export async function createTransaction(client: PoolClient, owner: string, transaction: TransactionInput): Promise<Transaction> {
   const result = await client.query<Transaction>(
     `INSERT INTO transaction (id, project_id, credit_account_id, debit_account_id, amount, date, description, owner_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,

@@ -54,6 +54,7 @@ describe('loadJournal', () => {
       description: transaction.description,
       created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
+      project_id: project.id,
     }])
   })
 
@@ -189,7 +190,7 @@ describe('loadJournal', () => {
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' } as TransactionInput
-    const accountTransaction = { id: randomUUID(), account_id: account1.id, date: '2023-05-13', ordering: 13, other_account_id: account2.id, amount: 500.00, total_balance: 500.00 } as AccountTransactionInput
+    const accountTransaction = { id: randomUUID(), account_id: account1.id, project_id: project.id, date: '2023-05-13', ordering: 13, other_account_id: account2.id, amount: 500.00, total_balance: 500.00 } as AccountTransactionInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)

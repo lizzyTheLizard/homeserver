@@ -45,6 +45,14 @@ export function endDate(period: Period): string {
   return start.add({ days: 1 }).toString()
 }
 
+export function lastDay(period: Period): string {
+  if (period.year === undefined || period.openEnded) return '9999-12-31'
+  const start = temporalFromPeriod(period)
+  if (period.month === undefined) return start.add({ years: 1 }).subtract({ days: 1 }).toString()
+  if (period.day === undefined) return start.add({ months: 1 }).subtract({ days: 1 }).toString()
+  return start.toString()
+}
+
 function temporalFromPeriod(period: Period): Temporal.PlainDate {
   return Temporal.PlainDate.from({
     year: period.year ?? 1,

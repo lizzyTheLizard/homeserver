@@ -7,6 +7,7 @@ export interface AccountTransactionInput {
   id: string
   ordering: number
   account_id: string
+  project_id: string
   other_account_id: string
   amount: number
   total_balance: number
@@ -43,10 +44,34 @@ export async function findLatestAccountTransactionBefore(client: PoolClient, own
   return removeNull(result.rows[0])
 }
 
+export async function findLatestAccountTransactionsBefore(client: PoolClient, project_id: string, owner: string, period: Period): Promise<AccountTransaction[]> {
+  const result = await client.query<AccountTransaction>(
+    `SELECT DISTINCT ON (account_id) *
+     FROM account_transaction
+     WHERE owner_id = $1 AND date < $2 AND project_id = $3
+     ORDER BY account_id, date DESC, ordering DESC`,
+    [owner, startDate(period), project_id],
+  )
+  logger.debug(`Finding latest account transactions before period ${periodToString(period)}`)
+  return result.rows.map(removeNull)
+}
+
+export async function findLatestAccountTransactionsIn(client: PoolClient, project_id: string, owner: string, period: Period): Promise<AccountTransaction[]> {
+  const result = await client.query<AccountTransaction>(
+    `SELECT DISTINCT ON (account_id) *
+     FROM account_transaction
+     WHERE owner_id = $1 AND date >= $2 AND date < $3 AND project_id = $4
+     ORDER BY account_id, date DESC, ordering DESC`,
+    [owner, startDate(period), endDate(period), project_id],
+  )
+  logger.debug(`Finding latest account transactions in period ${periodToString(period)}`)
+  return result.rows.map(removeNull)
+}
+
 export async function createAccountTransaction(client: PoolClient, owner: string, input: AccountTransactionInput): Promise<AccountTransaction> {
   const result = await client.query<AccountTransaction>(
-    'INSERT INTO account_transaction (id, ordering, account_id, other_account_id, amount, total_balance, date, transaction_id, description, owner_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-    [input.id, input.ordering, input.account_id, input.other_account_id, input.amount, input.total_balance, input.date, input.transaction_id, input.description, owner],
+    'INSERT INTO account_transaction (id, ordering, account_id, project_id, other_account_id, amount, total_balance, date, transaction_id, description, owner_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+    [input.id, input.ordering, input.account_id, input.project_id, input.other_account_id, input.amount, input.total_balance, input.date, input.transaction_id, input.description, owner],
   )
   if (!result.rows[0]) throw new Error('Failed to create account transaction')
   logger.debug(`Creating account transaction for account ${input.account_id} on date ${input.date}`)

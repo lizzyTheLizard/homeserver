@@ -394,6 +394,7 @@ describe('saveTransaction', () => {
       description: transactionInput.description,
       created_at: expect.any(String),
       updated_at: expect.any(String),
+      project_id: project.id,
     })
   })
 
@@ -430,6 +431,7 @@ describe('saveTransaction', () => {
       description: updatedTransaction.description,
       created_at: expect.any(String),
       updated_at: expect.any(String),
+      project_id: project.id,
     })
   })
 })
