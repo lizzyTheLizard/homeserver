@@ -1,6 +1,6 @@
 import { PoolClient } from 'pg'
 import { endDate, Period, periodToString, startDate } from '../_helper/Period'
-import { Entity } from '@/app/shared/_external/db/access'
+import { Entity, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface ClosingInput {
@@ -19,7 +19,7 @@ export async function findAllClosingsByAccount(client: PoolClient, owner: string
     [owner, startDate(period), endDate(period), accountId],
   )
   logger.debug(`Found ${result.rows.length.toString()} closings for account ${accountId} for ${periodToString(period)}`)
-  return result.rows
+  return result.rows.map(removeNull)
 }
 
 export async function findLastClosing(client: PoolClient, owner: string, projectId: string): Promise<Closing | undefined> {
@@ -29,7 +29,7 @@ export async function findLastClosing(client: PoolClient, owner: string, project
   )
   if (result.rows.length === 0) logger.debug(`No closing found for project ${projectId} and owner ${owner}`)
   else logger.debug(`Found closing for project ${projectId} and owner ${owner}`)
-  return result.rows[0]
+  return removeNull(result.rows[0])
 }
 
 export async function createClosing(client: PoolClient, owner: string, closing: ClosingInput): Promise<Closing> {
@@ -38,8 +38,8 @@ export async function createClosing(client: PoolClient, owner: string, closing: 
     [closing.id, closing.project_id, closing.date, closing.capital_account_id, closing.profit_account_id, closing.profit, owner],
   )
   if (!result.rows[0]) throw new Error('Failed to create closing')
-  logger.info(`Closing created for project ${closing.project_id} and owner ${owner}`)
-  return result.rows[0]
+  logger.debug(`Closing created for project ${closing.project_id} and owner ${owner}`)
+  return removeNull(result.rows[0])
 }
 
 export async function removeClosingAfter(client: PoolClient, owner_id: string, projectId: string, fromDate: string): Promise<Closing[]> {
@@ -47,6 +47,6 @@ export async function removeClosingAfter(client: PoolClient, owner_id: string, p
     `DELETE FROM closing WHERE project_id = $1 AND date >= $2 AND owner_id = $3 RETURNING *`,
     [projectId, fromDate, owner_id],
   )
-  logger.info(`Removed ${result.rows.length.toString()} closings for project ${projectId} after ${fromDate}`)
-  return result.rows
+  logger.debug(`Removed ${result.rows.length.toString()} closings for project ${projectId} after ${fromDate}`)
+  return result.rows.map(removeNull)
 }

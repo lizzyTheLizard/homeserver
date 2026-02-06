@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return Response.redirect(redirect)
   }
   catch (error) {
-    logger.error('Error during login callback', error)
+    logger.warn('Error during login callback', error)
     return Response.redirect(config.APP_URL + '/common/auth/error')
   }
 }

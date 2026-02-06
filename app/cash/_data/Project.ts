@@ -1,4 +1,4 @@
-import { count, Entity } from '@/app/shared/_external/db/access'
+import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 
@@ -15,7 +15,7 @@ export async function findAllProjects(client: PoolClient): Promise<Project[]> {
     `SELECT * FROM project`,
   )
   logger.debug(`Found ${result.rows.length.toString()} projects in total`)
-  return result.rows
+  return result.rows.map(removeNull)
 }
 
 export async function findProjectsByOwner(client: PoolClient, ownerId: string): Promise<Project[]> {
@@ -24,7 +24,7 @@ export async function findProjectsByOwner(client: PoolClient, ownerId: string): 
     [ownerId],
   )
   logger.debug(`Found ${result.rows.length.toString()} projects for owner ${ownerId}`)
-  return result.rows
+  return result.rows.map(removeNull)
 }
 
 export async function findProjectById(client: PoolClient, ownerId: string, id: string): Promise<Project | undefined> {
@@ -33,7 +33,7 @@ export async function findProjectById(client: PoolClient, ownerId: string, id: s
     [ownerId, id],
   )
   logger.debug(`${result.rows[0] ? 'Found' : 'Did not find'} project ${id} for owner ${ownerId}`)
-  return result.rows[0]
+  return removeNull(result.rows[0])
 }
 
 export async function createOrModifyProject(client: PoolClient, project: ProjectInput): Promise<Project> {
@@ -46,16 +46,17 @@ export async function createOrModifyProject(client: PoolClient, project: Project
     : 'INSERT INTO project (id, name, owner_id, archived) VALUES ($1, $2, $3, $4) RETURNING *'
   const result = await client.query<Project>(query, [project.id, project.name, project.owner_id, project.archived])
   if (!result.rows[0]) throw new Error('Failed to modify project')
-  logger.info(`Modified project '${project.name}' for owner ${project.owner_id}`)
-  return result.rows[0]
+  logger.debug(`Modified project '${project.name}' for owner ${project.owner_id}`)
+  return removeNull(result.rows[0])
 }
 
-export async function removeProject(client: PoolClient, id: string): Promise<void> {
-  await client.query(
-    `DELETE FROM project WHERE id = $1`,
+export async function removeProject(client: PoolClient, id: string): Promise<Project | undefined> {
+  const result = await client.query<Project>(
+    `DELETE FROM project WHERE id = $1 RETURNING *`,
     [id],
   )
-  logger.info(`Project ${id} deleted`)
+  logger.debug(`Project ${id} deleted`)
+  return removeNull(result.rows[0])
 }
 
 export async function findNumberOfProjects(client: PoolClient): Promise<number> {

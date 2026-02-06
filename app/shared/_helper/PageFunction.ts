@@ -19,9 +19,9 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
     }
     const code = httpAccessResponseCode(error)
     if (code === undefined) logger.error(`Unknown error while rendering page '${name}' in ${time.toString()} ms:`, error)
-    else if (code === 401) logger.info(`Unauthorized while rendering page '${name}' in ${time.toString()} ms`)
-    else if (code === 403) logger.info(`Forbidden while rendering page '${name}' in ${time.toString()} ms`)
-    else if (code === 404) logger.info(`Not Found while rendering page '${name}' in ${time.toString()} ms`)
+    else if (code === 401) logger.warn(`Unauthorized while rendering page '${name}' in ${time.toString()} ms`)
+    else if (code === 403) logger.warn(`Forbidden while rendering page '${name}' in ${time.toString()} ms`)
+    else if (code === 404) logger.warn(`Not Found while rendering page '${name}' in ${time.toString()} ms`)
     throw error
   })
 }

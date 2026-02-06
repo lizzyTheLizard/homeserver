@@ -24,7 +24,7 @@ export async function migrateDatabase(pool: Pool): Promise<void> {
   }
   catch (error) {
     await client.query('ROLLBACK')
-    logger.warn('Database migration failed')
+    logger.warn('Database migration failed', error)
     throw error
   }
   finally {
@@ -66,7 +66,7 @@ async function runMigration(client: PoolClient, migration: PlannedDatabaseMigrat
     await client.query(command)
   }
   await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
-  logger.info(`Migration ${migration.name} executed successfully`)
+  logger.debug(`Migration ${migration.name} executed successfully`)
 }
 
 function validateExistingMigrations(existing: DatabaseMigration[], planned: PlannedDatabaseMigration[]) {

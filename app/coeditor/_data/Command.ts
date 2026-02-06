@@ -26,11 +26,11 @@ export interface CommandResult {
   durationMs: number
 }
 
-export async function findNumberOfCommands(client: PoolClient, since?: string): Promise<number> {
+export function findNumberOfCommands(client: PoolClient, since?: string): Promise<number> {
   if (since === undefined) {
-    return await count(client, 'SELECT COUNT(*) AS count FROM command')
+    return count(client, 'SELECT COUNT(*) AS count FROM command')
   }
-  return await count(client, 'SELECT COUNT(*) AS count FROM command WHERE created_at > $1', [since])
+  return count(client, 'SELECT COUNT(*) AS count FROM command WHERE created_at > $1', [since])
 }
 
 export async function findCommandsByDiscussion(client: PoolClient, discussionId: string): Promise<Command[]> {
@@ -48,6 +48,6 @@ export async function createCommand(client: PoolClient, owner: string, input: Co
     [input.id, input.discussion_id, owner, input.text, input.title, input.context, input.language, input.profile, input.selection_start, input.selection_end, JSON.stringify(input.result), input.custom_command, input.predefined_command],
   )
   if (!result.rows[0]) throw new Error('Failed to insert command')
-  logger.info(`Inserted command ${result.rows[0].id} for discussion ${input.discussion_id}`)
+  logger.debug(`Inserted command ${result.rows[0].id} for discussion ${input.discussion_id}`)
   return removeNull(result.rows[0])
 }
