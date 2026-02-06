@@ -25,7 +25,7 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
       const journalData = await loadAccountJournal(period, projectId, accountId)
       return (
         <main>
-          <AccountJournal {...journalData} />
+          <AccountJournal {...journalData} period={period} project_id={projectId} />
         </main>
       )
     }
@@ -33,7 +33,7 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
       const journalData = await loadJournal(period, projectId)
       return (
         <main>
-          <Journal {...journalData} />
+          <Journal {...journalData} period={period} project_id={projectId} />
         </main>
       )
     }

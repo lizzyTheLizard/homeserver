@@ -6,11 +6,10 @@ import { useSidebarState } from '../../../../shared/_components/sidebar/SidebarS
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { stringToPeriod } from '@/app/cash/_helper/Period'
+import { Period } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { useMemo, useState } from 'react'
 import { deleteTransaction, saveTransaction } from './server'
-import { useParams } from 'next/navigation'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
@@ -21,14 +20,13 @@ import { Button } from '@/app/shared/_components/form/Button'
 import { Temporal } from '@js-temporal/polyfill'
 
 export interface JournalProps {
-  accounts?: Account[]
-  transactions?: Transaction[]
+  accounts: Account[]
+  transactions: Transaction[]
+  project_id: string
+  period: Period
 }
 
-export function Journal({ accounts = [], transactions: transactionsIn = [] }: JournalProps) {
-  const params = useParams()
-  const project_id = params.project_id as string
-  const period = stringToPeriod(params.period as string)
+export function Journal({ accounts, transactions: transactionsIn, project_id, period }: JournalProps) {
   const [transactions, addTransaction, removeTransaction] = useListState(transactionsIn)
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
   const [current, setCurrent] = useState(initialInput)

@@ -4,7 +4,7 @@ import { Accounts } from './Accounts'
 export default function Loading() {
   return (
     <main>
-      <Accounts accounts={[]} />
+      <Accounts accounts={[]} project_id="" />
       <LoadingSpinner />
     </main>
   )
