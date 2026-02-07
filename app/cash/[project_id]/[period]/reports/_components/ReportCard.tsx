@@ -17,6 +17,7 @@ export interface ReportCardProps {
 }
 
 export function ReportCard({ accounts, beforeTransactions, currentTransactions, header, types, period }: ReportCardProps) {
+  // TODO merge with server.ts calculation into a helper
   const items = useMemo(() => types
     .map(t => accounts
       .filter(a => a.type === t)
