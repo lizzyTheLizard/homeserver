@@ -15,6 +15,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import { AccountType } from './cash/_data/AccountType'
 
 const ownerId = 'sNtAXgwUYBxB3YDmgSY0j17bVGH4PMDN_Qt04POufuo'
+const projectId = 'd4d8728e-964d-460e-b345-d931510cf089'
 
 async function connectToAzureDB(): Promise<MongoClient> {
   const url = `mongodb://${process.env.AZURE_DB_USERNAME!}:${process.env.AZURE_DB_PASSWORD!}@${process.env.AZURE_DB_HOST!}:${process.env.AZURE_DB_PORT!}/${process.env.AZURE_DB_NAME!}?retryWrites=false&ssl=true`
@@ -33,13 +34,18 @@ async function connectToSqlDB(): Promise<PoolClient> {
 }
 
 async function cleanExistingDB(sqlClient: PoolClient): Promise<void> {
-  await sqlClient.query('TRUNCATE account_transaction, transaction, account, closing, project')
+  await sqlClient.query('DELETE FROM account_transaction WHERE project_id = $1', [projectId])
+  await sqlClient.query('DELETE FROM transaction WHERE project_id = $1', [projectId])
+  await sqlClient.query('DELETE FROM account WHERE project_id = $1', [projectId])
+  await sqlClient.query('DELETE FROM closing WHERE project_id = $1', [projectId])
+  await sqlClient.query('DELETE FROM project WHERE id = $1', [projectId])
+  logger.info(`Cleaned existing data for project ${projectId} in SQL database`)
 }
 
-async function getExistingProjects(mongoDb: Db): Promise<ProjectInput[]> {
-  const projects = await mongoDb.collection('CashProjekt').find({}).toArray()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  return projects.map(p => ({ id: p._id.toString(), name: p.name.toString(), archived: p.archived, owner_id: ownerId }))
+async function getExistingProject(mongoDb: Db): Promise<ProjectInput> {
+  const project = await mongoDb.collection('CashProjekt').findOne<{ _id: string, name: string, archived: boolean }>({ })
+  if (!project) throw new Error(`Project with id ${projectId} not found in Azure Cosmos DB`)
+  return { id: project._id, name: project.name, archived: project.archived, owner_id: ownerId }
 }
 
 async function getExistingAccounts(mongoDb: Db, projectId: string): Promise<AccountInput[]> {
@@ -75,25 +81,27 @@ async function getExistingClosings(mongoDb: Db, projectId: string): Promise<Clos
 }
 
 export async function importDatabaseFromAzure() {
+  logger.level = 'info'
   const mongoClient = await connectToAzureDB()
   const mongoDb = mongoClient.db(process.env.AZURE_DB_NAME)
   const sqlClient = await connectToSqlDB()
   try {
     await sqlClient.query('BEGIN')
     await cleanExistingDB(sqlClient)
-    const existingProjects = await getExistingProjects(mongoDb)
-    for (const existingProject of existingProjects) {
-      const project = await createOrModifyProject(sqlClient, existingProject)
-      const accounts = await getExistingAccounts(mongoDb, existingProject.id)
-      for (const account of accounts) await createOrModifyAccount(sqlClient, ownerId, account)
-      const closings = await getExistingClosings(mongoDb, existingProject.id)
-      for (const closing of closings) await createClosing(sqlClient, ownerId, closing)
-      const transactions = await getExistingTransactions(mongoDb, existingProject.id)
-      for (const transaction of transactions) await createTransaction(sqlClient, ownerId, transaction)
-      logger.debug(`Start recalculating transactions`)
-      await recalculateTransactions(sqlClient, ownerId, existingProject.id, Temporal.PlainDate.from('2000-01-01'), accounts.map(a => a.id))
-      logger.info(`Finish import project: ${JSON.stringify(project)}`)
-    }
+    const existingProject = await getExistingProject(mongoDb)
+    const project = await createOrModifyProject(sqlClient, existingProject)
+    logger.info(`Impored project      (1/4)`)
+    const accounts = await getExistingAccounts(mongoDb, existingProject.id)
+    for (const account of accounts) await createOrModifyAccount(sqlClient, ownerId, account)
+    logger.info(`Impored accounts     (2/4)`)
+    const closings = await getExistingClosings(mongoDb, existingProject.id)
+    for (const closing of closings) await createClosing(sqlClient, ownerId, closing)
+    logger.info(`Impored closings     (3/4)`)
+    const transactions = await getExistingTransactions(mongoDb, existingProject.id)
+    for (const transaction of transactions) await createTransaction(sqlClient, ownerId, transaction)
+    logger.info(`Impored transactions (4/4), starting recalculation...`)
+    await recalculateTransactions(sqlClient, ownerId, existingProject.id, Temporal.PlainDate.from('2000-01-01'), accounts.map(a => a.id))
+    logger.info(`Finish import project: ${JSON.stringify(project)}`)
     await sqlClient.query('COMMIT')
   }
   catch (error) {

@@ -25,19 +25,23 @@ export interface ReportsProps {
 
 export function Reports({ accounts = [], project_id = '', period, latestClosing, beforeTransactions, currentTransactions }: ReportsProps) {
   const router = useRouter()
-  const [sidebarState, sidebarStateModifier] = useSidebarState('Closing')
+  const [closeSidebarState, closeSidebarStateModifier] = useSidebarState('Closing')
+  const [reopenSidebarState, reopenSidebarStateModifier] = useSidebarState('Reopening')
   const [current, setCurrent] = useState<{ capital_account_id: string, profit_account_id: string }>(latestClosing ?? { capital_account_id: '', profit_account_id: '' })
 
   function showClosing() {
-    sidebarStateModifier.openSidebar('Close ' + periodToString(period))
+    closeSidebarStateModifier.openSidebar('Close ' + periodToString(period))
+  }
+  function showReopen() {
+    reopenSidebarStateModifier.openSidebar('Reopen ' + periodToString(period))
   }
 
-  function onSave() {
-    sidebarStateModifier.execute(close(period, project_id, current.profit_account_id, current.capital_account_id), () => { router.refresh() })
+  function onClose() {
+    closeSidebarStateModifier.execute(close(period, project_id, current.profit_account_id, current.capital_account_id), () => { router.refresh() })
   }
 
   function onReopen() {
-    sidebarStateModifier.execute(reopen(period, project_id), () => { router.refresh() })
+    reopenSidebarStateModifier.execute(reopen(period, project_id), () => { router.refresh() })
   }
 
   return (
@@ -45,7 +49,7 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
       <ActionTitle>
         <h1>Reports</h1>
         {latestClosing?.date && latestClosing.date >= lastDay(period)
-          ? (<Button onClick={(e) => { onReopen(); e.stopPropagation() }}>Reopen</Button>)
+          ? (<Button onClick={(e) => { showReopen(); e.stopPropagation() }}>Reopen</Button>)
           : (<Button onClick={(e) => { showClosing(); e.stopPropagation() }}>Close</Button>)}
         <PeriodPicker period={period} project_id={project_id} />
       </ActionTitle>
@@ -59,9 +63,9 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
         <ReportCard period={period} accounts={accounts} beforeTransactions={beforeTransactions} currentTransactions={currentTransactions} header="Passives" types={['Equity', 'Liability']}></ReportCard>
       </div>
       <Sidebar
-        state={sidebarState}
-        onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={onSave}
+        state={closeSidebarState}
+        onClose={() => { closeSidebarStateModifier.closeSidebar() }}
+        onSave={onClose}
       >
         <Select label="Capital Account" value={current.capital_account_id} onChange={(e) => { setCurrent({ ...current, capital_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
@@ -69,6 +73,12 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
         <Select label="Profit Account" value={current.profit_account_id} onChange={(e) => { setCurrent({ ...current, profit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
+      </Sidebar>
+      <Sidebar
+        state={reopenSidebarState}
+        onClose={() => { reopenSidebarStateModifier.closeSidebar() }}
+        onDelete={onReopen}
+      >
       </Sidebar>
     </>
   )
