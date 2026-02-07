@@ -15,6 +15,7 @@ import { findOldestTransaction } from '@/app/cash/_data/Transaction'
 import { lastDay, Period, periodToString } from '@/app/cash/_helper/Period'
 import { from, first, last, compare, MonthlyPeriod, next } from '@/app/cash/_helper/MonthlyPeriod'
 import { logger } from '@/app/shared/logger'
+import { getTotalForAccounts } from '@/app/cash/_helper/AccountTotal'
 
 export interface ReportsData {
   accounts: Account[]
@@ -81,17 +82,7 @@ async function calculateProfitForPeriod(client: PoolClient, owner: string, proje
   const accounts = await findAllAccountsForProject(client, owner, projectId)
   const latest = await findLatestAccountTransactionsIn(client, projectId, owner, periodToClose)
   const before = await findLatestAccountTransactionsBefore(client, projectId, owner, periodToClose)
-  const income = accounts.filter(a => a.type === 'Income')
-    .map((account) => {
-      const beforeBalance = before.find(t => t.account_id === account.id)?.total_balance ?? 0
-      const latestBalance = latest.find(t => t.account_id === account.id)?.total_balance ?? beforeBalance
-      return latestBalance - beforeBalance
-    }).reduce((sum, value) => sum + value, 0)
-  const expense = accounts.filter(a => a.type === 'Expense')
-    .map((account) => {
-      const beforeBalance = before.find(t => t.account_id === account.id)?.total_balance ?? 0
-      const latestBalance = latest.find(t => t.account_id === account.id)?.total_balance ?? beforeBalance
-      return latestBalance - beforeBalance
-    }).reduce((sum, value) => sum + value, 0)
-  return -expense - income
+  const income = getTotalForAccounts(accounts.filter(a => a.type === 'Income'), before, latest)
+  const expense = getTotalForAccounts(accounts.filter(a => a.type === 'Expense'), before, latest)
+  return income - expense
 }

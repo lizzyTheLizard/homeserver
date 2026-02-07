@@ -1,11 +1,12 @@
 import { Account } from '@/app/cash/_data/Account'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { AccountType, isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
+import { AccountType } from '@/app/cash/_data/AccountType'
 import { Card } from '@/app/shared/_components/Card'
 import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo } from 'react'
 import styles from './ReportCard.module.css'
 import { Period, periodToString } from '@/app/cash/_helper/Period'
+import { getTotalForAccount } from '@/app/cash/_helper/AccountTotal'
 
 export interface ReportCardProps {
   accounts: Account[]
@@ -17,18 +18,13 @@ export interface ReportCardProps {
 }
 
 export function ReportCard({ accounts, beforeTransactions, currentTransactions, header, types, period }: ReportCardProps) {
-  // TODO merge with server.ts calculation into a helper
   const items = useMemo(() => types
     .map(t => accounts
       .filter(a => a.type === t)
-      .map((a) => {
-        const before = beforeTransactions.find(t => t.account_id === a.id)?.total_balance ?? 0
-        const current = currentTransactions.find(t => t.account_id === a.id)?.total_balance ?? before
-        const unsignedTotal = isSummationAccount(a.type) ? current : current - before
-        let total = isCreditAccount(a.type) ? -unsignedTotal : unsignedTotal
-        if (Math.abs(total) < 0.005) total = 0
-        return { account: a, value: total, url: `/cash/${a.project_id}/${periodToString(period)}/journal?accountId=${a.id}` }
-      })
+      .map(a => ({
+        account: a,
+        value: getTotalForAccount(a, beforeTransactions, currentTransactions),
+        url: `/cash/${a.project_id}/${periodToString(period)}/journal?accountId=${a.id}` }))
       .filter(i => !(i.account.archived && Math.abs(i.value) === 0)),
     )
     .flat(),
