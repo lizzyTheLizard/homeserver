@@ -6,6 +6,7 @@ import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
+import { logger } from '@/app/shared/logger'
 
 export interface SettingsData {
   profiles: Profile[]
@@ -25,16 +26,19 @@ export async function deleteProfile(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
     validateString(id)
-    return removeProfile(client, user.sub, id)
+    const profile = await removeProfile(client, user.sub, id)
+    if (profile) logger.info(`Deleted profile with id ${id} for user ${user.sub}`)
+    else logger.info(`Profile with id ${id} not found for deletion for user ${user.sub}`)
   }))
 }
 
 export async function saveProfile(input: ProfileInput): ActionResponse<Profile> {
-  'use server'
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
     validateObject(input, ProfileInputConstraints)
-    return createOrModifyProfile(client, user.sub, input)
+    const profile = await createOrModifyProfile(client, user.sub, input)
+    logger.info(`Saved profile with id ${profile.id} for user ${user.sub} and language ${profile.language}`)
+    return profile
   }))
 }
 
@@ -42,7 +46,9 @@ export async function deleteTemplate(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
     validateString(id)
-    await removeTemplate(client, user.sub, id)
+    const template = await removeTemplate(client, user.sub, id)
+    if (template) logger.info(`Deleted template with id ${id} for user ${user.sub}`)
+    else logger.info(`Template with id ${id} not found for deletion for user ${user.sub}`)
   }))
 }
 
@@ -51,7 +57,9 @@ export async function saveTemplate(input: TemplateInput): ActionResponse<Templat
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
     validateObject(input, TemplateInputConstraints)
-    return createOrModifyTemplate(client, user.sub, input)
+    const template = await createOrModifyTemplate(client, user.sub, input)
+    logger.info(`Saved template with id ${template.id} for user ${user.sub} and language ${template.language}`)
+    return template
   }))
 }
 

@@ -17,7 +17,7 @@ export async function loadAccounts(projectId: string) {
     await findAllAccountsForProject(c, user.sub, projectId),
   ]))
   if (!project) {
-    logger.info(`Project with id ${projectId} not found for user ${user.sub}`)
+    logger.warn(`Project with id ${projectId} not found for user ${user.sub}`)
     return notFound()
   }
   return accounts
@@ -27,7 +27,9 @@ export async function deleteAccount(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateString(id)
-    await removeAccount(client, user.sub, id)
+    const account = await removeAccount(client, user.sub, id)
+    if (!account) logger.info(`Account with id ${id} not found for deletion for user ${user.sub}`)
+    else logger.info(`Deleted account ${account.name} with id ${id} for user ${user.sub}`)
   }))
 }
 
@@ -35,7 +37,9 @@ export async function saveAccount(input: AccountInput): ActionResponse<Account> 
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateObject(input, AccountInputConstraints)
-    return createOrModifyAccount(client, user.sub, input)
+    const result = await createOrModifyAccount(client, user.sub, input)
+    logger.info(`Saved account ${input.name} with id ${result.id} for user ${user.sub}`)
+    return result
   }))
 }
 

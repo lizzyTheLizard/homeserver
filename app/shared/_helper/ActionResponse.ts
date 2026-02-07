@@ -19,11 +19,11 @@ export async function toResponse<T>(promise: Promise<T>): ActionResponse<T> {
     .then(data => ({ success: true, data } as SuccessResponse<T>))
     .catch((error: unknown) => {
       if (isBackendError(error) && error.showStack) {
-        logger.error('Error in server action', error)
+        logger.warn('Error in server action', error)
         return { success: false, error: error.userMessage } as ErrorResponse
       }
       else if (isBackendError(error)) {
-        logger.error('Error in server action: ' + error.message)
+        logger.warn('Error in server action: ' + error.message)
         return { success: false, error: error.userMessage } as ErrorResponse
       }
       logger.error('Unknown error in server action:', error)

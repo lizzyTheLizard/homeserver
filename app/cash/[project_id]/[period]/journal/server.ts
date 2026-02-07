@@ -13,6 +13,7 @@ import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 import { Temporal } from '@js-temporal/polyfill'
+import { logger } from '@/app/shared/logger'
 
 export interface AccountJournalData {
   account: Account
@@ -60,9 +61,14 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
     if (!existingTransaction) return
     const lastClosing = await findLastClosing(client, user.sub, existingTransaction.project_id)
     if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot delete transaction from closed period')
-    await removeTransaction(client, user.sub, id)
+    const result = await removeTransaction(client, user.sub, id)
+    if (!result) {
+      logger.info(`Transaction with id ${id} not found for deletion for user ${user.sub}`)
+      return
+    }
     const date = Temporal.PlainDate.from(existingTransaction.date)
     await recalculateTransactions(client, user.sub, existingTransaction.project_id, date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+    logger.info(`Deleted transaction with id ${id} for user ${user.sub}`)
   }))
 }
 
@@ -79,6 +85,7 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
       const result = await modifyTransaction(client, user.sub, input)
       const date = Temporal.PlainDate.from(min(input.date, existingTransaction.date))
       await recalculateTransactions(client, user.sub, input.project_id, date, [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+      logger.info(`Modified transaction with id ${input.id} for user ${user.sub}`)
       return result
     }
     else {
@@ -87,6 +94,7 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
       const result = await createTransaction(client, user.sub, input)
       const date = Temporal.PlainDate.from(input.date)
       await recalculateTransactions(client, user.sub, input.project_id, date, [input.credit_account_id, input.debit_account_id])
+      logger.info(`Created transaction with id ${input.id} for user ${user.sub}`)
       return result
     }
   }))

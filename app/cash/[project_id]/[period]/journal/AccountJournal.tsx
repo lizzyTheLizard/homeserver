@@ -5,10 +5,9 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '../../../../shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { stringToPeriod } from '@/app/cash/_helper/Period'
+import { Period } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { deleteTransaction, saveTransaction } from './server'
-import { useParams } from 'next/navigation'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
@@ -25,15 +24,14 @@ import { Temporal } from '@js-temporal/polyfill'
 
 export interface AccountJournalProps {
   account: Account
-  accounts?: Account[]
-  transactions?: AccountTransaction[]
-  lastTransaction?: AccountTransaction
+  accounts: Account[]
+  transactions: AccountTransaction[]
+  lastTransaction: AccountTransaction | undefined
+  project_id: string
+  period: Period
 }
 
-export function AccountJournal({ account, accounts = [], transactions: transactionsIn = [], lastTransaction }: AccountJournalProps) {
-  const params = useParams()
-  const project_id = params.project_id as string
-  const period = stringToPeriod(params.period as string)
+export function AccountJournal({ account, accounts, transactions: transactionsIn, lastTransaction, project_id, period }: AccountJournalProps) {
   const router = useRouter()
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
   const [current, setCurrent] = useState(initialInput)

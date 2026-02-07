@@ -5,7 +5,6 @@ import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { v4 as randomUUID } from 'uuid'
 import { boolColumn, enumColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { deleteAccount, saveAccount } from './server'
-import { useParams } from 'next/navigation'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
@@ -17,7 +16,8 @@ import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Button } from '@/app/shared/_components/form/Button'
 
 export interface AccountsProps {
-  accounts?: Account[]
+  accounts: Account[]
+  project_id: string
 }
 
 const columns = [
@@ -26,9 +26,7 @@ const columns = [
   boolColumn('archived', { header: 'Archived' }),
 ]
 
-export function Accounts({ accounts: accountsIn = [] }: AccountsProps) {
-  const params = useParams()
-  const project_id = params.project_id as string
+export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
   const [accounts, addAccount, removeAccount] = useListState(accountsIn)
   const [sidebarState, sidebarStateModifier] = useSidebarState('Account')
   const [id, setId] = useState(randomUUID())

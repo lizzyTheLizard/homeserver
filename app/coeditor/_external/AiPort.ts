@@ -71,12 +71,10 @@ function mapToChatMessages(input: AiPortInput | Command): ChatCompletionMessageP
     : undefined
 
   if (!input.predefined_command && !input.custom_command) {
-    logger.info('No command provided in input')
     throw invalidInput('Either custom_command or predefined_command must be provided')
   }
   const command = input.custom_command ?? (input.predefined_command ? commands[input.predefined_command] : undefined)
   if (input.predefined_command && !command) {
-    logger.info(`Unknown predefined command: ${input.predefined_command}`)
     throw invalidInput(`Unknown predefined command '${input.predefined_command}'`)
   }
 

@@ -1,7 +1,7 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
 import { AccountType } from './AccountType'
-import { count, Entity } from '@/app/shared/_external/db/access'
+import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
 
 export interface AccountInput {
   id: string
@@ -18,15 +18,16 @@ export async function findAllAccountsForProject(client: PoolClient, ownerId: str
     [projectId, ownerId],
   )
   logger.debug(`Found ${result.rows.length.toString()} accounts for project ${projectId} and owner ${ownerId}`)
-  return result.rows
+  return result.rows.map(removeNull)
 }
 
-export async function removeAccount(client: PoolClient, ownerId: string, accountId: string): Promise<void> {
-  await client.query(
-    'DELETE FROM account WHERE id = $1 AND owner_id = $2',
+export async function removeAccount(client: PoolClient, ownerId: string, accountId: string): Promise<Account | undefined> {
+  const result = await client.query<Account>(
+    'DELETE FROM account WHERE id = $1 AND owner_id = $2 RETURNING *',
     [accountId, ownerId],
   )
-  logger.info(`Deleted account with id ${accountId} for owner ${ownerId}`)
+  logger.debug(`Deleted account with id ${accountId} for owner ${ownerId}`)
+  return removeNull(result.rows[0])
 }
 
 export async function createOrModifyAccount(client: PoolClient, ownerId: string, input: AccountInput): Promise<Account> {
@@ -39,8 +40,8 @@ export async function createOrModifyAccount(client: PoolClient, ownerId: string,
     : 'INSERT INTO account (id, project_id, name, type, owner_id, archived, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *'
   const result = await client.query<Account>(query, [input.id, input.project_id, input.name, input.type, ownerId, input.archived])
   if (!result.rows[0]) throw new Error('Failed to modify account')
-  logger.info(`Modified account '${input.name}' for owner ${ownerId}`)
-  return result.rows[0]
+  logger.debug(`Modified account '${input.name}' for owner ${ownerId}`)
+  return removeNull(result.rows[0])
 }
 
 export async function findNumberOfAccounts(client: PoolClient): Promise<number> {

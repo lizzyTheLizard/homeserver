@@ -24,11 +24,11 @@ export async function loadEditorData(discussionId?: string): Promise<EditorData>
     await findTemplatesByOwner(c, user.sub),
   ]))
   if (discussionId && !discussion) {
-    logger.info(`Discussion with id ${discussionId} not found for user ${user.sub}`)
+    logger.warn(`Discussion with id ${discussionId} not found for user ${user.sub}`)
     notFound()
   }
   if (discussion && discussion.owner_id !== user.sub) {
-    logger.info(`User ${user.sub} not authorized for discussion with id ${discussion.id}`)
+    logger.warn(`User ${user.sub} not authorized for discussion with id ${discussion.id}`)
     notFound()
   }
   return { discussion, templates }
@@ -52,7 +52,6 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
     validateObject(input, ExecuteCommandInputConstraints)
     const template = await findTemplateById(tx, user.sub, input.template_id)
     if (!template) {
-      logger.info(`Given template ${input.template_id} not found for owner ${user.sub}`)
       throw invalidInput(`Given template ${input.template_id} not found`)
     }
     const discussion = await findDiscussionById(tx, user.sub, input.discussion_id)
@@ -66,6 +65,8 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
       : await createDiscussion(tx, user.sub, updatedDiscussion)
     const command = toCommand(input, aiPortInput, commandResult)
     await createCommand(tx, user.sub, command)
+    if (discussion) logger.info(`Executed command for discussion ${result.id} by user ${user.sub} with template ${template.name}`)
+    else logger.info(`Created new discussion ${result.id} by user ${user.sub} with template ${template.name}`)
     return result
   }))
 }

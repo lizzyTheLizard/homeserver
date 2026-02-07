@@ -26,7 +26,8 @@ export async function setupPool(performMigration = true): Promise<Pool> {
     Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
     await testConnection(pool)
     if (performMigration) await migrateDatabase(pool)
-    logger.info('Database successfully connected')
+    if (performMigration) logger.info('Database successfully connected and migrated')
+    else logger.info('Database successfully connected')
     return pool
   }
   catch (error) {

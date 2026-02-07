@@ -5,7 +5,6 @@ import { logger } from '@/app/shared/logger'
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const session = await getUserSession()
-  const isF6Request = request.headers.get('User-Agent')?.includes('(Windows NT 6.1; WOW64)')
   let response: NextResponse
   if (request.nextUrl.pathname.startsWith('/_next/'))
     return NextResponse.next()
@@ -15,10 +14,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     response = NextResponse.next()
   else if (request.headers.get('X-Requested-With') === 'XMLHttpRequest')
     response = new NextResponse('Unauthorized', { status: 401 })
-  else if (isF6Request) {
-    logger.info(`Unauthenticated access from Win7 client (probably f6.ru) with IP ${request.headers.get('X-Forwarded-For') ?? 'unknown'}`)
-    response = new NextResponse('Unauthorized', { status: 401 })
-  }
   else {
     const redirectTo = await startLogin(request)
     response = NextResponse.redirect(redirectTo.href)

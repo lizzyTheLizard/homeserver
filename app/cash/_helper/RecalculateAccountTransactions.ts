@@ -36,6 +36,7 @@ async function recalculateSingleTransaction(c: Context): Promise<AccountTransact
   const accountTransaction: AccountTransactionInput = {
     id: randomUUID(),
     account_id: c.accountId,
+    project_id: c.item.project_id,
     date: c.item.date,
     ordering: (c.previous?.ordering ?? 0) + 1,
     ...details,

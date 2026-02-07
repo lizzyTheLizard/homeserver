@@ -8,7 +8,7 @@ export async function GET() {
     await logout()
   }
   catch (error) {
-    logger.error('Error during logout', error)
+    logger.warn('Error during logout', error)
     return redirect(config.APP_URL + '/common/auth/error')
   }
   return redirect(config.APP_URL + '/common/auth/out')
