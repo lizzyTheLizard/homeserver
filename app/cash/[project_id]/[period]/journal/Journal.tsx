@@ -50,7 +50,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
   ]
 
   function showTransaction(transaction?: Transaction) {
-    setCurrent(transaction ? { ...transaction, amount: transaction.amount.toString() } : initialInput)
+    setCurrent(transaction ? { ...transaction, amount: transaction.amount.toString() } : { ...initialInput, project_id, id: randomUUID() })
     sidebarStateModifier.openSidebar(transaction ? `Edit Transaction` : 'New Transaction')
   }
 
