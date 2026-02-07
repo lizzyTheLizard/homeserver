@@ -77,7 +77,7 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
       <Sidebar
         state={reopenSidebarState}
         onClose={() => { reopenSidebarStateModifier.closeSidebar() }}
-        onDelete={onReopen}
+        onSave={onReopen}
       >
       </Sidebar>
     </>
