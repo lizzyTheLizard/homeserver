@@ -84,14 +84,14 @@ async function calculateProfitForPeriod(client: PoolClient, owner: string, proje
   const income = accounts.filter(a => a.type === 'Income')
     .map((account) => {
       const beforeBalance = before.find(t => t.account_id === account.id)?.total_balance ?? 0
-      const latestBalance = latest.find(t => t.account_id === account.id)?.total_balance ?? 0
+      const latestBalance = latest.find(t => t.account_id === account.id)?.total_balance ?? beforeBalance
       return latestBalance - beforeBalance
     }).reduce((sum, value) => sum + value, 0)
   const expense = accounts.filter(a => a.type === 'Expense')
     .map((account) => {
       const beforeBalance = before.find(t => t.account_id === account.id)?.total_balance ?? 0
-      const latestBalance = latest.find(t => t.account_id === account.id)?.total_balance ?? 0
+      const latestBalance = latest.find(t => t.account_id === account.id)?.total_balance ?? beforeBalance
       return latestBalance - beforeBalance
     }).reduce((sum, value) => sum + value, 0)
-  return income - expense
+  return -expense - income
 }

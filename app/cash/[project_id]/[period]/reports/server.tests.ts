@@ -296,8 +296,8 @@ describe('close', () => {
     const activeAccount = { id: randomUUID(), project_id: project.id, name: 'Active', type: 'Asset', archived: false } as AccountInput
     const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: capitalAccount.id, debit_account_id: activeAccount.id, amount: 1000, date: '2023-01-01', description: 'Opening' } as TransactionInput
     const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 100, date: '2023-01-10', description: 'An expense' } as TransactionInput
-    const transaction3 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 500, date: '2023-01-20', description: 'Salary' } as TransactionInput
-    const transaction4 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: incomeAccount.id, amount: 200, date: '2023-02-10', description: 'An income' } as TransactionInput
+    const transaction3 = { id: randomUUID(), project_id: project.id, credit_account_id: incomeAccount.id, debit_account_id: activeAccount.id, amount: 500, date: '2023-01-20', description: 'Salary' } as TransactionInput
+    const transaction4 = { id: randomUUID(), project_id: project.id, credit_account_id: incomeAccount.id, debit_account_id: activeAccount.id, amount: 200, date: '2023-02-10', description: 'An income' } as TransactionInput
     const transaction5 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 50, date: '2023-02-15', description: 'Another expense' } as TransactionInput
     const closingJan = { id: randomUUID(), project_id: project.id, date: '2023-01-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 600 } as ClosingInput
 
