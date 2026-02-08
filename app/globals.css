@@ -85,3 +85,7 @@ h1 {
   --header-text-size: 1.5rem;
   --sidebar-width: 400px;
 }
+
+.error {
+    color: var(--danger-background-color);
+}

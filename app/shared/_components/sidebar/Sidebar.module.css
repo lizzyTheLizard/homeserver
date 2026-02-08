@@ -34,7 +34,6 @@
     flex-direction: column;
 }
 
-
 .form>* {
     margin: var(--gap-small) 0;
 }

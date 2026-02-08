@@ -56,7 +56,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
       {pending && <LoadingSpinner text="Processing..." />}
       <form className={style.form}>
         {children}
-        {error && <div className={style.error}>{error}</div>}
+        {error && <div className="error">{error}</div>}
         {onSave && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}
         {onDelete && <Button type="button" variant="danger" onClick={onDelete}>Delete</Button>}
         <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
