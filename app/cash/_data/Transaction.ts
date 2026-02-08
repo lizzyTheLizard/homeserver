@@ -1,6 +1,6 @@
 import { logger } from '@/app/shared/logger'
 import { PoolClient } from 'pg'
-import { endDate, Period, periodToString, startDate } from '../_helper/Period'
+import { endDate, Period, toString, startDate } from '../_helper/Period'
 import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
 
 export interface TransactionInput {
@@ -19,7 +19,7 @@ export async function findAllTransactions(client: PoolClient, owner: string, pro
     `SELECT * FROM transaction WHERE project_id = $1 AND date >= $2 AND date < $3 AND owner_id = $4`,
     [projectId, startDate(period), endDate(period), owner],
   )
-  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId} in period ${periodToString(period)}`)
+  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId} in period ${toString(period)}`)
   return result.rows.map(removeNull)
 }
 
@@ -28,7 +28,7 @@ export async function findAllTransactionsByAccount(client: PoolClient, owner: st
     `SELECT * FROM transaction WHERE project_id = $1 AND date >= $2 AND date < $3 AND owner_id = $4 AND (credit_account_id = $5 OR debit_account_id = $5)`,
     [projectId, startDate(period), endDate(period), owner, accountId],
   )
-  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId} and account ${accountId} in period ${periodToString(period)}`)
+  logger.debug(`Found ${result.rows.length.toString()} projects for project ${projectId} and account ${accountId} in period ${toString(period)}`)
   return result.rows.map(removeNull)
 }
 

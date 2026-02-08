@@ -1,6 +1,6 @@
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { Reports } from './Reports'
-import { stringToPeriod } from '@/app/cash/_helper/Period'
+import { fromUrlString } from '@/app/cash/_helper/Period'
 import { loadReports } from './server'
 
 export const metadata = {
@@ -17,7 +17,7 @@ export interface ReportsPageProps {
 export default async function Page({ params }: ReportsPageProps) {
   return serverPageFunction(metadata.title, async () => {
     const projectId = (await params).project_id
-    const period = stringToPeriod((await params).period)
+    const period = fromUrlString((await params).period)
     const data = await loadReports(period, projectId)
     return (
       <main>

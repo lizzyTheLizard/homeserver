@@ -1,6 +1,6 @@
 'use client'
 import { Select } from '@/app/shared/_components/form/Select'
-import { Period, periodToString } from '../_helper/Period'
+import { Period, toUrlString } from '../_helper/Period'
 import { Temporal } from '@js-temporal/polyfill'
 
 export interface PeriodPickerProps {
@@ -16,7 +16,7 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
   function defaultOnPeriodChange(p: Period) {
     const split = window.location.pathname.split('/')
     const s = window.location.search
-    const href = `/cash/${project_id ?? ''}/${periodToString(p)}` + '/' + split.slice(4).join('/') + s
+    const href = `/cash/${project_id ?? ''}/${toUrlString(p)}` + '/' + split.slice(4).join('/') + s
     window.location.href = href
   }
 
@@ -38,8 +38,6 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
 
   const year = period.year?.toString() ?? ''
   const month = period.month?.toString().padStart(2, '0') ?? ''
-
-  console.log('Rendering PeriodPicker with period:', periodToString(period), year, month)
 
   return (
     <>

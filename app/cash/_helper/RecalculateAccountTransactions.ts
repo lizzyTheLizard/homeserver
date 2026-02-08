@@ -1,7 +1,7 @@
 import { logger } from '@/app/shared/logger'
 import { findAllTransactionsByAccount, Transaction } from '../_data/Transaction'
 import { PoolClient } from 'pg'
-import { Period, periodToString } from './Period'
+import { Period, toString } from './Period'
 import { AccountTransaction, AccountTransactionInput, createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
 import { v4 as randomUUID } from 'uuid'
 import { Closing, findAllClosingsByAccount } from '../_data/Closing'
@@ -16,7 +16,7 @@ export async function recalculateTransactions(client: PoolClient, owner: string,
 }
 
 async function recalculateTransactionsForAccount(client: PoolClient, owner: string, projectId: string, accountId: string, period: Period): Promise<void> {
-  logger.debug(`Recalculating transactions for account ${accountId} for ${periodToString(period)}`)
+  logger.debug(`Recalculating transactions for account ${accountId} for ${toString(period)}`)
   await deleteAccountTransactions(client, owner, accountId, period)
   const transactions = await findAllTransactionsByAccount(client, owner, projectId, accountId, period)
   const closings = await findAllClosingsByAccount(client, owner, accountId, period)

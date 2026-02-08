@@ -5,7 +5,7 @@ import { Card } from '@/app/shared/_components/Card'
 import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo } from 'react'
 import styles from './ReportCard.module.css'
-import { Period, periodToString } from '@/app/cash/_helper/Period'
+import { Period, toUrlString } from '@/app/cash/_helper/Period'
 import { getTotalForAccount } from '@/app/cash/_helper/AccountTotal'
 
 export interface ReportCardProps {
@@ -24,7 +24,7 @@ export function ReportCard({ accounts, beforeTransactions, currentTransactions, 
       .map(a => ({
         account: a,
         value: getTotalForAccount(a, beforeTransactions, currentTransactions),
-        url: `/cash/${a.project_id}/${periodToString(period)}/journal?accountId=${a.id}` }))
+        url: `/cash/${a.project_id}/${toUrlString(period)}/journal?accountId=${a.id}` }))
       .filter(i => !(i.account.archived && Math.abs(i.value) === 0)),
     )
     .flat(),

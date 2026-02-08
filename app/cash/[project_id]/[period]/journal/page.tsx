@@ -1,5 +1,5 @@
 import { Journal } from './Journal'
-import { stringToPeriod } from '@/app/cash/_helper/Period'
+import { fromUrlString } from '@/app/cash/_helper/Period'
 import { loadAccountJournal, loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { AccountJournal } from './AccountJournal'
@@ -18,7 +18,7 @@ export interface JournalPageProps {
 
 export default async function Page({ params, searchParams }: JournalPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const period = stringToPeriod((await params).period)
+    const period = fromUrlString((await params).period)
     const projectId = (await params).project_id
     const accountId = (await searchParams).accountId
     if (accountId) {

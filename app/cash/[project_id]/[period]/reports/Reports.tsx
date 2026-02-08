@@ -2,7 +2,7 @@
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 import { Account } from '@/app/cash/_data/Account'
 import { Closing } from '@/app/cash/_data/Closing'
-import { lastDay, Period, periodToString } from '@/app/cash/_helper/Period'
+import { lastDay, Period, toString } from '@/app/cash/_helper/Period'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Button } from '@/app/shared/_components/form/Button'
 import { Select } from '@/app/shared/_components/form/Select'
@@ -30,10 +30,10 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
   const [current, setCurrent] = useState<{ capital_account_id: string, profit_account_id: string }>(latestClosing ?? { capital_account_id: '', profit_account_id: '' })
 
   function showClosing() {
-    closeSidebarStateModifier.openSidebar('Close ' + periodToString(period))
+    closeSidebarStateModifier.openSidebar('Close ' + toString(period))
   }
   function showReopen() {
-    reopenSidebarStateModifier.openSidebar('Reopen ' + periodToString(period))
+    reopenSidebarStateModifier.openSidebar('Reopen ' + toString(period))
   }
 
   function onClose() {

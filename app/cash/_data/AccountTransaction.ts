@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg'
-import { endDate, Period, periodToString, startDate } from '../_helper/Period'
+import { endDate, Period, startDate, toString } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
 import { Entity, removeNull } from '@/app/shared/_external/db/access'
 
@@ -22,7 +22,7 @@ export async function deleteAccountTransactions(client: PoolClient, owner: strin
     'DELETE FROM account_transaction WHERE account_id = $1 AND owner_id = $2 AND date >= $3 AND date < $4',
     [accountId, owner, startDate(period), endDate(period)],
   )
-  logger.debug(`Deleting account transactions for account ${accountId} in period ${periodToString(period)}`)
+  logger.debug(`Deleting account transactions for account ${accountId} in period ${toString(period)}`)
 }
 
 export async function findAllAccountTransactionsInPeriod(client: PoolClient, owner: string, accountId: string, period: Period): Promise<AccountTransaction[]> {
@@ -30,7 +30,7 @@ export async function findAllAccountTransactionsInPeriod(client: PoolClient, own
     'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_id = $2 AND date >= $3 AND date < $4 ORDER BY date DESC, ordering DESC',
     [accountId, owner, startDate(period), endDate(period)],
   )
-  logger.debug(`Finding ${result.rows.length.toString()} account transactions for account ${accountId} in period ${periodToString(period)}`)
+  logger.debug(`Finding ${result.rows.length.toString()} account transactions for account ${accountId} in period ${toString(period)}`)
   return result.rows.map(removeNull)
 }
 
@@ -40,7 +40,7 @@ export async function findLatestAccountTransactionBefore(client: PoolClient, own
     [accountId, owner, startDate(period)],
   )
   if (result.rows.length === 0) return undefined
-  logger.debug(`Finding last account transaction before period ${periodToString(period)} for account ${accountId}`)
+  logger.debug(`Finding last account transaction before period ${toString(period)} for account ${accountId}`)
   return removeNull(result.rows[0])
 }
 
@@ -52,7 +52,7 @@ export async function findLatestAccountTransactionsBefore(client: PoolClient, pr
      ORDER BY account_id, date DESC, ordering DESC`,
     [owner, startDate(period), project_id],
   )
-  logger.debug(`Finding latest account transactions before period ${periodToString(period)}`)
+  logger.debug(`Finding latest account transactions before period ${toString(period)}`)
   return result.rows.map(removeNull)
 }
 
@@ -64,7 +64,7 @@ export async function findLatestAccountTransactionsIn(client: PoolClient, projec
      ORDER BY account_id, date DESC, ordering DESC`,
     [owner, startDate(period), endDate(period), project_id],
   )
-  logger.debug(`Finding latest account transactions in period ${periodToString(period)}`)
+  logger.debug(`Finding latest account transactions in period ${toString(period)}`)
   return result.rows.map(removeNull)
 }
 

@@ -10,7 +10,7 @@ export interface Period {
 
 export const all: Period = { }
 
-export function stringToPeriod(s: string): Period {
+export function fromUrlString(s: string): Period {
   if (s === 'ALL') return all
   if (s === 'CURRENT') {
     const date = Temporal.Now.plainDateISO()
@@ -20,8 +20,12 @@ export function stringToPeriod(s: string): Period {
   return { current: false, year: parts[0], month: parts[1], day: parts[2], openEnded: s.endsWith('+') }
 }
 
-export function periodToString(period: Period): string {
+export function toUrlString(period: Period): string {
   if (period.current) return 'CURRENT'
+  return toString(period)
+}
+
+export function toString(period: Period): string {
   if (period.year === undefined) return 'ALL'
   let result = period.year.toString().padStart(4, '0')
   if (period.month === undefined)
