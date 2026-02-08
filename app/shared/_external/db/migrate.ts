@@ -46,18 +46,22 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 }
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
-  const filename = fileURLToPath(import.meta.url)
-  const currentDir = dirname(filename)
-  const migrationsDir = path.resolve(currentDir, '../../../../../db')
+  const migrationsDir = getMigrationDir()
   const names = await fs.readdir(migrationsDir)
   const result: PlannedDatabaseMigration[] = []
   for (const name of names) {
     const content = (await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')).replaceAll(/\r\n/g, '\n')
     const hash = createHash('sha256').update(content).digest('hex')
-    result.push({ content, hash, name })
+    result.push({ content, hash, name, tmp: name.startsWith('XXX_') })
   }
   logger.debug(`Found ${result.length.toString()} planned migrations`)
   return result
+}
+
+function getMigrationDir(): string {
+  const filename = fileURLToPath(import.meta.url)
+  const currentDir = dirname(filename)
+  return path.resolve(currentDir, '../../../../../db')
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {
@@ -65,8 +69,13 @@ async function runMigration(client: PoolClient, migration: PlannedDatabaseMigrat
   for (const command of commands) {
     await client.query(command)
   }
-  await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
-  logger.debug(`Migration ${migration.name} executed successfully`)
+  if (migration.tmp) {
+    logger.warn(`Tmp migration ${migration.name} executed successfully and NOT saved to the database. Do NOT do this in production, but remove the XXX_ prefix!`)
+  }
+  else {
+    await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
+    logger.debug(`Migration ${migration.name} executed successfully`)
+  }
 }
 
 function validateExistingMigrations(existing: DatabaseMigration[], planned: PlannedDatabaseMigration[]) {
@@ -103,4 +112,5 @@ interface PlannedDatabaseMigration {
   name: string
   content: string
   hash: string
+  tmp: boolean
 }
