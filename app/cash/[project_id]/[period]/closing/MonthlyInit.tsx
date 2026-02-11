@@ -5,13 +5,14 @@ import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { Button } from '@/app/shared/_components/form/Button'
 import { Select } from '@/app/shared/_components/form/Select'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { initialize } from './server'
 import { useRouter } from 'next/navigation'
 import { Monthly } from '@/app/cash/_data/Monthly'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
 import { parseNeonFile } from './__helper/NeonParser'
+import styles from './MonthlyInit.module.css'
 
 export interface MonthlyInitProps {
   project_id: string
@@ -28,6 +29,11 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   const [error, setError] = useState<string | undefined>(undefined)
   const [neonFile, setNeonFile] = useState<File | undefined>(undefined)
   const router = useRouter()
+  const firstField = useRef<HTMLSelectElement>(null)
+
+  useEffect(() => {
+    firstField.current?.focus()
+  }, [])
 
   function onSave() {
     if (!neonAccountId || !sharedAccountId || !creditCardAccountId || !neonFile) return
@@ -56,8 +62,8 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   }
 
   return (
-    <form>
-      <Select label="Neon Account" value={neonAccountId} onChange={(e) => { setNeonAccountId(e.target.value) }} required>
+    <form className={styles.form} onSubmit={(e) => { e.preventDefault(); onSave() }}>
+      <Select ref={firstField} label="Neon Account" value={neonAccountId} onChange={(e) => { setNeonAccountId(e.target.value) }} required>
         {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
       </Select>
       <Select label="Shared Account" value={sharedAccountId} onChange={(e) => { setSharedAccountId(e.target.value) }} required>
@@ -69,7 +75,9 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
       <Input type="file" label="Neon File" onChange={(e) => { setNeonFile(e.target.files?.[0]) }} required />
       {error && <div className="error">{error}</div>}
       {loading && (<LoadingSpinner />)}
-      <Button type="button" variant="primary" onClick={onSave}>Save</Button>
+      <div className={styles.buttons + ' row'}>
+        <Button type="submit" variant="primary">Save</Button>
+      </div>
     </form>
   )
 }

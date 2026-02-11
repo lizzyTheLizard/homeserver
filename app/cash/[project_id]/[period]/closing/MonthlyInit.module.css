@@ -1,0 +1,11 @@
+.form * {
+    margin-bottom: var(--gap-small);
+}
+
+.buttons {
+    justify-content: flex-end;
+}
+
+.buttons * {
+    width: 10rem;
+}
