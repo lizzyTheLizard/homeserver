@@ -7,7 +7,7 @@ import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { createTransactionsFromNeonInput } from './__helper/CreateNeonTransaction'
 import { lastDay, startDate } from '@/app/cash/_helper/Period'
-import { nextState, previousState } from '@/app/cash/_data/MonthlyState'
+import { nextState } from '@/app/cash/_data/MonthlyState'
 import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
 import { findLastClosing } from '@/app/cash/_data/Closing'
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
@@ -98,17 +98,6 @@ export async function markAsChecked(monthly: Monthly): ActionResponse<void> {
     if (!m) throw new Error('Monthly closing not found')
     if (m.state !== monthly.state) throw new Error('Monthly closing is not in state ' + monthly.state + ' but in state ' + m.state)
     m.state = nextState(m.state)
-    await modifyMonthlyClosing(client, user.sub, m)
-  }))
-}
-
-export async function markAsUnchecked(monthly: Monthly): ActionResponse<void> {
-  return await toResponse(transactional(async (client) => {
-    const user = await getAuthenticatedUserSession('cash')
-    const m = await findForPeriod(client, user.sub, monthly.project_id, monthly.period)
-    if (!m) throw new Error('Monthly closing not found')
-    if (m.state !== monthly.state) throw new Error('Monthly closing is not in state ' + monthly.state + ' but in state ' + m.state)
-    m.state = previousState(m.state)
     await modifyMonthlyClosing(client, user.sub, m)
   }))
 }

@@ -5,7 +5,7 @@ import { Monthly } from '@/app/cash/_data/Monthly'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { AccountJournal } from '../journal/AccountJournal'
-import { markAsChecked, markAsUnchecked } from './server'
+import { markAsChecked } from './server'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
@@ -36,21 +36,6 @@ export function MonthlyCheckAccount({ monthly, accounts, account, transactions, 
       .catch((e: unknown) => {
         console.error('Failed to check account', e)
         setError('Failed to check account')
-        setLoading(false)
-      })
-  }
-
-  function uncheck() {
-    setLoading(true)
-    setError(undefined)
-    markAsUnchecked(monthly).then((r) => {
-      if (r.success) router.refresh()
-      else setError('Failed to uncheck account: ' + r.error)
-      setLoading(false)
-    })
-      .catch((e: unknown) => {
-        console.error('Failed to uncheck account', e)
-        setError('Failed to uncheck account')
         setLoading(false)
       })
   }
