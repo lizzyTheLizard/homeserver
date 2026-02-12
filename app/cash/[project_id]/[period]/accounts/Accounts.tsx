@@ -12,8 +12,7 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Checkbox } from '@/app/shared/_components/form/Checkbox'
 import { useState } from 'react'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Button } from '@/app/shared/_components/form/Button'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface AccountsProps {
   accounts: Account[]
@@ -43,10 +42,7 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
   }
   return (
     <>
-      <ActionTitle>
-        <h1>Accounts</h1>
-        <Button onClick={(e) => { showAccount(); e.stopPropagation() }}>Add</Button>
-      </ActionTitle>
+      <ActionButton onClick={(e) => { showAccount(); e.stopPropagation() }}>Add Account</ActionButton>
       <DataTable
         columns={columns}
         data={accounts}

@@ -3,6 +3,8 @@ import { fromUrlString } from '@/app/cash/_helper/Period'
 import { loadAccountJournal, loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { AccountJournal } from './AccountJournal'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 
 export const metadata = {
   title: 'Cash - Journal',
@@ -25,6 +27,10 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
       const journalData = await loadAccountJournal(period, projectId, accountId)
       return (
         <main>
+          <ActionTitle>
+            <h1>{journalData.account.name}</h1>
+            <PeriodPicker period={period} project_id={projectId} />
+          </ActionTitle>
           <AccountJournal {...journalData} period={period} project_id={projectId} />
         </main>
       )
@@ -33,6 +39,10 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
       const journalData = await loadJournal(period, projectId)
       return (
         <main>
+          <ActionTitle>
+            <h1>Journal</h1>
+            <PeriodPicker period={period} project_id={projectId} />
+          </ActionTitle>
           <Journal {...journalData} period={period} project_id={projectId} />
         </main>
       )

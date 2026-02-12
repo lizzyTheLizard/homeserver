@@ -11,9 +11,6 @@ import { deleteTransaction, saveTransaction } from './server'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Button } from '@/app/shared/_components/form/Button'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import { TransactionInput } from '@/app/cash/_data/Transaction'
 import { useRouter } from 'next/navigation'
@@ -21,6 +18,7 @@ import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountTyp
 import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo, useState } from 'react'
 import { Temporal } from '@js-temporal/polyfill'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface AccountJournalProps {
   account: Account
@@ -104,11 +102,7 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
 
   return (
     <>
-      <ActionTitle>
-        <h1>{account.name}</h1>
-        <Button onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add</Button>
-        <PeriodPicker period={period} project_id={project_id} />
-      </ActionTitle>
+      <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <DataTable
         columns={columns}
         data={transactions}
