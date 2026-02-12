@@ -19,7 +19,7 @@ export interface ColumnDefinition<FieldType, FilterValueType> {
   header: string
   style?: CSSProperties
   sort?: (a: FieldType, b: FieldType) => number
-  cell: (value: FieldType) => ReactNode
+  cell: (value: FieldType, id: string) => ReactNode
   filter?: ColumnFilter<FieldType, FilterValueType>
 }
 
