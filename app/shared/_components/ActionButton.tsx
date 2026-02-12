@@ -21,8 +21,8 @@ export function ActionButton({ children, ...props }: ButtonProps) {
   if (!isClient) return null
   if (typeof document === 'undefined')
     return content
-  const sidebarContainers = document.getElementsByClassName(style.title)
-  if (sidebarContainers.length === 0)
+  const actionTitleContainer = document.getElementsByClassName(style.title)
+  if (actionTitleContainer.length === 0)
     return content
-  return createPortal(content, sidebarContainers[0])
+  return createPortal(content, actionTitleContainer[0])
 }

@@ -1,37 +1,115 @@
 'use server'
-
-import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
-import { createMonthlyClosing, findBeforePeriod, findForPeriod, Monthly, MonthlyInput } from '@/app/cash/_data/Monthly'
+import { createMonthlyClosing, findBeforePeriod, findForPeriod, modifyMonthlyClosing, Monthly, MonthlyInput } from '@/app/cash/_data/Monthly'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
-import { lastDay, startDate } from '@/app/cash/_helper/Period'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject } from '@/app/shared/_helper/validation'
-import { logger } from '@/app/shared/logger'
+import { createTransactionsFromNeonInput } from './__helper/CreateNeonTransaction'
+import { lastDay, startDate } from '@/app/cash/_helper/Period'
+import { nextState, previousState } from '@/app/cash/_data/MonthlyState'
+import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
+import { findLastClosing } from '@/app/cash/_data/Closing'
+import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 
-export interface MonthlyData {
-  monthly: Monthly | undefined
-  lastMonthClosing: Monthly | undefined
-  accounts: Account[]
+export type PageData = { type: 'ALREADY_CLOSED' }
+  | { type: 'NOT_FOUND', lastMonthClosing: Monthly | undefined, accounts: Account[] }
+  | { type: 'NEON', monthly: Monthly, accounts: Account[] }
+  | { type: 'SHARED', monthly: Monthly, accounts: Account[] }
+  | { type: 'FINISHED', monthly: Monthly, accounts: Account[] }
+  | { type: 'CHECK_ACCOUNT', monthly: Monthly, accounts: Account[], account: Account, transactions: AccountTransaction[], lastTransaction: AccountTransaction | undefined }
+
+export default async function loadData(projectId: string, period: MonthlyPeriod): Promise<PageData> {
+  return nontransactional(async (c) => {
+    const user = await getAuthenticatedUserSession('cash')
+    const monthly = await findForPeriod(c, user.sub, projectId, period)
+    const closing = await findLastClosing(c, user.sub, projectId)
+    if ((closing && closing.date >= lastDay(period)) && monthly?.state !== 'FINISHED') return { type: 'ALREADY_CLOSED' }
+
+    const lastMonthClosing = await findBeforePeriod(c, user.sub, projectId, period)
+    const accounts = await findAllAccountsForProject(c, user.sub, projectId)
+
+    if (!monthly) return { type: 'NOT_FOUND', lastMonthClosing, accounts }
+    if (monthly.state === 'NEON') return { type: 'NEON', monthly, accounts }
+    if (monthly.state === 'SHARED') return { type: 'SHARED', monthly, accounts }
+    if (monthly.state === 'FINISHED') return { type: 'FINISHED', monthly, accounts }
+
+    const accountId = getCurrentAccountIdForMonthly(monthly)
+    if (!accountId) throw new Error('Current account id not found for monthly in state ' + monthly.state)
+    const account = accounts.find(a => a.id === accountId)
+    if (!account) throw new Error('Account with id ' + accountId + ' not found')
+    const transactions = await findAllAccountTransactionsInPeriod(c, user.sub, accountId, period)
+    const lastTransaction = await findLatestAccountTransactionBefore(c, user.sub, accountId, period)
+    return { type: 'CHECK_ACCOUNT', monthly, accounts, account, transactions: transactions, lastTransaction }
+  })
 }
 
-export async function loadData(projectId: string, period: MonthlyPeriod): Promise<MonthlyData> {
-  const user = await getAuthenticatedUserSession('cash')
-  return await nontransactional(async c => ({
-    monthly: await findForPeriod(c, user.sub, projectId, period),
-    lastMonthClosing: await findBeforePeriod(c, user.sub, projectId, period),
-    accounts: await findAllAccountsForProject(c, user.sub, projectId),
-  }))
+function getCurrentAccountIdForMonthly(monthly: Monthly | undefined): string | undefined {
+  switch (monthly?.state) {
+    case undefined:
+    case 'NEON':
+    case 'SHARED':
+    case 'FINISHED':
+      return undefined
+    case 'NEONCHECK':
+      return monthly.neon_account_id
+    case 'CREDITCARDCHECK':
+      return monthly.credit_card_account_id
+    case 'SHAREDCHECK':
+      return monthly.shared_account_id
+  }
 }
 
 export async function initialize(input: MonthlyInput): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     validateObject(input, MonthlyInputConstraints)
-    input.neon_transactions?.forEach((transaction) => { validateObject(transaction, NeonTransactionConstraints(input.period)) })
+    input.neon_transactions.forEach((transaction) => {
+      validateObject(transaction, NeonTransactionConstraints)
+      if (transaction.date < startDate(input.period)) throw new Error('Transaction date must be within the period')
+      if (transaction.date > lastDay(input.period)) throw new Error('Transaction date must be within the period')
+    })
     const user = await getAuthenticatedUserSession('cash')
-    logger.error(JSON.stringify(input))
     await createMonthlyClosing(client, user.sub, input)
+  }))
+}
+
+export interface NeonTransactionInput {
+  order: number
+  accountId: string
+  description: string
+}
+
+export async function addNeonTransactions(projectId: string, period: MonthlyPeriod, transactions: NeonTransactionInput[]): ActionResponse<void> {
+  return await toResponse(transactional(async (client) => {
+    transactions.forEach((transaction) => { validateObject(transaction, NeonTransactionInputConstraints) })
+    const user = await getAuthenticatedUserSession('cash')
+    const monthly = await findForPeriod(client, user.sub, projectId, period)
+    if (!monthly || monthly.state !== 'NEON') throw new Error('Monthly closing not found or not in NEON state')
+    monthly.neon_transactions = await createTransactionsFromNeonInput(client, user.sub, monthly, transactions)
+    monthly.state = 'NEONCHECK'
+    await modifyMonthlyClosing(client, user.sub, monthly)
+  }))
+}
+
+export async function markAsChecked(monthly: Monthly): ActionResponse<void> {
+  return await toResponse(transactional(async (client) => {
+    const user = await getAuthenticatedUserSession('cash')
+    const m = await findForPeriod(client, user.sub, monthly.project_id, monthly.period)
+    if (!m) throw new Error('Monthly closing not found')
+    if (m.state !== monthly.state) throw new Error('Monthly closing is not in state ' + monthly.state + ' but in state ' + m.state)
+    m.state = nextState(m.state)
+    await modifyMonthlyClosing(client, user.sub, m)
+  }))
+}
+
+export async function markAsUnchecked(monthly: Monthly): ActionResponse<void> {
+  return await toResponse(transactional(async (client) => {
+    const user = await getAuthenticatedUserSession('cash')
+    const m = await findForPeriod(client, user.sub, monthly.project_id, monthly.period)
+    if (!m) throw new Error('Monthly closing not found')
+    if (m.state !== monthly.state) throw new Error('Monthly closing is not in state ' + monthly.state + ' but in state ' + m.state)
+    m.state = previousState(m.state)
+    await modifyMonthlyClosing(client, user.sub, m)
   }))
 }
 
@@ -112,13 +190,11 @@ const MonthlyInputConstraints = {
   },
 }
 
-const NeonTransactionConstraints = (period: MonthlyPeriod) => ({
+const NeonTransactionConstraints = {
   date: {
     presence: { allowEmpty: false },
     datetime: {
       dateOnly: true,
-      earliest: startDate(period),
-      latest: lastDay(period),
     },
   },
   order: {
@@ -143,4 +219,23 @@ const NeonTransactionConstraints = (period: MonthlyPeriod) => ({
       message: 'must be a valid UUID',
     },
   },
-})
+}
+
+const NeonTransactionInputConstraints = {
+  order: {
+    presence: { allowEmpty: false },
+    type: 'number',
+  },
+  accountId: {
+    presence: { allowEmpty: false },
+    type: 'string',
+    format: {
+      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      message: 'must be a valid UUID',
+    },
+  },
+  description: {
+    presence: { allowEmpty: false },
+    type: 'string',
+  },
+}

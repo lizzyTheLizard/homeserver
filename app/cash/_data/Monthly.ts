@@ -3,6 +3,7 @@ import { Entity, removeNull } from '@/app/shared/_external/db/access'
 import { MonthlyPeriod } from '../_helper/MonthlyPeriod'
 import { fromUrlString, toString } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
+import { MonthlyState } from './MonthlyState'
 
 export interface MonthlyInput {
   id: string
@@ -11,8 +12,8 @@ export interface MonthlyInput {
   shared_account_id: string
   neon_account_id: string
   credit_card_account_id: string
-  neon_transactions?: NeonTransaction[]
-  state: 'NEON' | 'CREDITCARD' | 'SHARED' | 'FINISHED'
+  neon_transactions: NeonTransaction[]
+  state: MonthlyState
 }
 export type Monthly = Entity<MonthlyInput>
 
@@ -46,9 +47,19 @@ export async function findBeforePeriod(client: PoolClient, ownerId: string, proj
 export async function createMonthlyClosing(client: PoolClient, ownerId: string, input: MonthlyInput): Promise<Monthly> {
   const result = await client.query<Monthly>(
     'INSERT INTO monthly (id, project_id, owner_id, period, shared_account_id, neon_account_id, credit_card_account_id, state, neon_transactions, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING *',
-    [input.id, input.project_id, ownerId, toString(input.period), input.shared_account_id, input.neon_account_id, input.credit_card_account_id, input.state, JSON.stringify(input.neon_transactions ?? [])],
+    [input.id, input.project_id, ownerId, toString(input.period), input.shared_account_id, input.neon_account_id, input.credit_card_account_id, input.state, JSON.stringify(input.neon_transactions)],
   )
   if (!result.rows[0]) throw new Error('Failed to create monthly closing')
   logger.debug(`Created monthly closing ${input.id} for project ${input.project_id} and period ${toString(input.period)}`)
+  return removeNull({ ...result.rows[0], period: fromUrlString(result.rows[0].period as unknown as string) as MonthlyPeriod })
+}
+
+export async function modifyMonthlyClosing(client: PoolClient, ownerId: string, input: MonthlyInput): Promise<Monthly> {
+  const result = await client.query<Monthly>(
+    'UPDATE monthly SET shared_account_id = $1, neon_account_id = $2, credit_card_account_id = $3, state = $4, neon_transactions = $5, updated_at = NOW() WHERE id = $6 AND owner_id = $7 RETURNING *',
+    [input.shared_account_id, input.neon_account_id, input.credit_card_account_id, input.state, JSON.stringify(input.neon_transactions), input.id, ownerId],
+  )
+  if (!result.rows[0]) throw new Error('Failed to modify monthly closing')
+  logger.debug(`Modified monthly closing ${input.id} for project ${input.project_id} and period ${toString(input.period)}`)
   return removeNull({ ...result.rows[0], period: fromUrlString(result.rows[0].period as unknown as string) as MonthlyPeriod })
 }

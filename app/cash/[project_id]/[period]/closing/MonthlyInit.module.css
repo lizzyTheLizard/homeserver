@@ -2,10 +2,23 @@
     margin-bottom: var(--gap-small);
 }
 
-.buttons {
-    justify-content: flex-end;
+
+@media (min-width: 600px) {
+    .buttons {
+        justify-content: flex-end;
+    }
+
+    .button {
+        width: 10rem;
+    }
 }
 
-.buttons * {
-    width: 10rem;
+@media (max-width: 600px) {
+    .form {
+        margin-top: var(--gap-small);
+    }
+
+    .button {
+        width: 100%;
+    }
 }

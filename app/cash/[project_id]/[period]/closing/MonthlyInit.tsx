@@ -2,7 +2,6 @@
 
 import { Account } from '@/app/cash/_data/Account'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
-import { Button } from '@/app/shared/_components/form/Button'
 import { Select } from '@/app/shared/_components/form/Select'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useEffect, useRef, useState } from 'react'
@@ -13,6 +12,7 @@ import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
 import { parseNeonFile } from './__helper/NeonParser'
 import styles from './MonthlyInit.module.css'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface MonthlyInitProps {
   project_id: string
@@ -30,6 +30,7 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   const [neonFile, setNeonFile] = useState<File | undefined>(undefined)
   const router = useRouter()
   const firstField = useRef<HTMLSelectElement>(null)
+  const valid = neonAccountId && sharedAccountId && creditCardAccountId && neonFile
 
   useEffect(() => {
     firstField.current?.focus()
@@ -62,22 +63,22 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   }
 
   return (
-    <form className={styles.form} onSubmit={(e) => { e.preventDefault(); onSave() }}>
-      <Select ref={firstField} label="Neon Account" value={neonAccountId} onChange={(e) => { setNeonAccountId(e.target.value) }} required>
-        {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
-      </Select>
-      <Select label="Shared Account" value={sharedAccountId} onChange={(e) => { setSharedAccountId(e.target.value) }} required>
-        {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
-      </Select>
-      <Select label="Credit Card Account" value={creditCardAccountId} onChange={(e) => { setCreditCardAccountId(e.target.value) }} required>
-        {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
-      </Select>
-      <Input type="file" label="Neon File" onChange={(e) => { setNeonFile(e.target.files?.[0]) }} required />
+    <>
+      <ActionButton onClick={onSave} disabled={loading || !valid} variant="primary" className={styles.saveButton}>Continue</ActionButton>
       {error && <div className="error">{error}</div>}
       {loading && (<LoadingSpinner />)}
-      <div className={styles.buttons + ' row'}>
-        <Button type="submit" variant="primary">Save</Button>
-      </div>
-    </form>
+      <form className={styles.form}>
+        <Select ref={firstField} label="Neon Account" value={neonAccountId} onChange={(e) => { setNeonAccountId(e.target.value) }} required>
+          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        </Select>
+        <Select label="Shared Account" value={sharedAccountId} onChange={(e) => { setSharedAccountId(e.target.value) }} required>
+          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        </Select>
+        <Select label="Credit Card Account" value={creditCardAccountId} onChange={(e) => { setCreditCardAccountId(e.target.value) }} required>
+          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        </Select>
+        <Input type="file" label="Neon File" onChange={(e) => { setNeonFile(e.target.files?.[0]) }} required />
+      </form>
+    </>
   )
 }
