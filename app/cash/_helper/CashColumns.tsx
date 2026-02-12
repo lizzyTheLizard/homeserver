@@ -51,7 +51,7 @@ export function currencyColumn(key: string, options?: Options<number>): ColumnDe
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: number) => <Currency amount={value} />),
-    sort: options?.sort === false ? undefined : (a: number, b: number) => a - b,
+    sort: options?.sort === false ? undefined : (a: number, b: number) => Math.abs(a) - Math.abs(b),
     filter: options?.filter === false ? undefined : filter,
     style: { textAlign: 'center', ...options?.style },
   }
