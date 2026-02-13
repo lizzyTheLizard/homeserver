@@ -1,12 +1,11 @@
 'use client'
-
 import { Account } from '@/app/cash/_data/Account'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import { Closing } from '@/app/cash/_data/Closing'
 import { Monthly } from '@/app/cash/_data/Monthly'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
-import { endDate, lastDay } from '@/app/cash/_helper/Period'
+import { lastDay } from '@/app/cash/_helper/Period'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useMemo } from 'react'

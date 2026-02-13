@@ -57,11 +57,13 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   function onSave() {
     const t = transactions.map(toNeonTransactionInput).filter(t => t !== undefined)
     setLoading(true)
-    addNeonTransactions(project_id, period, t).then((r) => {
-      if (r.success) router.refresh()
-      else setError('Failed to add neon transactions: ' + r.error)
-      setLoading(false)
-    })
+    setError(undefined)
+    addNeonTransactions(project_id, period, t)
+      .then((r) => {
+        if (r.success) router.refresh()
+        else setError('Failed to add neon transactions: ' + r.error)
+        setLoading(false)
+      })
       .catch((e: unknown) => {
         console.error('Failed to add neon transactions', e)
         setError('Failed to add neon transactions')

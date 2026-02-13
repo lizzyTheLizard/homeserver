@@ -58,7 +58,12 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>Monthly Closing - Init</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
-            <MonthlyInit period={period} project_id={projectId} accounts={pageData.accounts} lastMonthClosing={pageData.lastMonthClosing} />
+            <MonthlyInit
+              period={period}
+              project_id={projectId}
+              accounts={pageData.accounts}
+              lastMonthClosing={pageData.lastMonthClosing}
+            />
           </main>
         )
       case 'NEON':
@@ -68,7 +73,12 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>Monthly Closing - Neon Import</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
-            <MonthlyNeon period={period} project_id={projectId} monthly={pageData.monthly} accounts={pageData.accounts} />
+            <MonthlyNeon
+              period={period}
+              project_id={projectId}
+              monthly={pageData.monthly}
+              accounts={pageData.accounts}
+            />
           </main>
         )
       case 'SHARED':
@@ -78,7 +88,13 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>Monthly Closing - Shared</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
-            <MonthlyShared period={period} project_id={projectId} accounts={pageData.accounts} transactions={pageData.transactions} lastTransaction={pageData.lastTransaction} />
+            <MonthlyShared
+              period={period}
+              project_id={projectId}
+              accounts={pageData.accounts}
+              transactions={pageData.transactions}
+              lastTransaction={pageData.lastTransaction}
+            />
           </main>
         )
       case 'FINISHED':
@@ -105,7 +121,15 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>{`Monthly Closing - ${pageData.account.name}`}</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
-            <MonthlyCheckAccount monthly={pageData.monthly} accounts={pageData.accounts} account={pageData.account} transactions={pageData.transactions} lastTransaction={pageData.lastTransaction} project_id={pageData.monthly.project_id} period={pageData.monthly.period} />
+            <MonthlyCheckAccount
+              monthly={pageData.monthly}
+              accounts={pageData.accounts}
+              account={pageData.account}
+              transactions={pageData.transactions}
+              lastTransaction={pageData.lastTransaction}
+              project_id={pageData.monthly.project_id}
+              period={pageData.monthly.period}
+            />
           </main>
         )
       default:

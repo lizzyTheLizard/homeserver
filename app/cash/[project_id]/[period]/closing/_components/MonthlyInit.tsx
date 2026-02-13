@@ -1,5 +1,4 @@
 'use client'
-
 import { Account } from '@/app/cash/_data/Account'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { Select } from '@/app/shared/_components/form/Select'
@@ -7,7 +6,7 @@ import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useEffect, useRef, useState } from 'react'
 import { initialize } from '../server'
 import { useRouter } from 'next/navigation'
-import { Monthly } from '@/app/cash/_data/Monthly'
+import { Monthly, MonthlyInput, NeonTransaction } from '@/app/cash/_data/Monthly'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
 import { parseNeonFile } from '../__helper/NeonParser'
@@ -31,26 +30,16 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   const firstField = useRef<HTMLSelectElement>(null)
   const valid = neonAccountId && sharedAccountId && creditCardAccountId && neonFile
 
-  useEffect(() => {
-    firstField.current?.focus()
-  }, [])
+  useEffect(() => { firstField.current?.focus() }, [])
 
   function onSave() {
     if (!neonAccountId || !sharedAccountId || !creditCardAccountId || !neonFile) return
     setLoading(true)
     setError(undefined)
-    parseNeonFile(neonFile).then(transactions => initialize({
-      id: randomUUID(),
-      project_id,
-      period,
-      neon_account_id: neonAccountId,
-      shared_account_id: sharedAccountId,
-      credit_card_account_id: creditCardAccountId,
-      neon_transactions: transactions,
-      shared_transactions: [],
-      state: 'NEON',
-    }))
-      .then((r) => {
+    parseNeonFile(neonFile)
+      .then(async (transactions) => {
+        const input = toInput(transactions)
+        const r = await initialize(input)
         if (r.success) router.refresh()
         else setError('Failed to initialize monthly closing: ' + r.error)
         setLoading(false)
@@ -60,6 +49,20 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
         setError('Failed to initialize monthly closing')
         setLoading(false)
       })
+  }
+
+  function toInput(transactions: NeonTransaction[]): MonthlyInput {
+    return {
+      id: randomUUID(),
+      project_id,
+      period,
+      neon_account_id: neonAccountId,
+      shared_account_id: sharedAccountId,
+      credit_card_account_id: creditCardAccountId,
+      neon_transactions: transactions,
+      shared_transactions: [],
+      state: 'NEON',
+    }
   }
 
   return (

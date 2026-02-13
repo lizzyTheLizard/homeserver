@@ -28,11 +28,12 @@ export function MonthlyCheckAccount({ monthly, accounts, account, transactions, 
   function check() {
     setLoading(true)
     setError(undefined)
-    markAsChecked(monthly.project_id, monthly.period).then((r) => {
-      if (r.success) router.refresh()
-      else setError('Failed to check account: ' + r.error)
-      setLoading(false)
-    })
+    markAsChecked(monthly.project_id, monthly.period)
+      .then((r) => {
+        if (r.success) router.refresh()
+        else setError('Failed to check account: ' + r.error)
+        setLoading(false)
+      })
       .catch((e: unknown) => {
         console.error('Failed to check account', e)
         setError('Failed to check account')

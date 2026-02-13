@@ -39,13 +39,15 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
   }
 
   function onSave() {
-    const t = transactions.map(toSharedTransactionInput).filter(t => t !== undefined)
     setLoading(true)
-    addSharedTransactions(project_id, period, t).then((r) => {
-      if (r.success) router.refresh()
-      else setError('Failed to add shared transactions: ' + r.error)
-      setLoading(false)
-    })
+    setError(undefined)
+    const t = transactions.map(toSharedTransactionInput).filter(t => t !== undefined)
+    addSharedTransactions(project_id, period, t)
+      .then((r) => {
+        if (r.success) router.refresh()
+        else setError('Failed to add shared transactions: ' + r.error)
+        setLoading(false)
+      })
       .catch((e: unknown) => {
         console.error('Failed to add shared transactions', e)
         setError('Failed to add shared transactions')
