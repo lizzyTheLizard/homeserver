@@ -25,7 +25,7 @@ export function accountColumn(key: string, accounts: Account[], period: Period, 
     cell: options?.cell ?? ((value) => {
       const account = accounts.find(account => account.id === value)
       if (!account) return value
-      return <Link onClick={(e) => { e.stopPropagation() }} href={`/cash/${account.project_id}/${toUrlString(period)}/journal?accountId=${account.id}`}>{account.name}</Link>
+      return <Link tabIndex={-1} onClick={(e) => { e.stopPropagation() }} href={`/cash/${account.project_id}/${toUrlString(period)}/journal?accountId=${account.id}`}>{account.name}</Link>
     }),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,
