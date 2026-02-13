@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { deleteProject, loadProjects, saveProject } from './server'
@@ -16,6 +16,13 @@ vi.mock('@/app/common/auth/auth', async () => {
 })
 
 describe('loadProjects', () => {
+  beforeAll(() => {
+    // Clear all projects before starting tests
+    return transactional(async (tx) => {
+      await tx.query('DELETE FROM project')
+    })
+  })
+
   afterEach(async () => {
     // Clean up all projects after each test
     await transactional(async (tx) => {
