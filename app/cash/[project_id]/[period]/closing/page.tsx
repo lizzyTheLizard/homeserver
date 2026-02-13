@@ -22,7 +22,6 @@ export interface ClosingPageProps {
   }>
 }
 
-// TODO: Improve Titles
 export default async function Page({ params }: ClosingPageProps) {
   return serverPageFunction(metadata.title, async () => {
     const projectId = (await params).project_id
@@ -31,7 +30,7 @@ export default async function Page({ params }: ClosingPageProps) {
     if (!isMonthlyPeriod(period)) return (
       <main>
         <ActionTitle>
-          <h1>{`Closing ${toString(period)}`}</h1>
+          <h1>Monthly Closing</h1>
           <PeriodPicker period={period} project_id={projectId} />
         </ActionTitle>
         <ActionButton disabled variant="primary">Continue</ActionButton>
@@ -45,7 +44,7 @@ export default async function Page({ params }: ClosingPageProps) {
         return (
           <main>
             <ActionTitle>
-              <h1>{`Closing ${toString(period)}`}</h1>
+              <h1>Monthly Closing</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
             <ActionButton disabled variant="primary">Continue</ActionButton>
@@ -56,7 +55,7 @@ export default async function Page({ params }: ClosingPageProps) {
         return (
           <main>
             <ActionTitle>
-              <h1>{`Closing ${toString(period)}`}</h1>
+              <h1>Monthly Closing - Init</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
             <MonthlyInit period={period} project_id={projectId} accounts={pageData.accounts} lastMonthClosing={pageData.lastMonthClosing} />
@@ -66,7 +65,7 @@ export default async function Page({ params }: ClosingPageProps) {
         return (
           <main>
             <ActionTitle>
-              <h1>{`Closing ${toString(period)}`}</h1>
+              <h1>Monthly Closing - Neon Import</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
             <MonthlyNeon period={period} project_id={projectId} monthly={pageData.monthly} accounts={pageData.accounts} />
@@ -76,7 +75,7 @@ export default async function Page({ params }: ClosingPageProps) {
         return (
           <main>
             <ActionTitle>
-              <h1>{`Closing ${toString(period)}`}</h1>
+              <h1>Monthly Closing - Shared</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
             <MonthlyShared period={period} project_id={projectId} accounts={pageData.accounts} transactions={pageData.transactions} lastTransaction={pageData.lastTransaction} />
@@ -86,7 +85,7 @@ export default async function Page({ params }: ClosingPageProps) {
         return (
           <main>
             <ActionTitle>
-              <h1>{`Closing ${toString(period)}`}</h1>
+              <h1>Monthly Closing</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
             <MonthlyFinished accounts={pageData.accounts} monthly={pageData.monthly} period={period} project_id={projectId} />
@@ -96,7 +95,7 @@ export default async function Page({ params }: ClosingPageProps) {
         return (
           <main>
             <ActionTitle>
-              <h1>{`Closing ${toString(period)} - ${pageData.account.name}`}</h1>
+              <h1>{`Monthly Closing - ${pageData.account.name}`}</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
             <MonthlyCheckAccount monthly={pageData.monthly} accounts={pageData.accounts} account={pageData.account} transactions={pageData.transactions} lastTransaction={pageData.lastTransaction} project_id={pageData.monthly.project_id} period={pageData.monthly.period} />
