@@ -19,10 +19,7 @@ export function Input({ list, label, small, ...props }: InputProps) {
   const fallbackId = useId()
   const id = props.id ?? fallbackId
   const listId = list ? `${id}-list` : undefined
-  const preFormatedValue = props.value ?? internalValue
-  const value = props.type === 'date' && !focus && preFormatedValue
-    ? Temporal.PlainDate.from(preFormatedValue).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
-    : preFormatedValue
+  const value = getValue(props.value, internalValue, props.type, focus)
   const type = props.type === 'date' && !focus ? 'text' : props.type
   const inputClasses = [
     style.input, props.className ?? '',
@@ -69,4 +66,15 @@ export function Input({ list, label, small, ...props }: InputProps) {
       )}
     </div>
   )
+}
+
+function getValue(propValue: string | undefined, internalValue: string, type: string | undefined, focus: boolean): string {
+  const preFormatedValue = propValue ?? internalValue
+  if (!preFormatedValue) return ''
+  if (focus) return preFormatedValue
+  if (type === 'date')
+    return Temporal.PlainDate.from(preFormatedValue).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+  if (type === 'currency')
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'CHF' }).format(Number(preFormatedValue))
+  return preFormatedValue
 }

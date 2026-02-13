@@ -79,7 +79,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
         <Select label="Debit Account" value={current.debit_account_id} onChange={(e) => { setCurrent({ ...current, debit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
-        <Input type="number" label="Amount" value={current.amount} onChange={(e) => { setCurrent({ ...current, amount: e.target.value }) }} />
+        <Input type="currency" label="Amount" value={current.amount} onChange={(e) => { setCurrent({ ...current, amount: e.target.value }) }} />
         <Textarea style={{ flexGrow: 1 }} label="Description" value={current.description} onChange={(e) => { setCurrent({ ...current, description: e.target.value }) }} />
       </Sidebar>
     </>
