@@ -1,5 +1,5 @@
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { fromUrlString, toString } from '@/app/cash/_helper/Period'
+import { fromUrlString } from '@/app/cash/_helper/Period'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { isMonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
@@ -88,7 +88,14 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>Monthly Closing</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
-            <MonthlyFinished accounts={pageData.accounts} monthly={pageData.monthly} period={period} project_id={projectId} />
+            <MonthlyFinished
+              accounts={pageData.accounts}
+              monthly={pageData.monthly}
+              period={period}
+              latestClosing={pageData.latestClosing}
+              transactionsSharedAccounts={pageData.transactionsSharedAccounts}
+              transactionsNeonAccount={pageData.transactionsNeonAccount}
+            />
           </main>
         )
       case 'CHECK_ACCOUNT':
