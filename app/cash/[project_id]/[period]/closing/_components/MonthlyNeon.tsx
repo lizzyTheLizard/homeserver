@@ -9,11 +9,10 @@ import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
-import { addNeonTransactions, NeonTransactionInput } from './server'
+import { addNeonTransactions, NeonTransactionInput } from '../server'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
-import styles from './MonthlyNeon.module.css'
 
 export interface MonthlyNeonProps {
   project_id: string
@@ -95,7 +94,7 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   return (
     <>
       <ActionButton disabled={loading || !valid} onClick={() => { onSave() }}>Save</ActionButton>
-      <Input disabled label="Not assigned total" type="currency" value={notAssigned.toString()} className={styles.input} />
+      <Input disabled label="Not assigned total" type="currency" value={notAssigned.toString()} style={{ marginBottom: 'var(--gap-small)' }} />
       <DataTable
         columns={columns}
         data={transactions}

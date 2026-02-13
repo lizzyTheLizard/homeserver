@@ -1,5 +1,5 @@
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { Reports } from './Reports'
+import { Reports } from './_components/Reports'
 import { fromUrlString } from '@/app/cash/_helper/Period'
 import { loadReports } from './server'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'

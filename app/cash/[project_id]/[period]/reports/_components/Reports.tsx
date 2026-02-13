@@ -7,9 +7,9 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { close, reopen } from './server'
+import { close, reopen } from '../server'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { ReportCard } from './_components/ReportCard'
+import { ReportCard } from './ReportCard'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface ReportsProps {

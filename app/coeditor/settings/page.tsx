@@ -1,7 +1,7 @@
-import { Profiles } from './Profiles'
+import { Profiles } from './_components/Profiles'
 import { loadSettings } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { Templates } from './Templates'
+import { Templates } from './_components/Templates'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {

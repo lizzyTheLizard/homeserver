@@ -5,13 +5,12 @@ import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { Select } from '@/app/shared/_components/form/Select'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useEffect, useRef, useState } from 'react'
-import { initialize } from './server'
+import { initialize } from '../server'
 import { useRouter } from 'next/navigation'
 import { Monthly } from '@/app/cash/_data/Monthly'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
-import { parseNeonFile } from './__helper/NeonParser'
-import styles from './MonthlyInit.module.css'
+import { parseNeonFile } from '../__helper/NeonParser'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface MonthlyInitProps {
@@ -67,7 +66,7 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
       <ActionButton onClick={onSave} disabled={loading || !valid} variant="primary">Continue</ActionButton>
       {error && <div className="error">{error}</div>}
       {loading && (<LoadingSpinner />)}
-      <form className={styles.form}>
+      <form className="form-gaps">
         <Select ref={firstField} label="Neon Account" value={neonAccountId} onChange={(e) => { setNeonAccountId(e.target.value) }} required>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>

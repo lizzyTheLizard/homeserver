@@ -19,7 +19,7 @@ export type PageData = { type: 'ALREADY_CLOSED' }
   | { type: 'FINISHED', monthly: Monthly, accounts: Account[] }
   | { type: 'CHECK_ACCOUNT', monthly: Monthly, accounts: Account[], account: Account, transactions: AccountTransaction[], lastTransaction: AccountTransaction | undefined }
 
-export default async function loadData(projectId: string, period: MonthlyPeriod): Promise<PageData> {
+export async function loadData(projectId: string, period: MonthlyPeriod): Promise<PageData> {
   return nontransactional(async (c) => {
     const user = await getAuthenticatedUserSession('cash')
     const monthly = await findForPeriod(c, user.sub, projectId, period)

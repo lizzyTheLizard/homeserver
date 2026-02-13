@@ -1,5 +1,5 @@
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Accounts } from './Accounts'
+import { Accounts } from './_components/Accounts'
 import { loadAccounts } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 

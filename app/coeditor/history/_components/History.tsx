@@ -2,7 +2,7 @@
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useRouter } from 'next/navigation'
-import { Discussion } from '../_data/Discussion'
+import { Discussion } from '../../_data/Discussion'
 
 const columns = [
   textColumn('title', { header: 'Title' }),
@@ -20,7 +20,6 @@ export function History({ discussions = [] }: HistoryProps) {
 
   return (
     <>
-      <h1>History</h1>
       <DataTable
         columns={columns}
         data={discussions}

@@ -62,7 +62,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
       </div>
       {type !== undefined && <div className={style.type}>{type}</div>}
       {pending && <LoadingSpinner text="Processing..." />}
-      <form className={style.form}>
+      <form className="form-gaps">
         {children}
         {error && <div className="error">{error}</div>}
         {onSave && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}

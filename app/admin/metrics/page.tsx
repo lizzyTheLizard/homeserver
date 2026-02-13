@@ -1,6 +1,7 @@
 import { DashboardCard } from '../_components/DashboardCard'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { loadCashMetrics, loadCoeditorMetrics, loadGeneralMetrics } from './server'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Admin - Metrics',
@@ -14,7 +15,9 @@ export default async function Page() {
 
     return (
       <main>
-        <h1>Metrics</h1>
+        <ActionTitle>
+          <h1>Metrics</h1>
+        </ActionTitle>
         <div className="row">
           <DashboardCard header="General" items={generalMetics}></DashboardCard>
           <DashboardCard header="CoEditor" items={coeditorMetrics}></DashboardCard>

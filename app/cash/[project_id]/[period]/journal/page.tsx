@@ -1,8 +1,8 @@
-import { Journal } from './Journal'
+import { Journal } from './_components/Journal'
 import { fromUrlString } from '@/app/cash/_helper/Period'
 import { loadAccountJournal, loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { AccountJournal } from './AccountJournal'
+import { AccountJournal } from './_components/AccountJournal'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 

@@ -13,9 +13,6 @@ export interface ConfigProps {
 
 export function Config({ data = [] }: ConfigProps) {
   return (
-    <>
-      <h1>Configuration</h1>
-      <DataTable columns={columns} data={data} initialSortingOrder={[{ key: 'key', direction: 'ASC' }]} />
-    </>
+    <DataTable columns={columns} data={data} initialSortingOrder={[{ key: 'key', direction: 'ASC' }]} />
   )
 }

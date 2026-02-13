@@ -1,18 +1,18 @@
 'use client'
 
 import { useCallback, useReducer, useState } from 'react'
-import { editorStateReducer, initialState } from './Editor.state'
-import { Discussion } from '../_data/Discussion'
-import { PredefinedCommandType } from '../_data/Command'
+import { editorStateReducer, initialState } from '../_helper/Editor.state'
+import { Discussion } from '../../_data/Discussion'
+import { PredefinedCommandType } from '../../_data/Command'
 import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
-import { Template } from '../_data/Template'
+import { Template } from '../../_data/Template'
 import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { EditorContext } from './_components/EditorContext'
+import { EditorContext } from './EditorContext'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Button } from '@/app/shared/_components/form/Button'
-import { executeCommand } from './server'
+import { executeCommand } from '../server'
 import style from './Editor.module.css'
 
 export interface EditorProps {
@@ -82,8 +82,7 @@ export function Editor({ discussion, templates }: EditorProps) {
   }
 
   return (
-    <main>
-      <h1>CoEditor</h1>
+    <>
       {executePending && <LoadingSpinner text="Executing command..." />}
       <EditorContext
         templates={templates}
@@ -125,6 +124,6 @@ export function Editor({ discussion, templates }: EditorProps) {
         <Button onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length}>Redo</Button>
         <Button onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id}>New</Button>
       </div>
-    </main>
+    </>
   )
 }

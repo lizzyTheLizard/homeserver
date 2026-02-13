@@ -1,10 +1,10 @@
 'use client'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Template } from '../_data/Template'
+import { Profile } from '../../_data/Profile'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { deleteTemplate, saveTemplate } from './server'
+import { deleteProfile, saveProfile } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
@@ -12,49 +12,46 @@ import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 
-export interface TemplatesProps {
-  templates?: Template[]
+export interface ProfilesProps {
+  profiles?: Profile[]
+
 }
 
-const templateColumns = [
-  textColumn('name', { header: 'Name' }),
+const profileColumns = [
   textColumn('language', { header: 'Language' }),
   textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } }),
 ]
 
-export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
-  const [templates, addTemplate, removeTemplate] = useListState(templatesIn)
-  const [sidebarState, sidebarStateModifier] = useSidebarState('Template')
+export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
+  const [profiles, addProfile, removeProfile] = useListState(profilesIn)
+  const [sidebarState, sidebarStateModifier] = useSidebarState('Profile')
   const [id, setId] = useState('')
   const [language, setLanguage] = useState('')
   const [text, setText] = useState('')
-  const [name, setName] = useState('')
 
-  function showTemplate(template?: Template) {
-    setId(template?.id ?? randomUUID())
-    setLanguage(template?.language ?? '')
-    setText(template?.text ?? '')
-    setName(template?.name ?? '')
-    sidebarStateModifier.openSidebar(template ? template.name : 'New Template')
+  function showProfile(profile?: Profile) {
+    setId(profile?.id ?? randomUUID())
+    setLanguage(profile?.language ?? '')
+    setText(profile?.text ?? '')
+    sidebarStateModifier.openSidebar(profile ? profile.language : 'New Profile')
   }
 
   return (
     <>
-      <h2>Templates</h2>
-      <ActionButton onClick={() => { showTemplate() }}>Add Template</ActionButton>
+      <h2>Profiles</h2>
+      <ActionButton onClick={() => { showProfile() }}>Add Profile</ActionButton>
       <DataTable
-        onRowClick={(template) => { showTemplate(template) }}
-        columns={templateColumns}
-        data={templates}
+        onRowClick={(profile) => { showProfile(profile) }}
+        columns={profileColumns}
+        data={profiles}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
       />
       <Sidebar
         state={sidebarState}
         onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={() => { sidebarStateModifier.execute(saveTemplate({ id, language, text, name }), addTemplate) }}
-        onDelete={() => { sidebarStateModifier.execute(deleteTemplate(id), () => { removeTemplate(id) }) }}
+        onSave={() => { sidebarStateModifier.execute(saveProfile({ id, language, text }), addProfile) }}
+        onDelete={() => { sidebarStateModifier.execute(deleteProfile(id), () => { removeProfile(id) }) }}
       >
-        <Input type="text" label="Name" value={name} onChange={(e) => { setName(e.target.value) }} />
         <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
         <Textarea style={{ flexGrow: 1 }} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
       </Sidebar>

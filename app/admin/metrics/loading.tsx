@@ -1,10 +1,13 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { DashboardCard } from '../_components/DashboardCard'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export default function Loading() {
   return (
     <main>
-      <h1>Metrics</h1>
+      <ActionTitle>
+        <h1>Metrics</h1>
+      </ActionTitle>
       <LoadingSpinner />
       <div className="row">
         <DashboardCard header="General" items={[]}></DashboardCard>

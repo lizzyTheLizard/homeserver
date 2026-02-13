@@ -1,5 +1,5 @@
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Cash } from './Cash'
+import { Cash } from './_components/Cash'
 import { loadProjects } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 

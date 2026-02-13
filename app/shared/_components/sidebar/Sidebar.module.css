@@ -28,16 +28,6 @@
     height: 1.5rem;
 }
 
-.form {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.form>* {
-    margin: var(--gap-small) 0;
-}
-
 .error {
     color: var(--danger-background-color);
 }
