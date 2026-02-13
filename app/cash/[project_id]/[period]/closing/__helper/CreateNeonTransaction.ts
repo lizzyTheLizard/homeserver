@@ -11,10 +11,10 @@ export async function createTransactionsFromNeonInput(client: PoolClient, owner:
   const from = Temporal.PlainDate.from(result.reduce((min, t) => t.date < min ? t.date : min, '9999-12-31'))
   const accounts = [monthly.neon_account_id, ...result.map(t => t.other_account)]
   await recalculateTransactions(client, owner, monthly.project_id, from, accounts)
-  return result.map((r) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { other_account, ...t } = r
-    return t
+  return monthly.neon_transactions.map((nt) => {
+    const r = result.find(r => r.order === nt.order)
+    if (!r) return nt
+    return { ...nt, transaction_id: r.transaction_id }
   })
 }
 

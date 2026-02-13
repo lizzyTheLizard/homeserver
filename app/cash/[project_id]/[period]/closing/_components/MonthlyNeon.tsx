@@ -94,14 +94,14 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   return (
     <>
       <ActionButton disabled={loading || !valid} onClick={() => { onSave() }}>Save</ActionButton>
+      {error && <div className="error">{error}</div>}
+      {loading && (<LoadingSpinner />)}
       <Input disabled label="Not assigned total" type="currency" value={notAssigned.toString()} style={{ marginBottom: 'var(--gap-small)' }} />
       <DataTable
         columns={columns}
         data={transactions}
         initialSortingOrder={[{ key: 'amount', direction: 'DESC' }]}
       />
-      {error && <div className="error">{error}</div>}
-      {loading && (<LoadingSpinner />)}
     </>
   )
 }
