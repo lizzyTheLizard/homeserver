@@ -32,7 +32,7 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
     const obj = transactions.find(t => t.id === id)
     if (!obj) throw new Error('Could not find transaction for id ' + id)
     return (
-      <Select small value={value} onChange={(e) => { setAccount(obj, e.target.value) }}>
+      <Select className="accountInput" small value={value} onChange={(e) => { setAccount(obj, e.target.value) }}>
         {accounts.map(a => (
           <option key={a.id} value={a.id}>{a.name}</option>
         ))}
@@ -59,12 +59,12 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
     setLoading(true)
     addNeonTransactions(project_id, period, t).then((r) => {
       if (r.success) router.refresh()
-      else setError('Failed to initialize monthly closing: ' + r.error)
+      else setError('Failed to add neon transactions: ' + r.error)
       setLoading(false)
     })
       .catch((e: unknown) => {
-        console.error('Failed to initialize monthly closing', e)
-        setError('Failed to initialize monthly closing')
+        console.error('Failed to add neon transactions', e)
+        setError('Failed to add neon transactions')
         setLoading(false)
       })
   }
@@ -86,9 +86,9 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   }, [transactions])
 
   useEffect(() => {
-    const select = document.getElementsByTagName('select')
-    if (select.length > 0) select[2].focus()
-    console.log(select)
+    const select = document.getElementsByClassName('accountInput')
+    const firstSelect = select[0] as HTMLSelectElement
+    firstSelect.focus()
   }, [])
 
   return (

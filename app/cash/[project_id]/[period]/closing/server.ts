@@ -1,5 +1,5 @@
 'use server'
-import { createMonthlyClosing, findBeforePeriod, findForPeriod, modifyMonthlyClosing, Monthly, MonthlyInput } from '@/app/cash/_data/Monthly'
+import { createMonthlyClosing, findBeforePeriod, findForPeriod, modifyMonthlyClosing, Monthly, MonthlyInput, SharedTransaction } from '@/app/cash/_data/Monthly'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
@@ -15,7 +15,7 @@ import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccou
 export type PageData = { type: 'ALREADY_CLOSED' }
   | { type: 'NOT_FOUND', lastMonthClosing: Monthly | undefined, accounts: Account[] }
   | { type: 'NEON', monthly: Monthly, accounts: Account[] }
-  | { type: 'SHARED', monthly: Monthly, accounts: Account[] }
+  | { type: 'SHARED', monthly: Monthly, accounts: Account[], transactions: AccountTransaction[], lastTransaction: AccountTransaction | undefined }
   | { type: 'FINISHED', monthly: Monthly, accounts: Account[] }
   | { type: 'CHECK_ACCOUNT', monthly: Monthly, accounts: Account[], account: Account, transactions: AccountTransaction[], lastTransaction: AccountTransaction | undefined }
 
@@ -31,15 +31,16 @@ export async function loadData(projectId: string, period: MonthlyPeriod): Promis
 
     if (!monthly) return { type: 'NOT_FOUND', lastMonthClosing, accounts }
     if (monthly.state === 'NEON') return { type: 'NEON', monthly, accounts }
-    if (monthly.state === 'SHARED') return { type: 'SHARED', monthly, accounts }
     if (monthly.state === 'FINISHED') return { type: 'FINISHED', monthly, accounts }
 
     const accountId = getCurrentAccountIdForMonthly(monthly)
     if (!accountId) throw new Error('Current account id not found for monthly in state ' + monthly.state)
-    const account = accounts.find(a => a.id === accountId)
-    if (!account) throw new Error('Account with id ' + accountId + ' not found')
     const transactions = await findAllAccountTransactionsInPeriod(c, user.sub, accountId, period)
     const lastTransaction = await findLatestAccountTransactionBefore(c, user.sub, accountId, period)
+    if (monthly.state === 'SHARED') return { type: 'SHARED', monthly, accounts, transactions, lastTransaction }
+
+    const account = accounts.find(a => a.id === accountId)
+    if (!account) throw new Error('Account with id ' + accountId + ' not found')
     return { type: 'CHECK_ACCOUNT', monthly, accounts, account, transactions: transactions, lastTransaction }
   })
 }
@@ -48,13 +49,13 @@ function getCurrentAccountIdForMonthly(monthly: Monthly | undefined): string | u
   switch (monthly?.state) {
     case undefined:
     case 'NEON':
-    case 'SHARED':
     case 'FINISHED':
       return undefined
     case 'NEONCHECK':
       return monthly.neon_account_id
     case 'CREDITCARDCHECK':
       return monthly.credit_card_account_id
+    case 'SHARED':
     case 'SHAREDCHECK':
       return monthly.shared_account_id
   }
@@ -91,14 +92,25 @@ export async function addNeonTransactions(projectId: string, period: MonthlyPeri
   }))
 }
 
-export async function markAsChecked(monthly: Monthly): ActionResponse<void> {
+export async function markAsChecked(projectId: string, period: MonthlyPeriod): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
-    const m = await findForPeriod(client, user.sub, monthly.project_id, monthly.period)
+    const m = await findForPeriod(client, user.sub, projectId, period)
     if (!m) throw new Error('Monthly closing not found')
-    if (m.state !== monthly.state) throw new Error('Monthly closing is not in state ' + monthly.state + ' but in state ' + m.state)
     m.state = nextState(m.state)
     await modifyMonthlyClosing(client, user.sub, m)
+  }))
+}
+
+export async function addSharedTransactions(projectId: string, period: MonthlyPeriod, transactions: SharedTransaction[]): ActionResponse<void> {
+  return await toResponse(transactional(async (client) => {
+    transactions.forEach((transaction) => { validateObject(transaction, SharedTransactionInputConstraints) })
+    const user = await getAuthenticatedUserSession('cash')
+    const monthly = await findForPeriod(client, user.sub, projectId, period)
+    if (!monthly || monthly.state !== 'SHARED') throw new Error('Monthly closing not found or not in SHARED state')
+    monthly.shared_transactions = transactions
+    monthly.state = 'FINISHED'
+    await modifyMonthlyClosing(client, user.sub, monthly)
   }))
 }
 
@@ -177,6 +189,13 @@ const MonthlyInputConstraints = {
     type: 'array',
     presence: { allowEmpty: true },
   },
+  'shared_transactions': {
+    type: 'array',
+    presence: { allowEmpty: true },
+    length: {
+      maximum: 0,
+    },
+  },
 }
 
 const NeonTransactionConstraints = {
@@ -224,6 +243,21 @@ const NeonTransactionInputConstraints = {
     },
   },
   description: {
+    presence: { allowEmpty: false },
+    type: 'string',
+  },
+}
+
+const SharedTransactionInputConstraints = {
+  transaction_id: {
+    presence: { allowEmpty: false },
+    type: 'string',
+    format: {
+      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      message: 'must be a valid UUID',
+    },
+  },
+  category: {
     presence: { allowEmpty: false },
     type: 'string',
   },

@@ -28,7 +28,7 @@ export function MonthlyCheckAccount({ monthly, accounts, account, transactions, 
   function check() {
     setLoading(true)
     setError(undefined)
-    markAsChecked(monthly).then((r) => {
+    markAsChecked(monthly.project_id, monthly.period).then((r) => {
       if (r.success) router.refresh()
       else setError('Failed to check account: ' + r.error)
       setLoading(false)

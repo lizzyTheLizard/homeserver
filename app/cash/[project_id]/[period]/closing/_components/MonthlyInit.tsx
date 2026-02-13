@@ -47,6 +47,7 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
       shared_account_id: sharedAccountId,
       credit_card_account_id: creditCardAccountId,
       neon_transactions: transactions,
+      shared_transactions: [],
       state: 'NEON',
     }))
       .then((r) => {

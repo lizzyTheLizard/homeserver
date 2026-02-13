@@ -22,6 +22,7 @@ export interface ClosingPageProps {
   }>
 }
 
+// TODO: Improve Titles
 export default async function Page({ params }: ClosingPageProps) {
   return serverPageFunction(metadata.title, async () => {
     const projectId = (await params).project_id
@@ -78,7 +79,7 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>{`Closing ${toString(period)}`}</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
-            <MonthlyShared period={period} project_id={projectId} monthly={pageData.monthly} accounts={pageData.accounts} />
+            <MonthlyShared period={period} project_id={projectId} accounts={pageData.accounts} transactions={pageData.transactions} lastTransaction={pageData.lastTransaction} />
           </main>
         )
       case 'FINISHED':

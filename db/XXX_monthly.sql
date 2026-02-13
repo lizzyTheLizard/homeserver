@@ -12,6 +12,7 @@ CREATE TABLE monthly (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     neon_transactions JSON NOT NULL,
+    shared_transactions JSON NOT NULL,
     FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE,
     FOREIGN KEY (shared_account_id) REFERENCES account(id) ON DELETE CASCADE,
     FOREIGN KEY (neon_account_id) REFERENCES account(id) ON DELETE CASCADE,

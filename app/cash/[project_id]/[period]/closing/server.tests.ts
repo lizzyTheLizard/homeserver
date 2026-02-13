@@ -51,4 +51,4 @@ describe('initialize', () => {
   })
 })
 
-// TODO: Add tests for loadData, addNeonTransactions, markAsChecked
+// TODO: Add tests for loadData, addNeonTransactions, markAsChecked, addSharedTransactions
