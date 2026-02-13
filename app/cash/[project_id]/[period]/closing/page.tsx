@@ -9,6 +9,7 @@ import { MonthlyShared } from './MonthlyShared'
 import { MonthlyFinished } from './MonthlyFinished'
 import { MonthlyCheckAccount } from './MonthlyCheckAccount'
 import loadData from './server'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export const metadata = {
   title: 'Cash - Closing',
@@ -32,6 +33,7 @@ export default async function Page({ params }: ClosingPageProps) {
           <h1>{`Closing ${toString(period)}`}</h1>
           <PeriodPicker period={period} project_id={projectId} />
         </ActionTitle>
+        <ActionButton disabled variant="primary">Continue</ActionButton>
         <div>This period is not a valid monthly period.</div>
       </main>
     )
@@ -45,6 +47,7 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>{`Closing ${toString(period)}`}</h1>
               <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <ActionButton disabled variant="primary">Continue</ActionButton>
             <div>This period is already closed.</div>
           </main>
         )

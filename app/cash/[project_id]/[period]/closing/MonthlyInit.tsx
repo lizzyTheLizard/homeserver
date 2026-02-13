@@ -64,7 +64,7 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
 
   return (
     <>
-      <ActionButton onClick={onSave} disabled={loading || !valid} variant="primary" className={styles.saveButton}>Continue</ActionButton>
+      <ActionButton onClick={onSave} disabled={loading || !valid} variant="primary">Continue</ActionButton>
       {error && <div className="error">{error}</div>}
       {loading && (<LoadingSpinner />)}
       <form className={styles.form}>

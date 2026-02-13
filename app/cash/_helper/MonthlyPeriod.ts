@@ -41,5 +41,5 @@ export function compare(period1: MonthlyPeriod, period2: MonthlyPeriod): number 
 }
 
 export function isMonthlyPeriod(period: Period): period is MonthlyPeriod {
-  return period.year !== undefined && !period.openEnded && period.day === undefined
+  return period.year !== undefined && period.month !== undefined && !period.openEnded && period.day === undefined
 }
