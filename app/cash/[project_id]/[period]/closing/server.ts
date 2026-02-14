@@ -101,6 +101,7 @@ export async function markAsChecked(projectId: string, period: MonthlyPeriod): A
     const user = await getAuthenticatedUserSession('cash')
     const m = await findForPeriod(client, user.sub, projectId, period)
     if (!m) throw new Error('Monthly closing not found')
+    if (!m.state.endsWith('CHECK')) throw new Error('Monthly closing not in CHECK state')
     m.state = nextState(m.state)
     await modifyMonthlyClosing(client, user.sub, m)
   }))
