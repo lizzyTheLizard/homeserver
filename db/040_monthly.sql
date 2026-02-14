@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS monthly;
-
 CREATE TABLE monthly (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL,
@@ -17,4 +15,4 @@ CREATE TABLE monthly (
     FOREIGN KEY (shared_account_id) REFERENCES account(id) ON DELETE CASCADE,
     FOREIGN KEY (neon_account_id) REFERENCES account(id) ON DELETE CASCADE,
     FOREIGN KEY (credit_card_account_id) REFERENCES account(id) ON DELETE CASCADE
-);    
+);
