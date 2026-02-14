@@ -41,6 +41,7 @@ describe('initialize', () => {
         { date: '2024-01-01', order: 1, amount: 100, description: 'Transaction 1' },
         { date: '2024-01-02', order: 2, amount: 200, description: 'Transaction 2' },
       ],
+      shared_transactions: [],
     }
 
     const response = await initialize(data)
