@@ -49,22 +49,21 @@ export async function startLogin(request: Request): Promise<URL> {
   session.originalUrlRelative = getActualUrl(request).toString()
   await session.save()
 
-  return client.buildAuthorizationUrl(await getClientConfig(), parameters)
+  const clientConfig = await getClientConfig()
+  return client.buildAuthorizationUrl(clientConfig, parameters)
 }
 
 export async function callback(urlOrRequest: URL | Request): Promise<string> {
   const session = await getSession()
   const url = getActualUrl(urlOrRequest)
-  const tokenSet = await client.authorizationCodeGrant(await getClientConfig(), url, {
+  const clientConfig = await getClientConfig()
+  const tokenSet = await client.authorizationCodeGrant(clientConfig, url, {
     pkceCodeVerifier: session.code_verifier,
     expectedState: session.state,
   })
   const claims = tokenSet.claims()
-  if (!claims) {
-    throw authenticationFailed(`No claims found in token set during callback`)
-  }
-  // TODO: Use email instead of sub to identify users?
-  const sub = claims.sub
+  if (!claims) throw authenticationFailed(`No claims found in token set during callback`)
+  const sub = claims.email as string
   const name = claims.given_name as string
   const email = claims.email as string
   const applications = await getApplications(sub, email)

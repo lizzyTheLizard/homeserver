@@ -14,7 +14,7 @@ import { recalculateTransactions } from './cash/_helper/RecalculateAccountTransa
 import { Temporal } from '@js-temporal/polyfill'
 import { AccountType } from './cash/_data/AccountType'
 
-const ownerId = 'sNtAXgwUYBxB3YDmgSY0j17bVGH4PMDN_Qt04POufuo'
+const ownerId = 'matthias.graf.for.president@gmail.com'
 const projectId = 'd4d8728e-964d-460e-b345-d931510cf089'
 
 async function connectToAzureDB(): Promise<MongoClient> {
@@ -22,14 +22,14 @@ async function connectToAzureDB(): Promise<MongoClient> {
   const urlSafe = `mongodb://${process.env.AZURE_DB_USERNAME!}:****@${process.env.AZURE_DB_HOST!}:${process.env.AZURE_DB_PORT!}/${process.env.AZURE_DB_NAME!}?retryWrites=false&ssl=true`
   const mongoClient = new MongoClient(url)
   await mongoClient.connect()
-  logger.debug(`Connected to Azure Cosmos DB at ${urlSafe}`)
+  logger.info(`Connected to Azure Cosmos DB at ${urlSafe}`)
   return mongoClient
 }
 
 async function connectToSqlDB(): Promise<PoolClient> {
   const pool = await setupPool(false)
   const sqlClient = await pool.connect()
-  logger.debug(`Connected to SQL database at ${config.DB_CONNECTION_STRING}`)
+  logger.info(`Connected to SQL database at ${config.DB_CONNECTION_STRING}`)
   return sqlClient
 }
 
