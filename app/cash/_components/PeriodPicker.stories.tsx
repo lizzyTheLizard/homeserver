@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { PeriodPicker } from './PeriodPicker'
-import { all, Period, periodToString } from '../_helper/Period'
+import { all, Period } from '../_helper/Period'
 import { useState } from 'react'
 import { expect, fn } from 'storybook/test'
 
@@ -11,7 +11,7 @@ const meta = {
   args: {
     project_id: 'project_123',
     period: { current: false, year: 2023, month: 5 } as Period,
-    onPeriodChange: (p: Period) => { console.log('Period changed to:', periodToString(p)) },
+    onPeriodChange: fn(),
   },
   render: (args) => {
     const [period, setPeriod] = useState(args.period)

@@ -19,7 +19,7 @@ export function DataTableRow<DataType extends { id: string }>({ row, columns, on
     <tr key={row.id} onClick={onClick} className={onRowClick ? style.rowWithClick : ''}>
       {columns.map(column => (
         <td key={row.id + column.key} style={column.style} headers={column.header}>
-          {column.cell(row[column.key as keyof DataType])}
+          {column.cell(row[column.key as keyof DataType], row.id)}
         </td>
       ))}
     </tr>

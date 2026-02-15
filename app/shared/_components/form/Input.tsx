@@ -3,24 +3,23 @@ import { useId, useState } from 'react'
 import style from './Input.module.css'
 import { Temporal } from '@js-temporal/polyfill'
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'placeholder' | 'children'> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'placeholder' | 'children' | 'list'> {
   label?: string
   value?: string
   small?: boolean
   ref?: React.RefObject<HTMLInputElement>
+  list?: string[]
 }
 
 /** An input component styled
  */
-export function Input({ label, small, ...props }: InputProps) {
+export function Input({ list, label, small, ...props }: InputProps) {
   const [internalValue, setInternalValue] = useState('')
   const [focus, setFocus] = useState(false)
   const fallbackId = useId()
   const id = props.id ?? fallbackId
-  const preFormatedValue = props.value ?? internalValue
-  const value = props.type === 'date' && !focus && preFormatedValue
-    ? Temporal.PlainDate.from(preFormatedValue).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
-    : preFormatedValue
+  const listId = list ? `${id}-list` : undefined
+  const value = getValue(props.value, internalValue, props.type, focus)
   const type = props.type === 'date' && !focus ? 'text' : props.type
   const inputClasses = [
     style.input, props.className ?? '',
@@ -55,8 +54,27 @@ export function Input({ label, small, ...props }: InputProps) {
         onBlur={onBlur}
         placeholder=""
         onChange={handleChange}
+        list={listId}
       />
       { label && <label className={style.label} htmlFor={id}>{label}</label>}
+      {list && (
+        <datalist id={listId}>
+          {list.map((item, index) => (
+            <option key={index} value={item} />
+          ))}
+        </datalist>
+      )}
     </div>
   )
+}
+
+function getValue(propValue: string | undefined, internalValue: string, type: string | undefined, focus: boolean): string {
+  const preFormatedValue = propValue ?? internalValue
+  if (!preFormatedValue) return ''
+  if (focus) return preFormatedValue
+  if (type === 'date')
+    return Temporal.PlainDate.from(preFormatedValue).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+  if (type === 'currency')
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'CHF' }).format(Number(preFormatedValue))
+  return preFormatedValue
 }

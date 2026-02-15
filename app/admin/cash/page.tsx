@@ -1,4 +1,5 @@
-import { Cash } from './Cash'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Cash } from './_components/Cash'
 import { loadProjects } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
@@ -11,6 +12,9 @@ export default async function Page() {
     const projects = await loadProjects()
     return (
       <main>
+        <ActionTitle>
+          <h1>Cash Admin</h1>
+        </ActionTitle>
         <Cash projects={projects} />
       </main>
     )

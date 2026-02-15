@@ -89,3 +89,10 @@ export const Small: StoryObj<typeof meta> = {
     small: true,
   },
 }
+
+export const Currency: StoryObj<typeof meta> = {
+  args: {
+    type: 'currency',
+    value: '1234.56',
+  },
+}

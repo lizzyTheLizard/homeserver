@@ -1,4 +1,5 @@
-import { Editor } from './Editor'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Editor } from './_components/Editor'
 import { loadEditorData } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
@@ -11,7 +12,12 @@ export default async function Page({ searchParams}: { searchParams: Promise<Reco
     const discussionId = (await searchParams).id as string | undefined
     const editorData = await loadEditorData(discussionId)
     return (
-      <Editor discussion={editorData.discussion} templates={editorData.templates} />
+      <main>
+        <ActionTitle>
+          <h1>CoEditor</h1>
+        </ActionTitle>
+        <Editor discussion={editorData.discussion} templates={editorData.templates} />
+      </main>
     )
   })
 }

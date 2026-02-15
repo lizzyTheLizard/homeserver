@@ -21,6 +21,9 @@ export interface SidebarProps {
 export function Sidebar({ children, state: { open, pending, type, title, error }, onClose, onDelete, onSave, container }: PropsWithChildren<SidebarProps>) {
   const [id] = useState(randomUUID())
   const ref = useRef<HTMLElement | null>(null)
+  // Ensure this only renders on the client side to avoid hydration issues,
+  // see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
+  const [isClient, setIsClient] = useState(false)
 
   function adjustHeight() {
     if (!ref.current) return
@@ -46,6 +49,11 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
     return () => { if (openSidebar?.id === id) openSidebar = undefined }
   }, [open, id, onClose])
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsClient(true)
+  }, [])
+
   const content = (
     <aside className={style.sidebar + ' ' + (open ? style.open : style.closed)} ref={ref} onClick={(e) => { e.stopPropagation() }}>
       <div className={style.titlebar}>
@@ -54,9 +62,9 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
       </div>
       {type !== undefined && <div className={style.type}>{type}</div>}
       {pending && <LoadingSpinner text="Processing..." />}
-      <form className={style.form}>
+      <form className="form-gaps">
         {children}
-        {error && <div className={style.error}>{error}</div>}
+        {error && <div className="error">{error}</div>}
         {onSave && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}
         {onDelete && <Button type="button" variant="danger" onClick={onDelete}>Delete</Button>}
         <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
@@ -64,6 +72,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
     </aside>
   )
 
+  if (!isClient) return null
   if (container !== undefined)
     return createPortal(content, container.getElementsByClassName(style.sidebarContainer)[0])
   if (typeof document === 'undefined')

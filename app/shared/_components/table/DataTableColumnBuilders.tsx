@@ -11,7 +11,7 @@ export interface Options<FieldType> {
   header?: string
   filter?: boolean
   sort?: boolean
-  cell?: (value: FieldType) => ReactNode
+  cell?: (value: FieldType, id: string) => ReactNode
   style?: CSSProperties
 }
 

@@ -1,18 +1,16 @@
 'use client'
-import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 import { Account } from '@/app/cash/_data/Account'
 import { Closing } from '@/app/cash/_data/Closing'
-import { lastDay, Period, periodToString } from '@/app/cash/_helper/Period'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Button } from '@/app/shared/_components/form/Button'
+import { lastDay, Period, toString } from '@/app/cash/_helper/Period'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { close, reopen } from './server'
+import { close, reopen } from '../server'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { ReportCard } from './_components/ReportCard'
+import { ReportCard } from './ReportCard'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface ReportsProps {
   project_id: string
@@ -30,10 +28,10 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
   const [current, setCurrent] = useState<{ capital_account_id: string, profit_account_id: string }>(latestClosing ?? { capital_account_id: '', profit_account_id: '' })
 
   function showClosing() {
-    closeSidebarStateModifier.openSidebar('Close ' + periodToString(period))
+    closeSidebarStateModifier.openSidebar('Close ' + toString(period))
   }
   function showReopen() {
-    reopenSidebarStateModifier.openSidebar('Reopen ' + periodToString(period))
+    reopenSidebarStateModifier.openSidebar('Reopen ' + toString(period))
   }
 
   function onClose() {
@@ -46,13 +44,9 @@ export function Reports({ accounts = [], project_id = '', period, latestClosing,
 
   return (
     <>
-      <ActionTitle>
-        <h1>Reports</h1>
-        {latestClosing?.date && latestClosing.date >= lastDay(period)
-          ? (<Button onClick={(e) => { showReopen(); e.stopPropagation() }}>Reopen</Button>)
-          : (<Button onClick={(e) => { showClosing(); e.stopPropagation() }}>Close</Button>)}
-        <PeriodPicker period={period} project_id={project_id} />
-      </ActionTitle>
+      {latestClosing?.date && latestClosing.date >= lastDay(period)
+        ? (<ActionButton onClick={(e) => { showReopen(); e.stopPropagation() }}>Reopen</ActionButton>)
+        : (<ActionButton onClick={(e) => { showClosing(); e.stopPropagation() }}>Close</ActionButton>)}
       <div className="row">
         <ReportCard period={period} accounts={accounts} beforeTransactions={beforeTransactions} currentTransactions={currentTransactions} header="Incomes" types={['Income']}></ReportCard>
         <ReportCard period={period} accounts={accounts} beforeTransactions={beforeTransactions} currentTransactions={currentTransactions} header="Expenses" types={['Expense']}></ReportCard>

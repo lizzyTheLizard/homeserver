@@ -7,11 +7,10 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Checkbox } from '@/app/shared/_components/form/Checkbox'
 import { useState } from 'react'
 import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { deleteProject, saveProject } from './server'
+import { deleteProject, saveProject } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Button } from '@/app/shared/_components/form/Button'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface CashProps {
   projects?: Project[]
@@ -41,10 +40,7 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
 
   return (
     <>
-      <ActionTitle>
-        <h1>Cash Admin</h1>
-        <Button onClick={() => { showProject() }}>Add</Button>
-      </ActionTitle>
+      <ActionButton onClick={() => { showProject() }}>Add Project</ActionButton>
       <DataTable
         columns={columns}
         initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}

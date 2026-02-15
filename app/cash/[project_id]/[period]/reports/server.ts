@@ -12,7 +12,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import { v4 as randomUUID } from 'uuid'
 import { PoolClient } from 'pg'
 import { findOldestTransaction } from '@/app/cash/_data/Transaction'
-import { lastDay, Period, periodToString } from '@/app/cash/_helper/Period'
+import { lastDay, Period, toString } from '@/app/cash/_helper/Period'
 import { from, first, last, compare, MonthlyPeriod, next } from '@/app/cash/_helper/MonthlyPeriod'
 import { logger } from '@/app/shared/logger'
 import { getTotalForAccounts } from '@/app/cash/_helper/AccountTotal'
@@ -45,7 +45,7 @@ export async function reopen(period: Period, projectId: string): ActionResponse<
     const deleteClosing = await removeClosingAfterOrOn(client, user.sub, projectId, firstClosingDate)
     const accountsToRecalculate = deleteClosing.map(c => [c.capital_account_id, c.profit_account_id]).flat()
     await recalculateTransactions(client, user.sub, projectId, Temporal.PlainDate.from(firstClosingDate), accountsToRecalculate)
-    logger.info(`Reopened period ${periodToString(firstPeriodToReopen)} to ${periodToString(period)} for project ${projectId} by user ${user.sub}`)
+    logger.info(`Reopened period ${toString(firstPeriodToReopen)} to ${toString(period)} for project ${projectId} by user ${user.sub}`)
   }))
 }
 
@@ -61,7 +61,7 @@ export async function close(period: Period, project_id: string, profit_account_i
       const id = randomUUID()
       const closingInput = { id, project_id, date, profit, capital_account_id, profit_account_id }
       await createClosing(client, user.sub, closingInput)
-      logger.info(`Closed period ${periodToString(periodToClose)} for project ${project_id} by user ${user.sub} with profit ${profit.toString()}`)
+      logger.info(`Closed period ${toString(periodToClose)} for project ${project_id} by user ${user.sub} with profit ${profit.toString()}`)
       periodToClose = next(periodToClose)
     } while (compare(periodToClose, lastPeriodToClose) <= 0)
     const fromDate = Temporal.PlainDate.from(lastDay(firstPeriodToClose))

@@ -1,5 +1,5 @@
-import { Discussion } from '../_data/Discussion'
-import { Template } from '../_data/Template'
+import { Discussion } from '../../_data/Discussion'
+import { Template } from '../../_data/Template'
 
 export interface EditorState {
   text: string

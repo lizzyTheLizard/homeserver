@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { editorStateReducer, initialState } from './Editor.state'
-import { Discussion } from '../_data/Discussion'
-import { Template } from '../_data/Template'
+import { Discussion } from '../../_data/Discussion'
+import { Template } from '../../_data/Template'
 
 const templates = [
   { id: '1', language: 'en', parameters: [] },

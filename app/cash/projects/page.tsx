@@ -2,6 +2,7 @@ import { Card } from '@/app/shared/_components/Card'
 import { loadProjects } from './server'
 import { Project } from '../_data/Project'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Cash - Projects',
@@ -17,7 +18,9 @@ export default async function Page() {
 
     return (
       <main>
-        <h1>Projects</h1>
+        <ActionTitle>
+          <h1>Projects</h1>
+        </ActionTitle>
         <div className="row">
           {projects.map(p => (
             <Card href={getLink(p)} key={p.id}>

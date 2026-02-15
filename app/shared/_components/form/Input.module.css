@@ -70,3 +70,7 @@
 .input.small:focus + .label {
     display: none;
 }
+
+.input::file-selector-button {
+    display: none;
+}

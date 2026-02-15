@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg'
-import { endDate, Period, periodToString, startDate } from '../_helper/Period'
+import { endDate, Period, startDate, toString } from '../_helper/Period'
 import { Entity, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
@@ -18,7 +18,7 @@ export async function findAllClosingsByAccount(client: PoolClient, owner: string
     `SELECT * FROM closing WHERE owner_id = $1 AND date >= $2 AND date <= $3 AND (capital_account_id = $4 OR profit_account_id = $4) ORDER BY date ASC, id ASC`,
     [owner, startDate(period), endDate(period), accountId],
   )
-  logger.debug(`Found ${result.rows.length.toString()} closings for account ${accountId} for ${periodToString(period)}`)
+  logger.debug(`Found ${result.rows.length.toString()} closings for account ${accountId} for ${toString(period)}`)
   return result.rows.map(removeNull)
 }
 

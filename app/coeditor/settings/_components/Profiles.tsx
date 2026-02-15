@@ -1,17 +1,16 @@
 'use client'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Profile } from '../_data/Profile'
+import { Profile } from '../../_data/Profile'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { deleteProfile, saveProfile } from './server'
+import { deleteProfile, saveProfile } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Button } from '@/app/shared/_components/form/Button'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface ProfilesProps {
   profiles?: Profile[]
@@ -39,10 +38,8 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
 
   return (
     <>
-      <ActionTitle>
-        <h1>Profiles</h1>
-        <Button onClick={() => { showProfile() }}>Add</Button>
-      </ActionTitle>
+      <h2>Profiles</h2>
+      <ActionButton onClick={() => { showProfile() }}>Add Profile</ActionButton>
       <DataTable
         onRowClick={(profile) => { showProfile(profile) }}
         columns={profileColumns}

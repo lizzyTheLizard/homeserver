@@ -6,6 +6,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   emptyLabel?: string
   value?: string
   small?: boolean
+  ref?: React.Ref<HTMLSelectElement>
 }
 
 /**

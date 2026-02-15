@@ -1,17 +1,16 @@
 'use client'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Template } from '../_data/Template'
+import { Template } from '../../_data/Template'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { deleteTemplate, saveTemplate } from './server'
+import { deleteTemplate, saveTemplate } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { Button } from '@/app/shared/_components/form/Button'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export interface TemplatesProps {
   templates?: Template[]
@@ -41,10 +40,8 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
 
   return (
     <>
-      <ActionTitle>
-        <h1>Templates</h1>
-        <Button onClick={() => { showTemplate() }}>Add</Button>
-      </ActionTitle>
+      <h2>Templates</h2>
+      <ActionButton onClick={() => { showTemplate() }}>Add Template</ActionButton>
       <DataTable
         onRowClick={(template) => { showTemplate(template) }}
         columns={templateColumns}

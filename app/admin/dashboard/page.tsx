@@ -2,6 +2,7 @@ import { DashboardCard } from '../_components/DashboardCard'
 import { config } from '@/app/shared/config'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { loadBuildInfo, loadConfigInfo, loadMetricsInfo, loadRunInfo } from './server'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Admin - Dashboard',
@@ -16,7 +17,9 @@ export default async function Page() {
 
     return (
       <main>
-        <h1>Admin Dashboard</h1>
+        <ActionTitle>
+          <h1>Admin Dashboard</h1>
+        </ActionTitle>
         <div className="row">
           <DashboardCard header="Build" items={buildInfo}></DashboardCard>
           <DashboardCard header="Run" items={runInfo}></DashboardCard>
