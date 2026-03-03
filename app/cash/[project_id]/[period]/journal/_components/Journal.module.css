@@ -1,0 +1,21 @@
+.amount {
+    width: 13rem;
+}
+
+.date {
+    width: 13rem;
+}
+
+@media print {
+    .amount {
+        width: 7rem;
+    }
+
+    .date {
+        width: 5rem;
+    }
+
+    .account {
+        width: 6rem;
+    }
+}

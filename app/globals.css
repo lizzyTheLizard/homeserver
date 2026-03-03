@@ -96,3 +96,10 @@ h1 {
     flex-direction: column;
     gap: var(--gap-small);
 }
+
+@media print {
+  a {
+    color: var(--default-text-color);
+    text-decoration: none;
+  }
+}

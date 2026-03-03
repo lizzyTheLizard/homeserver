@@ -1,5 +1,5 @@
 import { Filtering, SortingOrder } from './sortAndFilter'
-import style from './DataTable.module.css'
+import style from './DataTableHeader.module.css'
 import { Icon } from '../Icon'
 import { ColumnDefinition } from './DataTable'
 
@@ -15,9 +15,10 @@ export function DataTableHeader<FieldType>({ column, sortingOrder, onSort, filte
   const sort = sortingOrder.find(f => f.key === column.key)
   const icon = sort ? (sort.direction === 'DESC' ? 'up' : 'down') : 'updown'
   const filterValue = filtering.find(f => f.key === column.key)?.value
+  const className = style.cell + ' ' + (column.className ?? '')
 
   return (
-    <th id={column.header} style={column.style}>
+    <th id={column.header} className={className} style={column.style}>
       <div className={style.header}>
         {column.header}
         {column.sort && (

@@ -1,6 +1,6 @@
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { Reports } from './_components/Reports'
-import { fromUrlString } from '@/app/cash/_helper/Period'
+import { fromUrlString, toString } from '@/app/cash/_helper/Period'
 import { loadReports } from './server'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
@@ -24,7 +24,7 @@ export default async function Page({ params }: ReportsPageProps) {
     return (
       <main>
         <ActionTitle>
-          <h1>Reports</h1>
+          <h1>{'Report ' + toString(period)}</h1>
           <PeriodPicker period={period} project_id={projectId} />
         </ActionTitle>
         <Reports {...data} project_id={projectId} period={period} />

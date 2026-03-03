@@ -12,7 +12,7 @@ export default function Page() {
   return (
     <main>
       <ActionTitle>
-        <h1>Reports</h1>
+        <h1>Report</h1>
         <PeriodPicker period={all} />
       </ActionTitle>
       <Reports period={all} project_id="" accounts={[]} latestClosing={undefined} beforeTransactions={[]} currentTransactions={[]} />

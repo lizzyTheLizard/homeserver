@@ -6,7 +6,7 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Currency } from '@/app/shared/_components/Currency'
 import { ColumnDefinition, ColumnFilter } from '@/app/shared/_components/table/DataTable'
 import { Period, toUrlString } from './Period'
-import style from '@/app/shared/_components/table/DataTable.module.css'
+import style from '@/app/shared/_components/table/DataTableColumnBuilder.module.css'
 
 export function accountColumn(key: string, accounts: Account[], period: Period, options?: Options<string>): ColumnDefinition<string, string> {
   const filter: ColumnFilter<string, string> = {
@@ -29,7 +29,8 @@ export function accountColumn(key: string, accounts: Account[], period: Period, 
     }),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,
-    style: { textAlign: 'center', ...options?.style },
+    style: options?.style,
+    className: style.center + ' ' + (options?.className ?? ''),
   }
 }
 
@@ -53,6 +54,7 @@ export function currencyColumn(key: string, options?: Options<number>): ColumnDe
     cell: options?.cell ?? ((value: number) => <Currency amount={value} />),
     sort: options?.sort === false ? undefined : (a: number, b: number) => Math.abs(a) - Math.abs(b),
     filter: options?.filter === false ? undefined : filter,
-    style: { textAlign: 'center', ...options?.style },
+    style: options?.style,
+    className: style.right + ' ' + (options?.className ?? ''),
   }
 }
