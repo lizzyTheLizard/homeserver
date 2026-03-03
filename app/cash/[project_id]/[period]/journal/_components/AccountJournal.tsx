@@ -19,6 +19,7 @@ import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo, useState } from 'react'
 import { Temporal } from '@js-temporal/polyfill'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Journal.module.css'
 
 export interface AccountJournalProps {
   account: Account
@@ -44,11 +45,11 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
     .sort((a, b) => a.name.localeCompare(b.name)), [transactionsIn, accounts])
 
   const columns = [
-    accountColumn('other_account_id', otherAccounts, period, { header: 'Other Account', sort: false }),
-    currencyColumn('amount', { cell: amountCell, header: 'Amount', style: { width: '13rem' }, sort: false }),
-    currencyColumn('total_balance', { cell: totalCell, header: 'Total', style: { width: '13rem' }, sort: false }),
-    dateColumn('date', { style: { width: '13rem' }, header: 'Date', sort: false }),
-    textColumn('description', { header: 'Description', style: { whiteSpace: 'pre', overflow: 'hidden' }, sort: false }),
+    accountColumn('other_account_id', otherAccounts, period, { className: style.account, header: 'Other Account', sort: false }),
+    currencyColumn('amount', { cell: amountCell, header: 'Amount', className: style.amount, sort: false }),
+    currencyColumn('total_balance', { cell: totalCell, header: 'Total', className: style.amount, sort: false }),
+    dateColumn('date', { className: style.date, header: 'Date', sort: false }),
+    textColumn('description', { header: 'Description', style: { whiteSpace: 'pre-wrap', overflow: 'hidden' }, sort: false }),
   ]
 
   function amountCell(v: number | undefined): React.ReactNode {

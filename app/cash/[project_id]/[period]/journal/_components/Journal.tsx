@@ -16,6 +16,7 @@ import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { Temporal } from '@js-temporal/polyfill'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Journal.module.css'
 
 export interface JournalProps {
   accounts: Account[]
@@ -40,11 +41,11 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
     .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts])
 
   const columns = [
-    accountColumn('credit_account_id', creditAccounts, period, { header: 'Credit Account' }),
-    accountColumn('debit_account_id', debitAccounts, period, { header: 'Debit Account' }),
-    currencyColumn('amount', { header: 'Amount', style: { width: '13rem' } }),
-    dateColumn('date', { style: { width: '13rem' }, header: 'Date' }),
-    textColumn('description', { header: 'Description', style: { whiteSpace: 'pre', overflow: 'hidden' } }),
+    accountColumn('credit_account_id', creditAccounts, period, { className: style.account, header: 'Credit Account' }),
+    accountColumn('debit_account_id', debitAccounts, period, { className: style.account, header: 'Debit Account' }),
+    currencyColumn('amount', { className: style.amount, header: 'Amount' }),
+    dateColumn('date', { className: style.date, header: 'Date' }),
+    textColumn('description', { header: 'Description', style: { whiteSpace: 'pre-wrap', overflow: 'hidden' } }),
   ]
 
   function showTransaction(transaction?: Transaction) {

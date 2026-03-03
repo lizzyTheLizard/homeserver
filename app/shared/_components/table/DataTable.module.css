@@ -1,52 +1,12 @@
-.emptyRow>td {
-  text-align: center;
-}
-
-.sortingButton{
-    background-color: var(--primary-background-color);
-    color: var(--default-background-color);
-    border: none;
-    padding: 0;
-}
-
-.header {
-  display: flex;
+table.dataTable {
+  table-layout: fixed;
   width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gap-small);
-}
+  border-radius: var(--border-radius);
+  border: 0;
+  border-spacing: 0;
+  border-collapse: separate;
 
-.dateFilters {
-  margin-top: var(--gap-small);
-  display: flex;
-  gap: var(--gap-small);
-  flex-wrap: wrap;
-}
-
-.dateFilters >div{
-  flex-grow: 1;
-  width: 10px;
-  min-width: 6rem;
-}
-
-.filter {
-  margin-top: var(--gap-small);
-}
-
-.rowWithClick:hover td {
-    background-color: grey !important
-}
-
-@media (min-width: 600px) {
-  table.dataTable {
-    border-spacing: 0;
-    border-collapse: separate;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--primary-border-color);
-    width: 100%;
-    table-layout: fixed;
-
+  thead {
     th {
       background-color: var(--primary-background-color);
       color: var(--default-background-color);
@@ -54,119 +14,152 @@
       padding: var(--gap-small) var(--gap-small);
       vertical-align: top;
       text-align: center;
+      border-top: 1px solid var(--primary-border-color);
+      border-right: 1px solid var(--primary-border-color);
     }
 
-    th:first-child{
-    /* To make backgound of first header round, we need to set border-radius */
-    border-top-left-radius: var(--border-radius);
+    th:first-child {
+      border-left: 1px solid var(--primary-border-color);
+      border-top-left-radius: var(--border-radius);
     }
 
-    th:last-child{
+    th:last-child {
       border-top-right-radius: var(--border-radius);
     }
+  }
 
-    th:not(:last-child),
-    td:not(:last-child) {
-    /* Apply a border to the right of all but the last column */
-    border-right: 1px solid var(--primary-border-color);
+  tbody {
+    tr {
+      td {
+        border-bottom: 1px solid var(--primary-border-color);
+        border-right: 1px solid var(--primary-border-color);
+      }
+
+      td:first-child {
+        border-left: 1px solid var(--primary-border-color);
+      }
     }
 
-    tr:not(:last-child)>th,
-    tr:not(:last-child)>td,
-    thead:not(:last-child),
-    tbody:not(:last-child),
-    tfoot:not(:last-child) {
-    /* Apply a border to the bottom of all but the last row */
-    border-bottom: 1px solid var(--primary-border-color);
+    tr.emptyRow {
+      td {
+        text-align: center;
+      }
     }
 
-    td {
-      padding: var(--gap-small) var(--gap-small);
-      vertical-align: top;
+    tr:first-child {
+      td {
+        border-top: 1px solid var(--primary-border-color);
+      }
     }
 
-    tr:not(.emptyRow) td {
-      text-align: left;
+    tr:last-child {
+      td:first-child {
+        border-bottom-left-radius: var(--border-radius);
+      }
+
+      td:last-child {
+        border-bottom-right-radius: var(--border-radius);
+      }
     }
-        
+
     tr:nth-child(even) td {
       background-color: #f2f2f2;
     }
-
-    tr:last-child td:first-child{
-      border-bottom-left-radius: var(--border-radius);
-    }
-
-    tr:last-child td:last-child{
-      border-bottom-right-radius: var(--border-radius);
-    }
-
   }
 }
 
-
 @media (max-width: 600px) {
-  table.dataTable{
-    display: block; 
-    border-radius: var(--border-radius);
-    border: 1px solid var(--primary-border-color);
-    width: 100%;
-    --header-width: 8rem;
+  table.dataTable {
+    display: block;
 
-    tbody, td, tr:not(.emptyRow) { 
-      display: block; 
-    }
-
-    thead, th { 
+    thead {
       display: none;
     }
-  
-    td {
-      padding: var(--gap-small) var(--gap-small);
-      border-bottom: 1px solid var(--primary-border-color);
-      border-top-left-radius: var(--border-radius);
-      border-top-right-radius: var(--border-radius);
-      word-break: break-all;
-      min-height: var(--gap);
-      width: initial !important;
-      text-align: right !important;
-    }
-    
-    tr:not(.emptyRow) td {
-      text-align: left;
-    }
 
-    td:first-child {
-      padding-top: var(--gap);
-    }
+    tbody {
+      display: block;
 
-    td:last-child {
-      padding-bottom: var(--gap);
-    }
+      tr {
+        display: block;
 
-    tr:last-child td:last-child {
-      border-bottom-left-radius: var(--border-radius);
-      border-bottom-right-radius: var(--border-radius);
-      border-bottom: none;
-    }
+        td {
+          display: block;
+          word-break: break-all;
+          min-height: var(--gap);
+          width: initial !important;
+          text-align: right;
+          border-left: 1px solid var(--primary-border-color);
+          padding: var(--gap-small) var(--gap-small);
+        }
 
-    tr:nth-child(even) td {
-      background-color: #f2f2f2;
-    }
+        td:first-child {
+          padding-top: var(--gap);
+          border-top: 1px solid var(--primary-border-color);
+          border-top-left-radius: var(--border-radius);
+          border-top-right-radius: var(--border-radius);
+        }
 
-    tr:not(.emptyRow) td:not(:has(*[label])) { 
-      position: relative;
-      padding-left: var(--header-width); 
-    }
+        td:last-child {
+          padding-bottom: var(--gap);
+          border-bottom-left-radius: var(--border-radius);
+          border-bottom-right-radius: var(--border-radius);
+          margin-bottom: var(--gap);
+        }
+      }
 
-    tr:not(.emptyRow) td:not(:has(*[label])):before { 
-      position: absolute;
-      left: var(--gap);
-      width: calc(100% - var(--header-width) - 2 * var(--gap));
-      white-space: nowrap;
-      font-weight: bold;
-      content: attr(headers);
-      text-align: left;
+      tr.emptyRow {
+        td {
+          text-align: center;
+        }
+      }
+
+      tr:not(.emptyRow) {
+        td {
+          padding-left: 8rem;
+        }
+        td:before {
+          position: absolute;
+          left: var(--gap);
+    		  width: calc(100% - 8rem - 2 * var(--gap));
+          white-space: nowrap;
+          font-weight: bold;
+          content: attr(headers);
+          text-align: left;
+        }
+      }
     }
   }
-} 
+}
+
+@media print {
+  table.dataTable {
+    font-size: small;
+    break-inside: auto;
+
+    thead {
+      display: table-header-group;
+
+      th {
+        background-color: initial;
+        color: initial;
+      }
+    }
+
+    tbody {
+      tr {
+        break-inside: avoid;
+        break-after: auto;
+
+        td {
+          overflow: clip;
+          break-inside: avoid;
+          break-after: auto;
+        }
+      }
+
+      tr:nth-child(even) td {
+        background-color: initial;
+      }
+    }
+  }
+}

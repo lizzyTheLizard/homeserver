@@ -34,7 +34,7 @@ export function ReportCard({ accounts, beforeTransactions, currentTransactions, 
 
   return (
     <Card>
-      <h2>{header}</h2>
+      <h2 className={styles.header}>{header}</h2>
       <table className={styles.table}>
         <thead>
           <tr>

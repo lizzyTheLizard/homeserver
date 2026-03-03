@@ -8,13 +8,12 @@
     flex-grow: 1;
 }
 
-.title > button {
+.title>button {
     width: initial;
 }
 
-
 @media (min-width: 600px) {
-    .title > *:not(.titleContent) {
+    .title>* {
         min-width: 9rem;
     }
 }
@@ -27,8 +26,20 @@
     .title h1 {
         width: 100%;
     }
-    
-    .title > *:not(.titleContent) {
+
+    .title > * {
         flex-grow: 1;
     }
 }
+
+    @media print {
+        .title h1 {
+            width: 100%;
+            margin: 0;
+            margin-bottom: var(--gap);
+        }
+
+        .title :not(h1) {
+            display: none;
+        }
+    }

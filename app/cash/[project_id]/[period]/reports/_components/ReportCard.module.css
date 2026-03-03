@@ -30,3 +30,17 @@
 .link {
     padding-top: 1rem;
 }
+
+@media print {
+    .value {
+        min-width: 8rem;
+    }
+
+    .table {
+        font-size: small;
+    }
+
+    .header {
+        margin: 0;
+    }
+}

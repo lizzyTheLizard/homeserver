@@ -4,7 +4,7 @@ import { Checkbox } from '../../_components/form/Checkbox'
 import { Input } from '../../_components/form/Input'
 import { Select } from '../../_components/form/Select'
 import { ColumnDefinition, ColumnFilter } from './DataTable'
-import style from './DataTable.module.css'
+import style from './DataTableColumnBuilder.module.css'
 import { Temporal } from '@js-temporal/polyfill'
 
 export interface Options<FieldType> {
@@ -13,6 +13,7 @@ export interface Options<FieldType> {
   sort?: boolean
   cell?: (value: FieldType, id: string) => ReactNode
   style?: CSSProperties
+  className?: string
 }
 
 export function textColumn(key: string, options?: Options<string>): ColumnDefinition<string, string> {
@@ -35,6 +36,7 @@ export function textColumn(key: string, options?: Options<string>): ColumnDefini
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,
     style: options?.style,
+    className: options?.className,
   }
 }
 
@@ -59,7 +61,8 @@ export function dateColumn(key: string, options?: Options<Temporal.PlainDate> & 
     cell: options?.cell ?? ((value: Temporal.PlainDate) => <DateTime date={value}></DateTime>),
     sort: options?.sort === false ? undefined : (a: Temporal.PlainDate, b: Temporal.PlainDate) => a.toString().localeCompare(b.toString()),
     filter: options?.filter === false ? undefined : filter,
-    style: { textAlign: 'center', ...options?.style },
+    style: options?.style,
+    className: style.center + ' ' + (options?.className ?? ''),
   }
 }
 
@@ -81,7 +84,8 @@ export function boolColumn(key: string, options?: Options<boolean>): ColumnDefin
       : <Checkbox checked={false} readOnly={true} small={true} center={true} />),
     sort: options?.sort === false ? undefined : (a: boolean, b: boolean) => (a === b ? 0 : a ? -1 : 1),
     filter: options?.filter === false ? undefined : filter,
-    style: { textAlign: 'center', ...options?.style },
+    style: options?.style,
+    className: style.center + ' ' + (options?.className ?? ''),
   }
 }
 
@@ -102,6 +106,7 @@ export function enumColumn(key: string, values: string[], options?: Options<stri
     cell: options?.cell ?? ((value: string) => value),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,
-    style: { textAlign: 'center', ...options?.style },
+    style: options?.style,
+    className: style.center + ' ' + (options?.className ?? ''),
   }
 }
