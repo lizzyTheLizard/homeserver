@@ -50,7 +50,7 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
 
   function setAccount(obj: NeonTransactionInEdit, value: string) {
     const accountId = value === '' ? undefined : value
-    const comment = accountId === undefined ? undefined : (obj.accountId ? obj.comment : (obj.subject ?? obj.description))
+    const comment = accountId === undefined ? undefined : (obj.accountId ? obj.comment : (obj.subject ?? (obj.description ?? '')))
     addTransaction({ ...obj, accountId, comment })
   }
 

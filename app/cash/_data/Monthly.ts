@@ -22,7 +22,7 @@ export interface NeonTransaction {
   date: string
   order: number
   amount: number
-  description: string
+  description?: string
   subject?: string
   transaction_id?: string
 }

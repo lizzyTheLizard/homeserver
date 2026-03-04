@@ -4,7 +4,6 @@ import { validate } from 'validate.js'
 import { parse } from 'papaparse'
 
 export function parseNeonFile(file: File): Promise<NeonTransaction[]> {
-  console.log('Parsing Neon file:', file.name)
   return new Promise((resolve, reject) => {
     parse(file, {
       delimiter: ';',
@@ -17,7 +16,7 @@ export function parseNeonFile(file: File): Promise<NeonTransaction[]> {
         resolve(results.data.map((data, i) => {
           const validationResult = validate(data, NeonTransactionConstraints, { format: 'flat' }) as string[] | undefined
           if (validationResult?.[0]) reject(new Error('Invalid CSV data: ' + validationResult[0]))
-          const input = data as { Date: string, Amount: string, Description: string, Subject?: string }
+          const input = data as { Date: string, Amount: string, Description?: string, Subject?: string }
           const date = Temporal.PlainDate.from(input.Date).toString()
           const amount = parseFloat(input.Amount)
           const description = input.Description
@@ -47,7 +46,6 @@ const NeonTransactionConstraints = {
     },
   },
   Description: {
-    presence: { allowEmpty: false },
     type: 'string',
   },
   Subject: {

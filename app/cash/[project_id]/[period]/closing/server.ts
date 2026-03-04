@@ -219,7 +219,6 @@ const NeonTransactionConstraints = {
     type: 'number',
   },
   description: {
-    presence: { allowEmpty: false },
     type: 'string',
   },
   subject: {

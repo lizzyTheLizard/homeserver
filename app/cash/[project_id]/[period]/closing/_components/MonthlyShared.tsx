@@ -78,8 +78,8 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
 
   useEffect(() => {
     const inputs = document.getElementsByClassName('categoryInput')
-    const firstInput = inputs[0] as HTMLInputElement
-    firstInput.focus()
+    const firstInput = inputs[0] as HTMLInputElement | undefined
+    firstInput?.focus()
   }, [])
 
   return (
