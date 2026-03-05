@@ -5,7 +5,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { Period } from '@/app/cash/_helper/Period'
+import { lastDay, Period, startDate, todayOrInPeriod } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { deleteTransaction, saveTransaction } from '../server'
 import { Input } from '@/app/shared/_components/form/Input'
@@ -17,7 +17,6 @@ import { useRouter } from 'next/navigation'
 import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
 import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo, useState } from 'react'
-import { Temporal } from '@js-temporal/polyfill'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
 
@@ -33,7 +32,7 @@ export interface AccountJournalProps {
 export function AccountJournal({ account, accounts, transactions: transactionsIn, lastTransaction, project_id, period }: AccountJournalProps) {
   const router = useRouter()
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
-  const [current, setCurrent] = useState(initialInput)
+  const [current, setCurrent] = useState(getInitialInput(period))
 
   const transactions = useMemo(() => isSummationAccount(account.type) && lastTransaction
     ? [...transactionsIn, getOpeningBalanceTransaction(lastTransaction)]
@@ -67,7 +66,7 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
 
   function showTransaction(transaction?: AccountTransaction | OpeningBalanceTransaction): void {
     if (!transaction) {
-      setCurrent(initialInput)
+      setCurrent(getInitialInput(period))
       sidebarStateModifier.openSidebar('New Transaction')
       return
     }
@@ -115,7 +114,7 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
         onSave={onSave}
         onDelete={onDelete}
       >
-        <Input type="date" label="Date" value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
+        <Input type="date" label="Date" min={startDate(period)} max={lastDay(period)} value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Other Account" value={current.other_account_id} onChange={(e) => { setCurrent({ ...current, other_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
@@ -134,12 +133,14 @@ interface SidebarInput {
   description: string
 }
 
-const initialInput: Omit<SidebarInput, 'amount'> & { amount: string } = {
-  id: randomUUID(),
-  other_account_id: '',
-  amount: '0',
-  date: Temporal.Now.plainDateISO().toString(),
-  description: '',
+function getInitialInput(period: Period): Omit<SidebarInput, 'amount'> & { amount: string } {
+  return {
+    id: randomUUID(),
+    other_account_id: '',
+    amount: '0',
+    date: todayOrInPeriod(period),
+    description: '',
+  }
 }
 
 interface OpeningBalanceTransaction {
