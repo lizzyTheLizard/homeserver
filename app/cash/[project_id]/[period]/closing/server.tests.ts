@@ -668,7 +668,8 @@ describe('loadData', () => {
     const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'FINISHED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
     const closing = { id: randomUUID(), project_id: project.id, date: '2024-02-01', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 500 } as ClosingInput
     const transaction1 = { id: randomUUID(), ordering: 1, account_id: neonAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2024-01-05', description: 'Transaction for neon account' } as AccountTransactionInput
-    const transaction2 = { id: randomUUID(), ordering: 1, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 50, total_balance: 50, date: '2024-01-10', description: 'Transaction for shared account' } as AccountTransactionInput
+    const transaction2 = { id: randomUUID(), ordering: 1, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 50, total_balance: 150, date: '2024-01-10', description: 'Transaction for shared account' } as AccountTransactionInput
+    const transaction3 = { id: randomUUID(), ordering: 2, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2023-12-10', description: 'Transaction for shared account' } as AccountTransactionInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -680,6 +681,7 @@ describe('loadData', () => {
       await createClosing(tx, task.id, closing)
       await createAccountTransaction(tx, task.id, transaction1)
       await createAccountTransaction(tx, task.id, transaction2)
+      await createAccountTransaction(tx, task.id, transaction3)
     })
 
     const result = await loadData(project.id, period)
@@ -687,8 +689,10 @@ describe('loadData', () => {
       type: 'FINISHED',
       monthly: expect.objectContaining({ id: monthly.id, state: 'FINISHED' }) as Monthly,
       accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
-      transactionsSharedAccounts: expect.arrayContaining([expect.objectContaining({ account_id: sharedAccount.id })]) as AccountTransaction[],
+      transactionsSharedAccount: expect.arrayContaining([expect.objectContaining({ account_id: sharedAccount.id })]) as AccountTransaction[],
+      lastTransactionSharedAccount: expect.objectContaining({ id: transaction3.id }) as AccountTransaction,
       transactionsNeonAccount: expect.arrayContaining([expect.objectContaining({ account_id: neonAccount.id })]) as AccountTransaction[],
+      lastTransactionNeonAccount: undefined,
       latestClosing: expect.objectContaining({ id: closing.id }) as Closing,
     })
   })
@@ -748,8 +752,10 @@ describe('loadData', () => {
       type: 'FINISHED',
       monthly: expect.objectContaining({ id: monthly.id, state: 'FINISHED' }) as Monthly,
       accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
-      transactionsSharedAccounts: [],
+      transactionsSharedAccount: [],
+      lastTransactionSharedAccount: undefined,
       transactionsNeonAccount: [],
+      lastTransactionNeonAccount: undefined,
       latestClosing: expect.objectContaining({ id: closing.id }) as Closing,
     })
   })

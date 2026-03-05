@@ -16,7 +16,7 @@ export type PageData = { type: 'ALREADY_CLOSED' }
   | { type: 'NOT_FOUND', lastMonthClosing: Monthly | undefined, accounts: Account[] }
   | { type: 'NEON', monthly: Monthly, accounts: Account[] }
   | { type: 'SHARED', monthly: Monthly, accounts: Account[], transactions: AccountTransaction[], lastTransaction: AccountTransaction | undefined }
-  | { type: 'FINISHED', monthly: Monthly, accounts: Account[], transactionsSharedAccounts: AccountTransaction[], transactionsNeonAccount: AccountTransaction[], latestClosing: Closing | undefined }
+  | { type: 'FINISHED', monthly: Monthly, accounts: Account[], transactionsSharedAccount: AccountTransaction[], lastTransactionSharedAccount: AccountTransaction | undefined, transactionsNeonAccount: AccountTransaction[], lastTransactionNeonAccount: AccountTransaction | undefined, latestClosing: Closing | undefined }
   | { type: 'CHECK_ACCOUNT', monthly: Monthly, accounts: Account[], account: Account, transactions: AccountTransaction[], lastTransaction: AccountTransaction | undefined }
 
 export async function loadData(projectId: string, period: MonthlyPeriod): Promise<PageData> {
@@ -32,9 +32,11 @@ export async function loadData(projectId: string, period: MonthlyPeriod): Promis
     if (!monthly) return { type: 'NOT_FOUND', lastMonthClosing, accounts }
     if (monthly.state === 'NEON') return { type: 'NEON', monthly, accounts }
     if (monthly.state === 'FINISHED') {
-      const transactionsSharedAccounts = await findAllAccountTransactionsInPeriod(c, user.sub, monthly.shared_account_id, period)
+      const transactionsSharedAccount = await findAllAccountTransactionsInPeriod(c, user.sub, monthly.shared_account_id, period)
+      const lastTransactionSharedAccount = await findLatestAccountTransactionBefore(c, user.sub, monthly.shared_account_id, period)
       const transactionsNeonAccount = await findAllAccountTransactionsInPeriod(c, user.sub, monthly.neon_account_id, period)
-      return { type: 'FINISHED', monthly, accounts, transactionsSharedAccounts, transactionsNeonAccount, latestClosing: closing }
+      const lastTransactionNeonAccount = await findLatestAccountTransactionBefore(c, user.sub, monthly.neon_account_id, period)
+      return { type: 'FINISHED', monthly, accounts, transactionsSharedAccount, lastTransactionSharedAccount, transactionsNeonAccount, lastTransactionNeonAccount, latestClosing: closing }
     }
 
     const accountId = getCurrentAccountIdForMonthly(monthly)
