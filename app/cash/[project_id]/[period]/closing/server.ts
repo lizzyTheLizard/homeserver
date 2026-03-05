@@ -174,6 +174,14 @@ const MonthlyInputConstraints = {
       message: 'must be a valid UUID',
     },
   },
+  'remaining_account_id': {
+    presence: { allowEmpty: false },
+    type: 'string',
+    format: {
+      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      message: 'must be a valid UUID',
+    },
+  },
   'credit_card_account_id': {
     presence: { allowEmpty: false },
     type: 'string',

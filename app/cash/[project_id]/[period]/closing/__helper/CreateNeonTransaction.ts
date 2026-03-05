@@ -5,9 +5,11 @@ import { v4 as randomUUID } from 'uuid'
 import { createTransaction, TransactionInput } from '@/app/cash/_data/Transaction'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { Temporal } from '@js-temporal/polyfill'
+import { lastDay, toString } from '@/app/cash/_helper/Period'
 
 export async function createTransactionsFromNeonInput(client: PoolClient, owner: string, monthly: Monthly, transactionInput: NeonTransactionInput[]): Promise<NeonTransaction[]> {
   const result = await Promise.all(transactionInput.map(i => createTransactionFromNeonInput(client, owner, monthly, i)))
+  await createRemainingTransaction(client, owner, monthly, transactionInput)
   const from = Temporal.PlainDate.from(result.reduce((min, t) => t.date < min ? t.date : min, '9999-12-31'))
   const accounts = [monthly.neon_account_id, ...result.map(t => t.other_account)]
   await recalculateTransactions(client, owner, monthly.project_id, from, accounts)
@@ -32,4 +34,20 @@ async function createTransactionFromNeonInput(client: PoolClient, owner: string,
   } as TransactionInput
   const t = await createTransaction(client, owner, transaction)
   return { ...existingTransaction, transaction_id: t.id, other_account: transactionInput.accountId }
+}
+
+async function createRemainingTransaction(client: PoolClient, owner: string, monthly: Monthly, transactions: NeonTransactionInput[]): Promise<void> {
+  const remainingAmount = monthly.neon_transactions
+    .filter(t => !transactions.some(input => input.order === t.order))
+    .reduce((acc, t) => acc + t.amount, 0)
+  const transaction = {
+    id: randomUUID(),
+    project_id: monthly.project_id,
+    amount: Math.abs(remainingAmount),
+    credit_account_id: remainingAmount < 0 ? monthly.neon_account_id : monthly.remaining_account_id,
+    debit_account_id: remainingAmount < 0 ? monthly.remaining_account_id : monthly.neon_account_id,
+    date: lastDay(monthly.period),
+    description: 'Remaining amount for ' + toString(monthly.period),
+  } as TransactionInput
+  await createTransaction(client, owner, transaction)
 }
