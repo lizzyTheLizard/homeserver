@@ -6,7 +6,7 @@ import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { Period } from '@/app/cash/_helper/Period'
+import { lastDay, Period, startDate, todayOrInPeriod } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { useMemo, useState } from 'react'
 import { deleteTransaction, saveTransaction } from '../server'
@@ -14,7 +14,6 @@ import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { Temporal } from '@js-temporal/polyfill'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
 
@@ -28,7 +27,7 @@ export interface JournalProps {
 export function Journal({ accounts, transactions: transactionsIn, project_id, period }: JournalProps) {
   const [transactions, addTransaction, removeTransaction] = useListState(transactionsIn)
   const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
-  const [current, setCurrent] = useState(initialInput)
+  const [current, setCurrent] = useState(getInitialInput(period, project_id))
 
   const creditAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.credit_account_id)))
     .map(accountId => accounts.find(a => a.id === accountId))
@@ -49,7 +48,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
   ]
 
   function showTransaction(transaction?: Transaction) {
-    setCurrent(transaction ? { ...transaction, amount: transaction.amount.toString() } : { ...initialInput, project_id, id: randomUUID() })
+    setCurrent(transaction ? { ...transaction, amount: transaction.amount.toString() } : getInitialInput(period, project_id))
     sidebarStateModifier.openSidebar(transaction ? `Edit Transaction` : 'New Transaction')
   }
 
@@ -73,7 +72,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
         onSave={onSave}
         onDelete={() => { sidebarStateModifier.execute(deleteTransaction(current.id), () => { removeTransaction(current.id) }) }}
       >
-        <Input type="date" label="Date" value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
+        <Input type="date" label="Date" min={startDate(period)} max={lastDay(period)} value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Credit Account" value={current.credit_account_id} onChange={(e) => { setCurrent({ ...current, credit_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
@@ -87,12 +86,14 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
   )
 }
 
-const initialInput: Omit<TransactionInput, 'amount'> & { amount: string } = {
-  id: randomUUID(),
-  project_id: '',
-  credit_account_id: '',
-  debit_account_id: '',
-  amount: '0',
-  date: Temporal.Now.plainDateISO().toString(),
-  description: '',
+function getInitialInput(period: Period, project_id: string): Omit<TransactionInput, 'amount'> & { amount: string } {
+  return {
+    id: randomUUID(),
+    project_id: project_id,
+    credit_account_id: '',
+    debit_account_id: '',
+    amount: '0',
+    date: todayOrInPeriod(period),
+    description: '',
+  }
 }

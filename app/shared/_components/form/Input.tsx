@@ -1,7 +1,6 @@
 'use client'
 import { useId, useState } from 'react'
 import style from './Input.module.css'
-import { Temporal } from '@js-temporal/polyfill'
 
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'placeholder' | 'children' | 'list'> {
   label?: string
@@ -20,7 +19,6 @@ export function Input({ list, label, small, ...props }: InputProps) {
   const id = props.id ?? fallbackId
   const listId = list ? `${id}-list` : undefined
   const value = getValue(props.value, internalValue, props.type, focus)
-  const type = props.type === 'date' && !focus ? 'text' : props.type
   const inputClasses = [
     style.input, props.className ?? '',
     label ? '' : style.noLabel,
@@ -46,7 +44,6 @@ export function Input({ list, label, small, ...props }: InputProps) {
     <div className={style.container}>
       <input
         {...props}
-        type={type}
         id={id}
         className={inputClasses}
         value={value}
@@ -68,12 +65,11 @@ export function Input({ list, label, small, ...props }: InputProps) {
   )
 }
 
-function getValue(propValue: string | undefined, internalValue: string, type: string | undefined, focus: boolean): string {
+function getValue(propValue: string | number | undefined, internalValue: string, type: string | undefined, focus: boolean): string | number {
   const preFormatedValue = propValue ?? internalValue
-  if (!preFormatedValue) return ''
+  // While editing, show unformatted value
   if (focus) return preFormatedValue
-  if (type === 'date')
-    return Temporal.PlainDate.from(preFormatedValue).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+  // For currency, show value incl. currency symbol
   if (type === 'currency')
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'CHF' }).format(Number(preFormatedValue))
   return preFormatedValue

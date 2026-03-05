@@ -24,16 +24,17 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   const [creditCardAccountId, setCreditCardAccountId] = useState(lastMonthClosing?.credit_card_account_id ?? '')
   const [neonAccountId, setNeonAccountId] = useState(lastMonthClosing?.neon_account_id ?? '')
   const [sharedAccountId, setSharedAccountId] = useState(lastMonthClosing?.shared_account_id ?? '')
+  const [remainingAccountId, setRemainingAccountId] = useState(lastMonthClosing?.remaining_account_id ?? '')
   const [error, setError] = useState<string | undefined>(undefined)
   const [neonFile, setNeonFile] = useState<File | undefined>(undefined)
   const router = useRouter()
   const firstField = useRef<HTMLSelectElement>(null)
-  const valid = neonAccountId && sharedAccountId && creditCardAccountId && neonFile
+  const valid = neonAccountId && sharedAccountId && creditCardAccountId && remainingAccountId && neonFile
 
   useEffect(() => { firstField.current?.focus() }, [])
 
   function onSave() {
-    if (!neonAccountId || !sharedAccountId || !creditCardAccountId || !neonFile) return
+    if (!neonAccountId || !sharedAccountId || !creditCardAccountId || !remainingAccountId || !neonFile) return
     setLoading(true)
     setError(undefined)
     parseNeonFile(neonFile)
@@ -57,6 +58,7 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
       project_id,
       period,
       neon_account_id: neonAccountId,
+      remaining_account_id: remainingAccountId,
       shared_account_id: sharedAccountId,
       credit_card_account_id: creditCardAccountId,
       neon_transactions: transactions,
@@ -78,6 +80,9 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
         <Select label="Credit Card Account" value={creditCardAccountId} onChange={(e) => { setCreditCardAccountId(e.target.value) }} required>
+          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        </Select>
+        <Select label="Remaining Account" value={remainingAccountId} onChange={(e) => { setRemainingAccountId(e.target.value) }} required>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
         </Select>
         <Input type="file" label="Neon File" onChange={(e) => { setNeonFile(e.target.files?.[0]) }} required />

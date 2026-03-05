@@ -1,0 +1,7 @@
+.inputRow {
+    display: flex;;
+}
+
+.inputRow > div {
+    flex-grow: 1;
+}

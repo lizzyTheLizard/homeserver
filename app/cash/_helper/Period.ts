@@ -57,6 +57,15 @@ export function lastDay(period: Period): string {
   return start.toString()
 }
 
+export function todayOrInPeriod(period: Period): string {
+  const today = Temporal.Now.plainDateISO()
+  const start = Temporal.PlainDate.from(startDate(period))
+  const end = Temporal.PlainDate.from(lastDay(period))
+  if (Temporal.PlainDate.compare(today, start) < 0) return start.toString()
+  if (Temporal.PlainDate.compare(today, end) > 0) return end.toString()
+  return today.toString()
+}
+
 function temporalFromPeriod(period: Period): Temporal.PlainDate {
   return Temporal.PlainDate.from({
     year: period.year ?? 1,
