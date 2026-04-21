@@ -61,6 +61,9 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
 function getMigrationDir(): string {
   const filename = fileURLToPath(import.meta.url)
   const currentDir = dirname(filename)
+  if (process.env.NODE_ENV === 'development') {
+    return path.resolve(currentDir, '../../../../db')
+  }
   return path.resolve(currentDir, '../../../../../db')
 }
 
