@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 export interface Config {
   APP_URL: string
   DB_CONNECTION_STRING: string

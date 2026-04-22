@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "vitest --run",
+    "test": "vitest --run --no-file-parallelism",
+    "test:ci": "vitest --run",
     "test:watch": "vitest --watch",
     "clean": "rimraf .next storybook-static",
     "storybook": "storybook dev -p 6006",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
+    "dotenv": "^17.4.2",
     "iron-session": "^8.0.4",
     "next": "16.0.7",
     "openai": "^6.10.0",
