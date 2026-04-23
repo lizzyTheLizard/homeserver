@@ -1,8 +1,8 @@
 import { DashboardCard } from '../_components/DashboardCard'
-import { config } from '@/app/shared/config'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { loadBuildInfo, loadConfigInfo, loadMetricsInfo, loadRunInfo } from './server'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { EventsCard } from './_components/EventsCard'
+import styles from './Dashboard.module.css'
 
 export const metadata = {
   title: 'Admin - Dashboard',
@@ -17,16 +17,14 @@ export default async function Page() {
 
     return (
       <main>
-        <ActionTitle>
-          <h1>Admin Dashboard</h1>
-        </ActionTitle>
-        <div className="row">
-          <DashboardCard header="Build" items={buildInfo}></DashboardCard>
-          <DashboardCard header="Run" items={runInfo}></DashboardCard>
-          <DashboardCard header="Config" url="/admin/config" items={configInfo}></DashboardCard>
-          <DashboardCard header="Metrics" url="/admin/metrics" items={metricsInfo}></DashboardCard>
-          <DashboardCard header="Logs" url={config.GRAFANA_URL} items={[]}></DashboardCard>
+        <h1>Dashboard</h1>
+        <div className={styles.grid}>
+          <DashboardCard header="Build" items={buildInfo} />
+          <DashboardCard header="Run" items={runInfo} />
+          <DashboardCard header="Config" url="/admin/config" items={configInfo} />
+          <DashboardCard header="Metrics" url="/admin/metrics" items={metricsInfo} />
         </div>
+        <EventsCard />
       </main>
     )
   })

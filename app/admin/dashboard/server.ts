@@ -12,11 +12,11 @@ const instanceId = randomUUID()
 
 export async function loadConfigInfo() {
   await getAuthenticatedUserSession('admin')
-  const dbId = config.DB_CONNECTION_STRING.split('@')[1].split('.')[0]
+  const dbId = new URL(config.DB_CONNECTION_STRING).pathname.substring(1)
   return [
     { name: 'Database', value: dbId, url: getDatabaseConsoleUrl(dbId) },
-    { name: 'AppUrl', value: config.APP_URL, url: config.APP_URL },
-    { name: 'ClientId', value: config.OIDC.CLIENT_ID, url: getEntraPortalUrl(config.OIDC.CLIENT_ID) },
+    { name: 'App URL', value: config.APP_URL.replace(/^https?:\/\//, ''), url: config.APP_URL },
+    { name: 'Client ID', value: 'Homeserver', url: getEntraPortalUrl(config.OIDC.CLIENT_ID) },
   ]
 }
 
@@ -34,10 +34,10 @@ export async function loadBuildInfo(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
   return [
     { name: 'Branch', value: process.env.GIT_BRANCH, url: getBranchUrl(process.env.GIT_BRANCH) },
-    { name: 'Commit', value: process.env.GIT_COMMIT_HASH, url: getCommitUrl(process.env.GIT_COMMIT_HASH) },
+    { name: 'Commit', value: process.env.GIT_COMMIT_HASH?.slice(0, 7), url: getCommitUrl(process.env.GIT_COMMIT_HASH) },
     { name: 'Action', value: process.env.GITHUB_RUN_ID, url: getActionUrl(process.env.GITHUB_RUN_ID) },
     { name: 'Origin', value: process.env.GITHUB_RUN_ID ? 'GitHub' : 'Local' },
-    { name: 'Built', value: process.env.BUILD_TIME ? Temporal.Instant.from(process.env.BUILD_TIME) : undefined },
+    { name: 'Built', date: process.env.BUILD_TIME ? Temporal.Instant.from(process.env.BUILD_TIME) : undefined },
 
   ]
 }
@@ -59,12 +59,21 @@ function getActionUrl(actionId: string | undefined) {
 
 export async function loadRunInfo(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
+  const started = Temporal.Now.instant().subtract(Temporal.Duration.from({ seconds: Math.floor(process.uptime()) }))
+
   return [
-    { name: 'Instance', value: instanceId },
-    { name: 'Started', value: Temporal.Now.instant().subtract(Temporal.Duration.from({ seconds: Math.floor(process.uptime()) })).toString() },
-    { name: 'Uptime (s)', value: process.uptime().toFixed(0) },
-    { name: 'Environment', value: process.env.NODE_ENV },
+    { name: 'Instance', value: instanceId.substring(0, 8) },
+    { name: 'Started', date: started },
+    { name: 'Uptime', value: formatUptime(process.uptime()) },
+    { name: 'Environment', value: process.env.NODE_ENV, accent: 'rgba(30,150,30,1)' },
   ]
+}
+
+function formatUptime(seconds: number): string {
+  const h = Math.floor(seconds / 3600).toString()
+  const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
+  const s = Math.floor(seconds % 60).toString().padStart(2, '0')
+  return `${h}h ${m}m ${s}s`
 }
 
 export async function loadMetricsInfo(): Promise<LineItem[]> {

@@ -10,11 +10,22 @@ import { findNumberOfProjects } from '@/app/cash/_data/Project'
 import { findNumberOfUsersWithProjects } from '@/app/cash/_data/Project'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
 
+function formatUptime(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  const parts: string[] = []
+  if (h > 0) parts.push(h.toString() + 'h')
+  if (m > 0) parts.push(m.toString() + 'm')
+  parts.push(s.toString() + 's')
+  return parts.join(' ')
+}
+
 export async function loadGeneralMetrics(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
   return [
-    { name: 'Memory (MB)', value: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) },
-    { name: 'Uptime (s)', value: process.uptime().toFixed(0) },
+    { name: 'Memory', value: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB` },
+    { name: 'Uptime', value: formatUptime(Math.floor(process.uptime())) },
   ]
 }
 
