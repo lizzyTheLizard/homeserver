@@ -96,20 +96,20 @@ jobs:
           - name: Checkout
             uses: actions/checkout@v4
           - name: Upload Configuration
-            uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+            uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.2
             id: apply-upload
             with:
                 directory: "./infrastructure"
                 workspace: ${{ env.TF_WORKSPACE }}
           - name: Create Plan Run
-            uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+            uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.2
             id: plan-run
             with:
                 plan_only: true
                 workspace: ${{ env.TF_WORKSPACE }}
                 configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
           - name: Get Plan Output
-            uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
+            uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.3.2
             id: plan-output
             with:
               plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
