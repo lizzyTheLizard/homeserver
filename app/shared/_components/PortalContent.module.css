@@ -64,6 +64,18 @@
   color: #777;
 }
 
+.weatherDivider {
+  width: 100%;
+  max-width: 520px;
+  height: 1px;
+  background: var(--default-border-color);
+}
+
+.weatherRow {
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 600px) {
   .wrapper {
     justify-content: flex-start;

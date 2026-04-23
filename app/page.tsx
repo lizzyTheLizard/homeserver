@@ -1,7 +1,6 @@
-import { applications } from './common/Application'
-import { getAuthenticatedUserSession } from './common/auth/auth'
 import { serverPageFunction } from './shared/_helper/PageFunction'
-import { PortalContent } from './_components/PortalContent'
+import { PortalContent } from './shared/_components/PortalContent'
+import { loadPortalData } from './server'
 
 export const metadata = {
   title: 'Gutschi.site - Dashboard',
@@ -9,13 +8,10 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const user = await getAuthenticatedUserSession()
-    const apps = applications
-      .filter(a => user.applications.includes(a.key))
-      .map(({ key, name, icon, link, description }) => ({ key, name, icon, link, description }))
+    const { apps, weather } = await loadPortalData()
     return (
       <main>
-        <PortalContent apps={apps} />
+        <PortalContent apps={apps} weather={weather} />
       </main>
     )
   })
