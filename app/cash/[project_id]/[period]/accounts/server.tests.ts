@@ -165,7 +165,7 @@ describe('saveAccount', () => {
 
     const otherUser: UserSession = { ...user, sub: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const updatedAccount = { ...account, name: 'Updated Name' } as AccountInput
+    const updatedAccount = { ...account, name: 'Updated Name' }
     await expect(saveAccount(updatedAccount)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 

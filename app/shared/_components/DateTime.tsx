@@ -1,7 +1,7 @@
 'use client'
 
 import { Temporal } from '@js-temporal/polyfill'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 export interface DateProps {
   /**
@@ -13,14 +13,13 @@ export interface DateProps {
 /**
  * Displays a date value.
  */
-export function DateTime({ date }: DateProps) {
-  // Ensure this only renders on the client side to avoid hydration issues,
-  // see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
-  const [isClient, setIsClient] = useState(false)
+// useSyncExternalStore avoids hydration mismatch by returning false on the server and true on the client
+// see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const subscribe = () => () => {}
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+export function DateTime({ date }: DateProps) {
+  const isClient = useSyncExternalStore(subscribe, () => true, () => false)
 
   if (!isClient) return null
   if (!date) return null

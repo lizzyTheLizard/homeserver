@@ -5,6 +5,6 @@ export const metadata = {
   title: 'Gutschi.site - Error',
 }
 
-export default function Page({ error}: { error: Error }) {
+export default function Page({ error }: { error: Error }) {
   return ErrorPage({ error })
 }

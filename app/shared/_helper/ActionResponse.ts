@@ -16,17 +16,17 @@ export interface SuccessResponse<T> {
 
 export async function toResponse<T>(promise: Promise<T>): ActionResponse<T> {
   return promise
-    .then(data => ({ success: true, data } as SuccessResponse<T>))
+    .then(data => ({ success: true as const, data }))
     .catch((error: unknown) => {
       if (isBackendError(error) && error.showStack) {
         logger.warn('Error in server action', error)
-        return { success: false, error: error.userMessage } as ErrorResponse
+        return { success: false, error: error.userMessage }
       }
       else if (isBackendError(error)) {
         logger.warn('Error in server action: ' + error.message)
-        return { success: false, error: error.userMessage } as ErrorResponse
+        return { success: false, error: error.userMessage }
       }
       logger.error('Unknown error in server action:', error)
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' } as ErrorResponse
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     })
 }

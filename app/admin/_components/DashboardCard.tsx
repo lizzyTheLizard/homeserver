@@ -32,7 +32,7 @@ export function DashboardCard({ items, header, url }: DashboardCardProps) {
 }
 
 function Line({ item }: { item: LineItem }) {
-  let value: ReactNode = ''
+  let value: ReactNode
   if (item.value === undefined)
     value = '-'
   else if (item.value instanceof Temporal.Instant)

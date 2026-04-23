@@ -21,7 +21,7 @@ export interface ReportsProps {
   currentTransactions: AccountTransaction[]
 }
 
-export function Reports({ accounts = [], project_id = '', period, latestClosing, beforeTransactions, currentTransactions }: ReportsProps) {
+export function Reports({ accounts, project_id, period, latestClosing, beforeTransactions, currentTransactions }: ReportsProps) {
   const router = useRouter()
   const [closeSidebarState, closeSidebarStateModifier] = useSidebarState('Closing')
   const [reopenSidebarState, reopenSidebarStateModifier] = useSidebarState('Reopening')

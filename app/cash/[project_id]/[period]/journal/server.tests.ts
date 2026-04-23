@@ -6,10 +6,10 @@ import { v4 as randomUUID } from 'uuid'
 import { loadJournal, saveTransaction, deleteTransaction, loadAccountJournal } from './server'
 import { createOrModifyProject, ProjectInput } from '@/app/cash/_data/Project'
 import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
-import { createTransaction, TransactionInput } from '@/app/cash/_data/Transaction'
+import { createTransaction } from '@/app/cash/_data/Transaction'
 import { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { ClosingInput, createClosing } from '@/app/cash/_data/Closing'
+import { createClosing } from '@/app/cash/_data/Closing'
 import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { Temporal } from '@js-temporal/polyfill'
@@ -51,9 +51,9 @@ describe('loadAccountJournal', () => {
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' } as TransactionInput
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: '2023-06-20', description: 'Second transaction' } as TransactionInput
-    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: '2022-05-01', description: 'Before date transaction' } as TransactionInput
+    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
+    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: '2023-06-20', description: 'Second transaction' }
+    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: '2022-05-01', description: 'Before date transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -84,9 +84,9 @@ describe('loadAccountJournal', () => {
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' } as TransactionInput
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: '2023-06-20', description: 'Second transaction' } as TransactionInput
-    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: '2022-05-01', description: 'Before date transaction' } as TransactionInput
+    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
+    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: '2023-06-20', description: 'Second transaction' }
+    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: '2022-05-01', description: 'Before date transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -157,7 +157,7 @@ describe('loadJournal', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -180,8 +180,8 @@ describe('loadJournal', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'May transaction' } as TransactionInput
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 200.75, date: '2023-06-20', description: 'June transaction' } as TransactionInput
+    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'May transaction' }
+    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 200.75, date: '2023-06-20', description: 'June transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -226,7 +226,7 @@ describe('saveTransaction', () => {
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     const result = await saveTransaction(transactionInput)
 
     if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
@@ -241,7 +241,7 @@ describe('saveTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -249,7 +249,7 @@ describe('saveTransaction', () => {
       await createTransaction(tx, task.id, transaction)
     })
 
-    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' } as TransactionInput
+    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
     const result = await saveTransaction(updatedTransaction)
 
     if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
@@ -264,7 +264,7 @@ describe('saveTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -274,7 +274,7 @@ describe('saveTransaction', () => {
 
     const otherUser: UserSession = { ...user, sub: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' } as TransactionInput
+    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
     await expect(saveTransaction(updatedTransaction)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 
@@ -293,7 +293,7 @@ describe('saveTransaction', () => {
 
     const otherUser: UserSession = { ...user, sub: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await expect(saveTransaction(transactionInput)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 
@@ -310,7 +310,7 @@ describe('saveTransaction', () => {
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await expect(saveTransaction({ ...transactionInput, id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
     await expect(saveTransaction({ ...transactionInput, project_id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
     await expect(saveTransaction({ ...transactionInput, project_id: randomUUID() })).resolves.toEqual({ success: false, error: expect.any(String) as string })
@@ -330,8 +330,8 @@ describe('saveTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 } as ClosingInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
+    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -351,7 +351,7 @@ describe('saveTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 } as ClosingInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -359,7 +359,7 @@ describe('saveTransaction', () => {
       await createClosing(tx, task.id, closing)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await expect(saveTransaction(transactionInput)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 
@@ -376,7 +376,7 @@ describe('saveTransaction', () => {
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await saveTransaction(transactionInput)
 
     const result = await nontransactional(c => findLatestAccountTransactionBefore(c, task.id, account1.id, { year: 2023, month: 8, openEnded: true }))
@@ -405,7 +405,7 @@ describe('saveTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -448,7 +448,7 @@ describe('deleteTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -472,7 +472,7 @@ describe('deleteTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -499,7 +499,7 @@ describe('deleteTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
-    const nonExistentTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: randomUUID(), debit_account_id: randomUUID(), amount: 150.25, date: '2023-07-10', description: 'Does not exist' } as TransactionInput
+    const nonExistentTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: randomUUID(), debit_account_id: randomUUID(), amount: 150.25, date: '2023-07-10', description: 'Does not exist' }
     await expect(deleteTransaction(nonExistentTransaction.id)).resolves.toEqual({ success: true })
   })
 
@@ -527,8 +527,8 @@ describe('deleteTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 } as ClosingInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
+    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
@@ -553,7 +553,7 @@ describe('deleteTransaction', () => {
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' } as TransactionInput
+    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await saveTransaction(transactionInput)
     await deleteTransaction(transactionInput.id)
 

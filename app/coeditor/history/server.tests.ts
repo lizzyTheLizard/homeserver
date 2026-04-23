@@ -5,7 +5,7 @@ import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { createOrModifyTemplate } from '../_data/Template'
 import { loadHistory } from './server'
-import { createDiscussion, DiscussionInput } from '../_data/Discussion'
+import { createDiscussion } from '../_data/Discussion'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -37,7 +37,7 @@ describe('loadHistory', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
@@ -53,7 +53,7 @@ describe('loadHistory', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
