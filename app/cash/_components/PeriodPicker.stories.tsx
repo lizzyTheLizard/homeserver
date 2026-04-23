@@ -10,7 +10,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     project_id: 'project_123',
-    period: { current: false, year: 2023, month: 5 } as Period,
+    period: { current: false, year: 2023, month: 5 },
     onPeriodChange: fn(),
   },
   render: (args) => {

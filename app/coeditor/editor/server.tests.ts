@@ -5,11 +5,11 @@ import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { CommandInput, createCommand } from '../_data/Command'
 import { ExecuteCommandInput } from './server'
-import { createOrModifyTemplate, TemplateInput } from '../_data/Template'
-import { createOrModifyProfile, ProfileInput } from '../_data/Profile'
+import { createOrModifyTemplate } from '../_data/Template'
+import { createOrModifyProfile } from '../_data/Profile'
 import { executeCommand, loadEditorData } from './server'
 import { aiPort } from '../_external/AiPort'
-import { createDiscussion, DiscussionInput, findDiscussionByOwner } from '../_data/Discussion'
+import { createDiscussion, findDiscussionByOwner } from '../_data/Discussion'
 
 // Mock the auth module
 vi.mock('@/app/common/auth/auth', async () => {
@@ -41,7 +41,7 @@ describe('loadEditorData', () => {
   test('Existing Templates', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async tx => await createOrModifyTemplate(tx, task.id, templateInput))
 
     const result = await loadEditorData(undefined)
@@ -53,7 +53,7 @@ describe('loadEditorData', () => {
   test('Templates from other users not loaded', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async tx => await createOrModifyTemplate(tx, task.id, templateInput))
 
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
@@ -67,8 +67,8 @@ describe('loadEditorData', () => {
   test('Existing Discussion', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
-    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
@@ -89,8 +89,8 @@ describe('loadEditorData', () => {
   test('Discussion from other users not loaded', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
-    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
@@ -111,7 +111,7 @@ describe('executeCommand', () => {
   test('New Discussion', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as ExecuteCommandInput
@@ -136,8 +136,8 @@ describe('executeCommand', () => {
   test('Existing Discussion', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
-    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input1)
@@ -175,7 +175,7 @@ describe('executeCommand', () => {
   test('Template other user', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Test User', email: 'test@example.com', applications: ['cash'] }
@@ -189,15 +189,15 @@ describe('executeCommand', () => {
   test('Discussion other user', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
-    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input1)
     })
     const otherUser: UserSession = { sub: 'other-user-id', name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const templateInput2 = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput2 = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, otherUser.sub, templateInput2)
     })
@@ -211,7 +211,7 @@ describe('executeCommandAction AI integration', () => {
   test('AiPort', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as ExecuteCommandInput
@@ -233,8 +233,8 @@ describe('executeCommandAction AI integration', () => {
   test('Profile', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const profileInput = { id: randomUUID(), text: 'Profile Text', language: 'en' } as ProfileInput
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const profileInput = { id: randomUUID(), text: 'Profile Text', language: 'en' }
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createOrModifyProfile(tx, task.id, profileInput)
@@ -251,7 +251,7 @@ describe('executeCommandAction AI integration', () => {
   test('Selection', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE', selection_start: 5, selection_end: 10 } as ExecuteCommandInput
@@ -266,7 +266,7 @@ describe('executeCommandAction AI integration', () => {
   test('Custom Command', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, custom_command: 'Custom Command Text' }
@@ -281,7 +281,7 @@ describe('executeCommandAction AI integration', () => {
   test('No old Commands', async ({ task }) => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' } as TemplateInput
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, custom_command: 'Custom Command Text' }
@@ -294,7 +294,7 @@ describe('executeCommandAction AI integration', () => {
     const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} } as DiscussionInput
+    const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     const input2 = { id: randomUUID(), discussion_id: input1.id, text: 'New text', predefined_command: 'INITIALIZE', context: 'context', language: 'en', result: { text: 'Result text', title: 'Result title', durationMs: 100 } } as CommandInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)

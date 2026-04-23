@@ -2,7 +2,7 @@ import { Monthly, NeonTransaction } from '@/app/cash/_data/Monthly'
 import { PoolClient } from 'pg'
 import { NeonTransactionInput } from '../server'
 import { v4 as randomUUID } from 'uuid'
-import { createTransaction, TransactionInput } from '@/app/cash/_data/Transaction'
+import { createTransaction } from '@/app/cash/_data/Transaction'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { Temporal } from '@js-temporal/polyfill'
 import { lastDay, toString } from '@/app/cash/_helper/Period'
@@ -31,7 +31,7 @@ async function createTransactionFromNeonInput(client: PoolClient, owner: string,
     debit_account_id: existingTransaction.amount < 0 ? transactionInput.accountId : monthly.neon_account_id,
     date: existingTransaction.date,
     description: transactionInput.description,
-  } as TransactionInput
+  }
   const t = await createTransaction(client, owner, transaction)
   return { ...existingTransaction, transaction_id: t.id, other_account: transactionInput.accountId }
 }
@@ -48,6 +48,6 @@ async function createRemainingTransaction(client: PoolClient, owner: string, mon
     debit_account_id: remainingAmount < 0 ? monthly.remaining_account_id : monthly.neon_account_id,
     date: lastDay(monthly.period),
     description: 'Remaining amount for ' + toString(monthly.period),
-  } as TransactionInput
+  }
   await createTransaction(client, owner, transaction)
 }

@@ -12,6 +12,7 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
     return result
   }).catch((error: unknown) => {
     const time = Temporal.Now.instant().epochMilliseconds - start
+    if (isDynamicServerUsage(error)) throw error
     if (isBackendError(error)) {
       if (error.showStack) logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)
       else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)
@@ -24,6 +25,10 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
     else if (code === 404) logger.warn(`Not Found while rendering page '${name}' in ${time.toString()} ms`)
     throw error
   })
+}
+
+function isDynamicServerUsage(error: unknown): boolean {
+  return error instanceof Error && 'digest' in error && error.digest === 'DYNAMIC_SERVER_USAGE'
 }
 
 function httpAccessResponseCode(error: unknown): number | undefined {

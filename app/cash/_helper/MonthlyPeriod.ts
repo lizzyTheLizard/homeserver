@@ -12,8 +12,8 @@ export function first(period: Period): MonthlyPeriod {
   if (period.year === undefined) throw new Error('Cannot reopen or close \'all\' period')
   if (period.openEnded) throw new Error('Cannot reopen or close open-ended period')
   if (period.day !== undefined) throw new Error('Cannot reopen or close daily period')
-  if (period.month === undefined) return { year: period.year, month: 1, openEnded: false, day: undefined } as MonthlyPeriod
-  return { year: period.year, month: period.month, openEnded: false, day: undefined } as MonthlyPeriod
+  if (period.month === undefined) return { year: period.year, month: 1, openEnded: false, day: undefined }
+  return { year: period.year, month: period.month, openEnded: false, day: undefined }
 }
 
 export function last(period: Period): MonthlyPeriod {

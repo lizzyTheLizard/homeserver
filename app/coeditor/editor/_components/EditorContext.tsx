@@ -1,4 +1,4 @@
-import { type FormEvent } from 'react'
+import { type ChangeEvent } from 'react'
 import style from './EditorContext.module.css'
 import { Template } from '../../_data/Template'
 import { Input } from '@/app/shared/_components/form/Input'
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function EditorContext({ templates, template, parameters, onParametersChange, onTemplateChange, onBlur }: Props) {
-  function handleTemplateChange(e: FormEvent<HTMLSelectElement>) {
+  function handleTemplateChange(e: ChangeEvent<HTMLSelectElement>) {
     const id = e.currentTarget.value
     const result = templates.find(t => t.id === id)
     if (result === undefined) {
@@ -26,7 +26,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
     onTemplateChange?.(result)
   }
 
-  function handleLanguageChange(e: FormEvent<HTMLSelectElement>) {
+  function handleLanguageChange(e: ChangeEvent<HTMLSelectElement>) {
     const language = e.currentTarget.value
     const result = templates.find(t => t.language === language)
     if (result === undefined) {

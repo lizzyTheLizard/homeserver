@@ -9,7 +9,7 @@ import { createMonthlyClosing, findForPeriod, Monthly, type MonthlyInput, type S
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { findAllTransactions } from '@/app/cash/_data/Transaction'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
-import { Closing, createClosing, type ClosingInput } from '@/app/cash/_data/Closing'
+import { Closing, createClosing } from '@/app/cash/_data/Closing'
 import { AccountTransaction, createAccountTransaction, type AccountTransactionInput } from '@/app/cash/_data/AccountTransaction'
 
 // Mock the auth module
@@ -666,7 +666,7 @@ describe('loadData', () => {
     const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
     const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'FINISHED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2024-02-01', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 500 } as ClosingInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2024-02-01', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 500 }
     const transaction1 = { id: randomUUID(), ordering: 1, account_id: neonAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2024-01-05', description: 'Transaction for neon account' } as AccountTransactionInput
     const transaction2 = { id: randomUUID(), ordering: 1, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 50, total_balance: 150, date: '2024-01-10', description: 'Transaction for shared account' } as AccountTransactionInput
     const transaction3 = { id: randomUUID(), ordering: 2, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2023-12-10', description: 'Transaction for shared account' } as AccountTransactionInput
@@ -708,7 +708,7 @@ describe('loadData', () => {
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
     const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEON', neon_transactions: [], shared_transactions: [] } as MonthlyInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2024-01-31', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 1000 } as ClosingInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2024-01-31', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 1000 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -735,7 +735,7 @@ describe('loadData', () => {
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
     const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'FINISHED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2024-01-31', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 1000 } as ClosingInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2024-01-31', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 1000 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)

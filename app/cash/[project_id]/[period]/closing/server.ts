@@ -91,7 +91,7 @@ export async function addNeonTransactions(projectId: string, period: MonthlyPeri
     transactions.forEach((transaction) => { validateObject(transaction, NeonTransactionInputConstraints) })
     const user = await getAuthenticatedUserSession('cash')
     const monthly = await findForPeriod(client, user.sub, projectId, period)
-    if (!monthly || monthly.state !== 'NEON') throw new Error('Monthly closing not found or not in NEON state')
+    if (monthly?.state !== 'NEON') throw new Error('Monthly closing not found or not in NEON state')
     monthly.neon_transactions = await createTransactionsFromNeonInput(client, user.sub, monthly, transactions)
     monthly.state = 'NEONCHECK'
     await modifyMonthlyClosing(client, user.sub, monthly)
@@ -114,7 +114,7 @@ export async function addSharedTransactions(projectId: string, period: MonthlyPe
     transactions.forEach((transaction) => { validateObject(transaction, SharedTransactionInputConstraints) })
     const user = await getAuthenticatedUserSession('cash')
     const monthly = await findForPeriod(client, user.sub, projectId, period)
-    if (!monthly || monthly.state !== 'SHARED') throw new Error('Monthly closing not found or not in SHARED state')
+    if (monthly?.state !== 'SHARED') throw new Error('Monthly closing not found or not in SHARED state')
     monthly.shared_transactions = transactions
     monthly.state = 'FINISHED'
     await modifyMonthlyClosing(client, user.sub, monthly)

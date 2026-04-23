@@ -4,8 +4,8 @@ import { v4 as randomUUID } from 'uuid'
 import { close, loadReports, reopen } from './server'
 import { createOrModifyProject, ProjectInput } from '@/app/cash/_data/Project'
 import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
-import { createTransaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { ClosingInput, createClosing, findAllClosingsByAccount, findLastClosing } from '@/app/cash/_data/Closing'
+import { createTransaction } from '@/app/cash/_data/Transaction'
+import { createClosing, findAllClosingsByAccount, findLastClosing } from '@/app/cash/_data/Closing'
 import type { UserSession } from '@/app/common/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { all, Period } from '@/app/cash/_helper/Period'
@@ -48,13 +48,13 @@ describe('loadReports', () => {
     const account2 = { id: randomUUID(), project_id: project.id, name: 'B Income', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'C Profit', type: 'Profit', archived: false } as AccountInput
     const account4 = { id: randomUUID(), project_id: project.id, name: 'D Equity', type: 'Equity', archived: false } as AccountInput
-    const closing1 = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: account4.id, profit_account_id: account3.id, profit: 50 } as ClosingInput
-    const closing2 = { id: randomUUID(), project_id: project.id, date: '2023-05-31', capital_account_id: account4.id, profit_account_id: account3.id, profit: 125 } as ClosingInput
-    const beforeTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100, date: '2023-04-10', description: 'Before period A1' } as TransactionInput
-    const inTransactionEarly = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 200, date: '2023-05-05', description: 'In period early A1' } as TransactionInput
-    const inTransactionLate = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 300, date: '2023-06-25', description: 'In period late A1' } as TransactionInput
-    const beforeTransactionA2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50, date: '2023-04-20', description: 'Before period A2' } as TransactionInput
-    const inTransactionA2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 75, date: '2023-05-12', description: 'In period A2' } as TransactionInput
+    const closing1 = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: account4.id, profit_account_id: account3.id, profit: 50 }
+    const closing2 = { id: randomUUID(), project_id: project.id, date: '2023-05-31', capital_account_id: account4.id, profit_account_id: account3.id, profit: 125 }
+    const beforeTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100, date: '2023-04-10', description: 'Before period A1' }
+    const inTransactionEarly = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 200, date: '2023-05-05', description: 'In period early A1' }
+    const inTransactionLate = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 300, date: '2023-06-25', description: 'In period late A1' }
+    const beforeTransactionA2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50, date: '2023-04-20', description: 'Before period A2' }
+    const inTransactionA2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 75, date: '2023-05-12', description: 'In period A2' }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -125,9 +125,9 @@ describe('reopen', () => {
     const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
-    const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 } as ClosingInput
-    const closingMay = { id: randomUUID(), project_id: project.id, date: '2023-05-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 20 } as ClosingInput
-    const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 } as ClosingInput
+    const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 }
+    const closingMay = { id: randomUUID(), project_id: project.id, date: '2023-05-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 20 }
+    const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -156,7 +156,7 @@ describe('reopen', () => {
     const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
-    const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 } as ClosingInput
+    const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -179,9 +179,9 @@ describe('reopen', () => {
     const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
-    const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 } as ClosingInput
-    const closingMay = { id: randomUUID(), project_id: project.id, date: '2023-05-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 20 } as ClosingInput
-    const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 } as ClosingInput
+    const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 }
+    const closingMay = { id: randomUUID(), project_id: project.id, date: '2023-05-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 20 }
+    const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -209,7 +209,7 @@ describe('close', () => {
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const newCapitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital 2', type: 'Equity', archived: false } as AccountInput
-    const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 } as ClosingInput
+    const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -238,7 +238,7 @@ describe('close', () => {
     const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: profitAccount.id, debit_account_id: capitalAccount.id, amount: 100, date: '2023-02-15', description: 'First transaction' } as TransactionInput
+    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: profitAccount.id, debit_account_id: capitalAccount.id, amount: 100, date: '2023-02-15', description: 'First transaction' }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -294,12 +294,12 @@ describe('close', () => {
     const incomeAccount = { id: randomUUID(), project_id: project.id, name: 'Income', type: 'Income', archived: false } as AccountInput
     const expenseAccount = { id: randomUUID(), project_id: project.id, name: 'Spending', type: 'Expense', archived: false } as AccountInput
     const activeAccount = { id: randomUUID(), project_id: project.id, name: 'Active', type: 'Asset', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: capitalAccount.id, debit_account_id: activeAccount.id, amount: 1000, date: '2023-01-01', description: 'Opening' } as TransactionInput
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 100, date: '2023-01-10', description: 'An expense' } as TransactionInput
-    const transaction3 = { id: randomUUID(), project_id: project.id, credit_account_id: incomeAccount.id, debit_account_id: activeAccount.id, amount: 500, date: '2023-01-20', description: 'Salary' } as TransactionInput
-    const transaction4 = { id: randomUUID(), project_id: project.id, credit_account_id: incomeAccount.id, debit_account_id: activeAccount.id, amount: 200, date: '2023-02-10', description: 'An income' } as TransactionInput
-    const transaction5 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 50, date: '2023-02-15', description: 'Another expense' } as TransactionInput
-    const closingJan = { id: randomUUID(), project_id: project.id, date: '2023-01-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 600 } as ClosingInput
+    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: capitalAccount.id, debit_account_id: activeAccount.id, amount: 1000, date: '2023-01-01', description: 'Opening' }
+    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 100, date: '2023-01-10', description: 'An expense' }
+    const transaction3 = { id: randomUUID(), project_id: project.id, credit_account_id: incomeAccount.id, debit_account_id: activeAccount.id, amount: 500, date: '2023-01-20', description: 'Salary' }
+    const transaction4 = { id: randomUUID(), project_id: project.id, credit_account_id: incomeAccount.id, debit_account_id: activeAccount.id, amount: 200, date: '2023-02-10', description: 'An income' }
+    const transaction5 = { id: randomUUID(), project_id: project.id, credit_account_id: activeAccount.id, debit_account_id: expenseAccount.id, amount: 50, date: '2023-02-15', description: 'Another expense' }
+    const closingJan = { id: randomUUID(), project_id: project.id, date: '2023-01-31', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 600 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
