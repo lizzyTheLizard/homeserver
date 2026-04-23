@@ -79,7 +79,7 @@ jobs:
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
           - name: Upload artifact
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@v7
             with:
               name: myimage
               path: ${{ runner.temp }}/myimage.tar
