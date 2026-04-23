@@ -1,0 +1,131 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: left;
+  margin: 0;
+}
+
+.search {
+  height: 2.5rem;
+  font-size: 0.9rem;
+  width: 220px;
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+  margin-left: auto;
+  padding: 0 0.75rem;
+  outline: none;
+  font-family: sans-serif;
+}
+
+.search:focus {
+  border-color: var(--primary-background-color);
+}
+
+.showSecrets {
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-family: sans-serif;
+  font-size: 0.85rem;
+  background: white;
+  border: 1px solid var(--default-border-color);
+  color: #444;
+}
+
+.showSecretsActive {
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-family: sans-serif;
+  font-size: 0.85rem;
+  background: var(--danger-transparent-color);
+  border: 1px solid rgba(220, 0, 0, 0.4);
+  color: var(--danger-border-color);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  background: white;
+}
+
+.sectionLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.configRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(200, 200, 200, 0.6);
+}
+
+.configKey {
+  font-size: 0.75rem;
+  color: #555;
+  font-family: monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.configValueWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  text-align: right;
+  min-width: 0;
+}
+
+.configValue {
+  font-size: 0.8rem;
+  font-family: monospace;
+  word-break: break-all;
+  color: black;
+}
+
+.configValueSecret {
+  font-size: 0.8rem;
+  font-family: monospace;
+  word-break: break-all;
+  color: #aaa;
+}
+
+.toggleBtn {
+  font-size: 0.7rem;
+  color: var(--primary-background-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

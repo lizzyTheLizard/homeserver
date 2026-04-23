@@ -1,0 +1,43 @@
+.eventsCard {
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+}
+
+.eventsHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sectionLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.viewLogsLink {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--primary-background-color);
+  text-decoration: underline;
+}
+
+.eventsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.eventsTable th {
+  text-align: left;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 2px solid var(--default-border-color);
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

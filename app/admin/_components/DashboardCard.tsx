@@ -1,14 +1,14 @@
-import { DateTime } from '@/app/shared/_components/DateTime'
-import styles from './DashboardCard.module.css'
-import { ReactNode } from 'react'
-import { Card } from '@/app/shared/_components/Card'
-import Link from 'next/link'
 import { Temporal } from '@js-temporal/polyfill'
+import styles from './DashboardCard.module.css'
+import Link from 'next/link'
+import { AdminDateTime } from './AdminDateTime'
 
 export interface LineItem {
   name: string
-  value: string | Temporal.Instant | number | undefined
+  value?: string | number | undefined
+  date?: Temporal.Instant
   url?: string
+  accent?: string
 }
 
 export interface DashboardCardProps {
@@ -19,32 +19,37 @@ export interface DashboardCardProps {
 
 export function DashboardCard({ items, header, url }: DashboardCardProps) {
   return (
-    <Card>
-      <h2>{header}</h2>
-      <table className={styles.table}>
-        <tbody>
-          {items.map(i => <Line key={i.name} item={i}></Line>)}
-        </tbody>
-      </table>
-      {url && <Link className={styles.link} href={url}>View all &rarr;</Link>}
-    </Card>
+    <div className={styles.card}>
+      <div className={styles.sectionLabel}>{header}</div>
+      <div className={styles.rows}>
+        {items.map(i => <Line key={i.name} item={i} />)}
+      </div>
+      {url && (
+        <div className={styles.viewAll}>
+          <Link href={url}>View all &rarr;</Link>
+        </div>
+      )}
+    </div>
   )
 }
 
 function Line({ item }: { item: LineItem }) {
-  let value: ReactNode
-  if (item.value === undefined)
-    value = '-'
-  else if (item.value instanceof Temporal.Instant)
-    value = (<DateTime date={item.value}></DateTime>)
-  else
-    value = item.value
-  if (item.url)
-    value = (<a href={item.url}>{value}</a>)
+  let inner
+  if ('date' in item && item.date) {
+    // inner = <div>{typeof item.date}</div>
+    inner = <AdminDateTime date={item.date} />
+  }
+  else {
+    const text = item.value !== undefined ? String(item.value) : '-'
+    const colorStyle = item.accent ? { color: item.accent } : undefined
+    inner = item.url
+      ? <a href={item.url} className={styles.link} style={colorStyle}>{text}</a>
+      : <span style={colorStyle}>{text}</span>
+  }
   return (
-    <tr>
-      <td className={styles.key}>{item.name + ':'}</td>
-      <td className={styles.value}>{value}</td>
-    </tr>
+    <div className={styles.row}>
+      <span className={styles.key}>{item.name}</span>
+      <div className={styles.value}>{inner}</div>
+    </div>
   )
 }
