@@ -55,7 +55,9 @@ resource "scaleway_container" "www_gutschi_site" {
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
     COOKIE_NAME="session",
-    ADMIN_EMAIL=var.admin_email
+    ADMIN_EMAIL=var.admin_email,
+    WEATHER_API_LOCATION="46.9471,7.4441",
+    WEATHER_DETAIL_URL="https://www.srf.ch/meteo/wetter/Bern/46.9471,7.4441"
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
@@ -65,7 +67,7 @@ resource "scaleway_container" "www_gutschi_site" {
       scaleway_iam_api_key.gutschi_site.secret_key,
       trimprefix(scaleway_sdb_sql_database.www_gutschi_site.endpoint, "postgres://"),
     ),
-    OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key    
+    OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key
   }
 }
 
@@ -85,8 +87,10 @@ resource "scaleway_container" "test_gutschi_site" {
     APP_URL="https://test.gutschi.site",
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
-    COOKIE_NAME="session"
-    ADMIN_EMAIL=var.admin_email
+    COOKIE_NAME="session",
+    ADMIN_EMAIL=var.admin_email,
+    WEATHER_API_LOCATION="46.9471,7.4441",
+    WEATHER_DETAIL_URL="https://www.srf.ch/meteo/wetter/Bern/46.9471,7.4441"
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
@@ -96,7 +100,8 @@ resource "scaleway_container" "test_gutschi_site" {
       scaleway_iam_api_key.gutschi_site.secret_key,
       trimprefix(scaleway_sdb_sql_database.test_gutschi_site.endpoint, "postgres://"),
     ),
-    OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key     }
+    OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key
+  }
 }
 
 resource scaleway_container_domain "www_gutschi_site" {

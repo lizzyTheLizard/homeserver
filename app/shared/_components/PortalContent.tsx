@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Icon } from '../shared/_components/Icon'
+import { Icon } from './Icon'
+import { WeatherBlock, WeatherInfo } from './WeatherBlock'
 import styles from './PortalContent.module.css'
 
 interface AppInfo {
@@ -22,7 +23,12 @@ function useClock() {
   return now
 }
 
-export function PortalContent({ apps }: { apps: AppInfo[] }) {
+interface PortalContentProps {
+  apps: AppInfo[]
+  weather: WeatherInfo | undefined
+}
+
+export function PortalContent({ apps, weather }: PortalContentProps) {
   const now = useClock()
 
   return (
@@ -45,6 +51,15 @@ export function PortalContent({ apps }: { apps: AppInfo[] }) {
           </Link>
         ))}
       </div>
+
+      {weather && (
+        <>
+          <div className={styles.weatherDivider} />
+          <div className={styles.weatherRow}>
+            <WeatherBlock weather={weather} />
+          </div>
+        </>
+      )}
     </div>
   )
 }
