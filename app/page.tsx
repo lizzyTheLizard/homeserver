@@ -1,8 +1,7 @@
-import { Card } from './shared/_components/Card'
-import { Icon } from './shared/_components/Icon'
 import { applications } from './common/Application'
 import { getAuthenticatedUserSession } from './common/auth/auth'
 import { serverPageFunction } from './shared/_helper/PageFunction'
+import { PortalContent } from './_components/PortalContent'
 
 export const metadata = {
   title: 'Gutschi.site - Dashboard',
@@ -11,18 +10,12 @@ export const metadata = {
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
     const user = await getAuthenticatedUserSession()
+    const apps = applications
+      .filter(a => user.applications.includes(a.key))
+      .map(({ key, name, icon, link, description }) => ({ key, name, icon, link, description }))
     return (
       <main>
-        <h1>Portal</h1>
-        <div className="row">
-          {applications.filter(a => user.applications.includes(a.key)).map(app => (
-            <Card href={app.link} key={app.key}>
-              <Icon name={app.icon} style={{ width: '5rem', height: '5rem' }}></Icon>
-              <h2>{app.name}</h2>
-              <span>{app.description}</span>
-            </Card>
-          ))}
-        </div>
+        <PortalContent apps={apps} />
       </main>
     )
   })
