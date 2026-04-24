@@ -71,6 +71,20 @@
     }
 }
 
+.confirmPanel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-small);
+    padding: var(--gap-small);
+    border: 1px solid rgba(220, 0, 0, 0.3);
+    border-radius: var(--border-radius);
+    background: rgba(220, 0, 0, 0.05);
+}
+
+.confirmPanel p {
+    font-size: 0.85rem;
+}
+
 @media (max-width: 600px) {
     .sidebar {
         background-color: white;

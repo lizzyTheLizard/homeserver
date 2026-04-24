@@ -4,20 +4,6 @@
   min-height: 6rem;
 }
 
-.confirmPanel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-small);
-  padding: var(--gap-small);
-  border: 1px solid rgba(220, 0, 0, 0.3);
-  border-radius: var(--border-radius);
-  background: rgba(220, 0, 0, 0.05);
-}
-
-.confirmPanel p {
-  font-size: 0.85rem;
-}
-
 /* Mobile list items (rendered as DataTable children, shown on small screens) */
 .mobileItem {
   padding: 0.65rem 1rem;

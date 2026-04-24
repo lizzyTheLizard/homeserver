@@ -57,7 +57,6 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
-  const [confirmDelete, setConfirmDelete] = useState(false)
 
   function openNew() {
     setSelected(null)
@@ -65,7 +64,6 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
     setName('')
     setUrl('')
     setDescription('')
-    setConfirmDelete(false)
     sidebarModifier.openSidebar('New favorite')
   }
 
@@ -75,13 +73,7 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
     setName(fav.name)
     setUrl(fav.url)
     setDescription(fav.description)
-    setConfirmDelete(false)
     sidebarModifier.openSidebar('Edit favorite')
-  }
-
-  function handleClose() {
-    setConfirmDelete(false)
-    sidebarModifier.closeSidebar()
   }
 
   function handleSave() {
@@ -94,12 +86,11 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
     }
     const action = selected ? editFavorite(selected.id, input) : saveFavorite(input)
     sidebarModifier.execute(action, () => {
-      setConfirmDelete(false)
       startTransition(() => { router.refresh() })
     })
   }
 
-  function handleConfirmDelete() {
+  function handleDelete() {
     if (!selected) return
     sidebarModifier.execute(deleteFavorite(selected.id), () => {
       startTransition(() => { router.refresh() })
@@ -144,27 +135,14 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
 
       <Sidebar
         state={{ ...sidebarState, type: selected?.name }}
-        onClose={handleClose}
-        onSave={confirmDelete ? undefined : handleSave}
+        onClose={() => { sidebarModifier.closeSidebar() }}
+        onSave={handleSave}
+        onDelete={selected ? handleDelete : undefined}
       >
         <Input label="Position" type="number" value={position} onChange={(e) => { setPosition(e.target.value) }} />
         <Input label="Name" value={name} onChange={(e) => { setName(e.target.value) }} />
         <Input label="URL" value={url} onChange={(e) => { setUrl(e.target.value) }} />
         <Textarea label="Description" value={description} onChange={(e) => { setDescription(e.target.value) }} className={styles.descriptionArea} />
-        {selected && !confirmDelete && (
-          <Button variant="danger" type="button" onClick={() => { setConfirmDelete(true) }}>Delete</Button>
-        )}
-        {selected && confirmDelete && (
-          <div className={styles.confirmPanel}>
-            <p>
-              Delete
-              {' '}
-              <strong>{selected.name}</strong>
-              ? This cannot be undone.
-            </p>
-            <Button variant="danger" type="button" onClick={handleConfirmDelete}>Confirm delete</Button>
-          </div>
-        )}
       </Sidebar>
     </>
   )

@@ -24,6 +24,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
   // Ensure this only renders on the client side to avoid hydration issues,
   // see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
   const [isClient, setIsClient] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   function adjustHeight() {
     if (!ref.current) return
@@ -51,23 +52,52 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!open) setConfirmDelete(false)
+  }, [open])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true)
   }, [])
+
+  function handleClose() {
+    setConfirmDelete(false)
+    onClose()
+  }
 
   const content = (
     <aside className={style.sidebar + ' ' + (open ? style.open : style.closed)} ref={ref} onClick={(e) => { e.stopPropagation() }}>
       <div className={style.titlebar}>
         <h1 className={style.title}>{title}</h1>
-        <Icon className={style.closebutton} name="close" onClick={onClose} />
+        <Icon className={style.closebutton} name="close" onClick={handleClose} />
       </div>
       {type !== undefined && <div className={style.type}>{type}</div>}
       {pending && <LoadingSpinner text="Processing..." />}
       <form className="form-gaps">
         {children}
         {error && <div className="error">{error}</div>}
-        {onSave && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}
-        {onDelete && <Button type="button" variant="danger" onClick={onDelete}>Delete</Button>}
-        <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+        {onSave && !confirmDelete && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}
+        {onDelete && !confirmDelete && (
+          <Button type="button" variant="danger" onClick={() => { setConfirmDelete(true) }}>Delete</Button>
+        )}
+        {onDelete && confirmDelete && (
+          <div className={style.confirmPanel}>
+            <p>
+              Delete
+              {type
+                ? (
+                    <>
+                      {' '}
+                      <strong>{type}</strong>
+                    </>
+                  )
+                : null}
+              ? This cannot be undone.
+            </p>
+            <Button type="button" variant="danger" onClick={onDelete}>Confirm delete</Button>
+          </div>
+        )}
+        <Button type="button" variant="secondary" onClick={handleClose}>Cancel</Button>
       </form>
     </aside>
   )
