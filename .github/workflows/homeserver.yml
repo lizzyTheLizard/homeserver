@@ -87,6 +87,7 @@ jobs:
     infrastructure:
         name: Check Infrastructure
         runs-on: ubuntu-latest
+        if: github.actor != 'dependabot[bot]'
         env:
             TF_CLOUD_ORGANIZATION: "gutschi-site"
             TF_API_TOKEN: "${{ secrets.TF_TOKEN }}"
@@ -127,7 +128,8 @@ jobs:
     deploy:
         name: Push Docker Container and restart
         needs: [lint, test, chromatic, build, infrastructure]
-        runs-on: ubuntu-latest        
+        runs-on: ubuntu-latest
+        if: github.actor != 'dependabot[bot]'        
         env:
             registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur
         steps:
