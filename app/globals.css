@@ -37,7 +37,8 @@ h1 {
 
 @media (max-width: 600px) {
   main{
-    margin: 0 var(--gap-small)
+    margin: 0 var(--gap-small);
+    padding-bottom: 4rem;
   }
 }
 
