@@ -7,15 +7,7 @@
     align-items: center;
     height: calc(var(--header-height) + var(--gap) + var(--gap));
     z-index: 200;
-}
-
-.mobileMenuIcon {
-    padding-left: var(--gap);
-    padding-right: 0;
-    padding-top: var(--gap);
-    padding-bottom: var(--gap);
-    height: var(--header-height);
-    width: var(--header-height);
+    box-sizing: border-box;
 }
 
 .spacer {
@@ -37,6 +29,8 @@
     padding: 0 var(--gap);
     box-sizing: border-box;
     text-decoration: none;
+    font: inherit;
+    font-size: 1rem;
 }
 
 .link:hover {
@@ -45,8 +39,13 @@
 
 .activeLink span {
     border-bottom: 0.2rem solid var(--primary-text-color);
-    padding-top: 0.4rem;
+    padding-top: 0.2rem;
     padding-bottom: 0.2rem;
+}
+
+.links {
+    display: flex;
+    flex-direction: row;
 }
 
 @media print {
@@ -55,30 +54,59 @@
     }
 }
 
-@media (min-width: 600px) {
-    .mobileMenuIcon {
-        display: none;
-    }
-
-    .links {
-        display: flex;
-        flex-direction: row;
-    }
-}
-
 @media (max-width: 600px) {
-    .links {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        background-color: var(--primary-background-color);
+    .container {
+        height: auto;
+        padding: var(--gap-small) 0;
     }
 
-    .link {
-        width: 100%;
+    /* Row 1: app name + utility links */
+    .applicationName {
+        order: 1;
+        flex-grow: 1;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: var(--gap-small) var(--gap);
     }
 
-    .mobileMenuHidden {
+    .utilityLink {
+        order: 1;
+        height: auto;
+        padding: var(--gap-small) var(--gap-small);
+        font-size: 0.8rem;
+        flex-grow: 0;
+    }
+
+    .spacer {
         display: none;
+    }
+
+    /* Row 2: tab strip */
+    .links {
+        order: 2;
+        width: 100%;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .links .link {
+        flex: 1;
+        justify-content: center;
+        height: 2.5rem;
+        padding: 0;
+        font-size: 0.85rem;
+        border-bottom: 3px solid transparent;
+    }
+
+    .links .link:hover {
+        background-color: var(--primary-hover-color);
+    }
+
+    .links .activeLink {
+        border-bottom: 3px solid var(--primary-text-color);
+    }
+
+    .links .activeLink span {
+        border-bottom: none;
+        padding: 0;
     }
 }
