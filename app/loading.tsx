@@ -1,10 +1,11 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { PortalContent } from './shared/_components/PortalContent'
 
 export default function Loading() {
   return (
     <main>
-      <h1>Portal</h1>
       <LoadingSpinner />
+      <PortalContent apps={[]} weather={undefined} favorites={[]} />
     </main>
   )
 }

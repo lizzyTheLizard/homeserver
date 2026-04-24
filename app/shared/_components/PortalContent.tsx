@@ -41,7 +41,7 @@ export function PortalContent({ apps, weather, favorites }: PortalContentProps) 
   return (
     <div className={styles.wrapper}>
       <div className={styles.clockBlock}>
-        <div className={styles.clock}>
+        <div className={styles.clock} suppressHydrationWarning>
           {now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
         <div className={styles.date}>

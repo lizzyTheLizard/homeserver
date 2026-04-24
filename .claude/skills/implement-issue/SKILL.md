@@ -86,7 +86,7 @@ Implement the plan step by step in the agreed order. After each logical chunk, b
 
 ### Step 6: Pre-commit checks
 
-When the user asks to commit, run the following checks in order:
+When finished the implementation, ask the user to check it and if you can commit. Do NOT commit without explicit agreement. Before you commit, run the following checks in order:
 
 1. **Lint:**
    ```bash

@@ -4,44 +4,41 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Favorite, FavoriteInput } from '@/app/startpage/_data/Favorite'
 import { saveFavorite, editFavorite, deleteFavorite } from '../server'
-import { DataTable, ColumnDefinition } from '@/app/shared/_components/table/DataTable'
 import { Button } from '@/app/shared/_components/form/Button'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Icon } from '@/app/shared/_components/Icon'
 import styles from './FavoritesContent.module.css'
 
-const columns: ColumnDefinition<Favorite, string>[] = [
-  {
-    key: 'position',
-    header: '#',
-    style: { width: '5%' },
-    sort: (a: number, b: number) => a - b,
-    cell: (v: number) => v,
-  } as ColumnDefinition<unknown, unknown>,
-  {
-    key: 'name',
-    header: 'Name',
-    style: { width: '20%' },
-    sort: (a: string, b: string) => a.localeCompare(b),
-    cell: (v: string) => v,
-  } as ColumnDefinition<unknown, unknown>,
-  {
-    key: 'url',
-    header: 'URL',
-    style: { width: '35%' },
-    sort: (a: string, b: string) => a.localeCompare(b),
-    cell: (v: string) => v,
-  } as ColumnDefinition<unknown, unknown>,
-  {
-    key: 'description',
-    header: 'Description',
-    sort: (a: string, b: string) => a.localeCompare(b),
-    cell: (v: string) => v,
-  } as ColumnDefinition<unknown, unknown>,
-]
+type SortField = 'position' | 'name' | 'url' | 'description'
+
+function sortFavorites(favorites: Favorite[], field: SortField, dir: 'asc' | 'desc'): Favorite[] {
+  return [...favorites].sort((a, b) => {
+    const mult = dir === 'asc' ? 1 : -1
+    if (field === 'position') return mult * (a.position - b.position)
+    return mult * a[field].localeCompare(b[field])
+  })
+}
+
+interface SortIconProps {
+  field: SortField
+  sortField: SortField
+  sortDir: 'asc' | 'desc'
+}
+
+function SortIcon({ field, sortField, sortDir }: SortIconProps) {
+  const active = sortField === field
+  const iconName = active ? (sortDir === 'asc' ? 'up' : 'down') : 'updown'
+  return (
+    <Icon
+      name={iconName}
+      className={styles.sortIcon}
+      style={{ opacity: active ? 1 : 0.4 }}
+    />
+  )
+}
 
 export function FavoritesContent({ initialFavorites }: { initialFavorites: Favorite[] }) {
   const router = useRouter()
@@ -53,6 +50,20 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [sortField, setSortField] = useState<SortField>('position')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+    }
+    else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+  }
+
+  const sorted = sortFavorites(initialFavorites, sortField, sortDir)
 
   function openNew() {
     setSelected(null)
@@ -103,15 +114,79 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
 
   return (
     <>
-      <ActionTitle className={styles.addRow}>
+      <div className={styles.titleRow}>
+        <h1 className={styles.titleText}>Favorites</h1>
+        <Button variant="primary" onClick={openNew} className={styles.desktopAddBtn}>Add favorite</Button>
+      </div>
+
+      {/* Desktop table */}
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th className={styles.th} style={{ width: '5%' }} onClick={() => { toggleSort('position') }}>
+              #
+              <SortIcon field="position" sortField={sortField} sortDir={sortDir} />
+            </th>
+            <th className={styles.th} style={{ width: '18%' }} onClick={() => { toggleSort('name') }}>
+              Name
+              <SortIcon field="name" sortField={sortField} sortDir={sortDir} />
+            </th>
+            <th className={`${styles.th} ${styles.thNoSort}`} style={{ width: '30%' }}>URL</th>
+            <th className={styles.th} onClick={() => { toggleSort('description') }}>
+              Description
+              <SortIcon field="description" sortField={sortField} sortDir={sortDir} />
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((fav) => {
+            const isActive = selected?.id === fav.id
+            return (
+              <tr
+                key={fav.id}
+                onClick={() => { openEdit(fav) }}
+                className={`${styles.row} ${isActive ? styles.activeRow : ''}`}
+              >
+                <td className={`${styles.td} ${styles.positionCell}`}>{fav.position}</td>
+                <td className={styles.td}>{fav.name}</td>
+                <td className={`${styles.td} ${styles.urlCell}`}>{fav.url}</td>
+                <td className={`${styles.td} ${styles.descCell}`}>{fav.description}</td>
+              </tr>
+            )
+          })}
+          {sorted.length === 0 && (
+            <tr>
+              <td colSpan={4} className={styles.emptyCell}>No favorites yet. Add one to get started.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {/* Mobile list */}
+      <div className={styles.mobileList}>
+        {sorted.map(fav => (
+          <div key={fav.id} className={styles.mobileItem} onClick={() => { openEdit(fav) }}>
+            <div className={styles.mobileItemName}>
+              <span className={styles.mobilePosition}>
+                {fav.position}
+                .
+              </span>
+              {fav.name}
+            </div>
+            <div className={styles.mobileUrl}>{fav.url}</div>
+            {fav.description ? <div className={styles.mobileDesc}>{fav.description}</div> : null}
+          </div>
+        ))}
+        {sorted.length === 0 && (
+          <div className={styles.emptyMobile}>No favorites yet.</div>
+        )}
+      </div>
+
+      {/* Mobile sticky add button */}
+      <div className={styles.mobileAddBar}>
         <Button variant="primary" onClick={openNew}>Add favorite</Button>
-      </ActionTitle>
-      <DataTable
-        data={initialFavorites}
-        columns={columns}
-        onRowClick={openEdit}
-        initialSortingOrder={[{ key: 'position', direction: 'ASC' }]}
-      />
+      </div>
+
       <Sidebar
         state={{ ...sidebarState, type: selected?.name }}
         onClose={handleClose}

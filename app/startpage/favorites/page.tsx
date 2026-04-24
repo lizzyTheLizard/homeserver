@@ -1,5 +1,4 @@
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { loadFavorites } from './server'
 import { FavoritesContent } from './_components/FavoritesContent'
 
@@ -12,9 +11,6 @@ export default async function Page() {
     const favorites = await loadFavorites()
     return (
       <main>
-        <ActionTitle>
-          <h1>Favorites</h1>
-        </ActionTitle>
         <FavoritesContent initialFavorites={favorites} />
       </main>
     )
