@@ -9,6 +9,13 @@ export interface Application {
 
 export const applications: Application[] = [
   {
+    key: 'startpage', link: '/startpage/favorites', icon: 'startpage', name: 'StartPage',
+    description: 'Browser start page with personal favorites',
+    getLinks: () => [
+      { text: 'Favorites', href: '/startpage/favorites' },
+    ],
+  },
+  {
     key: 'cash', link: '/cash/', icon: 'cash', name: 'Cash',
     description: 'Double bookkeeping application for privates',
     getLinks: (path: string) => {

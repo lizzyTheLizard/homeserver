@@ -14,6 +14,12 @@ interface AppInfo {
   description: string
 }
 
+interface FavoriteInfo {
+  id: string
+  name: string
+  url: string
+}
+
 function useClock() {
   const [now, setNow] = useState(new Date())
   useEffect(() => {
@@ -26,9 +32,10 @@ function useClock() {
 interface PortalContentProps {
   apps: AppInfo[]
   weather: WeatherInfo | undefined
+  favorites: FavoriteInfo[]
 }
 
-export function PortalContent({ apps, weather }: PortalContentProps) {
+export function PortalContent({ apps, weather, favorites }: PortalContentProps) {
   const now = useClock()
 
   return (
@@ -52,11 +59,23 @@ export function PortalContent({ apps, weather }: PortalContentProps) {
         ))}
       </div>
 
-      {weather && (
+      {(favorites.length > 0 || weather) && (
         <>
           <div className={styles.weatherDivider} />
-          <div className={styles.weatherRow}>
-            <WeatherBlock weather={weather} />
+          <div className={styles.bookmarksRow}>
+            {favorites.map(fav => (
+              <a
+                key={fav.id}
+                href={fav.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.bookmarkPill}
+              >
+                {fav.name}
+              </a>
+            ))}
+            {favorites.length > 0 && weather && <div className={styles.bookmarksDivider} />}
+            {weather && <WeatherBlock weather={weather} />}
           </div>
         </>
       )}

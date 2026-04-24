@@ -8,10 +8,10 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const { apps, weather } = await loadPortalData()
+    const { apps, weather, favorites } = await loadPortalData()
     return (
       <main>
-        <PortalContent apps={apps} weather={weather} />
+        <PortalContent apps={apps} weather={weather} favorites={favorites} />
       </main>
     )
   })

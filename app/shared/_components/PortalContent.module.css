@@ -71,9 +71,33 @@
   background: var(--default-border-color);
 }
 
-.weatherRow {
+.bookmarksRow {
   display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
+}
+
+.bookmarkPill {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  color: #444;
+  font-size: 0.85rem;
+  background: white;
+  transition: background 0.15s;
+}
+
+.bookmarkPill:hover {
+  background: var(--default-hover-color);
+}
+
+.bookmarksDivider {
+  width: 1px;
+  height: 1.5rem;
+  background: var(--default-border-color);
 }
 
 @media (max-width: 600px) {
