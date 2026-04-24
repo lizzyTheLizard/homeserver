@@ -13,20 +13,21 @@ export interface DataTableHeaderProps<FieldType> {
 
 export function DataTableHeader<FieldType>({ column, sortingOrder, onSort, filtering, onFilter }: DataTableHeaderProps<FieldType>) {
   const sort = sortingOrder.find(f => f.key === column.key)
-  const icon = sort ? (sort.direction === 'DESC' ? 'up' : 'down') : 'updown'
+  const icon = sort ? (sort.direction === 'ASC' ? 'up' : 'down') : 'updown'
   const filterValue = filtering.find(f => f.key === column.key)?.value
-  const className = style.cell + ' ' + (column.className ?? '')
+  const thClass = [style.th, column.sort ? style.sortable : '', column.className ?? ''].join(' ')
 
   return (
-    <th id={column.header} className={className} style={column.style}>
-      <div className={style.header}>
-        {column.header}
-        {column.sort && (
-          <button className={style.sortingButton} onClick={() => { onSort(sort, column.key) }}>
-            <Icon style={{ width: '1rem', height: '1rem' }} name={icon} />
-          </button>
-        )}
-      </div>
+    <th
+      id={column.header}
+      className={thClass}
+      style={column.style}
+      onClick={column.sort ? () => { onSort(sort, column.key) } : undefined}
+    >
+      {column.header}
+      {column.sort && (
+        <Icon name={icon} className={style.sortIcon} style={{ opacity: sort ? 1 : 0.4 }} />
+      )}
       {column.filter?.component(filterValue, (newValue) => { onFilter(newValue, column.key) })}
     </th>
   )

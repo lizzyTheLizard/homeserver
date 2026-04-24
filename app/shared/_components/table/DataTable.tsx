@@ -1,5 +1,5 @@
 'use client'
-import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
+import { CSSProperties, PropsWithChildren, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
 import { Filtering, sortAndFilter, SortingOrder } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
@@ -12,6 +12,7 @@ export interface DataTableProps<T extends { id: string }> extends TableHTMLAttri
   initialSortingOrder?: SortingOrder[]
   initialFiltering?: Filtering[]
   onRowClick?: (item: T) => void
+  activeId?: string
 }
 
 export interface ColumnDefinition<FieldType, FilterValueType> {
@@ -29,7 +30,7 @@ export interface ColumnFilter<FieldType, FilterValueType> {
   function: (dataValue: FieldType, filterValue: FilterValueType) => boolean
 }
 
-export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, ...props }: DataTableProps<T>) {
+export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, activeId, children, ...props }: PropsWithChildren<DataTableProps<T>>) {
   const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
   const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
   const [filtering, setFiltering] = useState<Filtering[]>(initialFiltering ?? [])
@@ -57,39 +58,49 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
     [data, sortingOrder, filtering, columns],
   )
 
-  return (
-    <>
-      <table {...props} className={classNames}>
-        <thead>
-          <tr>
-            {columns.map(column => (
-              <DataTableHeader
-                key={column.key}
-                column={column}
-                sortingOrder={sortingOrder}
-                filtering={filtering}
-                onSort={onSort}
-                onFilter={onFilter}
-              />
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedAndFilteredData.map(row => (
-            <DataTableRow
-              key={row.id}
-              row={row}
-              columns={columns}
-              onRowClick={onRowClick}
+  const table = (
+    <table {...props} className={classNames}>
+      <thead>
+        <tr>
+          {columns.map(column => (
+            <DataTableHeader
+              key={column.key}
+              column={column}
+              sortingOrder={sortingOrder}
+              filtering={filtering}
+              onSort={onSort}
+              onFilter={onFilter}
             />
           ))}
-          {sortedAndFilteredData.length === 0 && (
-            <tr className={style.emptyRow}>
-              <td colSpan={Object.keys(columns).length}>No Data</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </>
+        </tr>
+      </thead>
+      <tbody>
+        {sortedAndFilteredData.map(row => (
+          <DataTableRow
+            key={row.id}
+            row={row}
+            columns={columns}
+            onRowClick={onRowClick}
+            isActive={row.id === activeId}
+          />
+        ))}
+        {sortedAndFilteredData.length === 0 && (
+          <tr className={style.emptyRow}>
+            <td colSpan={Object.keys(columns).length}>No Data</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  )
+
+  if (!children) return table
+
+  return (
+    <div className={style.container}>
+      {table}
+      <div className={style.mobileView}>
+        {children}
+      </div>
+    </div>
   )
 }
