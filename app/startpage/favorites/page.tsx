@@ -11,7 +11,7 @@ export default async function Page() {
     const favorites = await loadFavorites()
     return (
       <main>
-        <FavoritesContent initialFavorites={favorites} />
+        <FavoritesContent favorites={favorites} />
       </main>
     )
   })

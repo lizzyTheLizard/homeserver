@@ -11,44 +11,17 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import styles from './FavoritesContent.module.css'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { DataTable, ColumnDefinition } from '@/app/shared/_components/table/DataTable'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { textColumn, numberColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 
-const COLUMNS: ColumnDefinition<unknown, unknown>[] = [
-  {
-    key: 'position',
-    header: '#',
-    style: { width: '5%' },
-    sort: (a, b) => (a as number) - (b as number),
-    cell: value => (
-      <span style={{ color: '#aaa', fontVariantNumeric: 'tabular-nums' }}>{value as number}</span>
-    ),
-  },
-  {
-    key: 'name',
-    header: 'Name',
-    style: { width: '18%' },
-    sort: (a, b) => (a as string).localeCompare(b as string),
-    cell: value => value as string,
-  },
-  {
-    key: 'url',
-    header: 'URL',
-    style: { width: '30%' },
-    cell: value => (
-      <span style={{ color: 'rgba(0,0,180,1)', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-        {value as string}
-      </span>
-    ),
-  },
-  {
-    key: 'description',
-    header: 'Description',
-    sort: (a, b) => (a as string).localeCompare(b as string),
-    cell: value => <span style={{ color: '#666' }}>{value as string}</span>,
-  },
+const COLUMNS = [
+  numberColumn('position', { filter: false, header: '#', style: { width: '5%' } }),
+  textColumn('name', { filter: false, header: 'Name', style: { width: '25%' } }),
+  textColumn('url', { filter: false, header: 'URL', style: { width: '30%' } }),
+  textColumn('description', { filter: false, header: 'Description' }),
 ]
 
-export function FavoritesContent({ initialFavorites }: { initialFavorites: Favorite[] }) {
+export function FavoritesContent({ favorites }: { favorites: Favorite[] }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [sidebarState, sidebarModifier] = useSidebarState(undefined)
@@ -65,6 +38,8 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
     setUrl('')
     setDescription('')
     sidebarModifier.openSidebar('New favorite')
+    const maxPosition = favorites.map(fav => fav.position).reduce((max, pos) => Math.max(max, pos), 0)
+    setPosition(String(maxPosition + 1))
   }
 
   function openEdit(fav: Favorite) {
@@ -97,7 +72,7 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
     })
   }
 
-  const mobileFavorites = [...initialFavorites].sort((a, b) => a.position - b.position)
+  const mobileFavorites = [...favorites].sort((a, b) => a.position - b.position)
 
   return (
     <>
@@ -107,7 +82,7 @@ export function FavoritesContent({ initialFavorites }: { initialFavorites: Favor
       </ActionTitle>
 
       <DataTable
-        data={initialFavorites}
+        data={favorites}
         columns={COLUMNS}
         onRowClick={openEdit}
         activeId={selected?.id}

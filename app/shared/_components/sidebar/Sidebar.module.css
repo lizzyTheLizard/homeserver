@@ -1,60 +1,100 @@
 .sidebar {
-    display:flex;
+    display: flex;
     flex-direction: column;
-    height: 100%;
-    width: 100%;
+    overflow: hidden;
+}
+
+.formBody {
+    flex-grow: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.actionsBar {
+    flex-shrink: 0;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--default-border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .titlebar {
     display: flex;
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 0.25rem;
 }
 
-.titlebar h1 {
-    text-align: left;
-    flex-grow: 1;
+.title {
+    font-size: 1.2rem;
+    font-weight: 600;
     margin: 0;
+    flex-grow: 1;
 }
 
 .type {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.17em;
-    font-weight: bold;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .closebutton {
-    height: 1.5rem;
+    height: 2.5rem;
+    width: 2.5rem;
+    margin: -0.25rem;
+    padding: 0.375rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    flex-shrink: 0;
 }
 
-.error {
-    color: var(--danger-background-color);
+.closebutton:hover {
+    background: rgb(240, 240, 240);
+}
+
+.confirmPanel {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(220, 0, 0, 0.3);
+    border-radius: var(--border-radius);
+    background: rgba(220, 0, 0, 0.05);
+}
+
+.confirmPanel p {
+    font-size: 0.85rem;
 }
 
 @media (min-width: 600px) {
     .sidebar {
         position: sticky;
         top: var(--gap-small);
-        overflow: hidden;
         background-color: white;
-        border-radius: var(--border-radius);
-        transition: width 1s, border-width 1s, padding 1s, margin 1s;
         align-self: flex-start;
         margin-top: var(--gap-small);
+        transition: width 0.3s, border-width 0.3s, margin 0.3s;
     }
 
     .sidebar.open {
-        width: calc(var(--sidebar-width));
-        border: 1px solid black;
-        padding: var(--gap);
+        width: var(--sidebar-width);
+        border-left: 2px solid rgba(0, 0, 220, 0.25);
+        border-top: 1px solid var(--default-border-color);
+        border-bottom: 1px solid var(--default-border-color);
         margin-left: var(--gap);
+        height: calc(100vh - var(--gap-small) - var(--gap-small));
     }
 
     .sidebar.closed {
-        width:0;
-        border: 0 solid black;
-        padding: 0;
+        width: 0;
+        border-width: 0;
         margin-left: 0;
     }
 
@@ -66,34 +106,18 @@
     .sidebarContent {
         width: 0;
         flex-grow: 1;
-        transition: width 1s;
         min-height: 100%;
     }
-}
-
-.confirmPanel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-small);
-    padding: var(--gap-small);
-    border: 1px solid rgba(220, 0, 0, 0.3);
-    border-radius: var(--border-radius);
-    background: rgba(220, 0, 0, 0.05);
-}
-
-.confirmPanel p {
-    font-size: 0.85rem;
 }
 
 @media (max-width: 600px) {
     .sidebar {
         background-color: white;
         position: fixed;
-        padding: var(--gap-small);
-        height: calc(100vh - 2 * var(--gap-small));
+        height: 100vh;
+        width: 100%;
         top: 0;
-        width: calc(100% - 2 * var(--gap-small));
-        transition: left 1s ease-in-out;
+        transition: left 0.3s ease-in-out;
         z-index: 300;
     }
 

@@ -3,6 +3,7 @@ import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { loadBuildInfo, loadConfigInfo, loadMetricsInfo, loadRunInfo } from './server'
 import { EventsCard } from './_components/EventsCard'
 import styles from './Dashboard.module.css'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Admin - Dashboard',
@@ -17,7 +18,9 @@ export default async function Page() {
 
     return (
       <main>
-        <h1>Dashboard</h1>
+        <ActionTitle>
+          <h1>Dashboard</h1>
+        </ActionTitle>
         <div className={styles.grid}>
           <DashboardCard header="Build" items={buildInfo} />
           <DashboardCard header="Run" items={runInfo} />

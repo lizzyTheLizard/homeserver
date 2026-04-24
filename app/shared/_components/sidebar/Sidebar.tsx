@@ -67,38 +67,42 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
 
   const content = (
     <aside className={style.sidebar + ' ' + (open ? style.open : style.closed)} ref={ref} onClick={(e) => { e.stopPropagation() }}>
-      <div className={style.titlebar}>
-        <h1 className={style.title}>{title}</h1>
-        <Icon className={style.closebutton} name="close" onClick={handleClose} />
-      </div>
-      {type !== undefined && <div className={style.type}>{type}</div>}
-      {pending && <LoadingSpinner text="Processing..." />}
-      <form className="form-gaps">
+      <div className={style.formBody}>
+        <div className={style.titlebar}>
+          <h1 className={style.title}>{title}</h1>
+          <Icon className={style.closebutton} name="close" onClick={handleClose} />
+        </div>
+        {type !== undefined && <p className={style.type}>{type}</p>}
+        {pending && <LoadingSpinner text="Processing..." />}
         {children}
         {error && <div className="error">{error}</div>}
+      </div>
+      <div className={style.actionsBar}>
         {onSave && !confirmDelete && <Button type="button" variant="primary" onClick={onSave}>Save</Button>}
         {onDelete && !confirmDelete && (
           <Button type="button" variant="danger" onClick={() => { setConfirmDelete(true) }}>Delete</Button>
         )}
         {onDelete && confirmDelete && (
-          <div className={style.confirmPanel}>
-            <p>
-              Delete
-              {type
-                ? (
-                    <>
-                      {' '}
-                      <strong>{type}</strong>
-                    </>
-                  )
-                : null}
-              ? This cannot be undone.
-            </p>
+          <>
+            <div className={style.confirmPanel}>
+              <p>
+                Delete
+                {type
+                  ? (
+                      <>
+                        {' '}
+                        <strong>{type}</strong>
+                      </>
+                    )
+                  : null}
+                ? This cannot be undone.
+              </p>
+            </div>
             <Button type="button" variant="danger" onClick={onDelete}>Confirm delete</Button>
-          </div>
+            <Button type="button" variant="secondary" onClick={handleClose}>Cancel</Button>
+          </>
         )}
-        <Button type="button" variant="secondary" onClick={handleClose}>Cancel</Button>
-      </form>
+      </div>
     </aside>
   )
 

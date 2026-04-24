@@ -43,13 +43,15 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
   return (
     <div className={style.container}>
       <span className={style.applicationName}>{currentApplication?.name ?? 'Homeserver'}</span>
-      <div className={style.links}>
-        {(currentApplication?.getLinks(effectivePath) ?? []).map(link => (
-          <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
-            <span>{link.text}</span>
-          </Link>
-        ))}
-      </div>
+      {(currentApplication?.getLinks(effectivePath).length ?? 0) !== 0 && (
+        <div className={style.links}>
+          {(currentApplication?.getLinks(effectivePath) ?? []).map(link => (
+            <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
+              <span>{link.text}</span>
+            </Link>
+          ))}
+        </div>
+      )}
       <div className={style.spacer} />
       {showPortalLink && <Link href="/" className={utilityLinkClass('/')}>All Applications</Link>}
       {hasSession && <a href="/common/auth/logout" className={utilityLinkClass('/common/auth/logout')}>Logout</a>}
