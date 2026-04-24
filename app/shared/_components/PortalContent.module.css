@@ -71,6 +71,14 @@
   background: var(--default-border-color);
 }
 
+.bookmarksAndWeather {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .bookmarksRow {
   display: flex;
   gap: 0.75rem;
@@ -104,7 +112,7 @@
   .wrapper {
     justify-content: flex-start;
     padding: 1.25rem 1rem 1rem;
-    gap: 0;
+    gap: 1rem;
   }
 
   .clockBlock {
@@ -113,7 +121,6 @@
 
   .cards {
     flex-direction: column;
-    flex-grow: 1;
     flex-wrap: nowrap;
     width: 100%;
     gap: 0.75rem;
@@ -121,7 +128,35 @@
 
   .card {
     width: 100%;
-    flex-grow: 1;
     padding: 1rem 0.5rem;
+  }
+
+  .weatherDivider {
+    max-width: 100%;
+  }
+
+  .bookmarksAndWeather {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .bookmarksRow {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    padding-bottom: 0.25rem;
+  }
+
+  .bookmarkPill {
+    flex-shrink: 0;
+  }
+
+  .bookmarksDivider {
+    display: none;
   }
 }

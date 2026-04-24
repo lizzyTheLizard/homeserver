@@ -62,18 +62,22 @@ export function PortalContent({ apps, weather, favorites }: PortalContentProps) 
       {(favorites.length > 0 || weather) && (
         <>
           <div className={styles.weatherDivider} />
-          <div className={styles.bookmarksRow}>
-            {favorites.map(fav => (
-              <a
-                key={fav.id}
-                href={fav.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.bookmarkPill}
-              >
-                {fav.name}
-              </a>
-            ))}
+          <div className={styles.bookmarksAndWeather}>
+            {favorites.length > 0 && (
+              <div className={styles.bookmarksRow}>
+                {favorites.map(fav => (
+                  <a
+                    key={fav.id}
+                    href={fav.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.bookmarkPill}
+                  >
+                    {fav.name}
+                  </a>
+                ))}
+              </div>
+            )}
             {favorites.length > 0 && weather && <div className={styles.bookmarksDivider} />}
             {weather && <WeatherBlock weather={weather} />}
           </div>
