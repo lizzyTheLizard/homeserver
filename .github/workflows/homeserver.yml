@@ -146,7 +146,7 @@ jobs:
               echo "container_tag=test" >> $GITHUB_ENV
               echo "container_id=89160430-514c-49ef-a53d-9e936beaec8a" >> $GITHUB_ENV
           - name: Login to Registry
-            uses: docker/login-action@v3
+            uses: docker/login-action@v4
             with:
               username: nologin
               password: ${{ secrets.SCW_SECRET_KEY }}
