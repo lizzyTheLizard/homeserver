@@ -58,6 +58,9 @@
     .container {
         height: auto;
         padding: var(--gap-small) 0;
+        background-color: white;
+        color: var(--default-text-color);
+        border-bottom: 1px solid var(--default-border-color);
     }
 
     /* Row 1: app name + utility links */
@@ -67,6 +70,7 @@
         font-size: 1rem;
         font-weight: 600;
         padding: var(--gap-small) var(--gap);
+        color: var(--default-text-color);
     }
 
     .utilityLink {
@@ -75,6 +79,12 @@
         padding: var(--gap-small) var(--gap-small);
         font-size: 0.8rem;
         flex-grow: 0;
+        background-color: white;
+        color: var(--default-text-color);
+    }
+
+    .utilityLink:hover {
+        background-color: var(--default-hover-color);
     }
 
     .spacer {
@@ -85,7 +95,7 @@
     .links {
         order: 2;
         width: 100%;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        border-top: 1px solid var(--default-border-color);
     }
 
     .links .link {
@@ -95,14 +105,16 @@
         padding: 0;
         font-size: 0.85rem;
         border-bottom: 3px solid transparent;
+        background-color: white;
+        color: var(--default-text-color);
     }
 
     .links .link:hover {
-        background-color: var(--primary-hover-color);
+        background-color: var(--default-hover-color);
     }
 
     .links .activeLink {
-        border-bottom: 3px solid var(--primary-text-color);
+        border-bottom: 3px solid var(--primary-background-color);
     }
 
     .links .activeLink span {
