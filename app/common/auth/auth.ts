@@ -113,7 +113,10 @@ async function getSession(): Promise<IronSession<SessionData>> {
     ttl: 604800, // 1 week in seconds
     cookieOptions: { secure: process.env.NODE_ENV === 'development' ? false : true },
   }
-  return getIronSession<SessionData>(cookiesList, settings)
+  logger.debug(`Getting session with cookies: ${cookiesList.getAll().map(c => `${c.name}=${c.value}`).join('; ')}`)
+  const session = await getIronSession<SessionData>(cookiesList, settings)
+  logger.debug(`Session data: ${JSON.stringify(session)}`)
+  return session
 }
 
 async function getClientConfig(): Promise<client.Configuration> {
