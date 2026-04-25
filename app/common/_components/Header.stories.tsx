@@ -10,6 +10,11 @@ const meta = {
     hasSession: true,
     accessibleApplications: ['admin', 'coeditor'],
   },
+  parameters: {
+    nextjs: {
+      appDirectory: true, // Enables App Router support
+    },
+  },
 } satisfies Meta<typeof Header>
 export default meta
 

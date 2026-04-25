@@ -1,5 +1,5 @@
 'use client'
-import { CSSProperties, PropsWithChildren, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
+import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
 import { Filtering, sortAndFilter, SortingOrder } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
@@ -13,6 +13,7 @@ export interface DataTableProps<T extends { id: string }> extends TableHTMLAttri
   initialFiltering?: Filtering[]
   onRowClick?: (item: T) => void
   activeId?: string
+  renderMobile?: (item: T) => ReactNode
 }
 
 export interface ColumnDefinition<FieldType, FilterValueType> {
@@ -30,7 +31,7 @@ export interface ColumnFilter<FieldType, FilterValueType> {
   function: (dataValue: FieldType, filterValue: FilterValueType) => boolean
 }
 
-export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, activeId, children, ...props }: PropsWithChildren<DataTableProps<T>>) {
+export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialFiltering, initialSortingOrder, activeId, renderMobile, ...props }: DataTableProps<T>) {
   const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
   const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
   const [filtering, setFiltering] = useState<Filtering[]>(initialFiltering ?? [])
@@ -93,13 +94,17 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
     </table>
   )
 
-  if (!children) return table
-
+  if (!renderMobile) return table
   return (
     <div className={style.container}>
       {table}
       <div className={style.mobileView}>
-        {children}
+        <div>
+          {sortedAndFilteredData.map(row => (renderMobile(row)))}
+          {sortedAndFilteredData.length === 0 && (
+            <div className={style.emptyMobile}>No Data</div>
+          )}
+        </div>
       </div>
     </div>
   )

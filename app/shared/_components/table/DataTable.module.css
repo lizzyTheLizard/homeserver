@@ -17,12 +17,15 @@ table.dataTable td {
   color: #999;
 }
 
-.container {
-  /* responsive wrapper for table + mobile view */
-}
-
 .mobileView {
   display: none;
+}
+
+.emptyMobile {
+  text-align: center;
+  color: #999;
+  padding: 3rem 1rem;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 600px) {

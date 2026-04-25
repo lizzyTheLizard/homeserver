@@ -25,6 +25,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
   // see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
   const [isClient, setIsClient] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const deleteText = (type ? `Delete ${type}` : 'Delete') + '? This cannot be undone.'
 
   function adjustHeight() {
     if (!ref.current) return
@@ -85,18 +86,7 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
         {onDelete && confirmDelete && (
           <>
             <div className={style.confirmPanel}>
-              <p>
-                Delete
-                {type
-                  ? (
-                      <>
-                        {' '}
-                        <strong>{type}</strong>
-                      </>
-                    )
-                  : null}
-                ? This cannot be undone.
-              </p>
+              <p>{deleteText}</p>
             </div>
             <Button type="button" variant="danger" onClick={onDelete}>Confirm delete</Button>
             <Button type="button" variant="secondary" onClick={handleClose}>Cancel</Button>

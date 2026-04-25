@@ -21,8 +21,7 @@ export async function loadPortalData() {
     .filter(a => user.applications.includes(a.key))
     .map(({ key, name, icon, link, description }) => ({ key, name, icon, link, description }))
 
-  const rawFavorites = await nontransactional(c => findFavoritesByOwner(c, user.sub))
-  const favorites = rawFavorites.map(({ id, name, url }) => ({ id, name, url }))
+  const favorites = await nontransactional(c => findFavoritesByOwner(c, user.sub))
 
   return { apps, weather, favorites }
 }
