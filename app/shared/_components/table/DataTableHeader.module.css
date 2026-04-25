@@ -19,6 +19,7 @@
   height: 0.75rem;
   vertical-align: middle;
   margin-left: 0.3rem;
+  margin-left: var(--gap);
 }
 
 @media print {

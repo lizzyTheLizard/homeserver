@@ -2,8 +2,9 @@
 
 import style from './Header.module.css'
 import { Application, applications } from '../Application'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Icon } from '@/app/shared/_components/Icon'
 
 function startWithIgnoreCase(path: string, app: Application) {
   const split = app.link.split('/')
@@ -25,6 +26,7 @@ export interface HeaderProps {
 }
 
 export function Header({ accessibleApplications, hasSession, path }: HeaderProps) {
+  const router = useRouter()
   const pathname = usePathname()
   const effectivePath = path ?? pathname
   const currentApplication = applications
@@ -32,29 +34,41 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
     .find(app => startWithIgnoreCase(effectivePath, app))
   const showPortalLink = currentApplication !== undefined && accessibleApplications.length > 1
 
-  function navLinkClass(href: string) {
-    return [style.link, isActiveLink(href, effectivePath) ? style.activeLink : ''].join(' ')
-  }
-
-  function utilityLinkClass(href: string) {
-    return [style.link, style.utilityLink, isActiveLink(href, effectivePath) ? style.activeLink : ''].join(' ')
+  function linkClass(href: string, isMobile: boolean) {
+    return [style.link, isMobile ? style.mobileLink : '', isActiveLink(href, effectivePath) ? style.activeLink : ''].join(' ')
   }
 
   return (
-    <div className={style.container}>
-      <span className={style.applicationName}>{currentApplication?.name ?? 'Homeserver'}</span>
-      {(currentApplication?.getLinks(effectivePath).length ?? 0) !== 0 && (
-        <div className={style.links}>
-          {(currentApplication?.getLinks(effectivePath) ?? []).map(link => (
-            <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
-              <span>{link.text}</span>
-            </Link>
-          ))}
-        </div>
-      )}
-      <div className={style.spacer} />
-      {showPortalLink && <Link href="/" className={utilityLinkClass('/')}>All Applications</Link>}
-      {hasSession && <a href="/common/auth/logout" className={utilityLinkClass('/common/auth/logout')}>Logout</a>}
-    </div>
+    <>
+      <div className={style.container}>
+        <span className={style.applicationName}>{currentApplication?.name ?? 'Homeserver'}</span>
+        {(currentApplication?.getLinks(effectivePath) ?? []).map(link => (
+          <Link key={link.href} href={link.href} className={linkClass(link.href, false)}>
+            <span>{link.text}</span>
+          </Link>
+        ))}
+        <div className={style.spacer} />
+        {showPortalLink
+          && (
+            <>
+              <Link href="/" className={linkClass('/', false)}>All Applications</Link>
+              <Link href="/" className={linkClass('/', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="home" /></Link>
+            </>
+          )}
+        {hasSession && (
+          <>
+            <Link href="/common/auth/logout" className={linkClass('/common/auth/logout', false)}>Logout</Link>
+            <Link href="/common/auth/logout" className={linkClass('/common/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></Link>
+          </>
+        )}
+      </div>
+      <div className={style.mobileContainer}>
+        {(currentApplication?.getLinks(effectivePath) ?? []).map(link => (
+          <button onClick={() => { router.push(link.href) }} key={link.href} className={style.button + ' ' + (isActiveLink(link.href, effectivePath) ? style.activeButton : '')}>
+            <span>{link.text}</span>
+          </button>
+        ))}
+      </div>
+    </>
   )
 }
