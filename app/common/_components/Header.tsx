@@ -57,8 +57,8 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
           )}
         {hasSession && (
           <>
-            <Link href="/common/auth/logout" className={linkClass('/common/auth/logout', false)}>Logout</Link>
-            <Link href="/common/auth/logout" className={linkClass('/common/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></Link>
+            <a href="/common/auth/logout" className={linkClass('/common/auth/logout', false)}>Logout</a>
+            <a href="/common/auth/logout" className={linkClass('/common/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></a>
           </>
         )}
       </div>
