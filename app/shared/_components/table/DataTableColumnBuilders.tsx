@@ -16,6 +16,30 @@ export interface Options<FieldType> {
   className?: string
 }
 
+export function numberColumn(key: string, options?: Options<number>): ColumnDefinition<number, number> {
+  const filter: ColumnFilter<number, number> = {
+    component: (v, sv) => (
+      <Input
+        className={style.filter}
+        label="includes"
+        value={v?.toString()}
+        onChange={(e) => { sv(parseFloat(e.target.value)) }}
+        small={true}
+      />
+    ),
+    function: (dataValue, filterValue) => dataValue === filterValue,
+  }
+  return {
+    key,
+    header: options?.header ?? key,
+    cell: options?.cell ?? ((value: number) => value),
+    sort: options?.sort === false ? undefined : (a: number, b: number) => a - b,
+    filter: options?.filter === false ? undefined : filter,
+    style: options?.style,
+    className: options?.className,
+  }
+}
+
 export function textColumn(key: string, options?: Options<string>): ColumnDefinition<string, string> {
   const filter: ColumnFilter<string, string> = {
     component: (v, sv) => (

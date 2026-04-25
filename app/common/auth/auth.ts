@@ -123,8 +123,8 @@ async function getClientConfig(): Promise<client.Configuration> {
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
 
 async function getApplications(sub: string, email: string): Promise<string[]> {
-  // Everyone can access coeditor
-  const result = ['coeditor']
+  // Everyone can access startpage and coeditor
+  const result = ['startpage', 'coeditor']
   // Only the admin can access admin pages
   if (email === config.ADMIN_EMAIL) result.push('admin')
   // Only if you have a project you can access cash

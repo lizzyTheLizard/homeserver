@@ -1,133 +1,40 @@
 table.dataTable {
-  table-layout: fixed;
   width: 100%;
-  border-radius: var(--border-radius);
-  border: 0;
-  border-spacing: 0;
-  border-collapse: separate;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+}
 
-  thead {
-    th {
-      background-color: var(--primary-background-color);
-      color: var(--default-background-color);
-      font-weight: bold;
-      padding: var(--gap-small) var(--gap-small);
-      vertical-align: top;
-      text-align: center;
-      border-top: 1px solid var(--primary-border-color);
-      border-right: 1px solid var(--primary-border-color);
-    }
+table.dataTable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--default-border-color);
+  font-size: 0.9rem;
+  vertical-align: top;
+}
 
-    th:first-child {
-      border-left: 1px solid var(--primary-border-color);
-      border-top-left-radius: var(--border-radius);
-    }
+.emptyRow td {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
 
-    th:last-child {
-      border-top-right-radius: var(--border-radius);
-    }
-  }
+.mobileView {
+  display: none;
+}
 
-  tbody {
-    tr {
-      td {
-        border-bottom: 1px solid var(--primary-border-color);
-        border-right: 1px solid var(--primary-border-color);
-      }
-
-      td:first-child {
-        border-left: 1px solid var(--primary-border-color);
-      }
-    }
-
-    tr.emptyRow {
-      td {
-        text-align: center;
-      }
-    }
-
-    tr:first-child {
-      td {
-        border-top: 1px solid var(--primary-border-color);
-      }
-    }
-
-    tr:last-child {
-      td:first-child {
-        border-bottom-left-radius: var(--border-radius);
-      }
-
-      td:last-child {
-        border-bottom-right-radius: var(--border-radius);
-      }
-    }
-
-    tr:nth-child(even) td {
-      background-color: #f2f2f2;
-    }
-  }
+.emptyMobile {
+  text-align: center;
+  color: #999;
+  padding: 3rem 1rem;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 600px) {
-  table.dataTable {
+  .container table.dataTable {
+    display: none;
+  }
+
+  .container .mobileView {
     display: block;
-
-    thead {
-      display: none;
-    }
-
-    tbody {
-      display: block;
-
-      tr {
-        display: block;
-
-        td {
-          display: block;
-          word-break: break-all;
-          min-height: var(--gap);
-          width: initial !important;
-          text-align: right;
-          border-left: 1px solid var(--primary-border-color);
-          padding: var(--gap-small) var(--gap-small);
-        }
-
-        td:first-child {
-          padding-top: var(--gap);
-          border-top: 1px solid var(--primary-border-color);
-          border-top-left-radius: var(--border-radius);
-          border-top-right-radius: var(--border-radius);
-        }
-
-        td:last-child {
-          padding-bottom: var(--gap);
-          border-bottom-left-radius: var(--border-radius);
-          border-bottom-right-radius: var(--border-radius);
-          margin-bottom: var(--gap);
-        }
-      }
-
-      tr.emptyRow {
-        td {
-          text-align: center;
-        }
-      }
-
-      tr:not(.emptyRow) {
-        td {
-          padding-left: 8rem;
-        }
-        td:before {
-          position: absolute;
-          left: var(--gap);
-    		  width: calc(100% - 8rem - 2 * var(--gap));
-          white-space: nowrap;
-          font-weight: bold;
-          content: attr(headers);
-          text-align: left;
-        }
-      }
-    }
   }
 }
 
@@ -135,31 +42,16 @@ table.dataTable {
   table.dataTable {
     font-size: small;
     break-inside: auto;
+  }
 
-    thead {
-      display: table-header-group;
+  table.dataTable tbody tr {
+    break-inside: avoid;
+    break-after: auto;
+  }
 
-      th {
-        background-color: initial;
-        color: initial;
-      }
-    }
-
-    tbody {
-      tr {
-        break-inside: avoid;
-        break-after: auto;
-
-        td {
-          overflow: clip;
-          break-inside: avoid;
-          break-after: auto;
-        }
-      }
-
-      tr:nth-child(even) td {
-        background-color: initial;
-      }
-    }
+  table.dataTable tbody tr td {
+    overflow: clip;
+    break-inside: avoid;
+    break-after: auto;
   }
 }

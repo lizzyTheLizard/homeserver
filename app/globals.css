@@ -37,7 +37,8 @@ h1 {
 
 @media (max-width: 600px) {
   main{
-    margin: 0 var(--gap-small)
+    margin: 0 var(--gap-small);
+    padding-bottom: 4rem;
   }
 }
 
@@ -84,8 +85,6 @@ h1 {
   --disabled-transparent-color: rgba(100, 100, 100, 0.1);
 
   --input-height: 2.5rem;
-  --header-height: 2rem;
-  --header-text-size: 1.5rem;
   --sidebar-width: 400px;
 }
 

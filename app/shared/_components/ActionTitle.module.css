@@ -20,14 +20,22 @@
 
 @media (max-width: 600px) {
     .title {
-        flex-wrap: wrap;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: white;
+        padding: var(--gap-small) var(--gap);
+        border-top: 1px solid var(--default-border-color);
+        flex-wrap: nowrap;
     }
 
     .title h1 {
-        width: 100%;
+        display: none;
     }
 
-    .title > * {
+    .title > *:not(h1) {
         flex-grow: 1;
     }
 }

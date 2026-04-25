@@ -14,7 +14,7 @@ export async function saveProject(project: ProjectInput) {
   return toResponse(transactional(async (tx) => {
     await getAuthenticatedUserSession('admin')
     const result = await createOrModifyProject(tx, project)
-    logger.info(`Saved project ${project.name} for user ${project.owner_id} with id ${result.id}`)
+    logger.info(`Saved project ${project.name} for user ${project.owner_id} with id ${project.id}`)
     return result
   }))
 }

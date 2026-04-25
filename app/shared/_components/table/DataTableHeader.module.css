@@ -1,29 +1,29 @@
-.sortingButton {
-  background-color: var(--primary-background-color);
-  color: var(--default-background-color);
-  border: none;
-  padding: 0;
+.th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--default-border-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  vertical-align: top;
 }
 
-.header {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gap-small);
+.sortable {
+  cursor: pointer;
+  user-select: none;
 }
 
+.sortIcon {
+  display: inline-flex;
+  width: 0.75rem;
+  height: 0.75rem;
+  vertical-align: middle;
+  margin-left: 0.3rem;
+  margin-left: var(--gap);
+}
 
 @media print {
-  .sortingButton {
-    display: none;
-  }
-
-  .header {
-    display: initial;
-  }
-
-  .cell :not(.header) {
+  .sortIcon {
     display: none;
   }
 }

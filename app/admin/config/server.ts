@@ -13,7 +13,7 @@ export interface ConfigSection {
   entries: ConfigEntry[]
 }
 
-const SECRET_PATTERN = /PASSWORD|SECRET|KEY|TOKEN|CREDENTIAL/i
+const SECRET_PATTERN = /PASSWORD|SECRET|KEY|TOKEN|CREDENTIAL|DB_CONNECTION_STRING/i
 
 function makeEntry(key: string): ConfigEntry {
   const value = process.env[key]

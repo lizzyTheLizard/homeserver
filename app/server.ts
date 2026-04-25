@@ -3,6 +3,8 @@ import { applications } from './common/Application'
 import { getAuthenticatedUserSession } from './common/auth/auth'
 import { fetchWeather } from './shared/_external/openmeteo'
 import { WeatherInfo } from './shared/_components/WeatherBlock'
+import { nontransactional } from './shared/_external/db/access'
+import { findFavoritesByOwner } from './startpage/_data/Favorite'
 
 export async function loadPortalData() {
   const location = config.WEATHER_API_LOCATION
@@ -19,5 +21,7 @@ export async function loadPortalData() {
     .filter(a => user.applications.includes(a.key))
     .map(({ key, name, icon, link, description }) => ({ key, name, icon, link, description }))
 
-  return { apps, weather }
+  const favorites = await nontransactional(c => findFavoritesByOwner(c, user.sub))
+
+  return { apps, weather, favorites }
 }

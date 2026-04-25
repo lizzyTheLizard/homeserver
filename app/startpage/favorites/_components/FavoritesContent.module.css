@@ -1,0 +1,36 @@
+.mobileItem {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--default-border-color);
+  cursor: pointer;
+  background: white;
+}
+
+.mobileItem:hover {
+  background: var(--default-hover-color);
+}
+
+.mobileItemName {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mobilePosition {
+  color: #aaa;
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.4rem;
+}
+
+.mobileUrl {
+  font-size: 0.72rem;
+  color: #888;
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobileDesc {
+  font-size: 0.78rem;
+  color: #555;
+  margin-top: 0.2rem;
+}

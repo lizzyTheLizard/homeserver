@@ -14,6 +14,12 @@ interface AppInfo {
   description: string
 }
 
+interface FavoriteInfo {
+  id: string
+  name: string
+  url: string
+}
+
 function useClock() {
   const [now, setNow] = useState(new Date())
   useEffect(() => {
@@ -26,15 +32,16 @@ function useClock() {
 interface PortalContentProps {
   apps: AppInfo[]
   weather: WeatherInfo | undefined
+  favorites: FavoriteInfo[]
 }
 
-export function PortalContent({ apps, weather }: PortalContentProps) {
+export function PortalContent({ apps, weather, favorites }: PortalContentProps) {
   const now = useClock()
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.clockBlock}>
-        <div className={styles.clock}>
+        <div className={styles.clock} suppressHydrationWarning>
           {now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
         <div className={styles.date}>
@@ -52,11 +59,30 @@ export function PortalContent({ apps, weather }: PortalContentProps) {
         ))}
       </div>
 
-      {weather && (
+      {(favorites.length > 0 || weather) && (
         <>
           <div className={styles.weatherDivider} />
-          <div className={styles.weatherRow}>
-            <WeatherBlock weather={weather} />
+          <div className={styles.bookmarksAndWeather}>
+            {favorites.length > 0 && (
+              <div className={styles.bookmarksSection}>
+                <div className={styles.bookmarksLabel}>Bookmarks</div>
+                <div className={styles.bookmarksRow}>
+                  {favorites.map(fav => (
+                    <a
+                      key={fav.id}
+                      href={fav.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.bookmarkPill}
+                    >
+                      {fav.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {favorites.length > 0 && weather && <div className={styles.bookmarksDivider} />}
+            {weather && <WeatherBlock weather={weather} />}
           </div>
         </>
       )}
