@@ -1,5 +1,5 @@
 import { serverPageFunction } from './shared/_helper/PageFunction'
-import { PortalContent } from './shared/_components/PortalContent'
+import { PortalContent } from './common/_components/PortalContent'
 import { loadPortalData } from './server'
 
 export const metadata = {

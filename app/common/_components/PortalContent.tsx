@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Icon } from './Icon'
+import { Icon } from '../../shared/_components/Icon'
 import { WeatherBlock, WeatherInfo } from './WeatherBlock'
 import styles from './PortalContent.module.css'
 

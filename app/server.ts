@@ -2,7 +2,7 @@ import { config } from './shared/config'
 import { applications } from './common/Application'
 import { getAuthenticatedUserSession } from './common/auth/auth'
 import { fetchWeather } from './shared/_external/openmeteo'
-import { WeatherInfo } from './shared/_components/WeatherBlock'
+import { WeatherInfo } from './common/_components/WeatherBlock'
 import { nontransactional } from './shared/_external/db/access'
 import { findFavoritesByOwner } from './startpage/_data/Favorite'
 

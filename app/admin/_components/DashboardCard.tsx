@@ -1,7 +1,7 @@
 import { Temporal } from '@js-temporal/polyfill'
 import styles from './DashboardCard.module.css'
 import Link from 'next/link'
-import { AdminDateTime } from './AdminDateTime'
+import { DateTime } from '@/app/shared/_components/DateTime'
 
 export interface LineItem {
   name: string
@@ -37,7 +37,7 @@ function Line({ item }: { item: LineItem }) {
   let inner
   if ('date' in item && item.date) {
     // inner = <div>{typeof item.date}</div>
-    inner = <AdminDateTime date={item.date} />
+    inner = <DateTime date={item.date} />
   }
   else {
     const text = item.value !== undefined ? String(item.value) : '-'
