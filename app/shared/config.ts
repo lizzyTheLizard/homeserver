@@ -1,5 +1,3 @@
-import 'dotenv/config'
-
 export interface Config {
   NODE_ENV: 'development' | 'production' | 'test'
   LOG_LEVEL: string
@@ -23,8 +21,8 @@ export interface Config {
     API_KEY: string
     MODEL: string
   }
-  LOCALE: string
-  CURRENCY: string
+  NODE_PUBLIC_LOCALE: string
+  NODE_PUBLIC_CURRENCY: string
   GIT_COMMIT_HASH: string
   GIT_BRANCH: string
   GITHUB_RUN_ID?: string
@@ -71,8 +69,8 @@ export const config: Config = {
     COOKIE_NAME: required('COOKIE_NAME', 'coeditor-session'),
     SESSION_PASSWORD: required('SESSION_PASSWORD', 'dev-only-session-password-must-be-32-chars-long'),
   },
-  LOCALE: optional('LOCALE', 'de-CH'),
-  CURRENCY: optional('CURRENCY', 'CHF'),
+  NODE_PUBLIC_LOCALE: optional('NODE_PUBLIC_LOCALE', 'de-CH'),
+  NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),
   GIT_BRANCH: required('GIT_BRANCH', 'DEVELOPMENT'),
   GIT_COMMIT_HASH: required('GIT_COMMIT_HASH', 'DEVELOPMENT'),
   GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // not required, no default
