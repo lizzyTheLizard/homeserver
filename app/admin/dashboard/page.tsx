@@ -11,10 +11,12 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const buildInfo = await loadBuildInfo()
-    const runInfo = await loadRunInfo()
-    const configInfo = await loadConfigInfo()
-    const metricsInfo = await loadMetricsInfo()
+    const [buildInfo, runInfo, configInfo, metricsInfo] = await Promise.all([
+      loadBuildInfo(),
+      loadRunInfo(),
+      loadConfigInfo(),
+      loadMetricsInfo(),
+    ])
 
     return (
       <main>

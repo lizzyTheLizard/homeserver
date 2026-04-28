@@ -21,9 +21,9 @@ vi.mock('@/app/common/auth/auth', async () => {
 
 describe('loadAccounts', () => {
   test('Empty accounts list', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const result = await loadAccounts(project.id)
@@ -32,10 +32,10 @@ describe('loadAccounts', () => {
   })
 
   test('Load accounts for project', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'Bank', type: 'Asset', archived: false } as AccountInput
@@ -57,10 +57,10 @@ describe('loadAccounts', () => {
   })
 
   test('Load accounts includes archived accounts', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Active Account', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Archived Account', type: 'Income', archived: true } as AccountInput
     await transactional(async (tx) => {
@@ -77,7 +77,7 @@ describe('loadAccounts', () => {
   })
 
   test('Non-existent project returns notFound', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const projectId = randomUUID()
 
@@ -85,10 +85,10 @@ describe('loadAccounts', () => {
   })
 
   test('Cannot load accounts for other user project', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: 'other-user-id', archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: 'other-user-id', archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     await expect(loadAccounts(project.id)).rejects.toThrow()
@@ -101,10 +101,10 @@ describe('saveAccount', () => {
   })
 
   test('Create new account', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const accountInput = { id: randomUUID(), project_id: project.id, name: 'New Account', type: 'Asset', archived: false } as AccountInput
@@ -112,14 +112,14 @@ describe('saveAccount', () => {
 
     if (!result.success) throw new Error('Expected success response')
     expect(result.data).toEqual(expect.objectContaining(accountInput))
-    expect(result.data.owner_id).toEqual(task.id)
+    expect(result.data.owner_email).toEqual(task.id)
   })
 
   test('Create account with all account types', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const accountTypes = ['Asset', 'Liability', 'Equity', 'Income', 'Expense'] as const
@@ -134,10 +134,10 @@ describe('saveAccount', () => {
   })
 
   test('Update existing account', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Original Name', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -149,31 +149,31 @@ describe('saveAccount', () => {
 
     if (!result.success) throw new Error('Expected success response')
     expect(result.data).toEqual(expect.objectContaining(updatedAccount))
-    expect(result.data.owner_id).toEqual(task.id)
+    expect(result.data.owner_email).toEqual(task.id)
   })
 
   test('Update account for other users fails', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Original Name', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account)
     })
 
-    const otherUser: UserSession = { ...user, sub: 'other-user-id' }
+    const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const updatedAccount = { ...account, name: 'Updated Name' }
     await expect(saveAccount(updatedAccount)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 
   test('Invalid Input', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const accountInput = { id: randomUUID(), project_id: project.id, name: 'Test Account', type: 'Asset', archived: false } as AccountInput
@@ -200,10 +200,10 @@ describe('deleteAccount', () => {
   })
 
   test('Delete existing account', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Account to Delete', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -220,17 +220,17 @@ describe('deleteAccount', () => {
   })
 
   test('Delete account for other users', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Account to Delete', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account)
     })
 
-    const otherUser: UserSession = { ...user, sub: 'other-user-id' }
+    const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await deleteAccount(account.id)
 
@@ -243,10 +243,10 @@ describe('deleteAccount', () => {
   })
 
   test('Delete non-existent account', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const nonExistentAccount = { id: randomUUID(), project_id: project.id, name: 'Does not exist', type: 'Asset', archived: false } as AccountInput
@@ -254,10 +254,10 @@ describe('deleteAccount', () => {
   })
 
   test('Invalid input', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     await expect(deleteAccount('')).resolves.toEqual({ success: false, error: expect.any(String) as string })

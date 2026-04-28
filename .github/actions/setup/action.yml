@@ -4,15 +4,16 @@ runs:
   using: "composite"
   steps:
   - name: Read nvmrc file
-    run: echo "{name}={$(cat .nvmrc)}" >> $GITHUB_OUTPUT
-    shell: bash
     id: nvm
-  - name: Setup node
-    uses: actions/setup-node@v1
-    with:
-      node-version: '${{ steps.nvm.outputs.NVMRC }}'
+    shell: bash
+    run: echo "NVMRC=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
   - name: Setup pnpm
     uses: pnpm/action-setup@v4
+  - name: Setup node
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ steps.nvm.outputs.NVMRC }}
+      cache: 'pnpm'
   - name: Install dependencies
-    run: pnpm i
+    run: pnpm install --frozen-lockfile
     shell: bash

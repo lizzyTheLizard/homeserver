@@ -18,7 +18,7 @@ vi.mock('@/app/common/auth/auth', async () => {
 
 describe('loadSettings', () => {
   test('Empty Templates', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadSettings()
@@ -28,7 +28,7 @@ describe('loadSettings', () => {
   })
 
   test('Existing Templates', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async tx => createOrModifyTemplate(tx, task.id, input))
@@ -40,12 +40,12 @@ describe('loadSettings', () => {
   })
 
   test('Templates from other users not loaded', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async tx => createOrModifyTemplate(tx, task.id, input))
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await loadSettings()
 
@@ -54,7 +54,7 @@ describe('loadSettings', () => {
   })
 
   test('Empty Profiles', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadSettings()
@@ -63,7 +63,7 @@ describe('loadSettings', () => {
   })
 
   test('Existing Profiles', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), text: 'A test profile', language: 'en' }
     await transactional(async tx => createOrModifyProfile(tx, task.id, input))
@@ -75,12 +75,12 @@ describe('loadSettings', () => {
   })
 
   test('Profiles from other users not loaded', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Profile 1', text: 'A test profile', language: 'en' }
     await transactional(async tx => createOrModifyProfile(tx, task.id, input))
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await loadSettings()
 
@@ -90,7 +90,7 @@ describe('loadSettings', () => {
 
 describe('deleteProfile', () => {
   test('Delete existing profile', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), language: 'en', text: 'A test profile' }
     await transactional(async tx => createOrModifyProfile(tx, task.id, input))
@@ -102,7 +102,7 @@ describe('deleteProfile', () => {
   })
 
   test('Delete non existing profile', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), language: 'en', text: 'A test profile' }
 
@@ -114,12 +114,12 @@ describe('deleteProfile', () => {
   })
 
   test('Delete profile of other user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), language: 'en', text: 'A test profile' }
     await transactional(async tx => createOrModifyProfile(tx, task.id, input))
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await deleteProfile(input.id)
 
@@ -131,7 +131,7 @@ describe('deleteProfile', () => {
 
 describe('saveProfile', () => {
   test('Create new profile', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), language: 'en', text: 'Original profile text XXX2' }
 
@@ -143,7 +143,7 @@ describe('saveProfile', () => {
   })
 
   test('Update existing profile', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), language: 'en', text: 'Original profile text XXX2' }
     await transactional(tx => createOrModifyProfile(tx, task.id, input1))
@@ -157,13 +157,13 @@ describe('saveProfile', () => {
   })
 
   test('Update profile of other user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), language: 'en', text: 'Original profile text XXX2' }
     await transactional(tx => createOrModifyProfile(tx, task.id, input1))
     const input = { id: input1.id, language: 'de', text: 'New profile text' }
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await saveProfile(input)
 
@@ -172,7 +172,7 @@ describe('saveProfile', () => {
   })
 
   test('Create profile in same language', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), language: 'en', text: 'Original profile text XXX2' }
     await transactional(tx => createOrModifyProfile(tx, task.id, input1))
@@ -185,7 +185,7 @@ describe('saveProfile', () => {
   })
 
   test('Update profile to same language', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), language: 'en', text: 'Original profile text XXX2' }
     const input2 = { id: randomUUID(), language: 'de', text: 'Original profile text XXX2' }
@@ -202,7 +202,7 @@ describe('saveProfile', () => {
   })
 
   test('Invalid input', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), language: 'en', text: 'New profile text' }
 
@@ -215,7 +215,7 @@ describe('saveProfile', () => {
 
 describe('saveTemplate', () => {
   test('Create new template', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Test Template', language: 'en', text: 'Original template text' }
 
@@ -227,7 +227,7 @@ describe('saveTemplate', () => {
   })
 
   test('Update existing template', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), name: 'Test Template', language: 'en', text: 'Original template text' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, input1))
@@ -241,13 +241,13 @@ describe('saveTemplate', () => {
   })
 
   test('Update template of other user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), name: 'Test Template', language: 'en', text: 'Original template text' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, input1))
     const input = { id: input1.id, name: 'Updated Template', language: 'de', text: 'New template text' }
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await saveTemplate(input)
 
@@ -256,7 +256,7 @@ describe('saveTemplate', () => {
   })
 
   test('Invalid input', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Test Template', language: 'en', text: 'Template text' }
 
@@ -269,7 +269,7 @@ describe('saveTemplate', () => {
 
 describe('deleteTemplate', () => {
   test('Delete existing template', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Test', language: 'en', text: 'Original profile text' }
     await transactional(async tx => createOrModifyTemplate(tx, task.id, input))
@@ -281,7 +281,7 @@ describe('deleteTemplate', () => {
   })
 
   test('Delete non existing template', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Test', language: 'en', text: 'Original profile text' }
 
@@ -293,12 +293,12 @@ describe('deleteTemplate', () => {
   })
 
   test('Delete profile of other user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Test', language: 'en', text: 'Original profile text' }
     await transactional(async tx => createOrModifyTemplate(tx, task.id, input))
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await deleteTemplate(input.id)
 

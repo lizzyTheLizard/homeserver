@@ -17,6 +17,6 @@ export const Normal: StoryObj<typeof meta> = {
 
 export const Time: StoryObj = {
   args: {
-    date: Temporal.Instant.from('2025-10-11T14:30:00Z'),
+    date: { epochMilliseconds: Temporal.Instant.from('2025-10-11T14:30:00Z').epochMilliseconds },
   },
 }

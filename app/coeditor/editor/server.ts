@@ -19,16 +19,16 @@ export interface EditorData {
 
 export async function loadEditorData(discussionId?: string): Promise<EditorData> {
   const user = await getAuthenticatedUserSession('coeditor')
-  const [discussion, templates] = await nontransactional(async c => ([
-    discussionId ? await findDiscussionById(c, user.sub, discussionId) : undefined,
-    await findTemplatesByOwner(c, user.sub),
+  const [discussion, templates] = await nontransactional(c => Promise.all([
+    discussionId ? findDiscussionById(c, user.email, discussionId) : Promise.resolve(undefined),
+    findTemplatesByOwner(c, user.email),
   ]))
   if (discussionId && !discussion) {
-    logger.warn(`Discussion with id ${discussionId} not found for user ${user.sub}`)
+    logger.warn(`Discussion with id ${discussionId} not found for user ${user.email}`)
     notFound()
   }
-  if (discussion && discussion.owner_id !== user.sub) {
-    logger.warn(`User ${user.sub} not authorized for discussion with id ${discussion.id}`)
+  if (discussion && discussion.owner_email !== user.email) {
+    logger.warn(`User ${user.email} not authorized for discussion with id ${discussion.id}`)
     notFound()
   }
   return { discussion, templates }
@@ -50,23 +50,23 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
   return toResponse(transactional(async (tx) => {
     const user = await getAuthenticatedUserSession('coeditor')
     validateObject(input, ExecuteCommandInputConstraints)
-    const template = await findTemplateById(tx, user.sub, input.template_id)
+    const template = await findTemplateById(tx, user.email, input.template_id)
     if (!template) {
       throw invalidInput(`Given template ${input.template_id} not found`)
     }
-    const discussion = await findDiscussionById(tx, user.sub, input.discussion_id)
-    const profile = await findProfileByOwnerAndLanguage(tx, user.sub, template.language)
+    const discussion = await findDiscussionById(tx, user.email, input.discussion_id)
+    const profile = await findProfileByOwnerAndLanguage(tx, user.email, template.language)
     const aiPortInput = toAiPortInput(input, discussion, template, profile)
     const pastCommands = await findCommandsByDiscussion(tx, input.discussion_id)
     const commandResult = await aiPort(aiPortInput, pastCommands)
     const updatedDiscussion = toDiscussionInput(input, aiPortInput.context, commandResult)
     const result = discussion
-      ? await modifyDiscussion(tx, user.sub, updatedDiscussion)
-      : await createDiscussion(tx, user.sub, updatedDiscussion)
+      ? await modifyDiscussion(tx, user.email, updatedDiscussion)
+      : await createDiscussion(tx, user.email, updatedDiscussion)
     const command = toCommand(input, aiPortInput, commandResult)
-    await createCommand(tx, user.sub, command)
-    if (discussion) logger.info(`Executed command for discussion ${result.id} by user ${user.sub} with template ${template.name}`)
-    else logger.info(`Created new discussion ${result.id} by user ${user.sub} with template ${template.name}`)
+    await createCommand(tx, user.email, command)
+    if (discussion) logger.info(`Executed command for discussion ${result.id} by user ${user.email} with template ${template.name}`)
+    else logger.info(`Created new discussion ${result.id} by user ${user.email} with template ${template.name}`)
     return result
   }))
 }
@@ -101,7 +101,7 @@ function createContextString(template: Template, values: Record<string, string>)
   let offset = 0
   for (const param of template.parameters) {
     if (!(param.name in values))
-      throw invalidInput(`Vale for parameter '${param.name}' is missing`)
+      throw invalidInput(`Value for parameter '${param.name}' is missing`)
     const value = values[param.name]
     result = result.substring(0, param.startPosition + offset) + value + result.substring(param.endPosition + offset)
     offset += value.length - (param.endPosition - param.startPosition)
@@ -159,11 +159,11 @@ const ExecuteCommandInputConstraints = {
     presence: false,
     type: 'number',
   },
-  customCommand: {
+  custom_command: {
     presence: false,
     type: 'string',
   },
-  predefinedCommand: {
+  predefined_command: {
     presence: false,
     type: 'string',
     inclusion: {

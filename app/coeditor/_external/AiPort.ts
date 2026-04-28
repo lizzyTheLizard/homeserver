@@ -7,6 +7,13 @@ import { validateObject } from '@/app/shared/_helper/validation'
 import { ChatCompletionMessageParam, ResponseFormatJSONSchema } from 'openai/resources'
 import { config } from '@/app/shared/config'
 
+let cachedClient: OpenAI | undefined
+function getClient(opts?: ClientOptions): OpenAI {
+  if (opts) return new OpenAI({ ...opts, baseURL: config.AI.BASE_URL, apiKey: config.AI.API_KEY })
+  cachedClient ??= new OpenAI({ baseURL: config.AI.BASE_URL, apiKey: config.AI.API_KEY })
+  return cachedClient
+}
+
 export interface AiPortInput {
   text?: string
   selection_start?: number
@@ -23,23 +30,27 @@ export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?
   const messagesSoFar = commandsSoFar.flatMap(command => mapToChatMessages(command))
   const systemMessage = createSystemMessage(input)
   const nextMessage = mapToChatMessages(input)[0]
-  logger.debug(`AI called with message: ${JSON.stringify(JSON.parse(nextMessage.content as string), null, 2)}`)
   const start = performance.now()
-  const client = new OpenAI({ ...opts, baseURL: config.AI.BASE_URL, apiKey: config.AI.API_KEY })
+  const client = getClient(opts)
   const completion = await client.chat.completions.create({
     model: config.AI.MODEL,
     messages: [systemMessage, ...messagesSoFar, nextMessage],
     response_format: responseFormat,
   })
-  const end = performance.now()
-  logger.debug(`AI Port call took ${((end - start) / 1000).toString()} seconds`)
-  const output = JSON.parse(completion.choices[0].message.content ?? '') as { text: string, title: string, error?: string }
+  const durationMs = performance.now() - start
+  logger.debug(`AI Port call took ${(durationMs / 1000).toString()} seconds`)
+  const rawContent = completion.choices[0].message.content ?? ''
+  let output: { text: string, title: string, error?: string }
+  try {
+    output = JSON.parse(rawContent) as { text: string, title: string, error?: string }
+  }
+  catch {
+    throw new Error(`AI returned non-JSON response: ${rawContent.slice(0, 200)}`)
+  }
   validateObject(output, responseFormatConstraint)
-  logger.debug(`AI Port call took ${((end - start) / 1000).toString()} seconds`)
-  logger.debug(`AI response : ${JSON.stringify(output, null, 2)}`)
-  if (output.error) throw new Error('AI Communication Error', { cause: output.error })
+  if (output.error) throw new Error(`AI Communication Error: ${output.error}`)
   const newText = getFullNewText(input, output.text)
-  return { title: output.title, text: newText, durationMs: end - start }
+  return { title: output.title, text: newText, durationMs }
 }
 
 function createSystemMessage(input: AiPortInput): ChatCompletionMessageParam {

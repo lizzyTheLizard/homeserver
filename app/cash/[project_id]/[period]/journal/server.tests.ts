@@ -25,10 +25,10 @@ vi.mock('@/app/common/auth/auth', async () => {
 
 describe('loadAccountJournal', () => {
   test('Empty journal', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -44,10 +44,10 @@ describe('loadAccountJournal', () => {
   })
 
   test('Journal with accounts and transactions', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
@@ -77,10 +77,10 @@ describe('loadAccountJournal', () => {
   })
 
   test('Filter transactions by period', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
@@ -109,10 +109,10 @@ describe('loadAccountJournal', () => {
   })
 
   test('Non-existent project returns notFound', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -123,10 +123,10 @@ describe('loadAccountJournal', () => {
   })
 
   test('Non-existent account returns notFound', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -139,9 +139,9 @@ describe('loadAccountJournal', () => {
 
 describe('loadJournal', () => {
   test('Empty journal', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const result = await loadJournal({ current: true, year: 2023, month: 5 }, project.id)
@@ -151,10 +151,10 @@ describe('loadJournal', () => {
   })
 
   test('Journal with accounts and transactions', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
@@ -174,10 +174,10 @@ describe('loadJournal', () => {
   })
 
   test('Filter transactions by period', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'May transaction' }
@@ -200,7 +200,7 @@ describe('loadJournal', () => {
   })
 
   test('Non-existent project returns notFound', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const projectId = randomUUID()
 
@@ -214,10 +214,10 @@ describe('saveTransaction', () => {
   })
 
   test('Create new transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {
@@ -231,14 +231,14 @@ describe('saveTransaction', () => {
 
     if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
     expect(result.data).toEqual(expect.objectContaining(transactionInput))
-    expect(result.data.owner_id).toEqual(task.id)
+    expect(result.data.owner_email).toEqual(task.id)
   })
 
   test('Update existing transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
@@ -254,14 +254,14 @@ describe('saveTransaction', () => {
 
     if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
     expect(result.data).toEqual(expect.objectContaining(updatedTransaction))
-    expect(result.data.owner_id).toEqual(task.id)
+    expect(result.data.owner_email).toEqual(task.id)
   })
 
   test('Update existing transaction for other users', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
@@ -272,17 +272,17 @@ describe('saveTransaction', () => {
       await createTransaction(tx, task.id, transaction)
     })
 
-    const otherUser: UserSession = { ...user, sub: 'other-user-id' }
+    const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
     await expect(saveTransaction(updatedTransaction)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 
   test('Create transaction in project of other users', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {
@@ -291,17 +291,17 @@ describe('saveTransaction', () => {
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const otherUser: UserSession = { ...user, sub: 'other-user-id' }
+    const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
     await expect(saveTransaction(transactionInput)).resolves.toEqual({ success: false, error: expect.any(String) as string })
   })
 
   test('Invalid input', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {
@@ -324,10 +324,10 @@ describe('saveTransaction', () => {
   })
 
   test('Modify transaction in closed period', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
@@ -345,10 +345,10 @@ describe('saveTransaction', () => {
   })
 
   test('Create transaction in closed period', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
@@ -364,10 +364,10 @@ describe('saveTransaction', () => {
   })
 
   test('Create account transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {
@@ -383,7 +383,7 @@ describe('saveTransaction', () => {
 
     expect(result).toEqual({
       id: expect.any(String),
-      owner_id: task.id,
+      owner_email: task.id,
       ordering: expect.any(Number),
       account_id: account1.id,
       other_account_id: account2.id,
@@ -399,10 +399,10 @@ describe('saveTransaction', () => {
   })
 
   test('Update existing account transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
@@ -420,7 +420,7 @@ describe('saveTransaction', () => {
 
     expect(result).toEqual({
       id: expect.any(String),
-      owner_id: task.id,
+      owner_email: task.id,
       ordering: expect.any(Number),
       account_id: account2.id,
       other_account_id: account1.id,
@@ -442,10 +442,10 @@ describe('deleteTransaction', () => {
   })
 
   test('Delete existing transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' }
@@ -466,10 +466,10 @@ describe('deleteTransaction', () => {
   })
 
   test('Delete transaction for other users', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' }
@@ -480,7 +480,7 @@ describe('deleteTransaction', () => {
       await createTransaction(tx, task.id, transaction)
     })
 
-    const otherUser: UserSession = { ...user, sub: 'other-user-id' }
+    const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await deleteTransaction(transaction.id)
 
@@ -493,10 +493,10 @@ describe('deleteTransaction', () => {
   })
 
   test('Delete non-existent transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const nonExistentTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: randomUUID(), debit_account_id: randomUUID(), amount: 150.25, date: '2023-07-10', description: 'Does not exist' }
@@ -504,10 +504,10 @@ describe('deleteTransaction', () => {
   })
 
   test('Invalid input', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {
@@ -521,10 +521,10 @@ describe('deleteTransaction', () => {
   })
 
   test('Delete transaction in closed period', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
@@ -541,10 +541,10 @@ describe('deleteTransaction', () => {
   })
 
   test('Delete account transaction', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {

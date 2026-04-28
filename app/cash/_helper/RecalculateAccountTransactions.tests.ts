@@ -11,7 +11,7 @@ import { Temporal } from '@js-temporal/polyfill'
 
 describe('loadJournal', () => {
   test('No Transactions', async ({ task }) => {
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     await transactional(async (tx) => {
@@ -27,7 +27,7 @@ describe('loadJournal', () => {
   })
 
   test('Single Transaction', async ({ task }) => {
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
@@ -43,7 +43,7 @@ describe('loadJournal', () => {
     const result = await nontransactional(c => findAllAccountTransactionsInPeriod(c, task.id, account1.id, { year: 2023, month: 5, openEnded: true }))
     expect(result).toEqual([{
       id: expect.any(String) as string,
-      owner_id: task.id,
+      owner_email: task.id,
       ordering: expect.any(Number) as number,
       account_id: account1.id,
       other_account_id: account2.id,
@@ -59,7 +59,7 @@ describe('loadJournal', () => {
   })
 
   test('Single Closing', async ({ task }) => {
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const closing = { id: randomUUID(), project_id: project.id, date: '2023-01-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 200.75 }
@@ -85,7 +85,7 @@ describe('loadJournal', () => {
   })
 
   test('Multiple Transactions', async ({ task }) => {
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
@@ -164,7 +164,7 @@ describe('loadJournal', () => {
   })
 
   test('Credit Account', async ({ task }) => {
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
@@ -186,7 +186,7 @@ describe('loadJournal', () => {
   })
 
   test('Existing Account Transaction', async ({ task }) => {
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }

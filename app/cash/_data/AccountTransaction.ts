@@ -19,7 +19,7 @@ export type AccountTransaction = Entity<AccountTransactionInput>
 
 export async function deleteAccountTransactions(client: PoolClient, owner: string, accountId: string, period: Period): Promise<void> {
   await client.query(
-    'DELETE FROM account_transaction WHERE account_id = $1 AND owner_id = $2 AND date >= $3 AND date < $4',
+    'DELETE FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date >= $3 AND date < $4',
     [accountId, owner, startDate(period), endDate(period)],
   )
   logger.debug(`Deleting account transactions for account ${accountId} in period ${toString(period)}`)
@@ -27,7 +27,7 @@ export async function deleteAccountTransactions(client: PoolClient, owner: strin
 
 export async function findAllAccountTransactionsInPeriod(client: PoolClient, owner: string, accountId: string, period: Period): Promise<AccountTransaction[]> {
   const result = await client.query<AccountTransaction>(
-    'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_id = $2 AND date >= $3 AND date < $4 ORDER BY date DESC, ordering DESC',
+    'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date >= $3 AND date < $4 ORDER BY date DESC, ordering DESC',
     [accountId, owner, startDate(period), endDate(period)],
   )
   logger.debug(`Finding ${result.rows.length.toString()} account transactions for account ${accountId} in period ${toString(period)}`)
@@ -36,7 +36,7 @@ export async function findAllAccountTransactionsInPeriod(client: PoolClient, own
 
 export async function findLatestAccountTransactionBefore(client: PoolClient, owner: string, accountId: string, period: Period): Promise<AccountTransaction | undefined> {
   const result = await client.query<AccountTransaction>(
-    'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_id = $2 AND date < $3 ORDER BY date DESC, ordering DESC LIMIT 1',
+    'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date < $3 ORDER BY date DESC, ordering DESC LIMIT 1',
     [accountId, owner, startDate(period)],
   )
   if (result.rows.length === 0) return undefined
@@ -48,7 +48,7 @@ export async function findLatestAccountTransactionsBefore(client: PoolClient, pr
   const result = await client.query<AccountTransaction>(
     `SELECT DISTINCT ON (account_id) *
      FROM account_transaction
-     WHERE owner_id = $1 AND date < $2 AND project_id = $3
+     WHERE owner_email = $1 AND date < $2 AND project_id = $3
      ORDER BY account_id, date DESC, ordering DESC`,
     [owner, startDate(period), project_id],
   )
@@ -60,7 +60,7 @@ export async function findLatestAccountTransactionsIn(client: PoolClient, projec
   const result = await client.query<AccountTransaction>(
     `SELECT DISTINCT ON (account_id) *
      FROM account_transaction
-     WHERE owner_id = $1 AND date >= $2 AND date < $3 AND project_id = $4
+     WHERE owner_email = $1 AND date >= $2 AND date < $3 AND project_id = $4
      ORDER BY account_id, date DESC, ordering DESC`,
     [owner, startDate(period), endDate(period), project_id],
   )
@@ -70,7 +70,7 @@ export async function findLatestAccountTransactionsIn(client: PoolClient, projec
 
 export async function createAccountTransaction(client: PoolClient, owner: string, input: AccountTransactionInput): Promise<AccountTransaction> {
   const result = await client.query<AccountTransaction>(
-    'INSERT INTO account_transaction (id, ordering, account_id, project_id, other_account_id, amount, total_balance, date, transaction_id, description, owner_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+    'INSERT INTO account_transaction (id, ordering, account_id, project_id, other_account_id, amount, total_balance, date, transaction_id, description, owner_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
     [input.id, input.ordering, input.account_id, input.project_id, input.other_account_id, input.amount, input.total_balance, input.date, input.transaction_id, input.description, owner],
   )
   if (!result.rows[0]) throw new Error('Failed to create account transaction')

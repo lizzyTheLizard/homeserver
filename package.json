@@ -14,7 +14,8 @@
     "clean": "rimraf .next storybook-static",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "chromatic": "npx chromatic --build-script-name build-storybook"
+    "chromatic": "npx chromatic --build-script-name build-storybook",
+    "prodToDev": "node --import tsx --env-file .env ./app/shared/_external/db/prodToDev.ts"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
@@ -46,6 +47,7 @@
     "@types/node": "^25.6.0",
     "@types/papaparse": "^5.5.2",
     "@types/pg": "^8.20.0",
+    "@types/pg-copy-streams": "^1.2.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -59,9 +61,11 @@
     "eslint-plugin-storybook": "^10.3.5",
     "globals": "^17.5.0",
     "jsdom": "^29.0.2",
+    "pg-copy-streams": "^7.0.0",
     "playwright": "^1.59.1",
     "rimraf": "^6.1.3",
     "storybook": "^10.3.5",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0",
     "vite": "^8.0.10",

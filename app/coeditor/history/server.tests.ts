@@ -25,7 +25,7 @@ vi.mock('../_external/AiPort', () => {
 
 describe('loadHistory', () => {
   test('Empty list', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadHistory()
@@ -34,7 +34,7 @@ describe('loadHistory', () => {
   })
 
   test('Existing Discussions', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
@@ -50,7 +50,7 @@ describe('loadHistory', () => {
   })
 
   test('Discussions from other users not loaded', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
@@ -59,7 +59,7 @@ describe('loadHistory', () => {
       await createDiscussion(tx, task.id, input)
     })
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await loadHistory()
 

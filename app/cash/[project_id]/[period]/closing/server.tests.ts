@@ -23,10 +23,10 @@ vi.mock('@/app/common/auth/auth', async () => {
 
 describe('initialize', () => {
   test('Creates monthly closing successfully', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
     const neonTransactions = [
@@ -61,10 +61,10 @@ describe('initialize', () => {
 
 describe('addNeonTransactions', () => {
   test('Success', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
     const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
@@ -115,10 +115,10 @@ describe('addNeonTransactions', () => {
   })
 
   test('Fails when monthly closing not found', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
     const neonTransactionInputs: NeonTransactionInput[] = [
@@ -135,10 +135,10 @@ describe('addNeonTransactions', () => {
   })
 
   test('Fails when monthly state is not NEON', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
@@ -163,10 +163,10 @@ describe('addNeonTransactions', () => {
   })
 
   test('Fails with invalid transaction input - missing order', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
@@ -191,10 +191,10 @@ describe('addNeonTransactions', () => {
   })
 
   test('Fails with invalid transaction input - invalid account UUID', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
@@ -221,10 +221,10 @@ describe('addNeonTransactions', () => {
 
 describe('addSharedTransactions', () => {
   test('Success', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -256,10 +256,10 @@ describe('addSharedTransactions', () => {
   })
 
   test('Fails when monthly closing not found', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
     const sharedTransactions: SharedTransaction[] = [
       { transaction_id: randomUUID(), category: 'Food' },
@@ -274,10 +274,10 @@ describe('addSharedTransactions', () => {
   })
 
   test('Fails when monthly state is not SHARED', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -302,10 +302,10 @@ describe('addSharedTransactions', () => {
   })
 
   test('Fails with invalid transaction input - missing transaction_id', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -330,10 +330,10 @@ describe('addSharedTransactions', () => {
   })
 
   test('Fails with invalid transaction input - invalid transaction_id UUID', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -358,10 +358,10 @@ describe('addSharedTransactions', () => {
   })
 
   test('Fails with invalid transaction input - missing category', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -388,10 +388,10 @@ describe('addSharedTransactions', () => {
 
 describe('markAsChecked', () => {
   test('Cannot mark NEON as checked', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -413,10 +413,10 @@ describe('markAsChecked', () => {
   })
 
   test('Transitions from NEONCHECK to CREDITCARDCHECK', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -441,10 +441,10 @@ describe('markAsChecked', () => {
   })
 
   test('Transitions from CREDITCARDCHECK to SHAREDCHECK', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -469,10 +469,10 @@ describe('markAsChecked', () => {
   })
 
   test('Transitions from SHAREDCHECK to SHARED', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -497,10 +497,10 @@ describe('markAsChecked', () => {
   })
 
   test('Cannot mark SHARED as checked', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -522,10 +522,10 @@ describe('markAsChecked', () => {
   })
 
   test('Fails when monthly closing not found', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
 
     await transactional(async (tx) => {
@@ -539,10 +539,10 @@ describe('markAsChecked', () => {
 
 describe('loadData', () => {
   test('NOT_FOUND', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
     const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
 
@@ -560,10 +560,10 @@ describe('loadData', () => {
   })
 
   test('NEON', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -589,10 +589,10 @@ describe('loadData', () => {
   })
 
   test('CHECK_ACCOUNT', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
@@ -623,10 +623,10 @@ describe('loadData', () => {
   })
 
   test('SHARED', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
@@ -656,10 +656,10 @@ describe('loadData', () => {
   })
 
   test('FINISHED', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
@@ -698,10 +698,10 @@ describe('loadData', () => {
   })
 
   test('Returns ALREADY_CLOSED when a closing exists that is >= lastDay of period and monthly is not FINISHED', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
@@ -725,10 +725,10 @@ describe('loadData', () => {
   })
 
   test('Returns FINISHED state even when there is an ALREADY_CLOSED situation if monthly is FINISHED', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
     const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
     const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput

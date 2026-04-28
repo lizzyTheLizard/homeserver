@@ -29,7 +29,7 @@ vi.mock('../_external/AiPort', () => {
 
 describe('loadEditorData', () => {
   test('Empty template list', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadEditorData(undefined)
@@ -39,7 +39,7 @@ describe('loadEditorData', () => {
   })
 
   test('Existing Templates', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async tx => await createOrModifyTemplate(tx, task.id, templateInput))
@@ -51,12 +51,12 @@ describe('loadEditorData', () => {
   })
 
   test('Templates from other users not loaded', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async tx => await createOrModifyTemplate(tx, task.id, templateInput))
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await loadEditorData(undefined)
 
@@ -65,7 +65,7 @@ describe('loadEditorData', () => {
   })
 
   test('Existing Discussion', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
@@ -80,14 +80,14 @@ describe('loadEditorData', () => {
   })
 
   test('Not existing Discussion', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     await expect(loadEditorData(randomUUID())).rejects.toThrow()
   })
 
   test('Discussion from other users not loaded', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
@@ -96,7 +96,7 @@ describe('loadEditorData', () => {
       await createDiscussion(tx, task.id, input)
     })
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Other User', email: 'other@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     await expect(loadEditorData(randomUUID())).rejects.toThrow()
   })
@@ -109,7 +109,7 @@ describe('executeCommand', () => {
   })
 
   test('New Discussion', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
@@ -123,7 +123,7 @@ describe('executeCommand', () => {
       template_id: templateInput.id,
       text: 'Text', title: 'Title',
       parameters: {},
-      owner_id: task.id,
+      owner_email: task.id,
       context: 'A test template',
       created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
@@ -134,7 +134,7 @@ describe('executeCommand', () => {
   })
 
   test('Existing Discussion', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
@@ -152,7 +152,7 @@ describe('executeCommand', () => {
       template_id: templateInput.id,
       text: 'Text', title: 'Title',
       parameters: {},
-      owner_id: task.id,
+      owner_email: task.id,
       context: 'A test template',
       created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
@@ -163,7 +163,7 @@ describe('executeCommand', () => {
   })
 
   test('Template not found', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: randomUUID(), text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as ExecuteCommandInput
@@ -173,12 +173,12 @@ describe('executeCommand', () => {
   })
 
   test('Template other user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
 
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Test User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: 'New text', parameters: {}, predefined_command: 'INITIALIZE' } as ExecuteCommandInput
     const result = await executeCommand(input)
@@ -187,7 +187,7 @@ describe('executeCommand', () => {
   })
 
   test('Discussion other user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
@@ -195,11 +195,11 @@ describe('executeCommand', () => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input1)
     })
-    const otherUser: UserSession = { sub: 'other-user-id', name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const otherUser: UserSession = { name: 'Test User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const templateInput2 = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(async (tx) => {
-      await createOrModifyTemplate(tx, otherUser.sub, templateInput2)
+      await createOrModifyTemplate(tx, otherUser.email, templateInput2)
     })
     const input = { id: randomUUID(), discussion_id: input1.id, template_id: templateInput2.id, text: 'New text', parameters: {}, predefined_command: 'IMPROVE' } as ExecuteCommandInput
     const result = await executeCommand(input)
@@ -209,7 +209,7 @@ describe('executeCommand', () => {
 })
 describe('executeCommandAction AI integration', () => {
   test('AiPort', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
@@ -231,7 +231,7 @@ describe('executeCommandAction AI integration', () => {
   })
 
   test('Profile', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const profileInput = { id: randomUUID(), text: 'Profile Text', language: 'en' }
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
@@ -249,7 +249,7 @@ describe('executeCommandAction AI integration', () => {
   })
 
   test('Selection', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
@@ -264,7 +264,7 @@ describe('executeCommandAction AI integration', () => {
   })
 
   test('Custom Command', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
@@ -279,7 +279,7 @@ describe('executeCommandAction AI integration', () => {
   })
 
   test('No old Commands', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
@@ -291,7 +291,7 @@ describe('executeCommandAction AI integration', () => {
   })
 
   test('Old Commands', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }

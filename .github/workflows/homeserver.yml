@@ -123,7 +123,7 @@ jobs:
                 echo "Changes detected in infrastructure! ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy."
                 echo "See ${{ steps.plan-run.outputs.run_link }} for details."
                 echo "Updating infrastructure manually."
-                exit -1
+                exit 1
               fi
     deploy:
         name: Push Docker Container and restart

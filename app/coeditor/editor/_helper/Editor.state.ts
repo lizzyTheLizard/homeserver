@@ -73,7 +73,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
       }
     }
     case 'TEXT_BLUR':{
-      if (state.undoStack[-1] === state.text) return state
+      if (state.lastText === state.text) return state
       return {
         ...state,
         lastText: state.text,

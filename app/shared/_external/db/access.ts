@@ -51,7 +51,7 @@ export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): 
 export type Entity<T> = T & {
   created_at: string
   updated_at: string
-  owner_id: string
+  owner_email: string
 }
 
 /**

@@ -17,7 +17,7 @@ const makeInput = (id = crypto.randomUUID()) => ({ id, position: 1, name: 'GitHu
 
 describe('loadFavorites', () => {
   test('returns empty list when no favorites', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadFavorites()
@@ -26,7 +26,7 @@ describe('loadFavorites', () => {
   })
 
   test('returns favorites for authenticated user', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     await transactional(tx => createOrModifyFavorite(tx, task.id, makeInput()))
@@ -34,11 +34,11 @@ describe('loadFavorites', () => {
     const result = await loadFavorites()
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({ name: 'GitHub', url: 'https://github.com', owner_id: task.id })
+    expect(result[0]).toMatchObject({ name: 'GitHub', url: 'https://github.com', owner_email: task.id })
   })
 
   test('does not return other users favorites', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     await transactional(tx => createOrModifyFavorite(tx, task.id + '_other', { ...makeInput(), name: 'Other' }))
@@ -51,7 +51,7 @@ describe('loadFavorites', () => {
 
 describe('saveFavorite', () => {
   test('creates a new favorite', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const input = makeInput()
@@ -59,11 +59,11 @@ describe('saveFavorite', () => {
 
     expect(result.success).toBe(true)
     if (!result.success) return
-    expect(result.data).toMatchObject({ id: input.id, name: 'GitHub', url: 'https://github.com', owner_id: task.id })
+    expect(result.data).toMatchObject({ id: input.id, name: 'GitHub', url: 'https://github.com', owner_email: task.id })
   })
 
   test('updates an existing favorite', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const input = makeInput()
@@ -78,7 +78,7 @@ describe('saveFavorite', () => {
 
 describe('deleteFavorite', () => {
   test('deletes an existing favorite', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const created = await transactional(tx => createOrModifyFavorite(tx, task.id, makeInput()))
@@ -91,7 +91,7 @@ describe('deleteFavorite', () => {
   })
 
   test('cannot delete another users favorite', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['startpage'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const otherId = task.id + '_other'

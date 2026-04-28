@@ -10,9 +10,11 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const generalMetrics = await loadGeneralMetrics()
-    const coeditorMetrics = await loadCoeditorMetrics()
-    const cashMetrics = await loadCashMetrics()
+    const [generalMetrics, coeditorMetrics, cashMetrics] = await Promise.all([
+      loadGeneralMetrics(),
+      loadCoeditorMetrics(),
+      loadCashMetrics(),
+    ])
 
     return (
       <main>

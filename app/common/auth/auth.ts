@@ -8,7 +8,6 @@ import { cookies } from 'next/headers'
 import * as client from 'openid-client'
 
 export interface UserSession {
-  sub: string
   name: string
   email: string
   applications: string[]
@@ -63,15 +62,15 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   })
   const claims = tokenSet.claims()
   if (!claims) throw authenticationFailed(`No claims found in token set during callback`)
-  const sub = claims.email as string
-  const name = claims.given_name as string
   const email = claims.email as string
-  const applications = await getApplications(sub, email)
+  if (!email) throw authenticationFailed(`No email claim found in token set during callback`)
+  const name = (claims.given_name as string | undefined) ?? email
+  const applications = await getApplications(email)
   const result = session.originalUrlRelative ?? '/'
   session.code_verifier = undefined
   session.state = undefined
   session.originalUrlRelative = undefined
-  session.userInfo = { sub, name, email, applications }
+  session.userInfo = { name, email, applications }
   await session.save()
   logger.info(`User ${email} logged in successfully`)
   return result
@@ -111,7 +110,7 @@ async function getSession(): Promise<IronSession<SessionData>> {
     cookieName: config.SESSION.COOKIE_NAME,
     password: config.SESSION.SESSION_PASSWORD,
     ttl: 604800, // 1 week in seconds
-    cookieOptions: { secure: process.env.NODE_ENV === 'development' ? false : true },
+    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
   }
   return getIronSession<SessionData>(cookiesList, settings)
 }
@@ -122,13 +121,13 @@ async function getClientConfig(): Promise<client.Configuration> {
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
 
-async function getApplications(sub: string, email: string): Promise<string[]> {
+async function getApplications(email: string): Promise<string[]> {
   // Everyone can access startpage and coeditor
   const result = ['startpage', 'coeditor']
   // Only the admin can access admin pages
   if (email === config.ADMIN_EMAIL) result.push('admin')
   // Only if you have a project you can access cash
-  const projects = await nontransactional(c => findProjectsByOwner(c, sub))
+  const projects = await nontransactional(c => findProjectsByOwner(c, email))
   if (projects.length > 0) {
     result.push('cash')
   }

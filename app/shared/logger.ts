@@ -1,8 +1,10 @@
 import winston from 'winston'
 import { Console } from 'winston/lib/winston/transports'
+import { config } from './config'
 
 function createLogger() {
-  const format = process.env.NODE_ENV === 'development'
+  const isDev = config.NODE_ENV === 'development'
+  const format = isDev
     ? winston.format.combine(
         winston.format.errors({ stack: true }),
         winston.format.colorize({ all: true }),
@@ -13,7 +15,7 @@ function createLogger() {
         winston.format.json(),
       )
   return winston.createLogger({
-    level: 'debug',
+    level: config.LOG_LEVEL,
     transports: [
       new Console({
         handleExceptions: true,
@@ -31,9 +33,3 @@ function toConsoleString(info: winston.Logform.TransformableInfo) {
 }
 
 export const logger = createLogger()
-
-console.log = () => { /* empty */ }
-console.error = () => { /* empty */ }
-console.warn = () => { /* empty */ }
-console.info = () => { /* empty */ }
-console.debug = () => { /* empty */ }

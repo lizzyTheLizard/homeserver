@@ -26,13 +26,14 @@ export interface ReportsData {
 
 export async function loadReports(period: Period, projectId: string): Promise<ReportsData> {
   const user = await getAuthenticatedUserSession('cash')
-  const result = await nontransactional(async c => ({
-    project: await findProjectById(c, user.sub, projectId),
-    accounts: await findAllAccountsForProject(c, user.sub, projectId),
-    latestClosing: await findLastClosing(c, user.sub, projectId),
-    beforeTransactions: await findLatestAccountTransactionsBefore(c, projectId, user.sub, period),
-    currentTransactions: await findLatestAccountTransactionsIn(c, projectId, user.sub, period),
-  }))
+  const [project, accounts, latestClosing, beforeTransactions, currentTransactions] = await nontransactional(c => Promise.all([
+    findProjectById(c, user.email, projectId),
+    findAllAccountsForProject(c, user.email, projectId),
+    findLastClosing(c, user.email, projectId),
+    findLatestAccountTransactionsBefore(c, projectId, user.email, period),
+    findLatestAccountTransactionsIn(c, projectId, user.email, period),
+  ]))
+  const result = { project, accounts, latestClosing, beforeTransactions, currentTransactions }
   if (!result.project) return notFound()
   return result
 }
@@ -42,10 +43,10 @@ export async function reopen(period: Period, projectId: string): ActionResponse<
   return await toResponse(transactional(async (client) => {
     const firstPeriodToReopen = first(period)
     const firstClosingDate = lastDay(firstPeriodToReopen)
-    const deleteClosing = await removeClosingAfterOrOn(client, user.sub, projectId, firstClosingDate)
+    const deleteClosing = await removeClosingAfterOrOn(client, user.email, projectId, firstClosingDate)
     const accountsToRecalculate = deleteClosing.map(c => [c.capital_account_id, c.profit_account_id]).flat()
-    await recalculateTransactions(client, user.sub, projectId, Temporal.PlainDate.from(firstClosingDate), accountsToRecalculate)
-    logger.info(`Reopened period ${toString(firstPeriodToReopen)} to ${toString(period)} for project ${projectId} by user ${user.sub}`)
+    await recalculateTransactions(client, user.email, projectId, Temporal.PlainDate.from(firstClosingDate), accountsToRecalculate)
+    logger.info(`Reopened period ${toString(firstPeriodToReopen)} to ${toString(period)} for project ${projectId} by user ${user.email}`)
   }))
 }
 
@@ -53,19 +54,19 @@ export async function close(period: Period, project_id: string, profit_account_i
   const user = await getAuthenticatedUserSession('cash')
   return await toResponse(transactional(async (client) => {
     const lastPeriodToClose = last(period)
-    const firstPeriodToClose = await getFirstPeriodToClose(client, user.sub, project_id, period)
+    const firstPeriodToClose = await getFirstPeriodToClose(client, user.email, project_id, period)
     let periodToClose = firstPeriodToClose
     do {
-      const profit = await calculateProfitForPeriod(client, user.sub, project_id, periodToClose)
+      const profit = await calculateProfitForPeriod(client, user.email, project_id, periodToClose)
       const date = lastDay(periodToClose)
       const id = randomUUID()
       const closingInput = { id, project_id, date, profit, capital_account_id, profit_account_id }
-      await createClosing(client, user.sub, closingInput)
-      logger.info(`Closed period ${toString(periodToClose)} for project ${project_id} by user ${user.sub} with profit ${profit.toString()}`)
+      await createClosing(client, user.email, closingInput)
+      logger.info(`Closed period ${toString(periodToClose)} for project ${project_id} by user ${user.email} with profit ${profit.toString()}`)
       periodToClose = next(periodToClose)
     } while (compare(periodToClose, lastPeriodToClose) <= 0)
     const fromDate = Temporal.PlainDate.from(lastDay(firstPeriodToClose))
-    await recalculateTransactions(client, user.sub, project_id, fromDate, [profit_account_id, capital_account_id])
+    await recalculateTransactions(client, user.email, project_id, fromDate, [profit_account_id, capital_account_id])
   }))
 }
 

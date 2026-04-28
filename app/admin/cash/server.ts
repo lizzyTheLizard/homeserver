@@ -1,5 +1,5 @@
 'use server'
-import { createOrModifyProject, findAllProjects, ProjectInput, removeProject } from '@/app/cash/_data/Project'
+import { createOrModifyProject, findAllProjects, ProjectInput, removeProjectAsAdmin } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
@@ -14,7 +14,7 @@ export async function saveProject(project: ProjectInput) {
   return toResponse(transactional(async (tx) => {
     await getAuthenticatedUserSession('admin')
     const result = await createOrModifyProject(tx, project)
-    logger.info(`Saved project ${project.name} for user ${project.owner_id} with id ${project.id}`)
+    logger.info(`Saved project ${project.name} for user ${project.owner_email} with id ${project.id}`)
     return result
   }))
 }
@@ -22,9 +22,9 @@ export async function saveProject(project: ProjectInput) {
 export async function deleteProject(id: string) {
   return toResponse(transactional(async (tx) => {
     await getAuthenticatedUserSession('admin')
-    const result = await removeProject(tx, id)
+    const result = await removeProjectAsAdmin(tx, id)
     if (!result) logger.info(`Project with id ${id} not found for deletion`)
-    else logger.info(`Deleted project ${result.name} for user ${result.owner_id} with id ${id}`)
+    else logger.info(`Deleted project ${result.name} for user ${result.owner_email} with id ${id}`)
     return result
   }))
 }

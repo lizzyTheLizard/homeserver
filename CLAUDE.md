@@ -27,13 +27,13 @@ pnpm vitest run path/to/file.tests.ts
 
 **`proxy.ts`** is the Next.js Middleware that runs before every route. It validates the session and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login. AJAX requests get a 401 instead.
 
-**Database** uses `pg` (PostgreSQL) with a connection pool initialized once at startup in `app/shared/_external/db/setup.ts`. All DB access goes through two wrappers in `app/shared/_external/db/access.ts`:
+**Database** uses `pg` (PostgreSQL) with a connection pool initialized once at startup in [app/shared/_external/db/setup.ts](app/shared/_external/db/setup.ts). All DB access goes through two wrappers in [app/shared/_external/db/access.ts](app/shared/_external/db/access.ts):
 - `transactional(fn)` — wraps `fn` in a BEGIN/COMMIT/ROLLBACK
 - `nontransactional(fn)` — plain pool client, no transaction
 
-Custom PG type parsers are set in `TYPE_MAPPINGS` (dates stay as strings, numerics become JS numbers). Migrations in `db/` run automatically on pool startup.
+Custom PG type parsers are set in `TYPE_MAPPINGS` (dates stay as strings, numerics become JS numbers). Migrations in [db/](db/) run automatically on pool startup.
 
-**Test setup** (`vitest.setup.ts`) spins up an in-memory PGlite database, applies all SQL migrations from `db/`, and mocks `transactional`/`nontransactional` to use PGlite. Three vitest projects run in parallel:
+**Test setup** ([vitest.setup.ts](vitest.setup.ts)) spins up an in-memory PGlite database, applies all SQL migrations from [db/](db/), and mocks `transactional`/`nontransactional` to use PGlite. Three vitest projects run in parallel:
 - `unit` — `**/*.tests.ts` (excludes server tests)
 - `integration` — `**/server.tests.ts` (hits the mocked DB)
 - `storybook` — runs Story interaction tests via Playwright/Chromium

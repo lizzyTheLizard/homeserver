@@ -7,7 +7,7 @@ export interface DateProps {
   /**
    * The date string to display.
    */
-  date: string | Temporal.PlainDate | Temporal.Instant | undefined
+  date: string | Temporal.PlainDateLike | { epochMilliseconds: number } | undefined
 }
 
 /**
@@ -24,10 +24,13 @@ export function DateTime({ date }: DateProps) {
   if (!date) return null
 
   const t = typeof date !== 'string' ? date : date.length <= 10 ? Temporal.PlainDate.from(date) : Temporal.Instant.from(date)
-  if (t instanceof Temporal.PlainDate)
-    return (<span>{t.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>)
-  if (t instanceof Temporal.Instant) {
-    const zoned = t.toZonedDateTimeISO(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  if ('era' in t) {
+    const date = Temporal.PlainDate.from(t)
+    return (<span>{date.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>)
+  }
+  if ('epochMilliseconds' in t) {
+    const zoned = Temporal.Instant.fromEpochMilliseconds(t.epochMilliseconds)
+      .toZonedDateTimeISO(Intl.DateTimeFormat().resolvedOptions().timeZone)
     return (
       <div>
         <div>{zoned.toLocaleString(undefined, { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' })}</div>
@@ -35,5 +38,5 @@ export function DateTime({ date }: DateProps) {
       </div>
     )
   }
-  throw new Error('Unsupported date type: ' + typeof date)
+  throw new Error('Unsupported date type ' + typeof date + ': ' + JSON.stringify(date))
 }

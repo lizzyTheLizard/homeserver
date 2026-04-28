@@ -13,7 +13,7 @@ export default function Loading() {
     language: '',
     text: 'This is a dummy template used during loading state.',
     parameters: [],
-    owner_id: 'system',
+    owner_email: 'system',
   }
 
   return (

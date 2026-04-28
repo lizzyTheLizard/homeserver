@@ -6,12 +6,15 @@ import path from 'path'
 import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
+import { splitSql } from './splitSql'
+import { config } from '../../config'
 
 /**
  * Migrate the DB to the latest version. This function should be called through setup only.
  * @param pool The DB connection pool
+ * @param upToIncluding If specified, only run migrations up to and including the given migration name. This is used for the prodToDev script to only run the migrations that have already been run in production.
  */
-export async function migrateDatabase(pool: Pool): Promise<void> {
+export async function migrateDatabase(pool: Pool, upToIncluding?: string): Promise<void> {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
@@ -19,7 +22,7 @@ export async function migrateDatabase(pool: Pool): Promise<void> {
     const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
     validateExistingMigrations(existing, planned)
-    await executeNewMigrations(client, existing, planned)
+    await executeNewMigrations(client, existing, planned, upToIncluding)
     await client.query('COMMIT')
   }
   catch (error) {
@@ -47,7 +50,9 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
   const migrationsDir = getMigrationDir()
-  const names = await fs.readdir(migrationsDir)
+  const names = (await fs.readdir(migrationsDir))
+    .filter(n => n.endsWith('.sql'))
+    .sort()
   const result: PlannedDatabaseMigration[] = []
   for (const name of names) {
     const content = (await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')).replaceAll(/\r\n/g, '\n')
@@ -61,15 +66,14 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
 function getMigrationDir(): string {
   const filename = fileURLToPath(import.meta.url)
   const currentDir = dirname(filename)
-  if (process.env.NODE_ENV === 'development') {
+  if (config.NODE_ENV === 'development') {
     return path.resolve(currentDir, '../../../../db')
   }
   return path.resolve(currentDir, '../../../../../db')
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {
-  const commands = migration.content.split(';').map(c => c.trim()).filter(c => c.length > 0)
-  for (const command of commands) {
+  for (const command of splitSql(migration.content)) {
     await client.query(command)
   }
   if (migration.tmp) {
@@ -90,7 +94,7 @@ function validateExistingMigrations(existing: DatabaseMigration[], planned: Plan
   }
 }
 
-async function executeNewMigrations(client: PoolClient, existing: DatabaseMigration[], planned: PlannedDatabaseMigration[]) {
+async function executeNewMigrations(client: PoolClient, existing: DatabaseMigration[], planned: PlannedDatabaseMigration[], upToIncluding?: string) {
   // Execute the new migrations
   let lastMigrationToRun: string | undefined = undefined
   for (const p of planned) {
@@ -98,10 +102,12 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
     if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
       logger.debug(`Migration ${p.name} has already run on ${e.run_on}`)
+      if (p.name === upToIncluding) break
       continue
     }
     await runMigration(client, p)
     lastMigrationToRun = p.name
+    if (p.name === upToIncluding) break
   }
 }
 

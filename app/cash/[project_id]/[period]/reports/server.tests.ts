@@ -24,10 +24,10 @@ vi.mock('@/app/common/auth/auth', async () => {
 
 describe('loadReports', () => {
   test('Empty reports', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const result = await loadReports({ year: 2023, month: 5 }, project.id)
@@ -39,11 +39,11 @@ describe('loadReports', () => {
   })
 
   test('Reports with accounts, closing, and transactions', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const period: Period = { year: 2023, month: 5 }
-    const project = { id: randomUUID(), name: 'Test Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
     const account1 = { id: randomUUID(), project_id: project.id, name: 'A Asset', type: 'Asset', archived: false } as AccountInput
     const account2 = { id: randomUUID(), project_id: project.id, name: 'B Income', type: 'Income', archived: false } as AccountInput
     const account3 = { id: randomUUID(), project_id: project.id, name: 'C Profit', type: 'Profit', archived: false } as AccountInput
@@ -100,17 +100,17 @@ describe('loadReports', () => {
   })
 
   test('Non-existent project returns notFound', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     await expect(loadReports({ year: 2023, month: 7 }, randomUUID())).rejects.toThrow()
   })
 
   test('Cannot load other user project', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Other User Project', owner_id: 'other-user-id', archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Other User Project', owner_email: 'other-user-id', archived: false } as ProjectInput
     await transactional(tx => createOrModifyProject(tx, project))
 
     await expect(loadReports({ year: 2023, month: 5 }, project.id)).rejects.toThrow()
@@ -119,10 +119,10 @@ describe('loadReports', () => {
 
 describe('reopen', () => {
   test('reopen removes later closings and recalculates', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 }
@@ -150,10 +150,10 @@ describe('reopen', () => {
   })
 
   test('reopen already opened period does nothing', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const closingJune = { id: randomUUID(), project_id: project.id, date: '2023-06-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 30 }
@@ -173,10 +173,10 @@ describe('reopen', () => {
   })
 
   test('reopen before first closing reopens everything', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const closingApril = { id: randomUUID(), project_id: project.id, date: '2023-04-30', capital_account_id: capitalAccount.id, profit_account_id: profitAccount.id, profit: 10 }
@@ -202,10 +202,10 @@ describe('reopen', () => {
 
 describe('close', () => {
   test('close creates closings for all periods since last closing', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const newCapitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital 2', type: 'Equity', archived: false } as AccountInput
@@ -232,10 +232,10 @@ describe('close', () => {
   })
 
   test('close creates closings since first transaction when first closing', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: profitAccount.id, debit_account_id: capitalAccount.id, amount: 100, date: '2023-02-15', description: 'First transaction' }
@@ -262,10 +262,10 @@ describe('close', () => {
   })
 
   test('close creates one closings when first closing and no transactions', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
 
@@ -285,10 +285,10 @@ describe('close', () => {
   })
 
   test('close computes profit and creates transactions correctly', async ({ task }) => {
-    const user: UserSession = { sub: task.id, name: 'Test User', email: 'test@example.com', applications: ['cash'] }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { id: randomUUID(), name: 'Reopen Project', owner_id: task.id, archived: false } as ProjectInput
+    const project = { id: randomUUID(), name: 'Reopen Project', owner_email: task.id, archived: false } as ProjectInput
     const profitAccount = { id: randomUUID(), project_id: project.id, name: 'Profit', type: 'Profit', archived: false } as AccountInput
     const capitalAccount = { id: randomUUID(), project_id: project.id, name: 'Capital', type: 'Equity', archived: false } as AccountInput
     const incomeAccount = { id: randomUUID(), project_id: project.id, name: 'Income', type: 'Income', archived: false } as AccountInput

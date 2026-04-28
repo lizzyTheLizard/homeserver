@@ -6,7 +6,7 @@ export interface ProjectInput {
   id: string
   name: string
   archived: boolean
-  owner_id: string
+  owner_email: string
 }
 export type Project = Entity<ProjectInput>
 
@@ -20,7 +20,7 @@ export async function findAllProjects(client: PoolClient): Promise<Project[]> {
 
 export async function findProjectsByOwner(client: PoolClient, ownerId: string): Promise<Project[]> {
   const result = await client.query<Project>(
-    `SELECT * FROM project WHERE owner_id = $1`,
+    `SELECT * FROM project WHERE owner_email = $1`,
     [ownerId],
   )
   logger.debug(`Found ${result.rows.length.toString()} projects for owner ${ownerId}`)
@@ -29,7 +29,7 @@ export async function findProjectsByOwner(client: PoolClient, ownerId: string): 
 
 export async function findProjectById(client: PoolClient, ownerId: string, id: string): Promise<Project | undefined> {
   const result = await client.query<Project>(
-    `SELECT * FROM project WHERE owner_id = $1 AND id = $2`,
+    `SELECT * FROM project WHERE owner_email = $1 AND id = $2`,
     [ownerId, id],
   )
   logger.debug(`${result.rows[0] ? 'Found' : 'Did not find'} project ${id} for owner ${ownerId}`)
@@ -42,20 +42,24 @@ export async function createOrModifyProject(client: PoolClient, project: Project
     [project.id],
   )
   const query = result1.rows[0]
-    ? 'UPDATE project SET name = $2, owner_id = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
-    : 'INSERT INTO project (id, name, owner_id, archived) VALUES ($1, $2, $3, $4) RETURNING *'
-  const result = await client.query<Project>(query, [project.id, project.name, project.owner_id, project.archived])
+    ? 'UPDATE project SET name = $2, owner_email = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
+    : 'INSERT INTO project (id, name, owner_email, archived) VALUES ($1, $2, $3, $4) RETURNING *'
+  const result = await client.query<Project>(query, [project.id, project.name, project.owner_email, project.archived])
   if (!result.rows[0]) throw new Error('Failed to modify project')
-  logger.debug(`Modified project '${project.name}' for owner ${project.owner_id}`)
+  logger.debug(`Modified project '${project.name}' for owner ${project.owner_email}`)
   return removeNull(result.rows[0])
 }
 
-export async function removeProject(client: PoolClient, id: string): Promise<Project | undefined> {
+/**
+ * Delete a project regardless of owner. Intended only for administrative
+ * use — callers must enforce that the request is authorised.
+ */
+export async function removeProjectAsAdmin(client: PoolClient, id: string): Promise<Project | undefined> {
   const result = await client.query<Project>(
     `DELETE FROM project WHERE id = $1 RETURNING *`,
     [id],
   )
-  logger.debug(`Project ${id} deleted`)
+  logger.debug(`Project ${id} deleted (admin)`)
   return removeNull(result.rows[0])
 }
 
@@ -64,5 +68,5 @@ export async function findNumberOfProjects(client: PoolClient): Promise<number> 
 }
 
 export async function findNumberOfUsersWithProjects(client: PoolClient): Promise<number> {
-  return await count(client, 'SELECT COUNT(DISTINCT owner_id) AS count FROM project')
+  return await count(client, 'SELECT COUNT(DISTINCT owner_email) AS count FROM project')
 }

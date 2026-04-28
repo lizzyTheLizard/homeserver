@@ -36,8 +36,7 @@ export function DashboardCard({ items, header, url }: DashboardCardProps) {
 function Line({ item }: { item: LineItem }) {
   let inner
   if ('date' in item && item.date) {
-    // inner = <div>{typeof item.date}</div>
-    inner = <DateTime date={item.date} />
+    inner = <DateTime date={{ epochMilliseconds: item.date.epochMilliseconds }} />
   }
   else {
     const text = item.value !== undefined ? String(item.value) : '-'

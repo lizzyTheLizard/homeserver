@@ -31,24 +31,44 @@ export async function loadGeneralMetrics(): Promise<LineItem[]> {
 
 export async function loadCoeditorMetrics(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
-  return nontransactional(async c => ([
-    { name: 'Coeditor Users', value: await findNumberOfUsersWithTemplates(c) },
-    { name: 'Discussions (Total)', value: await findNumberOfDiscussions(c) },
-    { name: 'Discussions (day)', value: await findNumberOfDiscussions(c, get24HoursAgo()) },
-    { name: 'Commands (Total)', value: await findNumberOfCommands(c) },
-    { name: 'Commands (day)', value: await findNumberOfCommands(c, get24HoursAgo()) },
-  ] as LineItem[]))
+  return nontransactional(async (c) => {
+    const [users, totalDiscussions, dayDiscussions, totalCommands, dayCommands] = await Promise.all([
+      findNumberOfUsersWithTemplates(c),
+      findNumberOfDiscussions(c),
+      findNumberOfDiscussions(c, get24HoursAgo()),
+      findNumberOfCommands(c),
+      findNumberOfCommands(c, get24HoursAgo()),
+    ])
+    return [
+      { name: 'Coeditor Users', value: users },
+      { name: 'Discussions (Total)', value: totalDiscussions },
+      { name: 'Discussions (day)', value: dayDiscussions },
+      { name: 'Commands (Total)', value: totalCommands },
+      { name: 'Commands (day)', value: dayCommands },
+    ]
+  })
 }
 
 export async function loadCashMetrics(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
-  return nontransactional(async c => ([
-    { name: 'Cash Users', value: await findNumberOfUsersWithProjects(c) },
-    { name: 'Projects', value: await findNumberOfProjects(c) },
-    { name: 'Accounts', value: await findNumberOfAccounts(c) },
-    { name: 'Transactions (Total)', value: await findNumberOfTransactions(c) },
-    { name: 'Transactions (day)', value: await findNumberOfTransactions(c, get24HoursAgo()) },
-    { name: 'Transactions (30 days)', value: await findNumberOfTransactions(c, get30DaysAgo()) },
-    { name: 'Transactions (Calendar-Month)', value: await findNumberOfTransactions(c, getStartOfMonth()) },
-  ] as LineItem[]))
+  return nontransactional(async (c) => {
+    const [users, projects, accounts, total, day, days30, calMonth] = await Promise.all([
+      findNumberOfUsersWithProjects(c),
+      findNumberOfProjects(c),
+      findNumberOfAccounts(c),
+      findNumberOfTransactions(c),
+      findNumberOfTransactions(c, get24HoursAgo()),
+      findNumberOfTransactions(c, get30DaysAgo()),
+      findNumberOfTransactions(c, getStartOfMonth()),
+    ])
+    return [
+      { name: 'Cash Users', value: users },
+      { name: 'Projects', value: projects },
+      { name: 'Accounts', value: accounts },
+      { name: 'Transactions (Total)', value: total },
+      { name: 'Transactions (day)', value: day },
+      { name: 'Transactions (30 days)', value: days30 },
+      { name: 'Transactions (Calendar-Month)', value: calMonth },
+    ]
+  })
 }

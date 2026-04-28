@@ -5,5 +5,5 @@ import { nontransactional } from '@/app/shared/_external/db/access'
 
 export async function loadProjects() {
   const user = await getAuthenticatedUserSession('cash')
-  return nontransactional(c => findProjectsByOwner(c, user.sub))
+  return nontransactional(c => findProjectsByOwner(c, user.email))
 }

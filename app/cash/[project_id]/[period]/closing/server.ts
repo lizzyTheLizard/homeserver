@@ -22,27 +22,27 @@ export type PageData = { type: 'ALREADY_CLOSED' }
 export async function loadData(projectId: string, period: MonthlyPeriod): Promise<PageData> {
   return nontransactional(async (c) => {
     const user = await getAuthenticatedUserSession('cash')
-    const monthly = await findForPeriod(c, user.sub, projectId, period)
-    const closing = await findLastClosing(c, user.sub, projectId)
+    const monthly = await findForPeriod(c, user.email, projectId, period)
+    const closing = await findLastClosing(c, user.email, projectId)
     if ((closing && closing.date >= lastDay(period)) && monthly?.state !== 'FINISHED') return { type: 'ALREADY_CLOSED' }
 
-    const lastMonthClosing = await findBeforePeriod(c, user.sub, projectId, period)
-    const accounts = await findAllAccountsForProject(c, user.sub, projectId)
+    const lastMonthClosing = await findBeforePeriod(c, user.email, projectId, period)
+    const accounts = await findAllAccountsForProject(c, user.email, projectId)
 
     if (!monthly) return { type: 'NOT_FOUND', lastMonthClosing, accounts }
     if (monthly.state === 'NEON') return { type: 'NEON', monthly, accounts }
     if (monthly.state === 'FINISHED') {
-      const transactionsSharedAccount = await findAllAccountTransactionsInPeriod(c, user.sub, monthly.shared_account_id, period)
-      const lastTransactionSharedAccount = await findLatestAccountTransactionBefore(c, user.sub, monthly.shared_account_id, period)
-      const transactionsNeonAccount = await findAllAccountTransactionsInPeriod(c, user.sub, monthly.neon_account_id, period)
-      const lastTransactionNeonAccount = await findLatestAccountTransactionBefore(c, user.sub, monthly.neon_account_id, period)
+      const transactionsSharedAccount = await findAllAccountTransactionsInPeriod(c, user.email, monthly.shared_account_id, period)
+      const lastTransactionSharedAccount = await findLatestAccountTransactionBefore(c, user.email, monthly.shared_account_id, period)
+      const transactionsNeonAccount = await findAllAccountTransactionsInPeriod(c, user.email, monthly.neon_account_id, period)
+      const lastTransactionNeonAccount = await findLatestAccountTransactionBefore(c, user.email, monthly.neon_account_id, period)
       return { type: 'FINISHED', monthly, accounts, transactionsSharedAccount, lastTransactionSharedAccount, transactionsNeonAccount, lastTransactionNeonAccount, latestClosing: closing }
     }
 
     const accountId = getCurrentAccountIdForMonthly(monthly)
     if (!accountId) throw new Error('Current account id not found for monthly in state ' + monthly.state)
-    const transactions = await findAllAccountTransactionsInPeriod(c, user.sub, accountId, period)
-    const lastTransaction = await findLatestAccountTransactionBefore(c, user.sub, accountId, period)
+    const transactions = await findAllAccountTransactionsInPeriod(c, user.email, accountId, period)
+    const lastTransaction = await findLatestAccountTransactionBefore(c, user.email, accountId, period)
     if (monthly.state === 'SHARED') return { type: 'SHARED', monthly, accounts, transactions, lastTransaction }
 
     const account = accounts.find(a => a.id === accountId)
@@ -76,7 +76,7 @@ export async function initialize(input: MonthlyInput): ActionResponse<void> {
       if (transaction.date > lastDay(input.period)) throw new Error('Transaction date must be within the period')
     })
     const user = await getAuthenticatedUserSession('cash')
-    await createMonthlyClosing(client, user.sub, input)
+    await createMonthlyClosing(client, user.email, input)
   }))
 }
 
@@ -90,22 +90,22 @@ export async function addNeonTransactions(projectId: string, period: MonthlyPeri
   return await toResponse(transactional(async (client) => {
     transactions.forEach((transaction) => { validateObject(transaction, NeonTransactionInputConstraints) })
     const user = await getAuthenticatedUserSession('cash')
-    const monthly = await findForPeriod(client, user.sub, projectId, period)
+    const monthly = await findForPeriod(client, user.email, projectId, period)
     if (monthly?.state !== 'NEON') throw new Error('Monthly closing not found or not in NEON state')
-    monthly.neon_transactions = await createTransactionsFromNeonInput(client, user.sub, monthly, transactions)
+    monthly.neon_transactions = await createTransactionsFromNeonInput(client, user.email, monthly, transactions)
     monthly.state = 'NEONCHECK'
-    await modifyMonthlyClosing(client, user.sub, monthly)
+    await modifyMonthlyClosing(client, user.email, monthly)
   }))
 }
 
 export async function markAsChecked(projectId: string, period: MonthlyPeriod): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
-    const m = await findForPeriod(client, user.sub, projectId, period)
+    const m = await findForPeriod(client, user.email, projectId, period)
     if (!m) throw new Error('Monthly closing not found')
     if (!m.state.endsWith('CHECK')) throw new Error('Monthly closing not in CHECK state')
     m.state = nextState(m.state)
-    await modifyMonthlyClosing(client, user.sub, m)
+    await modifyMonthlyClosing(client, user.email, m)
   }))
 }
 
@@ -113,11 +113,11 @@ export async function addSharedTransactions(projectId: string, period: MonthlyPe
   return await toResponse(transactional(async (client) => {
     transactions.forEach((transaction) => { validateObject(transaction, SharedTransactionInputConstraints) })
     const user = await getAuthenticatedUserSession('cash')
-    const monthly = await findForPeriod(client, user.sub, projectId, period)
+    const monthly = await findForPeriod(client, user.email, projectId, period)
     if (monthly?.state !== 'SHARED') throw new Error('Monthly closing not found or not in SHARED state')
     monthly.shared_transactions = transactions
     monthly.state = 'FINISHED'
-    await modifyMonthlyClosing(client, user.sub, monthly)
+    await modifyMonthlyClosing(client, user.email, monthly)
   }))
 }
 
@@ -196,7 +196,7 @@ const MonthlyInputConstraints = {
     presence: { allowEmpty: false },
     type: 'string',
     inclusion: {
-      within: ['NEON', 'CREDITCARD', 'SHARED', 'FINISHED'],
+      within: ['NEON', 'NEONCHECK', 'CREDITCARDCHECK', 'SHAREDCHECK', 'SHARED', 'FINISHED'],
       message: 'must be a valid state',
     },
   },

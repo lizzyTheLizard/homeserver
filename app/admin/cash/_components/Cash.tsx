@@ -18,7 +18,7 @@ export interface CashProps {
 
 const columns = [
   textColumn('name', { header: 'Name' }),
-  textColumn('owner_id', { style: { overflow: 'clip' }, header: 'Owner' }),
+  textColumn('owner_email', { style: { overflow: 'clip' }, header: 'Owner' }),
   boolColumn('archived', { header: 'Archived' }),
 ]
 
@@ -26,14 +26,14 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
   const [id, setId] = useState(randomUUID())
   const [name, setName] = useState('')
   const [archived, setArchived] = useState(false)
-  const [owner_id, setOwnerId] = useState('')
+  const [owner_email, setOwnerEmail] = useState('')
   const [projects, addProject, removeProject] = useListState<Project>(projectsIn)
   const [sidebarState, sidebarStateModifier] = useSidebarState('Project')
 
   function showProject(project?: Project) {
     setId(project?.id ?? randomUUID())
     setName(project?.name ?? '')
-    setOwnerId(project?.owner_id ?? '')
+    setOwnerEmail(project?.owner_email ?? '')
     setArchived(project?.archived ?? false)
     sidebarStateModifier.openSidebar(project ? project.name : 'New Project')
   }
@@ -50,11 +50,11 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
       <Sidebar
         state={sidebarState}
         onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={() => { sidebarStateModifier.execute(saveProject({ id, name, owner_id, archived }), addProject) }}
+        onSave={() => { sidebarStateModifier.execute(saveProject({ id, name, owner_email, archived }), addProject) }}
         onDelete={() => { sidebarStateModifier.execute(deleteProject(id), () => { removeProject(id) }) }}
       >
         <Input type="text" label="Name" required value={name} onChange={(e) => { setName(e.target.value) }} />
-        <Input type="text" label="Owner ID" required value={owner_id} onChange={(e) => { setOwnerId(e.target.value) }} />
+        <Input type="text" label="Owner Email" required value={owner_email} onChange={(e) => { setOwnerEmail(e.target.value) }} />
         <Checkbox label="Archived" checked={archived} onChange={(e) => { setArchived(e.target.checked) }} />
       </Sidebar>
     </>

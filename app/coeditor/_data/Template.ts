@@ -22,7 +22,7 @@ export interface TemplateParameter {
 
 export async function findTemplatesByOwner(client: PoolClient, owner: string): Promise<Template[]> {
   const result = await client.query<Template>(
-    'SELECT * FROM template WHERE owner_id = $1',
+    'SELECT * FROM template WHERE owner_email = $1',
     [owner],
   )
   if (result.rows.length === 0) {
@@ -37,12 +37,12 @@ export async function findTemplatesByOwner(client: PoolClient, owner: string): P
 }
 
 export function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
-  return count(client, 'SELECT COUNT(DISTINCT owner_id) AS count FROM template')
+  return count(client, 'SELECT COUNT(DISTINCT owner_email) AS count FROM template')
 }
 
 export async function findTemplateById(client: PoolClient, owner: string, id: string): Promise<Template | undefined> {
   const result = await client.query<Template>(
-    'SELECT * FROM template WHERE owner_id = $1 AND id=$2',
+    'SELECT * FROM template WHERE owner_email = $1 AND id=$2',
     [owner, id],
   )
   return removeNull(result.rows[0])
@@ -51,8 +51,8 @@ export async function findTemplateById(client: PoolClient, owner: string, id: st
 export async function createOrModifyTemplate(client: PoolClient, owner: string, input: TemplateInput): Promise<Template> {
   const parameters = extractParameters(input.text)
   const query = await findTemplateById(client, owner, input.id)
-    ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_id = $5 RETURNING *'
-    : 'INSERT INTO template (id, name, language, text, owner_id, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
+    ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_email = $5 RETURNING *'
+    : 'INSERT INTO template (id, name, language, text, owner_email, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
   const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
   if (!result.rows[0]) throw new Error('Failed to modify template')
   logger.debug(`Modified template '${input.id}' for owner ${owner}`)
@@ -63,9 +63,9 @@ function extractParameters(text: string): TemplateParameter[] {
   const PARAMETER_REGEX = /\{([^}]+)\}/g
   return Array.from(text.matchAll(PARAMETER_REGEX)).map((match) => {
     const matchedString = match[1]
-    const paramterDetails = getParameterDetails(matchedString)
+    const parameterDetails = getParameterDetails(matchedString)
     const matchedLength = matchedString.length + 2 // +2 for the curly braces
-    return { ...paramterDetails, startPosition: match.index, endPosition: match.index + matchedLength }
+    return { ...parameterDetails, startPosition: match.index, endPosition: match.index + matchedLength }
   })
 }
 
@@ -85,18 +85,18 @@ function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SE
 export async function removeTemplate(client: PoolClient, owner: string, template_id: string): Promise<Template | undefined> {
   // First remove all discussions related to this template
   const result1 = await client.query(
-    'DELETE FROM discussion WHERE template_id = $1 AND owner_id = $2',
+    'DELETE FROM discussion WHERE template_id = $1 AND owner_email = $2',
     [template_id, owner],
   )
   logger.debug(`Removed ${(result1.rowCount ?? 0).toString()} discussions for template ${template_id}`)
 
   const result2 = await client.query<Template>(
-    'DELETE FROM template WHERE id = $1 AND owner_id = $2 RETURNING *',
+    'DELETE FROM template WHERE id = $1 AND owner_email = $2 RETURNING *',
     [template_id, owner],
   )
   if (result2.rowCount !== 0)
     logger.debug(`Deleted template ${template_id} for owner ${owner}`)
   else
-    logger.debug(`Try to delete non exising template '${template_id}' for owner ${owner}`)
+    logger.debug(`Tried to delete non-existing template '${template_id}' for owner ${owner}`)
   return removeNull(result2.rows[0])
 }

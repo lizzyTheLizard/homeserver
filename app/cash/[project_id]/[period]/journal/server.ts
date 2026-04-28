@@ -24,11 +24,11 @@ export interface AccountJournalData {
 
 export async function loadAccountJournal(period: Period, projectId: string, accountId: string): Promise<AccountJournalData> {
   const user = await getAuthenticatedUserSession('cash')
-  const [project, accounts, transactions, lastTransaction] = await nontransactional(async c => ([
-    await findProjectById(c, user.sub, projectId),
-    await findAllAccountsForProject(c, user.sub, projectId),
-    await findAllAccountTransactionsInPeriod(c, user.sub, accountId, period),
-    await findLatestAccountTransactionBefore(c, user.sub, accountId, period),
+  const [project, accounts, transactions, lastTransaction] = await nontransactional(c => Promise.all([
+    findProjectById(c, user.email, projectId),
+    findAllAccountsForProject(c, user.email, projectId),
+    findAllAccountTransactionsInPeriod(c, user.email, accountId, period),
+    findLatestAccountTransactionBefore(c, user.email, accountId, period),
   ]))
   if (!project) return notFound()
   const account = accounts.find(acc => acc.id === accountId)
@@ -43,10 +43,10 @@ export interface JournalData {
 
 export async function loadJournal(period: Period, projectId: string): Promise<JournalData> {
   const user = await getAuthenticatedUserSession('cash')
-  const [project, accounts, transactions] = await nontransactional(async c => ([
-    await findProjectById(c, user.sub, projectId),
-    await findAllAccountsForProject(c, user.sub, projectId),
-    await findAllTransactions(c, user.sub, projectId, period),
+  const [project, accounts, transactions] = await nontransactional(c => Promise.all([
+    findProjectById(c, user.email, projectId),
+    findAllAccountsForProject(c, user.email, projectId),
+    findAllTransactions(c, user.email, projectId, period),
   ]))
   if (!project) return notFound()
 
@@ -57,18 +57,18 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateString(id)
-    const existingTransaction = await findTransactionsById(client, user.sub, id)
+    const existingTransaction = await findTransactionsById(client, user.email, id)
     if (!existingTransaction) return
-    const lastClosing = await findLastClosing(client, user.sub, existingTransaction.project_id)
+    const lastClosing = await findLastClosing(client, user.email, existingTransaction.project_id)
     if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot delete transaction from closed period')
-    const result = await removeTransaction(client, user.sub, id)
+    const result = await removeTransaction(client, user.email, id)
     if (!result) {
-      logger.info(`Transaction with id ${id} not found for deletion for user ${user.sub}`)
+      logger.info(`Transaction with id ${id} not found for deletion for user ${user.email}`)
       return
     }
     const date = Temporal.PlainDate.from(existingTransaction.date)
-    await recalculateTransactions(client, user.sub, existingTransaction.project_id, date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
-    logger.info(`Deleted transaction with id ${id} for user ${user.sub}`)
+    await recalculateTransactions(client, user.email, existingTransaction.project_id, date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+    logger.info(`Deleted transaction with id ${id} for user ${user.email}`)
   }))
 }
 
@@ -76,25 +76,25 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateObject(input, TransactionInputConstraints)
-    const lastClosing = await findLastClosing(client, user.sub, input.project_id)
+    const lastClosing = await findLastClosing(client, user.email, input.project_id)
     if (isClosed(lastClosing, input.date)) throw invalidInput('Cannot modify transaction in closed period')
-    const existingTransaction = await findTransactionsById(client, user.sub, input.id)
+    const existingTransaction = await findTransactionsById(client, user.email, input.id)
     if (existingTransaction) {
       if (existingTransaction.project_id !== input.project_id) throw invalidInput('Cannot change project of existing transaction')
       if (isClosed(lastClosing, existingTransaction.date)) throw invalidInput('Cannot modify transaction from closed period')
-      const result = await modifyTransaction(client, user.sub, input)
+      const result = await modifyTransaction(client, user.email, input)
       const date = Temporal.PlainDate.from(min(input.date, existingTransaction.date))
-      await recalculateTransactions(client, user.sub, input.project_id, date, [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
-      logger.info(`Modified transaction with id ${input.id} for user ${user.sub}`)
+      await recalculateTransactions(client, user.email, input.project_id, date, [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
+      logger.info(`Modified transaction with id ${input.id} for user ${user.email}`)
       return result
     }
     else {
-      const project = await findProjectById(client, user.sub, input.project_id)
+      const project = await findProjectById(client, user.email, input.project_id)
       if (!project) throw invalidInput('Cannot create transaction for non-existing project')
-      const result = await createTransaction(client, user.sub, input)
+      const result = await createTransaction(client, user.email, input)
       const date = Temporal.PlainDate.from(input.date)
-      await recalculateTransactions(client, user.sub, input.project_id, date, [input.credit_account_id, input.debit_account_id])
-      logger.info(`Created transaction with id ${input.id} for user ${user.sub}`)
+      await recalculateTransactions(client, user.email, input.project_id, date, [input.credit_account_id, input.debit_account_id])
+      logger.info(`Created transaction with id ${input.id} for user ${user.email}`)
       return result
     }
   }))

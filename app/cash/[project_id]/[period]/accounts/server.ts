@@ -12,12 +12,12 @@ import { logger } from '@/app/shared/logger'
 
 export async function loadAccounts(projectId: string) {
   const user = await getAuthenticatedUserSession('cash')
-  const [project, accounts] = await nontransactional(async c => ([
-    await findProjectById(c, user.sub, projectId),
-    await findAllAccountsForProject(c, user.sub, projectId),
+  const [project, accounts] = await nontransactional(c => Promise.all([
+    findProjectById(c, user.email, projectId),
+    findAllAccountsForProject(c, user.email, projectId),
   ]))
   if (!project) {
-    logger.warn(`Project with id ${projectId} not found for user ${user.sub}`)
+    logger.warn(`Project with id ${projectId} not found for user ${user.email}`)
     return notFound()
   }
   return accounts
@@ -27,9 +27,9 @@ export async function deleteAccount(id: string): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateString(id)
-    const account = await removeAccount(client, user.sub, id)
-    if (!account) logger.info(`Account with id ${id} not found for deletion for user ${user.sub}`)
-    else logger.info(`Deleted account ${account.name} with id ${id} for user ${user.sub}`)
+    const account = await removeAccount(client, user.email, id)
+    if (!account) logger.info(`Account with id ${id} not found for deletion for user ${user.email}`)
+    else logger.info(`Deleted account ${account.name} with id ${id} for user ${user.email}`)
   }))
 }
 
@@ -37,8 +37,8 @@ export async function saveAccount(input: AccountInput): ActionResponse<Account> 
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
     validateObject(input, AccountInputConstraints)
-    const result = await createOrModifyAccount(client, user.sub, input)
-    logger.info(`Saved account ${input.name} with id ${result.id} for user ${user.sub}`)
+    const result = await createOrModifyAccount(client, user.email, input)
+    logger.info(`Saved account ${input.name} with id ${result.id} for user ${user.email}`)
     return result
   }))
 }

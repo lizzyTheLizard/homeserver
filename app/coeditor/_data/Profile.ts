@@ -12,7 +12,7 @@ export type Profile = Entity<ProfileInput>
 
 export async function findProfilesByOwner(client: PoolClient, owner: string): Promise<Profile[]> {
   const result = await client.query<Profile>(
-    'SELECT * FROM profile WHERE owner_id = $1',
+    'SELECT * FROM profile WHERE owner_email = $1',
     [owner],
   )
   logger.debug(`Found ${result.rows.length.toString()} profiles for owner ${owner}`)
@@ -21,7 +21,7 @@ export async function findProfilesByOwner(client: PoolClient, owner: string): Pr
 
 export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: string, language: string): Promise<Profile | undefined> {
   const result = await client.query<Profile>(
-    'SELECT * FROM profile WHERE owner_id = $1 AND language = $2 LIMIT 1',
+    'SELECT * FROM profile WHERE owner_email = $1 AND language = $2 LIMIT 1',
     [owner, language],
   )
   logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile '${language}' for owner ${owner}`)
@@ -30,7 +30,7 @@ export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: s
 
 async function findProfileById(client: PoolClient, owner: string, id: string): Promise<Profile | undefined> {
   const result = await client.query<Profile>(
-    'SELECT * FROM profile WHERE owner_id = $1 AND id = $2 LIMIT 1',
+    'SELECT * FROM profile WHERE owner_email = $1 AND id = $2 LIMIT 1',
     [owner, id],
   )
   logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile '${id}' for owner ${owner}`)
@@ -39,11 +39,11 @@ async function findProfileById(client: PoolClient, owner: string, id: string): P
 
 export async function createOrModifyProfile(client: PoolClient, owner: string, input: ProfileInput): Promise<Profile> {
   const sameLang = await findProfileByOwnerAndLanguage(client, owner, input.language)
-  if (sameLang && sameLang.id !== input.id) throw invalidInput(`There is alread a profile for language ${input.language}`)
+  if (sameLang && sameLang.id !== input.id) throw invalidInput(`There is already a profile for language ${input.language}`)
   const existing = await findProfileById(client, owner, input.id)
   const query = existing
-    ? 'UPDATE profile SET text = $2, language=$3, updated_at = NOW() WHERE owner_id = $4 AND id = $1 RETURNING *'
-    : 'INSERT INTO profile (id,text, language, owner_id) VALUES ($1, $2, $3, $4) RETURNING *'
+    ? 'UPDATE profile SET text = $2, language=$3, updated_at = NOW() WHERE owner_email = $4 AND id = $1 RETURNING *'
+    : 'INSERT INTO profile (id,text, language, owner_email) VALUES ($1, $2, $3, $4) RETURNING *'
   const result = await client.query<Profile>(query, [input.id, input.text, input.language, owner])
   if (!result.rows[0]) throw new Error('Failed to modify profile')
   logger.debug(`Modified profile '${input.language}' for owner ${owner}`)
@@ -52,10 +52,10 @@ export async function createOrModifyProfile(client: PoolClient, owner: string, i
 
 export async function removeProfile(client: PoolClient, owner: string, id: string): Promise<Profile | undefined> {
   const result = await client.query<Profile>(
-    'DELETE FROM profile WHERE owner_id = $1 AND id = $2 RETURNING *',
+    'DELETE FROM profile WHERE owner_email = $1 AND id = $2 RETURNING *',
     [owner, id],
   )
   if (result.rowCount !== 0) logger.debug(`Deleted profile '${id}' for owner ${owner}`)
-  else logger.debug(`Try to delete non exising profile '${id}' for owner ${owner}`)
+  else logger.debug(`Tried to delete non-existing profile '${id}' for owner ${owner}`)
   return removeNull(result.rows[0])
 }
