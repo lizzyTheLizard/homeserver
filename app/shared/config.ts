@@ -32,13 +32,14 @@ export interface Config {
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
-const allowDefaults = isDev || isTest || isBuild
+const isStorybook = Object.keys(process.env).length === 0
+const allowDefaults = isDev || isTest || isBuild || isStorybook
 
 function required(name: string, devDefault?: string): string {
   const value = process.env[name]
   if (value && value.length > 0) return value
   if (allowDefaults && devDefault !== undefined) return devDefault
-  throw new Error(`Missing required environment variable: ${name} in ${process.env.NODE_ENV} mode`)
+  throw new Error(`Missing required environment variable: ${name}`)
 }
 
 function optional(name: string, defaultValue: string): string {
