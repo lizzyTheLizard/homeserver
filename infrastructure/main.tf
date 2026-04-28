@@ -62,10 +62,11 @@ resource "scaleway_container" "www_gutschi_site" {
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
     SESSION_PASSWORD=var.session_password,
-    DB_CONNECTION_STRING = format("postgres://%s:%s@%s",
+    DB_CONNECTION_STRING = format("postgres://%s:%s@%s?%s",
       scaleway_iam_application.gutschi_site.id,
       scaleway_iam_api_key.gutschi_site.secret_key,
-      trimprefix(scaleway_sdb_sql_database.www_gutschi_site.endpoint, "postgres://"),
+      split("?" , trimprefix(scaleway_sdb_sql_database.www_gutschi_site.endpoint, "postgres://"))[0],
+      "sslmode=verify-full",
     ),
     OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key
   }
@@ -95,10 +96,11 @@ resource "scaleway_container" "test_gutschi_site" {
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
     SESSION_PASSWORD=var.session_password,
-    DB_CONNECTION_STRING = format("postgres://%s:%s@%s",
+    DB_CONNECTION_STRING = format("postgres://%s:%s@%s?%s",
       scaleway_iam_application.gutschi_site.id,
       scaleway_iam_api_key.gutschi_site.secret_key,
-      trimprefix(scaleway_sdb_sql_database.test_gutschi_site.endpoint, "postgres://"),
+      split("?" , trimprefix(scaleway_sdb_sql_database.test_gutschi_site.endpoint, "postgres://"))[0],
+      "sslmode=verify-full",
     ),
     OPENAI_API_KEY = scaleway_iam_api_key.gutschi_site.secret_key
   }
