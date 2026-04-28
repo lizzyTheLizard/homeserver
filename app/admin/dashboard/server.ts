@@ -38,10 +38,10 @@ export async function loadBuildInfo(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
   return [
     { name: 'Branch', value: config.GIT_BRANCH, url: getBranchUrl(config.GIT_BRANCH) },
-    { name: 'Commit', value: config.GIT_COMMIT_HASH?.slice(0, 7), url: getCommitUrl(config.GIT_COMMIT_HASH) },
+    { name: 'Commit', value: config.GIT_COMMIT_HASH.slice(0, 7), url: getCommitUrl(config.GIT_COMMIT_HASH) },
     { name: 'Action', value: config.GITHUB_RUN_ID, url: getActionUrl(config.GITHUB_RUN_ID) },
     { name: 'Origin', value: config.GITHUB_RUN_ID ? 'GitHub' : 'Local' },
-    { name: 'Built', date: config.BUILD_TIME ? Temporal.Instant.from(config.BUILD_TIME) : undefined },
+    { name: 'Built', date: Temporal.Instant.from(config.BUILD_TIME) },
 
   ]
 }

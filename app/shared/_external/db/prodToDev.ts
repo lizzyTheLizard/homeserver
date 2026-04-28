@@ -66,9 +66,7 @@ async function copyAllData(fromPool: Pool, toPool: Pool): Promise<void> {
     for (const table of tables) {
       if (table === 'migrations') continue
       logger.debug(`Copying table ${table}...`)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       const exportStream = fromClient.query(to(`COPY ${table} TO STDOUT`))
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       const importStream = toClient.query(from(`COPY ${table} FROM STDIN`))
       await pipeline(exportStream, importStream)
     }
