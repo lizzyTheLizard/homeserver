@@ -1,8 +1,7 @@
-import { PoolClient } from 'pg'
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '../../shared/_helper/BackendError'
-import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
+import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface TemplateInput {
   id: string
@@ -20,7 +19,7 @@ export interface TemplateParameter {
   endPosition: number
 }
 
-export async function findTemplatesByOwner(client: PoolClient, owner: string): Promise<Template[]> {
+export async function findTemplatesByOwner(client: Queryable, owner: string): Promise<Template[]> {
   const result = await client.query<Template>(
     'SELECT * FROM template WHERE owner_email = $1',
     [owner],
@@ -36,11 +35,11 @@ export async function findTemplatesByOwner(client: PoolClient, owner: string): P
   return result.rows.map(removeNull)
 }
 
-export function findNumberOfUsersWithTemplates(client: PoolClient): Promise<number> {
+export function findNumberOfUsersWithTemplates(client: Queryable): Promise<number> {
   return count(client, 'SELECT COUNT(DISTINCT owner_email) AS count FROM template')
 }
 
-export async function findTemplateById(client: PoolClient, owner: string, id: string): Promise<Template | undefined> {
+export async function findTemplateById(client: Queryable, owner: string, id: string): Promise<Template | undefined> {
   const result = await client.query<Template>(
     'SELECT * FROM template WHERE owner_email = $1 AND id=$2',
     [owner, id],
@@ -48,7 +47,7 @@ export async function findTemplateById(client: PoolClient, owner: string, id: st
   return removeNull(result.rows[0])
 }
 
-export async function createOrModifyTemplate(client: PoolClient, owner: string, input: TemplateInput): Promise<Template> {
+export async function createOrModifyTemplate(client: Queryable, owner: string, input: TemplateInput): Promise<Template> {
   const parameters = extractParameters(input.text)
   const query = await findTemplateById(client, owner, input.id)
     ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_email = $5 RETURNING *'
@@ -82,7 +81,7 @@ function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SE
   return { name, type, values }
 }
 
-export async function removeTemplate(client: PoolClient, owner: string, template_id: string): Promise<Template | undefined> {
+export async function removeTemplate(client: Queryable, owner: string, template_id: string): Promise<Template | undefined> {
   // First remove all discussions related to this template
   const result1 = await client.query(
     'DELETE FROM discussion WHERE template_id = $1 AND owner_email = $2',

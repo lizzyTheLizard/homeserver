@@ -1,6 +1,5 @@
-import { Entity, removeNull } from '@/app/shared/_external/db/access'
+import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
-import { PoolClient } from 'pg'
 
 export interface FavoriteInput {
   id: string
@@ -12,7 +11,7 @@ export interface FavoriteInput {
 
 export type Favorite = Entity<FavoriteInput>
 
-export async function findFavoritesByOwner(client: PoolClient, ownerId: string): Promise<Favorite[]> {
+export async function findFavoritesByOwner(client: Queryable, ownerId: string): Promise<Favorite[]> {
   const result = await client.query<Favorite>(
     'SELECT * FROM user_favorite WHERE owner_email = $1 ORDER BY position ASC, name ASC',
     [ownerId],
@@ -21,7 +20,7 @@ export async function findFavoritesByOwner(client: PoolClient, ownerId: string):
   return result.rows.map(removeNull)
 }
 
-export async function createOrModifyFavorite(client: PoolClient, ownerId: string, input: FavoriteInput): Promise<Favorite> {
+export async function createOrModifyFavorite(client: Queryable, ownerId: string, input: FavoriteInput): Promise<Favorite> {
   const result1 = await client.query<Favorite>(
     `SELECT * FROM user_favorite WHERE id = $1 AND owner_email = $2`,
     [input.id, ownerId],
@@ -35,7 +34,7 @@ export async function createOrModifyFavorite(client: PoolClient, ownerId: string
   return removeNull(result.rows[0])
 }
 
-export async function removeFavorite(client: PoolClient, ownerId: string, id: string): Promise<Favorite | undefined> {
+export async function removeFavorite(client: Queryable, ownerId: string, id: string): Promise<Favorite | undefined> {
   const result = await client.query<Favorite>(
     'DELETE FROM user_favorite WHERE id = $1 AND owner_email = $2 RETURNING *',
     [id, ownerId],

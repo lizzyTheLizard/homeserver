@@ -1,6 +1,5 @@
-import { PoolClient } from 'pg'
 import { endDate, Period, startDate, toString } from '../_helper/Period'
-import { Entity, removeNull } from '@/app/shared/_external/db/access'
+import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface ClosingInput {
@@ -13,7 +12,7 @@ export interface ClosingInput {
 }
 export type Closing = Entity<ClosingInput>
 
-export async function findAllClosingsByAccount(client: PoolClient, owner: string, accountId: string, period: Period): Promise<Closing[]> {
+export async function findAllClosingsByAccount(client: Queryable, owner: string, accountId: string, period: Period): Promise<Closing[]> {
   const result = await client.query<Closing>(
     `SELECT * FROM closing WHERE owner_email = $1 AND date >= $2 AND date <= $3 AND (capital_account_id = $4 OR profit_account_id = $4) ORDER BY date ASC, id ASC`,
     [owner, startDate(period), endDate(period), accountId],
@@ -22,7 +21,7 @@ export async function findAllClosingsByAccount(client: PoolClient, owner: string
   return result.rows.map(removeNull)
 }
 
-export async function findLastClosing(client: PoolClient, owner: string, projectId: string): Promise<Closing | undefined> {
+export async function findLastClosing(client: Queryable, owner: string, projectId: string): Promise<Closing | undefined> {
   const result = await client.query<Closing>(
     `SELECT * FROM closing WHERE project_id = $1 AND owner_email = $2 ORDER BY date DESC LIMIT 1`,
     [projectId, owner],
@@ -32,7 +31,7 @@ export async function findLastClosing(client: PoolClient, owner: string, project
   return removeNull(result.rows[0])
 }
 
-export async function createClosing(client: PoolClient, owner: string, closing: ClosingInput): Promise<Closing> {
+export async function createClosing(client: Queryable, owner: string, closing: ClosingInput): Promise<Closing> {
   const result = await client.query<Closing>(
     `INSERT INTO closing (id, project_id, date, capital_account_id, profit_account_id, profit, owner_email) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [closing.id, closing.project_id, closing.date, closing.capital_account_id, closing.profit_account_id, closing.profit, owner],
@@ -42,7 +41,7 @@ export async function createClosing(client: PoolClient, owner: string, closing: 
   return removeNull(result.rows[0])
 }
 
-export async function removeClosingAfter(client: PoolClient, owner_email: string, projectId: string, fromDate: string): Promise<Closing[]> {
+export async function removeClosingAfter(client: Queryable, owner_email: string, projectId: string, fromDate: string): Promise<Closing[]> {
   const result = await client.query<Closing>(
     `DELETE FROM closing WHERE project_id = $1 AND date >= $2 AND owner_email = $3 RETURNING *`,
     [projectId, fromDate, owner_email],

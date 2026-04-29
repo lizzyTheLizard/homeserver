@@ -1,7 +1,6 @@
-import { PoolClient } from 'pg'
 import { endDate, Period, startDate, toString } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
-import { Entity, removeNull } from '@/app/shared/_external/db/access'
+import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface AccountTransactionInput {
   id: string
@@ -17,7 +16,7 @@ export interface AccountTransactionInput {
 }
 export type AccountTransaction = Entity<AccountTransactionInput>
 
-export async function deleteAccountTransactions(client: PoolClient, owner: string, accountId: string, period: Period): Promise<void> {
+export async function deleteAccountTransactions(client: Queryable, owner: string, accountId: string, period: Period): Promise<void> {
   await client.query(
     'DELETE FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date >= $3 AND date < $4',
     [accountId, owner, startDate(period), endDate(period)],
@@ -25,7 +24,7 @@ export async function deleteAccountTransactions(client: PoolClient, owner: strin
   logger.debug(`Deleting account transactions for account ${accountId} in period ${toString(period)}`)
 }
 
-export async function findAllAccountTransactionsInPeriod(client: PoolClient, owner: string, accountId: string, period: Period): Promise<AccountTransaction[]> {
+export async function findAllAccountTransactionsInPeriod(client: Queryable, owner: string, accountId: string, period: Period): Promise<AccountTransaction[]> {
   const result = await client.query<AccountTransaction>(
     'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date >= $3 AND date < $4 ORDER BY date DESC, ordering DESC',
     [accountId, owner, startDate(period), endDate(period)],
@@ -34,7 +33,7 @@ export async function findAllAccountTransactionsInPeriod(client: PoolClient, own
   return result.rows.map(removeNull)
 }
 
-export async function findLatestAccountTransactionBefore(client: PoolClient, owner: string, accountId: string, period: Period): Promise<AccountTransaction | undefined> {
+export async function findLatestAccountTransactionBefore(client: Queryable, owner: string, accountId: string, period: Period): Promise<AccountTransaction | undefined> {
   const result = await client.query<AccountTransaction>(
     'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date < $3 ORDER BY date DESC, ordering DESC LIMIT 1',
     [accountId, owner, startDate(period)],
@@ -44,7 +43,7 @@ export async function findLatestAccountTransactionBefore(client: PoolClient, own
   return removeNull(result.rows[0])
 }
 
-export async function findLatestAccountTransactionsBefore(client: PoolClient, project_id: string, owner: string, period: Period): Promise<AccountTransaction[]> {
+export async function findLatestAccountTransactionsBefore(client: Queryable, project_id: string, owner: string, period: Period): Promise<AccountTransaction[]> {
   const result = await client.query<AccountTransaction>(
     `SELECT DISTINCT ON (account_id) *
      FROM account_transaction
@@ -56,7 +55,7 @@ export async function findLatestAccountTransactionsBefore(client: PoolClient, pr
   return result.rows.map(removeNull)
 }
 
-export async function findLatestAccountTransactionsIn(client: PoolClient, project_id: string, owner: string, period: Period): Promise<AccountTransaction[]> {
+export async function findLatestAccountTransactionsIn(client: Queryable, project_id: string, owner: string, period: Period): Promise<AccountTransaction[]> {
   const result = await client.query<AccountTransaction>(
     `SELECT DISTINCT ON (account_id) *
      FROM account_transaction
@@ -68,7 +67,7 @@ export async function findLatestAccountTransactionsIn(client: PoolClient, projec
   return result.rows.map(removeNull)
 }
 
-export async function createAccountTransaction(client: PoolClient, owner: string, input: AccountTransactionInput): Promise<AccountTransaction> {
+export async function createAccountTransaction(client: Queryable, owner: string, input: AccountTransactionInput): Promise<AccountTransaction> {
   const result = await client.query<AccountTransaction>(
     'INSERT INTO account_transaction (id, ordering, account_id, project_id, other_account_id, amount, total_balance, date, transaction_id, description, owner_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
     [input.id, input.ordering, input.account_id, input.project_id, input.other_account_id, input.amount, input.total_balance, input.date, input.transaction_id, input.description, owner],

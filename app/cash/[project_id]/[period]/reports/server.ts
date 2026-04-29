@@ -1,7 +1,7 @@
 'use server'
 import { findProjectById } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
+import { nontransactional, Queryable, transactional } from '@/app/shared/_external/db/access'
 import { notFound } from 'next/navigation'
 import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
@@ -10,7 +10,6 @@ import { AccountTransaction, findLatestAccountTransactionsBefore, findLatestAcco
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { Temporal } from '@js-temporal/polyfill'
 import { v4 as randomUUID } from 'uuid'
-import { PoolClient } from 'pg'
 import { findOldestTransaction } from '@/app/cash/_data/Transaction'
 import { lastDay, Period, toString } from '@/app/cash/_helper/Period'
 import { from, first, last, compare, MonthlyPeriod, next } from '@/app/cash/_helper/MonthlyPeriod'
@@ -70,7 +69,7 @@ export async function close(period: Period, project_id: string, profit_account_i
   }))
 }
 
-async function getFirstPeriodToClose(client: PoolClient, owner: string, projectId: string, period: Period): Promise<MonthlyPeriod> {
+async function getFirstPeriodToClose(client: Queryable, owner: string, projectId: string, period: Period): Promise<MonthlyPeriod> {
   const latestClosing = await findLastClosing(client, owner, projectId)
   if (latestClosing !== undefined) return next(from(latestClosing.date))
   const firstTransaction = await findOldestTransaction(client, owner, projectId)
@@ -79,7 +78,7 @@ async function getFirstPeriodToClose(client: PoolClient, owner: string, projectI
   return { year: date.year, month: date.month, openEnded: false, day: undefined }
 }
 
-async function calculateProfitForPeriod(client: PoolClient, owner: string, projectId: string, periodToClose: MonthlyPeriod): Promise<number> {
+async function calculateProfitForPeriod(client: Queryable, owner: string, projectId: string, periodToClose: MonthlyPeriod): Promise<number> {
   const accounts = await findAllAccountsForProject(client, owner, projectId)
   const latest = await findLatestAccountTransactionsIn(client, projectId, owner, periodToClose)
   const before = await findLatestAccountTransactionsBefore(client, projectId, owner, periodToClose)

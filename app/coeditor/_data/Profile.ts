@@ -1,7 +1,6 @@
-import { PoolClient } from 'pg'
 import { invalidInput } from '../../shared/_helper/BackendError'
 import { logger } from '@/app/shared/logger'
-import { Entity, removeNull } from '@/app/shared/_external/db/access'
+import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface ProfileInput {
   id: string
@@ -10,7 +9,7 @@ export interface ProfileInput {
 }
 export type Profile = Entity<ProfileInput>
 
-export async function findProfilesByOwner(client: PoolClient, owner: string): Promise<Profile[]> {
+export async function findProfilesByOwner(client: Queryable, owner: string): Promise<Profile[]> {
   const result = await client.query<Profile>(
     'SELECT * FROM profile WHERE owner_email = $1',
     [owner],
@@ -19,7 +18,7 @@ export async function findProfilesByOwner(client: PoolClient, owner: string): Pr
   return result.rows.map(removeNull)
 }
 
-export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: string, language: string): Promise<Profile | undefined> {
+export async function findProfileByOwnerAndLanguage(client: Queryable, owner: string, language: string): Promise<Profile | undefined> {
   const result = await client.query<Profile>(
     'SELECT * FROM profile WHERE owner_email = $1 AND language = $2 LIMIT 1',
     [owner, language],
@@ -28,7 +27,7 @@ export async function findProfileByOwnerAndLanguage(client: PoolClient, owner: s
   return removeNull(result.rows[0])
 }
 
-async function findProfileById(client: PoolClient, owner: string, id: string): Promise<Profile | undefined> {
+async function findProfileById(client: Queryable, owner: string, id: string): Promise<Profile | undefined> {
   const result = await client.query<Profile>(
     'SELECT * FROM profile WHERE owner_email = $1 AND id = $2 LIMIT 1',
     [owner, id],
@@ -37,7 +36,7 @@ async function findProfileById(client: PoolClient, owner: string, id: string): P
   return removeNull(result.rows[0])
 }
 
-export async function createOrModifyProfile(client: PoolClient, owner: string, input: ProfileInput): Promise<Profile> {
+export async function createOrModifyProfile(client: Queryable, owner: string, input: ProfileInput): Promise<Profile> {
   const sameLang = await findProfileByOwnerAndLanguage(client, owner, input.language)
   if (sameLang && sameLang.id !== input.id) throw invalidInput(`There is already a profile for language ${input.language}`)
   const existing = await findProfileById(client, owner, input.id)
@@ -50,7 +49,7 @@ export async function createOrModifyProfile(client: PoolClient, owner: string, i
   return removeNull(result.rows[0])
 }
 
-export async function removeProfile(client: PoolClient, owner: string, id: string): Promise<Profile | undefined> {
+export async function removeProfile(client: Queryable, owner: string, id: string): Promise<Profile | undefined> {
   const result = await client.query<Profile>(
     'DELETE FROM profile WHERE owner_email = $1 AND id = $2 RETURNING *',
     [owner, id],

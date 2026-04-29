@@ -1,6 +1,5 @@
-import type { PoolClient } from 'pg'
 import { logger } from '@/app/shared/logger'
-import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
+import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface DiscussionInput {
   id: string
@@ -12,7 +11,7 @@ export interface DiscussionInput {
 }
 export type Discussion = Entity<DiscussionInput>
 
-export async function findDiscussionById(client: PoolClient, owner: string, discussion_id: string): Promise<Discussion | undefined> {
+export async function findDiscussionById(client: Queryable, owner: string, discussion_id: string): Promise<Discussion | undefined> {
   const result = await client.query<Discussion>(
     'SELECT * FROM discussion WHERE id = $1 and owner_email = $2',
     [discussion_id, owner],
@@ -21,7 +20,7 @@ export async function findDiscussionById(client: PoolClient, owner: string, disc
   return removeNull(result.rows[0])
 }
 
-export async function findDiscussionByOwner(client: PoolClient, owner: string): Promise<Discussion[]> {
+export async function findDiscussionByOwner(client: Queryable, owner: string): Promise<Discussion[]> {
   const result = await client.query<Discussion>(
     'SELECT * FROM discussion WHERE owner_email = $1 ORDER BY updated_at DESC',
     [owner],
@@ -30,14 +29,14 @@ export async function findDiscussionByOwner(client: PoolClient, owner: string): 
   return result.rows.map(removeNull)
 }
 
-export function findNumberOfDiscussions(client: PoolClient, since?: string): Promise<number> {
+export function findNumberOfDiscussions(client: Queryable, since?: string): Promise<number> {
   if (since === undefined) {
     return count(client, 'SELECT COUNT(*) AS count FROM discussion')
   }
   return count(client, 'SELECT COUNT(*) AS count FROM discussion WHERE updated_at > $1', [since])
 }
 
-export async function createDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {
+export async function createDiscussion(client: Queryable, owner: string, input: DiscussionInput): Promise<Discussion> {
   const result = await client.query<Discussion>(
     'INSERT INTO discussion (id, text, title, owner_email, template_id, context, parameters) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
     [input.id, input.text, input.title, owner, input.template_id, input.context, JSON.stringify(input.parameters)],
@@ -47,7 +46,7 @@ export async function createDiscussion(client: PoolClient, owner: string, input:
   return removeNull(result.rows[0])
 }
 
-export async function modifyDiscussion(client: PoolClient, owner: string, input: DiscussionInput): Promise<Discussion> {
+export async function modifyDiscussion(client: Queryable, owner: string, input: DiscussionInput): Promise<Discussion> {
   const result = await client.query<Discussion>('UPDATE discussion SET text = $2, title = $3, template_id = $4, context = $5, parameters = $6, updated_at = NOW() WHERE id = $1 AND owner_email = $7 RETURNING *',
     [input.id, input.text, input.title, input.template_id, input.context, JSON.stringify(input.parameters), owner])
   if (!result.rows[0]) throw new Error('Failed to modify discussion')

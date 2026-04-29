@@ -1,13 +1,13 @@
 import { logger } from '@/app/shared/logger'
 import { findAllTransactionsByAccount, Transaction } from '../_data/Transaction'
-import { PoolClient } from 'pg'
+import { Queryable } from '@/app/shared/_external/db/access'
 import { Period, toString } from './Period'
 import { AccountTransaction, AccountTransactionInput, createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
 import { v4 as randomUUID } from 'uuid'
 import { Closing, findAllClosingsByAccount } from '../_data/Closing'
 import { Temporal } from '@js-temporal/polyfill'
 
-export async function recalculateTransactions(client: PoolClient, owner: string, projectId: string, from: Temporal.PlainDate, accountIds: string[]): Promise<void> {
+export async function recalculateTransactions(client: Queryable, owner: string, projectId: string, from: Temporal.PlainDate, accountIds: string[]): Promise<void> {
   const uniqueAccountIds = Array.from(new Set(accountIds))
   const period: Period = { year: from.year, month: from.month, day: from.day, openEnded: true }
   for (const accountId of uniqueAccountIds) {
@@ -15,7 +15,7 @@ export async function recalculateTransactions(client: PoolClient, owner: string,
   }
 }
 
-async function recalculateTransactionsForAccount(client: PoolClient, owner: string, projectId: string, accountId: string, period: Period): Promise<void> {
+async function recalculateTransactionsForAccount(client: Queryable, owner: string, projectId: string, accountId: string, period: Period): Promise<void> {
   logger.debug(`Recalculating transactions for account ${accountId} for ${toString(period)}`)
   await deleteAccountTransactions(client, owner, accountId, period)
   const transactions = await findAllTransactionsByAccount(client, owner, projectId, accountId, period)
@@ -76,7 +76,7 @@ function getClosingDetails(c: Context<Closing>) {
 }
 
 interface Context<T = Transaction | Closing> {
-  client: PoolClient
+  client: Queryable
   owner: string
   accountId: string
   period: Period
