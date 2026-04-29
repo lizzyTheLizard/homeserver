@@ -1,23 +1,18 @@
-import { validate, extend, validators } from 'validate.js'
+import { z } from 'zod'
 import { invalidInput } from './BackendError'
-import { Temporal } from '@js-temporal/polyfill'
 
-export function validateObject(input: unknown, constraints: unknown) {
-  const validationResult = validate(input, constraints, { format: 'flat' }) as string[] | undefined
-  if (validationResult?.[0]) throw invalidInput(validationResult[0])
+export function validateObject<T extends z.ZodType>(input: unknown, schema: T): z.infer<T> {
+  const result = schema.safeParse(input)
+  if (!result.success) throw invalidInput(formatError(result.error))
+  return result.data
 }
 
-export function validateString(input: unknown) {
-  if (typeof input !== 'string' || input.trim() === '') throw invalidInput('Input must be a non-empty string')
+export function validateString(input: unknown): string {
+  return validateObject(input, z.string().trim().min(1))
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-extend(validators.datetime, {
-  parse: function (value: string) {
-    return Temporal.PlainDateTime.from(value)
-      .toZonedDateTime('+00:00').epochMilliseconds
-  },
-  format: function (value: number) {
-    return Temporal.Instant.fromEpochMilliseconds(value).toString()
-  },
-})
+function formatError(error: z.ZodError): string {
+  const issue = error.issues[0]
+  if (issue.path.length === 0) return 'Invalid input (' + issue.message + ')'
+  return 'Invalid input on field \'' + issue.path.join('.') + '\' (' + issue.message + ')'
+}

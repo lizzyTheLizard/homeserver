@@ -187,7 +187,7 @@ describe('addNeonTransactions', () => {
     })
 
     const response = await addNeonTransactions(project.id, monthly.period, neonTransactionInputs)
-    expect(response).toEqual({ success: false, error: 'Order can\'t be blank' })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'order\' (Invalid input: expected number, received undefined)' })
   })
 
   test('Fails with invalid transaction input - invalid account UUID', async ({ task }) => {
@@ -215,7 +215,7 @@ describe('addNeonTransactions', () => {
     })
 
     const response = await addNeonTransactions(project.id, monthly.period, neonTransactionInputs)
-    expect(response).toEqual({ success: false, error: 'Account id must be a valid UUID' })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'accountId\' (Invalid UUID)' })
   })
 })
 
@@ -326,7 +326,7 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ success: false, error: 'Transaction id can\'t be blank' })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'transaction_id\' (Invalid input: expected string, received undefined)' })
   })
 
   test('Fails with invalid transaction input - invalid transaction_id UUID', async ({ task }) => {
@@ -354,7 +354,7 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ success: false, error: 'Transaction id must be a valid UUID' })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'transaction_id\' (Invalid UUID)' })
   })
 
   test('Fails with invalid transaction input - missing category', async ({ task }) => {
@@ -382,7 +382,7 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ success: false, error: 'Category can\'t be blank' })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'category\' (Invalid input: expected string, received undefined)' })
   })
 })
 

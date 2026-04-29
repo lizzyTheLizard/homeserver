@@ -7,6 +7,7 @@ import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
+import { z } from 'zod'
 import { notFound } from 'next/navigation'
 import { logger } from '@/app/shared/logger'
 
@@ -36,40 +37,17 @@ export async function deleteAccount(id: string): ActionResponse<void> {
 export async function saveAccount(input: AccountInput): ActionResponse<Account> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
-    validateObject(input, AccountInputConstraints)
+    validateObject(input, AccountInputSchema)
     const result = await createOrModifyAccount(client, user.email, input)
     logger.info(`Saved account ${input.name} with id ${result.id} for user ${user.email}`)
     return result
   }))
 }
 
-const AccountInputConstraints = {
-  id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  project_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  name: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-  type: {
-    presence: { allowEmpty: false },
-    inclusion: ACCOUNT_TYPES,
-  },
-  archived: {
-    presence: { allowEmpty: true },
-    type: 'boolean',
-  },
-}
+const AccountInputSchema = z.object({
+  id: z.uuid(),
+  project_id: z.uuid(),
+  name: z.string().min(1),
+  type: z.enum(ACCOUNT_TYPES),
+  archived: z.boolean(),
+})

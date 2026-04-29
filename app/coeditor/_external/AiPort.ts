@@ -6,6 +6,7 @@ import { ClientOptions } from 'openai'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { ChatCompletionMessageParam, ResponseFormatJSONSchema } from 'openai/resources'
 import { config } from '@/app/shared/config'
+import { z } from 'zod'
 
 let cachedClient: OpenAI | undefined
 function getClient(opts?: ClientOptions): OpenAI {
@@ -39,15 +40,7 @@ export async function aiPort(input: AiPortInput, commandsSoFar: Command[], opts?
   })
   const durationMs = performance.now() - start
   logger.debug(`AI Port call took ${(durationMs / 1000).toString()} seconds`)
-  const rawContent = completion.choices[0].message.content ?? ''
-  let output: { text: string, title: string, error?: string }
-  try {
-    output = JSON.parse(rawContent) as { text: string, title: string, error?: string }
-  }
-  catch {
-    throw new Error(`AI returned non-JSON response: ${rawContent.slice(0, 200)}`)
-  }
-  validateObject(output, responseFormatConstraint)
+  const output = parseOutput(completion)
   if (output.error) throw new Error(`AI Communication Error: ${output.error}`)
   const newText = getFullNewText(input, output.text)
   return { title: output.title, text: newText, durationMs }
@@ -107,6 +100,18 @@ function mapToChatMessages(input: AiPortInput | Command): ChatCompletionMessageP
   ]
 }
 
+function parseOutput(completion: OpenAI.Chat.Completions.ChatCompletion): z.infer<typeof AiResponseSchema> {
+  const rawContent = completion.choices[0].message.content ?? ''
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(rawContent)
+  }
+  catch {
+    throw new Error(`AI returned non-JSON response: ${rawContent.slice(0, 200)}`)
+  }
+  return validateObject(parsed, AiResponseSchema)
+}
+
 function getFullNewText(input: AiPortInput, newText: string): string {
   if (input.selection_end === undefined)
     return newText
@@ -126,29 +131,16 @@ const commands: Record<PredefinedCommandType, string> = {
   EXTEND: 'I want to extend the text. Add more information and details to the text.',
 }
 
+const AiResponseSchema = z.object({
+  text: z.string().min(1).describe('The edited text or the replacement for the selected text'),
+  title: z.string().min(1).describe('The new title of the document'),
+  error: z.string().describe('An optional error message if an error occurred').optional(),
+})
+
 const responseFormat: ResponseFormatJSONSchema = {
   type: 'json_schema',
   json_schema: {
     name: 'CoEditor Response Schema',
-    schema: {
-      type: 'object',
-      properties: {
-        text: { type: 'string', description: 'The edited text or the replacement for the selected text' },
-        title: { type: 'string', description: 'The new title of the document' },
-        error: { type: 'string', description: 'An optional error message if an error occurred' },
-      },
-      required: ['text', 'title'],
-    },
-  },
-}
-
-const responseFormatConstraint = {
-  text: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-  title: {
-    presence: { allowEmpty: false },
-    type: 'string',
+    schema: z.toJSONSchema(AiResponseSchema, { target: 'draft-7' }),
   },
 }
