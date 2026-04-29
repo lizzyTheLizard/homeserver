@@ -7,7 +7,8 @@ import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { createTransactionsFromNeonInput } from './__helper/CreateNeonTransaction'
 import { lastDay, startDate } from '@/app/cash/_helper/Period'
-import { nextState } from '@/app/cash/_data/MonthlyState'
+import { MONTHLY_STATES, nextState } from '@/app/cash/_data/MonthlyState'
+import { z } from 'zod'
 import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
 import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
@@ -69,9 +70,8 @@ function getCurrentAccountIdForMonthly(monthly: Monthly | undefined): string | u
 
 export async function initialize(input: MonthlyInput): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    validateObject(input, MonthlyInputConstraints)
+    validateObject(input, MonthlyInputSchema)
     input.neon_transactions.forEach((transaction) => {
-      validateObject(transaction, NeonTransactionConstraints)
       if (transaction.date < startDate(input.period)) throw new Error('Transaction date must be within the period')
       if (transaction.date > lastDay(input.period)) throw new Error('Transaction date must be within the period')
     })
@@ -88,7 +88,7 @@ export interface NeonTransactionInput {
 
 export async function addNeonTransactions(projectId: string, period: MonthlyPeriod, transactions: NeonTransactionInput[]): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    transactions.forEach((transaction) => { validateObject(transaction, NeonTransactionInputConstraints) })
+    transactions.forEach((transaction) => { validateObject(transaction, NeonTransactionInputSchema) })
     const user = await getAuthenticatedUserSession('cash')
     const monthly = await findForPeriod(client, user.email, projectId, period)
     if (monthly?.state !== 'NEON') throw new Error('Monthly closing not found or not in NEON state')
@@ -111,7 +111,7 @@ export async function markAsChecked(projectId: string, period: MonthlyPeriod): A
 
 export async function addSharedTransactions(projectId: string, period: MonthlyPeriod, transactions: SharedTransaction[]): ActionResponse<void> {
   return await toResponse(transactional(async (client) => {
-    transactions.forEach((transaction) => { validateObject(transaction, SharedTransactionInputConstraints) })
+    transactions.forEach((transaction) => { validateObject(transaction, SharedTransactionSchema) })
     const user = await getAuthenticatedUserSession('cash')
     const monthly = await findForPeriod(client, user.email, projectId, period)
     if (monthly?.state !== 'SHARED') throw new Error('Monthly closing not found or not in SHARED state')
@@ -121,158 +121,38 @@ export async function addSharedTransactions(projectId: string, period: MonthlyPe
   }))
 }
 
-const MonthlyInputConstraints = {
-  'id': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  'project_id': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  'period': {
-    presence: { allowEmpty: false },
-    type: 'object',
-  },
-  'period.year': {
-    presence: { allowEmpty: false },
-    type: 'number',
-    numericality: {
-      onlyInteger: true,
-      greaterThanOrEqualTo: 2000,
-      lessThanOrEqualTo: 2100,
-    },
-  },
-  'period.month': {
-    presence: { allowEmpty: false },
-    type: 'number',
-    numericality: {
-      onlyInteger: true,
-      greaterThanOrEqualTo: 1,
-      lessThanOrEqualTo: 12,
-    },
-  },
-  'shared_account_id': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  'neon_account_id': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  'remaining_account_id': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  'credit_card_account_id': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  'state': {
-    presence: { allowEmpty: false },
-    type: 'string',
-    inclusion: {
-      within: ['NEON', 'NEONCHECK', 'CREDITCARDCHECK', 'SHAREDCHECK', 'SHARED', 'FINISHED'],
-      message: 'must be a valid state',
-    },
-  },
-  'neon_transactions': {
-    type: 'array',
-    presence: { allowEmpty: true },
-  },
-  'shared_transactions': {
-    type: 'array',
-    presence: { allowEmpty: true },
-    length: {
-      maximum: 0,
-    },
-  },
-}
+const NeonTransactionInputSchema = z.object({
+  order: z.number(),
+  accountId: z.uuid(),
+  description: z.string().min(1),
+})
 
-const NeonTransactionConstraints = {
-  date: {
-    presence: { allowEmpty: false },
-    datetime: {
-      dateOnly: true,
-    },
-  },
-  order: {
-    presence: { allowEmpty: false },
-    type: 'number',
-  },
-  amount: {
-    presence: { allowEmpty: false },
-    type: 'number',
-  },
-  description: {
-    type: 'string',
-  },
-  subject: {
-    type: 'string',
-  },
-  transaction_id: {
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-}
+const SharedTransactionSchema = z.object({
+  transaction_id: z.uuid(),
+  category: z.string().min(1),
+})
 
-const NeonTransactionInputConstraints = {
-  order: {
-    presence: { allowEmpty: false },
-    type: 'number',
-  },
-  accountId: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  description: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-}
+const NeonTransactionSchema = z.object({
+  date: z.iso.date(),
+  order: z.number(),
+  amount: z.number(),
+  description: z.string().optional(),
+  subject: z.string().optional(),
+  transaction_id: z.uuid().optional(),
+})
 
-const SharedTransactionInputConstraints = {
-  transaction_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  category: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-}
+const MonthlyInputSchema = z.object({
+  id: z.uuid(),
+  project_id: z.uuid(),
+  period: z.object({
+    year: z.number().int().min(2000).max(2100),
+    month: z.number().int().min(1).max(12),
+  }),
+  shared_account_id: z.uuid(),
+  neon_account_id: z.uuid(),
+  remaining_account_id: z.uuid(),
+  credit_card_account_id: z.uuid(),
+  state: z.enum(MONTHLY_STATES),
+  neon_transactions: z.array(NeonTransactionSchema),
+  shared_transactions: z.array(SharedTransactionSchema).max(0),
+})

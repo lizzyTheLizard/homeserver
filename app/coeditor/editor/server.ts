@@ -6,11 +6,12 @@ import { nontransactional, transactional } from '@/app/shared/_external/db/acces
 import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PredefinedCommandType } from '../_data/Command'
+import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES, PredefinedCommandType } from '../_data/Command'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { findProfileByOwnerAndLanguage, Profile } from '../_data/Profile'
 import { aiPort, AiPortInput } from '../_external/AiPort'
+import z from 'zod'
 
 export interface EditorData {
   discussion: Discussion | undefined
@@ -45,11 +46,10 @@ export interface ExecuteCommandInput {
   custom_command?: string
   predefined_command?: PredefinedCommandType
 }
-
 export async function executeCommand(input: ExecuteCommandInput): ActionResponse<Discussion> {
   return toResponse(transactional(async (tx) => {
     const user = await getAuthenticatedUserSession('coeditor')
-    validateObject(input, ExecuteCommandInputConstraints)
+    validateObject(input, ExecuteCommandInputSchema)
     const template = await findTemplateById(tx, user.email, input.template_id)
     if (!template) {
       throw invalidInput(`Given template ${input.template_id} not found`)
@@ -118,57 +118,14 @@ function toCommand(input: ExecuteCommandInput, aiInput: AiPortInput, commandResu
   }
 }
 
-const ExecuteCommandInputConstraints = {
-  id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  discussion_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  template_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  text: {
-    presence: { allowEmpty: true },
-    type: 'string',
-  },
-  parameters: {
-    presence: true,
-    type: 'object',
-  },
-  selection_start: {
-    presence: false,
-    type: 'number',
-  },
-  selection_end: {
-    presence: false,
-    type: 'number',
-  },
-  custom_command: {
-    presence: false,
-    type: 'string',
-  },
-  predefined_command: {
-    presence: false,
-    type: 'string',
-    inclusion: {
-      within: ['INITIALIZE', 'IMPROVE', 'REFORMULATE', 'SUMMARIZE', 'EXTEND'],
-      message: 'must be one of INITIALIZE, IMPROVE, REFORMULATE, SUMMARIZE, EXTEND',
-    },
-  },
-}
+const ExecuteCommandInputSchema = z.object({
+  id: z.uuid(),
+  discussion_id: z.uuid(),
+  template_id: z.uuid(),
+  text: z.string(),
+  parameters: z.record(z.string(), z.string()),
+  selection_start: z.number().optional(),
+  selection_end: z.number().optional(),
+  custom_command: z.string().optional(),
+  predefined_command: z.enum(PREDEFINED_COMMAND_TYPES).optional(),
+})

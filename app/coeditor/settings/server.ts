@@ -5,6 +5,7 @@ import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, remo
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
 import { transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
+import { z } from 'zod'
 import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
 import { logger } from '@/app/shared/logger'
 
@@ -35,7 +36,7 @@ export async function deleteProfile(id: string): ActionResponse<void> {
 export async function saveProfile(input: ProfileInput): ActionResponse<Profile> {
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
-    validateObject(input, ProfileInputConstraints)
+    validateObject(input, ProfileInputSchema)
     const profile = await createOrModifyProfile(client, user.email, input)
     logger.info(`Saved profile with id ${profile.id} for user ${user.email} and language ${profile.language}`)
     return profile
@@ -56,43 +57,21 @@ export async function saveTemplate(input: TemplateInput): ActionResponse<Templat
   'use server'
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('coeditor')
-    validateObject(input, TemplateInputConstraints)
+    validateObject(input, TemplateInputSchema)
     const template = await createOrModifyTemplate(client, user.email, input)
     logger.info(`Saved template with id ${template.id} for user ${user.email} and language ${template.language}`)
     return template
   }))
 }
 
-const TemplateInputConstraints = {
-  id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  name: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-  language: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-  text: {
-    presence: { allowEmpty: true },
-    type: 'string',
-  },
-}
+const TemplateInputSchema = z.object({
+  id: z.uuid(),
+  name: z.string().min(1),
+  language: z.string().min(1),
+  text: z.string(),
+})
 
-const ProfileInputConstraints = {
-  language: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-  text: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-}
+const ProfileInputSchema = z.object({
+  language: z.string().min(1),
+  text: z.string().min(1),
+})

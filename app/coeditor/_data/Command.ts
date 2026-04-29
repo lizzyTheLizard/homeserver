@@ -18,7 +18,8 @@ export interface CommandInput {
 }
 export type Command = Entity<CommandInput>
 
-export type PredefinedCommandType = 'INITIALIZE' | 'IMPROVE' | 'REFORMULATE' | 'SUMMARIZE' | 'EXTEND'
+export const PREDEFINED_COMMAND_TYPES = ['INITIALIZE', 'IMPROVE', 'REFORMULATE', 'SUMMARIZE', 'EXTEND'] as const
+export type PredefinedCommandType = typeof PREDEFINED_COMMAND_TYPES[number]
 
 export interface CommandResult {
   text: string

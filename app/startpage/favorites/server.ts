@@ -4,6 +4,7 @@ import { nontransactional, transactional } from '@/app/shared/_external/db/acces
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { createOrModifyFavorite, Favorite, FavoriteInput, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite'
+import { z } from 'zod'
 
 export async function loadFavorites(): Promise<Favorite[]> {
   const user = await getAuthenticatedUserSession('startpage')
@@ -13,7 +14,7 @@ export async function loadFavorites(): Promise<Favorite[]> {
 export async function saveFavorite(input: FavoriteInput): ActionResponse<Favorite> {
   return toResponse(transactional(async (tx) => {
     const user = await getAuthenticatedUserSession('startpage')
-    validateObject(input, FavoriteInputConstraints)
+    validateObject(input, FavoriteInputSchema)
     return createOrModifyFavorite(tx, user.email, input)
   }))
 }
@@ -26,21 +27,10 @@ export async function deleteFavorite(id: string): ActionResponse<Favorite | unde
   }))
 }
 
-const FavoriteInputConstraints = {
-  id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  position: {
-    presence: { allowEmpty: false },
-    type: 'number',
-    numericality: { onlyInteger: true, greaterThanOrEqualTo: 0 },
-  },
-  name: { presence: { allowEmpty: false }, type: 'string' },
-  url: { presence: { allowEmpty: false }, type: 'string' },
-  description: { presence: { allowEmpty: true }, type: 'string' },
-}
+const FavoriteInputSchema = z.object({
+  id: z.uuid(),
+  position: z.number().int().min(0),
+  name: z.string().min(1),
+  url: z.string().min(1),
+  description: z.string(),
+})

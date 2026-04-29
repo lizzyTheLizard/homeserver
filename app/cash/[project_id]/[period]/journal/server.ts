@@ -8,6 +8,7 @@ import { createTransaction, findAllTransactions, findTransactionsById, modifyTra
 import { Period } from '@/app/cash/_helper/Period'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
+import { z } from 'zod'
 import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
@@ -75,7 +76,7 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
 export async function saveTransaction(input: TransactionInput): ActionResponse<Transaction> {
   return await toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('cash')
-    validateObject(input, TransactionInputConstraints)
+    validateObject(input, TransactionInputSchema)
     const lastClosing = await findLastClosing(client, user.email, input.project_id)
     if (isClosed(lastClosing, input.date)) throw invalidInput('Cannot modify transaction in closed period')
     const existingTransaction = await findTransactionsById(client, user.email, input.id)
@@ -109,48 +110,12 @@ function min(date1: string, date2: string): string {
   return date1 < date2 ? date1 : date2
 }
 
-const TransactionInputConstraints = {
-  id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  project_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  credit_account_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  debit_account_id: {
-    presence: { allowEmpty: false },
-    type: 'string',
-    format: {
-      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-      message: 'must be a valid UUID',
-    },
-  },
-  amount: {
-    presence: { allowEmpty: false },
-    type: 'number',
-  },
-  date: {
-    presence: { allowEmpty: true },
-  },
-  description: {
-    presence: { allowEmpty: false },
-    type: 'string',
-  },
-}
+const TransactionInputSchema = z.object({
+  id: z.uuid(),
+  project_id: z.uuid(),
+  credit_account_id: z.uuid(),
+  debit_account_id: z.uuid(),
+  amount: z.number(),
+  date: z.string(),
+  description: z.string().min(1),
+})
