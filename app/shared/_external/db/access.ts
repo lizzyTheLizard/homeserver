@@ -4,21 +4,24 @@ import { setupPool } from './setup'
 let poolPromise: Promise<Pool> | undefined = undefined
 
 /**
+ * A connection-bearing object that can run a query. Either the `Pool` (each
+ * `query()` checks out its own client, safe for parallel reads) or a single
+ * `PoolClient` (required inside a transaction so all queries hit the same
+ * connection).
+ */
+export type Queryable = Pool | PoolClient
+
+/**
  * Executes a function without a transaction. No rollback is possible.
+ * The function receives the pool itself, so parallel queries run on
+ * separate connections.
  * @param fn The function to execute
  * @returns The result of the function
  */
-export async function nontransactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+export async function nontransactional<T>(fn: (client: Queryable) => Promise<T>): Promise<T> {
   poolPromise ??= setupPool()
   const pool = await poolPromise
-  const client = await pool.connect()
-  try {
-    const result = await fn(client)
-    return result
-  }
-  finally {
-    client.release()
-  }
+  return fn(pool)
 }
 
 /**
@@ -87,7 +90,7 @@ export const removeNull = <T>(input: T): T => {
  * @param params The query parameters
  * @returns The count as number
  */
-export async function count(client: PoolClient, query: string, params?: unknown[]): Promise<number> {
+export async function count(client: Queryable, query: string, params?: unknown[]): Promise<number> {
   const result = await client.query<{ count: string }>(query, params)
   return parseInt(result.rows[0].count, 10)
 }

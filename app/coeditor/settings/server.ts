@@ -3,7 +3,7 @@
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../_data/Profile'
 import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
-import { transactional } from '@/app/shared/_external/db/access'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { z } from 'zod'
 import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
@@ -16,9 +16,9 @@ export interface SettingsData {
 
 export async function loadSettings(): Promise<SettingsData> {
   const user = await getAuthenticatedUserSession('coeditor')
-  const [templates, profiles] = await transactional(tx => Promise.all([
-    findTemplatesByOwner(tx, user.email),
-    findProfilesByOwner(tx, user.email),
+  const [templates, profiles] = await nontransactional(c => Promise.all([
+    findTemplatesByOwner(c, user.email),
+    findProfilesByOwner(c, user.email),
   ]))
   return { profiles, templates }
 }

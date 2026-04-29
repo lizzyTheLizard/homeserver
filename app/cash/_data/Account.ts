@@ -1,7 +1,6 @@
 import { logger } from '@/app/shared/logger'
-import { PoolClient } from 'pg'
 import { AccountType } from './AccountType'
-import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
+import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface AccountInput {
   id: string
@@ -12,7 +11,7 @@ export interface AccountInput {
 }
 export type Account = Entity<AccountInput>
 
-export async function findAllAccountsForProject(client: PoolClient, ownerId: string, projectId: string): Promise<Account[]> {
+export async function findAllAccountsForProject(client: Queryable, ownerId: string, projectId: string): Promise<Account[]> {
   const result = await client.query<Account>(
     'SELECT * FROM account WHERE project_id = $1 AND owner_email = $2 ORDER BY name ASC',
     [projectId, ownerId],
@@ -21,7 +20,7 @@ export async function findAllAccountsForProject(client: PoolClient, ownerId: str
   return result.rows.map(removeNull)
 }
 
-export async function removeAccount(client: PoolClient, ownerId: string, accountId: string): Promise<Account | undefined> {
+export async function removeAccount(client: Queryable, ownerId: string, accountId: string): Promise<Account | undefined> {
   const result = await client.query<Account>(
     'DELETE FROM account WHERE id = $1 AND owner_email = $2 RETURNING *',
     [accountId, ownerId],
@@ -30,7 +29,7 @@ export async function removeAccount(client: PoolClient, ownerId: string, account
   return removeNull(result.rows[0])
 }
 
-export async function createOrModifyAccount(client: PoolClient, ownerId: string, input: AccountInput): Promise<Account> {
+export async function createOrModifyAccount(client: Queryable, ownerId: string, input: AccountInput): Promise<Account> {
   const result1 = await client.query<Account>(
     'SELECT * FROM account WHERE id = $1 AND owner_email = $2',
     [input.id, ownerId],
@@ -44,6 +43,6 @@ export async function createOrModifyAccount(client: PoolClient, ownerId: string,
   return removeNull(result.rows[0])
 }
 
-export async function findNumberOfAccounts(client: PoolClient): Promise<number> {
+export async function findNumberOfAccounts(client: Queryable): Promise<number> {
   return await count(client, 'SELECT COUNT(*) AS count FROM account')
 }

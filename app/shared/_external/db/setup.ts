@@ -22,7 +22,7 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
 export async function setupPool(): Promise<Pool> {
   try {
     logger.debug('Setting up database connection')
-    const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING })
+    const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING, max: 100 })
     Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
     await testConnection(pool)
     await migrateDatabase(pool)

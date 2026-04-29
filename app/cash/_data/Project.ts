@@ -1,6 +1,5 @@
-import { count, Entity, removeNull } from '@/app/shared/_external/db/access'
+import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
-import { PoolClient } from 'pg'
 
 export interface ProjectInput {
   id: string
@@ -10,7 +9,7 @@ export interface ProjectInput {
 }
 export type Project = Entity<ProjectInput>
 
-export async function findAllProjects(client: PoolClient): Promise<Project[]> {
+export async function findAllProjects(client: Queryable): Promise<Project[]> {
   const result = await client.query<Project>(
     `SELECT * FROM project`,
   )
@@ -18,7 +17,7 @@ export async function findAllProjects(client: PoolClient): Promise<Project[]> {
   return result.rows.map(removeNull)
 }
 
-export async function findProjectsByOwner(client: PoolClient, ownerId: string): Promise<Project[]> {
+export async function findProjectsByOwner(client: Queryable, ownerId: string): Promise<Project[]> {
   const result = await client.query<Project>(
     `SELECT * FROM project WHERE owner_email = $1`,
     [ownerId],
@@ -27,7 +26,7 @@ export async function findProjectsByOwner(client: PoolClient, ownerId: string): 
   return result.rows.map(removeNull)
 }
 
-export async function findProjectById(client: PoolClient, ownerId: string, id: string): Promise<Project | undefined> {
+export async function findProjectById(client: Queryable, ownerId: string, id: string): Promise<Project | undefined> {
   const result = await client.query<Project>(
     `SELECT * FROM project WHERE owner_email = $1 AND id = $2`,
     [ownerId, id],
@@ -36,7 +35,7 @@ export async function findProjectById(client: PoolClient, ownerId: string, id: s
   return removeNull(result.rows[0])
 }
 
-export async function createOrModifyProject(client: PoolClient, project: ProjectInput): Promise<Project> {
+export async function createOrModifyProject(client: Queryable, project: ProjectInput): Promise<Project> {
   const result1 = await client.query<Project>(
     `SELECT * FROM project WHERE id = $1`,
     [project.id],
@@ -54,7 +53,7 @@ export async function createOrModifyProject(client: PoolClient, project: Project
  * Delete a project regardless of owner. Intended only for administrative
  * use — callers must enforce that the request is authorised.
  */
-export async function removeProjectAsAdmin(client: PoolClient, id: string): Promise<Project | undefined> {
+export async function removeProjectAsAdmin(client: Queryable, id: string): Promise<Project | undefined> {
   const result = await client.query<Project>(
     `DELETE FROM project WHERE id = $1 RETURNING *`,
     [id],
@@ -63,10 +62,10 @@ export async function removeProjectAsAdmin(client: PoolClient, id: string): Prom
   return removeNull(result.rows[0])
 }
 
-export async function findNumberOfProjects(client: PoolClient): Promise<number> {
+export async function findNumberOfProjects(client: Queryable): Promise<number> {
   return await count(client, 'SELECT COUNT(*) AS count FROM project')
 }
 
-export async function findNumberOfUsersWithProjects(client: PoolClient): Promise<number> {
+export async function findNumberOfUsersWithProjects(client: Queryable): Promise<number> {
   return await count(client, 'SELECT COUNT(DISTINCT owner_email) AS count FROM project')
 }
