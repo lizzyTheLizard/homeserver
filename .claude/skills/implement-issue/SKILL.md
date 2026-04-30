@@ -10,6 +10,10 @@ Guide the user from selecting a GitHub issue through implementation, commit, and
 
 ## Workflow
 
+### Step 0: Check if this is an ongoing implementation
+
+If the current branch is already in the form issue-#NUMBER-short-title-with-dashes, ask if you should continue with the implementation of this issue. If so, go directely to step 6
+
 ### Step 1: Select the issue
 
 If the user has not already specified an issue number, list open issues so they can pick one:

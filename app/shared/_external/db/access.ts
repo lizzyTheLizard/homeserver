@@ -1,7 +1,19 @@
 import { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
-let poolPromise: Promise<Pool> | undefined = undefined
+// global keeps the same pool promise across Next.js hot-reloads in dev mode.
+declare global {
+  var __dbPoolPromise: Promise<Pool> | undefined
+}
+
+function getPoolPromise(): Promise<Pool> {
+  global.__dbPoolPromise ??= setupPool()
+  return global.__dbPoolPromise
+}
+
+export async function initPool(): Promise<Pool> {
+  return getPoolPromise()
+}
 
 /**
  * A connection-bearing object that can run a query. Either the `Pool` (each
@@ -19,8 +31,7 @@ export type Queryable = Pool | PoolClient
  * @returns The result of the function
  */
 export async function nontransactional<T>(fn: (client: Queryable) => Promise<T>): Promise<T> {
-  poolPromise ??= setupPool()
-  const pool = await poolPromise
+  const pool = await getPoolPromise()
   return fn(pool)
 }
 
@@ -30,8 +41,7 @@ export async function nontransactional<T>(fn: (client: Queryable) => Promise<T>)
  * @returns The result of the function
  */
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  poolPromise ??= setupPool()
-  const pool = await poolPromise
+  const pool = await getPoolPromise()
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
