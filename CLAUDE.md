@@ -43,3 +43,17 @@ Custom PG type parsers are set in `TYPE_MAPPINGS` (dates stay as strings, numeri
 Within `app/`, non-route folders are prefixed with `_` to opt out of the Next.js router (e.g. `_components/`, `_data/`, `_external/`, `_helper/`).
 
 Test files use `.tests.ts` suffix. Integration tests (those needing the DB) are named `server.tests.ts`.
+
+## Client-only rendering (hydration)
+
+To guard a component or block that must only render on the client, use the `useIsClient()` hook from `app/shared/_helper/useIsClient.ts`:
+
+```ts
+const isClient = useIsClient()
+if (!isClient) return null
+```
+
+This returns `false` on the server and `true` after hydration — no extra render, no flash of empty content.
+
+- **Do not** use the `useState(false)` + `useEffect(() => setState(true), [])` flag pattern.
+- `suppressHydrationWarning` is **not** the right tool here; avoid it.

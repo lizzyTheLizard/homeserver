@@ -1,16 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
 import { Button, ButtonProps } from './form/Button'
 import { createPortal } from 'react-dom'
 import style from './ActionTitle.module.css'
+import { useIsClient } from '../_helper/useIsClient'
 
 export function ActionButton({ children, ...props }: ButtonProps) {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsClient(true)
-  }, [])
+  const isClient = useIsClient()
 
   const content = (
     <Button {...props}>

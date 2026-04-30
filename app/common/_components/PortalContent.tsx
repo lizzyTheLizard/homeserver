@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Icon } from '../../shared/_components/Icon'
 import { WeatherBlock, WeatherInfo } from './WeatherBlock'
 import styles from './PortalContent.module.css'
+import { useIsClient } from '../../shared/_helper/useIsClient'
 
 interface AppInfo {
   key: string
@@ -37,17 +38,20 @@ interface PortalContentProps {
 
 export function PortalContent({ apps, weather, favorites }: PortalContentProps) {
   const now = useClock()
+  const isClient = useIsClient()
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.clockBlock}>
-        <div className={styles.clock} suppressHydrationWarning>
-          {now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      {isClient && (
+        <div className={styles.clockBlock}>
+          <div className={styles.clock}>
+            {now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
+          <div className={styles.date}>
+            {now.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
         </div>
-        <div className={styles.date}>
-          {now.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </div>
-      </div>
+      )}
 
       <div className={styles.cards}>
         {apps.map(app => (
