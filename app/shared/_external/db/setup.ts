@@ -14,6 +14,15 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
   1700: value => parseFloat(value), // NUMERIC
 }
 
+// global keeps the same pool promise across Next.js hot-reloads in dev mode.
+declare global {
+  var _phaseTimings: { connectionMs: number, migrationMs: number } | undefined
+}
+
+export function getDbPhaseTimings(): { connectionMs: number, migrationMs: number } | undefined {
+  return global._phaseTimings
+}
+
 /**
  * Setup the Postgres connection pool, test the connection and run migrations. This function should
  * be called once on server start.
@@ -24,8 +33,16 @@ export async function setupPool(): Promise<Pool> {
     logger.debug('Setting up database connection')
     const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING, max: 100 })
     Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
+
+    const connStart = Date.now()
     await testConnection(pool)
+    const connectionMs = Date.now() - connStart
+
+    const migrateStart = Date.now()
     await migrateDatabase(pool)
+    const migrationMs = Date.now() - migrateStart
+
+    global._phaseTimings = { connectionMs, migrationMs }
     logger.info('Database successfully connected and migrated')
     return pool
   }

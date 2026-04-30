@@ -9,6 +9,7 @@ import { findNumberOfAccounts } from '@/app/cash/_data/Account'
 import { findNumberOfProjects } from '@/app/cash/_data/Project'
 import { findNumberOfUsersWithProjects } from '@/app/cash/_data/Project'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
+import { getDbPhaseTimings } from '@/app/shared/_external/db/setup'
 
 function formatUptime(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -23,9 +24,12 @@ function formatUptime(seconds: number): string {
 
 export async function loadGeneralMetrics(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
+  const phases = getDbPhaseTimings()
   return [
     { name: 'Memory', value: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB` },
     { name: 'Uptime', value: formatUptime(Math.floor(process.uptime())) },
+    { name: 'DB Connection time', value: phases ? `${phases.connectionMs.toString()}ms` : 'n/a' },
+    { name: 'DB Migration time', value: phases ? `${phases.migrationMs.toString()}ms` : 'n/a' },
   ]
 }
 
