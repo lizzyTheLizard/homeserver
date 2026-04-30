@@ -7,6 +7,7 @@ import style from './Sidebar.module.css'
 import { Button } from '../form/Button'
 import { SidebarState } from './SidebarState'
 import { v4 as randomUUID } from 'uuid'
+import { useIsClient } from '../../_helper/useIsClient'
 
 let openSidebar: { id: string, onClose: () => void } | undefined = undefined
 
@@ -21,9 +22,7 @@ export interface SidebarProps {
 export function Sidebar({ children, state: { open, pending, type, title, error }, onClose, onDelete, onSave, container }: PropsWithChildren<SidebarProps>) {
   const [id] = useState(randomUUID())
   const ref = useRef<HTMLElement | null>(null)
-  // Ensure this only renders on the client side to avoid hydration issues,
-  // see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
-  const [isClient, setIsClient] = useState(false)
+  const isClient = useIsClient()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const deleteText = (type ? `Delete ${type}` : 'Delete') + '? This cannot be undone.'
 
@@ -55,11 +54,6 @@ export function Sidebar({ children, state: { open, pending, type, title, error }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) setConfirmDelete(false)
   }, [open])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsClient(true)
-  }, [])
 
   function handleClose() {
     setConfirmDelete(false)
