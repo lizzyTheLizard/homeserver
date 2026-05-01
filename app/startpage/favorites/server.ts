@@ -4,6 +4,7 @@ import { nontransactional, transactional } from '@/app/shared/_external/db/acces
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { createOrModifyFavorite, Favorite, FavoriteInput, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite'
+import { logEvent } from '@/app/shared/_data/Event'
 import { z } from 'zod'
 
 export async function loadFavorites(): Promise<Favorite[]> {
@@ -15,7 +16,9 @@ export async function saveFavorite(input: FavoriteInput): ActionResponse<Favorit
   return toResponse(transactional(async (tx) => {
     const user = await getAuthenticatedUserSession('startpage')
     validateObject(input, FavoriteInputSchema)
-    return createOrModifyFavorite(tx, user.email, input)
+    const result = await createOrModifyFavorite(tx, user.email, input)
+    await logEvent(tx, 'INFO', `Saved favorite ${input.name}`)
+    return result
   }))
 }
 
@@ -23,7 +26,9 @@ export async function deleteFavorite(id: string): ActionResponse<Favorite | unde
   return toResponse(transactional(async (tx) => {
     const user = await getAuthenticatedUserSession('startpage')
     validateString(id)
-    return removeFavorite(tx, user.email, id)
+    const result = await removeFavorite(tx, user.email, id)
+    if (result) await logEvent(tx, 'INFO', `Deleted favorite ${result.name}`)
+    return result
   }))
 }
 

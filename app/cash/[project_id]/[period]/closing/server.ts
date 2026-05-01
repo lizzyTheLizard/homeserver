@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { Account, findAllAccountsForProject } from '@/app/cash/_data/Account'
 import { Closing, findLastClosing } from '@/app/cash/_data/Closing'
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export type PageData = { type: 'ALREADY_CLOSED' }
   | { type: 'NOT_FOUND', lastMonthClosing: Monthly | undefined, accounts: Account[] }
@@ -77,6 +78,7 @@ export async function initialize(input: MonthlyInput): ActionResponse<void> {
     })
     const user = await getAuthenticatedUserSession('cash')
     await createMonthlyClosing(client, user.email, input)
+    await logEvent(client, 'INFO', `Initialized monthly closing for period ${input.period.year.toString()}-${input.period.month.toString().padStart(2, '0')}`)
   }))
 }
 
@@ -95,6 +97,7 @@ export async function addNeonTransactions(projectId: string, period: MonthlyPeri
     monthly.neon_transactions = await createTransactionsFromNeonInput(client, user.email, monthly, transactions)
     monthly.state = 'NEONCHECK'
     await modifyMonthlyClosing(client, user.email, monthly)
+    await logEvent(client, 'INFO', `Added ${transactions.length.toString()} Neon transactions for period ${period.year.toString()}-${period.month.toString().padStart(2, '0')}`)
   }))
 }
 
@@ -106,6 +109,7 @@ export async function markAsChecked(projectId: string, period: MonthlyPeriod): A
     if (!m.state.endsWith('CHECK')) throw new Error('Monthly closing not in CHECK state')
     m.state = nextState(m.state)
     await modifyMonthlyClosing(client, user.email, m)
+    await logEvent(client, 'INFO', `Marked monthly closing as checked for period ${period.year.toString()}-${period.month.toString().padStart(2, '0')}`)
   }))
 }
 
@@ -118,6 +122,7 @@ export async function addSharedTransactions(projectId: string, period: MonthlyPe
     monthly.shared_transactions = transactions
     monthly.state = 'FINISHED'
     await modifyMonthlyClosing(client, user.email, monthly)
+    await logEvent(client, 'INFO', `Added ${transactions.length.toString()} shared transactions for period ${period.year.toString()}-${period.month.toString().padStart(2, '0')}`)
   }))
 }
 

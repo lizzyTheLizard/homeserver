@@ -10,6 +10,7 @@ import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { z } from 'zod'
 import { notFound } from 'next/navigation'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export async function loadAccounts(projectId: string) {
   const user = await getAuthenticatedUserSession('cash')
@@ -29,8 +30,12 @@ export async function deleteAccount(id: string): ActionResponse<void> {
     const user = await getAuthenticatedUserSession('cash')
     validateString(id)
     const account = await removeAccount(client, user.email, id)
-    if (!account) logger.info(`Account with id ${id} not found for deletion for user ${user.email}`)
-    else logger.info(`Deleted account ${account.name} with id ${id} for user ${user.email}`)
+    if (!account) {
+      logger.info(`Account with id ${id} not found for deletion for user ${user.email}`)
+      return
+    }
+    logger.info(`Deleted account ${account.name} with id ${id} for user ${user.email}`)
+    await logEvent(client, 'INFO', `Deleted account ${account.name}`)
   }))
 }
 
@@ -40,6 +45,7 @@ export async function saveAccount(input: AccountInput): ActionResponse<Account> 
     validateObject(input, AccountInputSchema)
     const result = await createOrModifyAccount(client, user.email, input)
     logger.info(`Saved account ${input.name} with id ${result.id} for user ${user.email}`)
+    await logEvent(client, 'INFO', `Saved account ${input.name}`)
     return result
   }))
 }

@@ -4,16 +4,14 @@ import { Temporal } from '@js-temporal/polyfill'
 import { useIsClient } from '../_helper/useIsClient'
 
 export interface DateProps {
-  /**
-   * The date string to display.
-   */
   date: string | Temporal.PlainDateLike | { epochMilliseconds: number } | undefined
+  oneLine?: boolean
 }
 
 /**
  * Displays a date value.
  */
-export function DateTime({ date }: DateProps) {
+export function DateTime({ date, oneLine }: DateProps) {
   const isClient = useIsClient()
   if (!isClient) return null
   if (!date) return null
@@ -26,6 +24,11 @@ export function DateTime({ date }: DateProps) {
   if ('epochMilliseconds' in t) {
     const zoned = Temporal.Instant.fromEpochMilliseconds(t.epochMilliseconds)
       .toZonedDateTimeISO(Intl.DateTimeFormat().resolvedOptions().timeZone)
+    if (oneLine) {
+      return (
+        <span>{zoned.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+      )
+    }
     return (
       <div>
         <div>{zoned.toLocaleString(undefined, { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' })}</div>

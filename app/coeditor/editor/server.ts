@@ -5,6 +5,7 @@ import { findTemplateById, findTemplatesByOwner, Template } from '../_data/Templ
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES, PredefinedCommandType } from '../_data/Command'
 import { validateObject } from '@/app/shared/_helper/validation'
@@ -65,8 +66,14 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
       : await createDiscussion(tx, user.email, updatedDiscussion)
     const command = toCommand(input, aiPortInput, commandResult)
     await createCommand(tx, user.email, command)
-    if (discussion) logger.info(`Executed command for discussion ${result.id} by user ${user.email} with template ${template.name}`)
-    else logger.info(`Created new discussion ${result.id} by user ${user.email} with template ${template.name}`)
+    if (discussion) {
+      logger.info(`Executed command for discussion ${result.id} by user ${user.email} with template ${template.name}`)
+      await logEvent(tx, 'INFO', `Executed CoEditor command on discussion ${result.id}`)
+    }
+    else {
+      logger.info(`Created new discussion ${result.id} by user ${user.email} with template ${template.name}`)
+      await logEvent(tx, 'INFO', `Created CoEditor discussion ${result.id}`)
+    }
     return result
   }))
 }

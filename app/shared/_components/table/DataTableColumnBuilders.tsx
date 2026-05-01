@@ -5,7 +5,6 @@ import { Input } from '../../_components/form/Input'
 import { Select } from '../../_components/form/Select'
 import { ColumnDefinition, ColumnFilter } from './DataTable'
 import style from './DataTableColumnBuilder.module.css'
-import { Temporal } from '@js-temporal/polyfill'
 
 export interface Options<FieldType> {
   header?: string
@@ -64,8 +63,8 @@ export function textColumn(key: string, options?: Options<string>): ColumnDefini
   }
 }
 
-export function dateColumn(key: string, options?: Options<Temporal.PlainDate> & { showTime?: boolean }): ColumnDefinition<Temporal.PlainDate, { from?: string, to?: string }> {
-  const filter: ColumnFilter<Temporal.PlainDate, { from?: string, to?: string }> = {
+export function dateColumn(key: string, options?: Options<string>): ColumnDefinition<string, { from?: string, to?: string }> {
+  const filter: ColumnFilter<string, { from?: string, to?: string }> = {
     component: (v, sv) => (
       <div className={style.dateFilters}>
         <Input label="From" type="date" value={v?.from} onChange={(e) => { sv({ from: e.target.value, to: v?.to }) }} small={true} />
@@ -73,17 +72,16 @@ export function dateColumn(key: string, options?: Options<Temporal.PlainDate> & 
       </div>
     ),
     function: (dataValue, filterValue) => {
-      const dateStr = dataValue.toString()
-      if (filterValue.from && filterValue.from > dateStr) return false
-      if (filterValue.to && filterValue.to < dateStr) return false
+      if (filterValue.from && filterValue.from > dataValue) return false
+      if (filterValue.to && filterValue.to < dataValue) return false
       return true
     },
   }
   return {
     key,
     header: options?.header ?? key,
-    cell: options?.cell ?? ((value: Temporal.PlainDate) => <DateTime date={value}></DateTime>),
-    sort: options?.sort === false ? undefined : (a: Temporal.PlainDate, b: Temporal.PlainDate) => a.toString().localeCompare(b.toString()),
+    cell: options?.cell ?? ((value: string) => <DateTime date={value} oneLine></DateTime>),
+    sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
     filter: options?.filter === false ? undefined : filter,
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),

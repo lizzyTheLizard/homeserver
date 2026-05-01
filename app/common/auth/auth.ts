@@ -3,6 +3,7 @@ import { authenticationFailed } from '@/app/shared/_helper/BackendError'
 import { config } from '@/app/shared/config'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
@@ -73,6 +74,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   session.userInfo = { name, email, applications }
   await session.save()
   logger.info(`User ${email} logged in successfully`)
+  await nontransactional(c => logEvent(c, 'INFO', `User ${email} logged in`))
   return result
 }
 
@@ -95,6 +97,7 @@ export async function logout(): Promise<void> {
   session.originalUrlRelative = undefined
   await session.save()
   logger.info(`User ${oldInfo?.email ?? ''} logged out successfully`)
+  await nontransactional(c => logEvent(c, 'INFO', `User ${oldInfo?.email ?? 'unknown'} logged out`))
 }
 
 interface SessionData {
