@@ -1,8 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Sidebar, SidebarContainer } from './Sidebar'
+import { Sidebar } from './Sidebar'
+import { SidebarContainer } from './SidebarContainer'
+import { useSidebar } from './SidebarContext'
 import { MouseEvent, ReactNode, useState } from 'react'
 import { Button } from '../form/Button'
-import { useSidebarState } from './SidebarState'
+
+function SidebarStoryContent({ args, container }: { args: { title: string, type: string, mainContent: ReactNode }, container: HTMLDivElement | undefined }) {
+  const [sidebarId, openSidebar] = useSidebar()
+  function toggle(e: MouseEvent<unknown, unknown>) {
+    openSidebar()
+    e.stopPropagation()
+  }
+  return (
+    <>
+      <main>{args.mainContent}</main>
+      <Button onClick={toggle}>Toggle Sidebar</Button>
+      <Sidebar id={sidebarId} title={args.title} type={args.type} container={container} />
+    </>
+  )
+}
 
 const meta = {
   title: 'Shared/Sidebar',
@@ -26,23 +42,11 @@ const meta = {
   },
 
   render: (args) => {
-    const [state, stateModifier] = useSidebarState(args.type)
     const [container, setContainer] = useState<HTMLDivElement | undefined>(undefined)
-
-    function toggle(e: MouseEvent<unknown, unknown>) {
-      if (state.open) { stateModifier.closeSidebar() }
-      else { stateModifier.openSidebar(args.title) };
-      e.stopPropagation()
-    }
-
     return (
       <div ref={(r) => { setContainer(r ?? undefined) }}>
         <SidebarContainer>
-          <main>{args.mainContent}</main>
-          <Button onClick={toggle}>Toggle Sidebar</Button>
-          <Sidebar state={state} onClose={() => { stateModifier.closeSidebar() }} container={container}>
-            <Button onClick={() => { stateModifier.closeSidebar() }}>Toggle Sidebar</Button>
-          </Sidebar>
+          <SidebarStoryContent args={args} container={container} />
         </SidebarContainer>
       </div>
     )

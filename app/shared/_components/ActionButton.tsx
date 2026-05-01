@@ -7,8 +7,13 @@ import { useIsClient } from '../_helper/useIsClient'
 export function ActionButton({ children, ...props }: ButtonProps) {
   const isClient = useIsClient()
 
+  function onClick(e: React.MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation()
+    props.onClick?.(e)
+  }
+
   const content = (
-    <Button {...props}>
+    <Button {...props} onClick={onClick}>
       {children}
     </Button>
   )

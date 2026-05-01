@@ -5,8 +5,8 @@ import { Favorite } from '@/app/startpage/_data/Favorite'
 import { saveFavorite, deleteFavorite } from '../server'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import styles from './FavoritesContent.module.css'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
@@ -28,7 +28,9 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [favorites, addFavorite, removeFavorite] = useListState<Favorite>(favoritesIn)
-  const [sidebarState, sidebarModifier] = useSidebarState('Favorite')
+  const [title, setTitle] = useState<string>('New Favorite')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [noDelete, setNoDelete] = useState(false)
 
   function showFavorite(fav?: Favorite) {
     const maxPosition = favorites.map(fav => fav.position).reduce((max, pos) => Math.max(max, pos), 0)
@@ -37,7 +39,9 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
     setName(fav?.name ?? '')
     setUrl(fav?.url ?? '')
     setDescription(fav?.description ?? '')
-    sidebarModifier.openSidebar(fav ? fav.name : 'New favorite')
+    setTitle(fav ? fav.name : 'New Favorite')
+    setNoDelete(!fav)
+    openSidebar()
   }
 
   function renderMobile(f: Favorite): ReactNode {
@@ -69,10 +73,14 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
       >
       </DataTable>
       <Sidebar
-        state={{ ...sidebarState }}
-        onClose={() => { sidebarModifier.closeSidebar() }}
-        onSave={() => { sidebarModifier.execute(saveFavorite({ id, position: parseInt(position), name, url, description }), addFavorite) }}
-        onDelete={() => { sidebarModifier.execute(deleteFavorite(id), () => { removeFavorite(id) }) }}
+        id={sidebarId}
+        title={title}
+        type="Favorite"
+        onSave={() => saveFavorite({ id, position: parseInt(position), name, url, description })}
+        onAfterSave={addFavorite}
+        onDelete={() => deleteFavorite(id)}
+        onAfterDelete={() => { removeFavorite(id) }}
+        noDelete={noDelete}
       >
         <Input label="Position" type="number" value={position} onChange={(e) => { setPosition(e.target.value) }} />
         <Input label="Name" value={name} onChange={(e) => { setName(e.target.value) }} />

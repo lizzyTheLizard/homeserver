@@ -1,8 +1,8 @@
 'use client'
 import { Account } from '@/app/cash/_data/Account'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
@@ -26,8 +26,10 @@ export interface JournalProps {
 
 export function Journal({ accounts, transactions: transactionsIn, project_id, period }: JournalProps) {
   const [transactions, addTransaction, removeTransaction] = useListState(transactionsIn)
-  const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
+  const [title, setTitle] = useState<string>('New Transaction')
+  const [sidebarId, openSidebar] = useSidebar()
   const [current, setCurrent] = useState(getInitialInput(period, project_id))
+  const [noDelete, setNoDelete] = useState(false)
 
   const creditAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.credit_account_id)))
     .map(accountId => accounts.find(a => a.id === accountId))
@@ -49,12 +51,9 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
 
   function showTransaction(transaction?: Transaction) {
     setCurrent(transaction ? { ...transaction, amount: transaction.amount.toString() } : getInitialInput(period, project_id))
-    sidebarStateModifier.openSidebar(transaction ? `Edit Transaction` : 'New Transaction')
-  }
-
-  function onSave() {
-    const transaction = { ...current, amount: parseFloat(current.amount) }
-    sidebarStateModifier.execute(saveTransaction(transaction), addTransaction)
+    setTitle(transaction ? `Edit Transaction` : 'New Transaction')
+    setNoDelete(!transaction)
+    openSidebar()
   }
 
   return (
@@ -67,10 +66,14 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
         onRowClick={(transaction) => { showTransaction(transaction) }}
       />
       <Sidebar
-        state={sidebarState}
-        onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={onSave}
-        onDelete={() => { sidebarStateModifier.execute(deleteTransaction(current.id), () => { removeTransaction(current.id) }) }}
+        id={sidebarId}
+        title={title}
+        type="Transaction"
+        onSave={() => saveTransaction({ ...current, amount: parseFloat(current.amount) })}
+        onAfterSave={addTransaction}
+        onDelete={() => deleteTransaction(current.id)}
+        noDelete={noDelete}
+        onAfterDelete={() => { removeTransaction(current.id) }}
       >
         <Input type="date" label="Date" min={startDate(period)} max={lastDay(period)} value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Credit Account" value={current.credit_account_id} onChange={(e) => { setCurrent({ ...current, credit_account_id: e.target.value }) }}>

@@ -1,7 +1,7 @@
 import './globals.css'
 import { Header } from './common/_components/Header'
 import { getUserSession } from './common/auth/auth'
-import { SidebarContainer } from './shared/_components/sidebar/Sidebar'
+import { SidebarContainer } from './shared/_components/sidebar/SidebarContainer'
 
 export const metadata = {
   title: 'Gutschi.site',

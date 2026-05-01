@@ -1,8 +1,8 @@
 'use client'
 import { Account } from '@/app/cash/_data/Account'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { lastDay, Period, startDate, todayOrInPeriod } from '@/app/cash/_helper/Period'
@@ -12,13 +12,14 @@ import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { TransactionInput } from '@/app/cash/_data/Transaction'
+import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
 import { useRouter } from 'next/navigation'
 import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
 import { Currency } from '@/app/shared/_components/Currency'
 import { useMemo, useState } from 'react'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
+import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
 
 export interface AccountJournalProps {
   account: Account
@@ -31,8 +32,10 @@ export interface AccountJournalProps {
 
 export function AccountJournal({ account, accounts, transactions: transactionsIn, lastTransaction, project_id, period }: AccountJournalProps) {
   const router = useRouter()
-  const [sidebarState, sidebarStateModifier] = useSidebarState('Transaction')
   const [current, setCurrent] = useState(getInitialInput(period))
+  const [title, setTitle] = useState<string>('New Transaction')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [noDelete, setNoDelete] = useState(false)
 
   const transactions = useMemo(() => isSummationAccount(account.type) && lastTransaction
     ? [...transactionsIn, getOpeningBalanceTransaction(lastTransaction)]
@@ -67,7 +70,9 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
   function showTransaction(transaction?: AccountTransaction | OpeningBalanceTransaction): void {
     if (!transaction) {
       setCurrent(getInitialInput(period))
-      sidebarStateModifier.openSidebar('New Transaction')
+      setTitle('New Transaction')
+      setNoDelete(true)
+      openSidebar()
       return
     }
     // Check if this is opnening balance. If so, cannot edit
@@ -75,10 +80,12 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
     // Check if this is a closing transaction. If so, cannot edit
     if (!transaction.transaction_id) return
     setCurrent({ ...transaction, id: transaction.transaction_id, description: transaction.description ?? '', amount: ((isCreditAccount(account.type) ? -1 : 1) * transaction.amount).toString() })
-    sidebarStateModifier.openSidebar('Edit Transaction')
+    setTitle('Edit Transaction')
+    setNoDelete(false)
+    openSidebar()
   }
 
-  function onSave(): void {
+  function save(): ActionResponse<Transaction> {
     const currentAmmount = (isCreditAccount(account.type) ? -1 : 1) * parseFloat(current.amount)
     const credit_account_id = currentAmmount < 0 ? account.id : current.other_account_id
     const debit_account_id = currentAmmount > 0 ? account.id : current.other_account_id
@@ -90,14 +97,7 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
       debit_account_id,
       amount,
     }
-    sidebarStateModifier.execute(
-      saveTransaction(transaction),
-      () => { router.refresh() },
-    )
-  }
-
-  function onDelete(): void {
-    sidebarStateModifier.execute(deleteTransaction(current.id), () => { router.refresh() })
+    return saveTransaction(transaction)
   }
 
   return (
@@ -109,10 +109,14 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
         onRowClick={(transaction) => { showTransaction(transaction) }}
       />
       <Sidebar
-        state={sidebarState}
-        onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={onSave}
-        onDelete={onDelete}
+        id={sidebarId}
+        title={title}
+        type="Transaction"
+        onSave={save}
+        onAfterSave={() => { router.refresh() }}
+        onDelete={() => deleteTransaction(current.id)}
+        onAfterDelete={() => { router.refresh() }}
+        noDelete={noDelete}
       >
         <Input type="date" label="Date" min={startDate(period)} max={lastDay(period)} value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
         <Select label="Other Account" value={current.other_account_id} onChange={(e) => { setCurrent({ ...current, other_account_id: e.target.value }) }}>

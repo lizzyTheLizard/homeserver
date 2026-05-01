@@ -98,16 +98,6 @@
         margin-left: 0;
     }
 
-    .sidebarContainer {
-        display: flex;
-        flex-grow: 1;
-    }
-
-    .sidebarContent {
-        width: 0;
-        flex-grow: 1;
-        min-height: 100%;
-    }
 }
 
 @media (max-width: 600px) {
