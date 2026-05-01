@@ -6,7 +6,7 @@ import { v4 as randomUUID } from 'uuid'
 import { boolColumn, enumColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { deleteAccount, saveAccount } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
-import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
@@ -27,19 +27,24 @@ const columns = [
 
 export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
   const [accounts, addAccount, removeAccount] = useListState(accountsIn)
-  const [sidebarState, sidebarStateModifier] = useSidebarState('Account')
+  const [sidebarId, openSidebar] = useSidebar()
   const [id, setId] = useState(randomUUID())
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>(ACCOUNT_TYPES[0])
+  const [title, setTitle] = useState<string>('New Account')
   const [archived, setArchived] = useState(false)
+  const [noDelete, setNoDelete] = useState(false)
 
   function showAccount(account?: Account) {
     setId(account ? account.id : randomUUID())
     setName(account ? account.name : '')
     setType(account ? account.type : ACCOUNT_TYPES[0])
     setArchived(account ? account.archived : false)
-    sidebarStateModifier.openSidebar(account ? account.name : 'New Account')
+    setTitle(account ? account.name : 'New Account')
+    setNoDelete(!account)
+    openSidebar()
   }
+
   return (
     <>
       <ActionButton onClick={(e) => { showAccount(); e.stopPropagation() }}>Add Account</ActionButton>
@@ -50,10 +55,14 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         onRowClick={(account) => { showAccount(account) }}
       />
       <Sidebar
-        state={sidebarState}
-        onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={() => { sidebarStateModifier.execute(saveAccount({ project_id, id, name, type, archived }), addAccount) }}
-        onDelete={() => { sidebarStateModifier.execute(deleteAccount(id), () => { removeAccount(id) }) }}
+        id={sidebarId}
+        title={title}
+        type="Account"
+        onSave={() => saveAccount({ project_id, id, name, type, archived })}
+        onAfterSave={addAccount}
+        onDelete={() => deleteAccount(id)}
+        onAfterDelete={() => { removeAccount(id) }}
+        noDelete={noDelete}
       >
         <Input type="text" label="Name" required value={name} onChange={(e) => { setName(e.target.value) }} />
         <Select label="Type" required value={type} onChange={(e) => { setType(e.target.value as AccountType) }}>

@@ -3,8 +3,8 @@ import { Account } from '@/app/cash/_data/Account'
 import { Closing } from '@/app/cash/_data/Closing'
 import { lastDay, Period, toString } from '@/app/cash/_helper/Period'
 import { Select } from '@/app/shared/_components/form/Select'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { close, reopen } from '../server'
@@ -23,23 +23,20 @@ export interface ReportsProps {
 
 export function Reports({ accounts, project_id, period, latestClosing, beforeTransactions, currentTransactions }: ReportsProps) {
   const router = useRouter()
-  const [closeSidebarState, closeSidebarStateModifier] = useSidebarState('Closing')
-  const [reopenSidebarState, reopenSidebarStateModifier] = useSidebarState('Reopening')
+  const [closeTitle, setCloseTitle] = useState<string>('Close')
+  const [closeSidebarId, openCloseSidebar] = useSidebar()
+  const [reopenTitle, setReopenTitle] = useState<string>('Reopen')
+  const [reopenSidebarId, openReopenSidebar] = useSidebar()
   const [current, setCurrent] = useState<{ capital_account_id: string, profit_account_id: string }>(latestClosing ?? { capital_account_id: '', profit_account_id: '' })
 
   function showClosing() {
-    closeSidebarStateModifier.openSidebar('Close ' + toString(period))
+    setCloseTitle('Close ' + toString(period))
+    openCloseSidebar()
   }
+
   function showReopen() {
-    reopenSidebarStateModifier.openSidebar('Reopen ' + toString(period))
-  }
-
-  function onClose() {
-    closeSidebarStateModifier.execute(close(period, project_id, current.profit_account_id, current.capital_account_id), () => { router.refresh() })
-  }
-
-  function onReopen() {
-    reopenSidebarStateModifier.execute(reopen(period, project_id), () => { router.refresh() })
+    setReopenTitle('Reopen ' + toString(period))
+    openReopenSidebar()
   }
 
   return (
@@ -57,9 +54,11 @@ export function Reports({ accounts, project_id, period, latestClosing, beforeTra
         <ReportCard period={period} accounts={accounts} beforeTransactions={beforeTransactions} currentTransactions={currentTransactions} header="Passives" types={['Equity', 'Liability']}></ReportCard>
       </div>
       <Sidebar
-        state={closeSidebarState}
-        onClose={() => { closeSidebarStateModifier.closeSidebar() }}
-        onSave={onClose}
+        id={closeSidebarId}
+        title={closeTitle}
+        type="Closing"
+        onSave={() => close(period, project_id, current.profit_account_id, current.capital_account_id)}
+        onAfterSave={() => { router.refresh() }}
       >
         <Select label="Capital Account" value={current.capital_account_id} onChange={(e) => { setCurrent({ ...current, capital_account_id: e.target.value }) }}>
           {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
@@ -69,9 +68,11 @@ export function Reports({ accounts, project_id, period, latestClosing, beforeTra
         </Select>
       </Sidebar>
       <Sidebar
-        state={reopenSidebarState}
-        onClose={() => { reopenSidebarStateModifier.closeSidebar() }}
-        onSave={onReopen}
+        id={reopenSidebarId}
+        title={reopenTitle}
+        type="Closing"
+        onSave={() => reopen(period, project_id)}
+        onAfterSave={() => { router.refresh() }}
       >
       </Sidebar>
     </>

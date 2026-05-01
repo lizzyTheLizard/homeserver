@@ -1,8 +1,8 @@
 'use client'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { Profile } from '../../_data/Profile'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { useSidebarState } from '@/app/shared/_components/sidebar/SidebarState'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { deleteProfile, saveProfile } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
@@ -24,16 +24,20 @@ const profileColumns = [
 
 export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
   const [profiles, addProfile, removeProfile] = useListState(profilesIn)
-  const [sidebarState, sidebarStateModifier] = useSidebarState('Profile')
+  const [title, setTitle] = useState<string>('New Profile')
+  const [sidebarId, openSidebar] = useSidebar()
   const [id, setId] = useState('')
   const [language, setLanguage] = useState('')
   const [text, setText] = useState('')
+  const [noDelete, setNoDelete] = useState(false)
 
   function showProfile(profile?: Profile) {
     setId(profile?.id ?? randomUUID())
     setLanguage(profile?.language ?? '')
     setText(profile?.text ?? '')
-    sidebarStateModifier.openSidebar(profile ? profile.language : 'New Profile')
+    setTitle(profile ? profile.language : 'New Profile')
+    setNoDelete(!profile)
+    openSidebar()
   }
 
   return (
@@ -47,10 +51,14 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
       />
       <Sidebar
-        state={sidebarState}
-        onClose={() => { sidebarStateModifier.closeSidebar() }}
-        onSave={() => { sidebarStateModifier.execute(saveProfile({ id, language, text }), addProfile) }}
-        onDelete={() => { sidebarStateModifier.execute(deleteProfile(id), () => { removeProfile(id) }) }}
+        id={sidebarId}
+        title={title}
+        type="Profile"
+        onSave={() => saveProfile({ id, language, text })}
+        onAfterSave={addProfile}
+        onDelete={() => deleteProfile(id)}
+        noDelete={noDelete}
+        onAfterDelete={() => { removeProfile(id) }}
       >
         <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
         <Textarea style={{ flexGrow: 1 }} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
