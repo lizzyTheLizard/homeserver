@@ -2,6 +2,8 @@ import { ReactNode } from 'react'
 import { isBackendError } from './BackendError'
 import { logger } from '../logger'
 import { Temporal } from '@js-temporal/polyfill'
+import { nontransactional } from '../_external/db/access'
+import { logEvent } from '../_data/Event'
 
 export async function serverPageFunction(name: string, fn: () => Promise<ReactNode> | ReactNode): Promise<ReactNode> {
   const start = Temporal.Now.instant().epochMilliseconds
@@ -10,7 +12,7 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
     const time = Temporal.Now.instant().epochMilliseconds - start
     logger.debug(`Rendered page '${name}' in ${time.toString()} ms successfully`)
     return result
-  }).catch((error: unknown) => {
+  }).catch(async (error: unknown) => {
     const time = Temporal.Now.instant().epochMilliseconds - start
     if (isDynamicServerUsage(error)) throw error
     if (isBackendError(error)) {
@@ -19,10 +21,14 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
       throw error
     }
     const code = httpAccessResponseCode(error)
-    if (code === undefined) logger.error(`Unknown error while rendering page '${name}' in ${time.toString()} ms:`, error)
-    else if (code === 401) logger.warn(`Unauthorized while rendering page '${name}' in ${time.toString()} ms`)
-    else if (code === 403) logger.warn(`Forbidden while rendering page '${name}' in ${time.toString()} ms`)
-    else if (code === 404) logger.warn(`Not Found while rendering page '${name}' in ${time.toString()} ms`)
+    if (code === undefined) {
+      logger.error(`Unknown error while rendering page '${name}' in ${time.toString()} ms:`, error)
+      await nontransactional(c => logEvent(c, 'ERROR', `Unknown error while rendering page '${name}': ${String(error)}`))
+    }
+    else {
+      logger.warn(`HTTP ${code.toString()} error while rendering page '${name}' in ${time.toString()} ms:`, error)
+      await nontransactional(c => logEvent(c, 'WARN', `HTTP ${code.toString()} error while rendering page '${name}' in ${time.toString()} ms: ${String(error)}`))
+    }
     throw error
   })
 }

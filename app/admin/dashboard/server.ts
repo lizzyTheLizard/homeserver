@@ -7,6 +7,7 @@ import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
 import { get24HoursAgo, get30DaysAgo } from '@/app/cash/_helper/Dates'
 import { Temporal } from '@js-temporal/polyfill'
+import { Event, findRecentEvents } from '@/app/shared/_data/Event'
 
 const DB_CONSOLE_URL_TEMPLATE = 'https://console.scaleway.com/serverless-db/fr-par/databases/{id}/overview'
 const ENTRA_PORTAL_URL_TEMPLATE = 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/{clientId}/isMSAApp~/false'
@@ -78,6 +79,11 @@ function formatUptime(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
   const s = Math.floor(seconds % 60).toString().padStart(2, '0')
   return `${h}h ${m}m ${s}s`
+}
+
+export async function loadEvents(): Promise<Event[]> {
+  await getAuthenticatedUserSession('admin')
+  return nontransactional(c => findRecentEvents(c))
 }
 
 export async function loadMetricsInfo(): Promise<LineItem[]> {

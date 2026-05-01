@@ -1,6 +1,6 @@
 import { DashboardCard } from '../_components/DashboardCard'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { loadBuildInfo, loadConfigInfo, loadMetricsInfo, loadRunInfo } from './server'
+import { loadBuildInfo, loadConfigInfo, loadEvents, loadMetricsInfo, loadRunInfo } from './server'
 import { EventsCard } from './_components/EventsCard'
 import styles from './Dashboard.module.css'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
@@ -11,11 +11,12 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const [buildInfo, runInfo, configInfo, metricsInfo] = await Promise.all([
+    const [buildInfo, runInfo, configInfo, metricsInfo, events] = await Promise.all([
       loadBuildInfo(),
       loadRunInfo(),
       loadConfigInfo(),
       loadMetricsInfo(),
+      loadEvents(),
     ])
 
     return (
@@ -29,7 +30,7 @@ export default async function Page() {
           <DashboardCard header="Config" url="/admin/config" items={configInfo} />
           <DashboardCard header="Metrics" url="/admin/metrics" items={metricsInfo} />
         </div>
-        <EventsCard />
+        <EventsCard events={events} />
       </main>
     )
   })

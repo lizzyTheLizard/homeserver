@@ -14,6 +14,7 @@ import { findOldestTransaction } from '@/app/cash/_data/Transaction'
 import { lastDay, Period, toString } from '@/app/cash/_helper/Period'
 import { from, first, last, compare, MonthlyPeriod, next } from '@/app/cash/_helper/MonthlyPeriod'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 import { getTotalForAccounts } from '@/app/cash/_helper/AccountTotal'
 
 export interface ReportsData {
@@ -46,6 +47,7 @@ export async function reopen(period: Period, projectId: string): ActionResponse<
     const accountsToRecalculate = deleteClosing.map(c => [c.capital_account_id, c.profit_account_id]).flat()
     await recalculateTransactions(client, user.email, projectId, Temporal.PlainDate.from(firstClosingDate), accountsToRecalculate)
     logger.info(`Reopened period ${toString(firstPeriodToReopen)} to ${toString(period)} for project ${projectId} by user ${user.email}`)
+    await logEvent(client, 'INFO', `Reopened period ${toString(period)}`)
   }))
 }
 
@@ -66,6 +68,7 @@ export async function close(period: Period, project_id: string, profit_account_i
     } while (compare(periodToClose, lastPeriodToClose) <= 0)
     const fromDate = Temporal.PlainDate.from(lastDay(firstPeriodToClose))
     await recalculateTransactions(client, user.email, project_id, fromDate, [profit_account_id, capital_account_id])
+    await logEvent(client, 'INFO', `Closed period ${toString(period)}`)
   }))
 }
 

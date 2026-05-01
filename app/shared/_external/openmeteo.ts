@@ -1,4 +1,6 @@
+import { logEvent } from '../_data/Event'
 import { logger } from '../logger'
+import { nontransactional } from './db/access'
 
 export interface OpenMeteoWeather {
   temp: number
@@ -23,7 +25,8 @@ export async function fetchWeather(location: string): Promise<OpenMeteoWeather |
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
     const res = await fetch(url, { cache: 'no-store' })
     if (!res.ok) {
-      logger.error(`Weather API returned ${String(res.status)} ${res.statusText}`)
+      logger.warn(`Weather API returned ${String(res.status)} ${res.statusText}`)
+      await nontransactional(c => logEvent(c, 'WARN', `Weather API error: ${String(res.status)} ${res.statusText}`))
       return undefined
     }
 
@@ -43,7 +46,8 @@ export async function fetchWeather(location: string): Promise<OpenMeteoWeather |
     return data
   }
   catch (e) {
-    logger.error('Failed to fetch weather data', e)
+    logger.warn('Failed to fetch weather data', e)
+    await nontransactional(c => logEvent(c, 'WARN', `Failed to fetch weather data: ${String(e)}`))
     return undefined
   }
 }

@@ -25,19 +25,47 @@
   text-decoration: underline;
 }
 
-.eventsTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
 }
 
-.eventsTable th {
-  text-align: left;
-  padding: 0.4rem 0.75rem;
-  border-bottom: 2px solid var(--default-border-color);
+.badgeINFO {
+  background: rgba(0, 0, 220, 0.08);
+  color: rgba(0, 0, 150, 1);
+}
+
+.badgeWARN {
+  background: rgba(220, 120, 0, 0.1);
+  color: rgba(160, 80, 0, 1);
+}
+
+.badgeERROR {
+  background: rgba(220, 0, 0, 0.1);
+  color: rgba(150, 0, 0, 1);
+}
+
+.mobileItem {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--default-border-color);
+  background: white;
+}
+
+.mobileTimeBadge {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mobileTime {
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.mobileMessage {
+  font-size: 0.78rem;
   color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  margin-top: 0.2rem;
 }

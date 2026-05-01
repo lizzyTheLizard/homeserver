@@ -15,6 +15,7 @@ import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTr
 import { AccountTransaction, findAllAccountTransactionsInPeriod, findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 import { Temporal } from '@js-temporal/polyfill'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export interface AccountJournalData {
   account: Account
@@ -70,6 +71,7 @@ export async function deleteTransaction(id: string): ActionResponse<void> {
     const date = Temporal.PlainDate.from(existingTransaction.date)
     await recalculateTransactions(client, user.email, existingTransaction.project_id, date, [existingTransaction.credit_account_id, existingTransaction.debit_account_id])
     logger.info(`Deleted transaction with id ${id} for user ${user.email}`)
+    await logEvent(client, 'INFO', `Deleted transaction ${existingTransaction.description}`)
   }))
 }
 
@@ -87,6 +89,7 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
       const date = Temporal.PlainDate.from(min(input.date, existingTransaction.date))
       await recalculateTransactions(client, user.email, input.project_id, date, [input.credit_account_id, input.debit_account_id, existingTransaction.credit_account_id, existingTransaction.debit_account_id])
       logger.info(`Modified transaction with id ${input.id} for user ${user.email}`)
+      await logEvent(client, 'INFO', `Modified transaction ${input.description}`)
       return result
     }
     else {
@@ -96,6 +99,7 @@ export async function saveTransaction(input: TransactionInput): ActionResponse<T
       const date = Temporal.PlainDate.from(input.date)
       await recalculateTransactions(client, user.email, input.project_id, date, [input.credit_account_id, input.debit_account_id])
       logger.info(`Created transaction with id ${input.id} for user ${user.email}`)
+      await logEvent(client, 'INFO', `Created transaction ${input.description}`)
       return result
     }
   }))
