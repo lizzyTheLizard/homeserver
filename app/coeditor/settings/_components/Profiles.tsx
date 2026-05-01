@@ -57,7 +57,7 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
         onSave={() => saveProfile({ id, language, text })}
         onAfterSave={addProfile}
         onDelete={() => deleteProfile(id)}
-        setNoDelete={noDelete}
+        noDelete={noDelete}
         onAfterDelete={() => { removeProfile(id) }}
       >
         <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
