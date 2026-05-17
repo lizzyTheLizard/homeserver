@@ -6,9 +6,11 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { lastDay, Period, startDate, todayOrInPeriod } from '@/app/cash/_helper/Period'
+import { lastDay, Period, startDate, todayOrInPeriod, toUrlString } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
-import { useMemo, useState } from 'react'
+import { ReactNode, useMemo, useState } from 'react'
+import { Currency } from '@/app/shared/_components/Currency'
+import { AccountBadge } from '@/app/cash/_components/AccountBadge'
 import { deleteTransaction, saveTransaction } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
@@ -16,6 +18,7 @@ import { Select } from '@/app/shared/_components/form/Select'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
+import { DateTime } from '@/app/shared/_components/DateTime'
 
 export interface JournalProps {
   accounts: Account[]
@@ -56,15 +59,38 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
     openSidebar()
   }
 
+  function renderMobile(item: Transaction): ReactNode {
+    const creditAccount = accounts.find(a => a.id === item.credit_account_id)
+    const debitAccount = accounts.find(a => a.id === item.debit_account_id)
+    return (
+      <div key={item.id} className={style.mobileItem} onClick={() => { showTransaction(item) }}>
+        <div className={style.mobileRow}>
+          <span className={style.mobileDesc}>{item.description}</span>
+          <Currency amount={item.amount} />
+        </div>
+        <div className={style.mobileMeta}>
+          <span className={style.mobileAccounts}>
+            {creditAccount && <AccountBadge type={creditAccount.type} name={creditAccount.name} link={`/cash/${creditAccount.project_id}/${toUrlString(period)}/journal?accountId=${creditAccount.id}`} />}
+            <span className={style.mobileArrow}>→</span>
+            {debitAccount && <AccountBadge type={debitAccount.type} name={debitAccount.name} link={`/cash/${debitAccount.project_id}/${toUrlString(period)}/journal?accountId=${debitAccount.id}`} />}
+          </span>
+          <span><DateTime date={item.date} /></span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
-      <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <DataTable
         columns={columns}
         data={transactions}
         initialSortingOrder={[{ key: 'date', direction: 'DESC' }]}
+        searchLabel="Search transactions…"
         onRowClick={(transaction) => { showTransaction(transaction) }}
+        renderMobile={renderMobile}
       />
+      <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}

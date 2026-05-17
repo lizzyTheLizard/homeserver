@@ -8,7 +8,7 @@ const meta = {
   component: DataTable,
   tags: ['autodocs'],
   args: {
-    columns: [textColumn('row1', { header: 'Header 1', filter: false, sort: false }), textColumn('row2', { header: 'Header 2', filter: false, sort: false })],
+    columns: [textColumn('row1', { header: 'Header 1', sort: false }), textColumn('row2', { header: 'Header 2', sort: false })],
     data: [
       { id: '1', row1: 'Row 1, Cell 1', row2: 'Row 1, Cell 2' },
       { id: '2', row1: 'Row 2, Cell 1', row2: 'Row 2, Cell 2' },
@@ -47,16 +47,16 @@ type Complicated = Meta<typeof DataTable<{ id: string, text: string, select: Com
 export const Sorting: StoryObj<Complicated> = {
   args: {
     columns: [
-      textColumn('text', { header: 'Text', filter: false }),
-      enumColumn('select', ['A1', 'A2', 'A3'], { header: 'Select', filter: false }),
-      dateColumn('date', { header: 'Date', filter: false }),
-      boolColumn('bool', { header: 'Boolean', filter: false }),
+      textColumn('text', { header: 'Text' }),
+      enumColumn('select', ['A1', 'A2', 'A3'], { header: 'Select' }),
+      dateColumn('date', { header: 'Date' }),
+      boolColumn('bool', { header: 'Boolean' }),
     ],
     data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }), bool: i % 2 === 0 })),
   },
 }
 
-export const Filtering: StoryObj<Complicated> = {
+export const Search: StoryObj<Complicated> = {
   args: {
     columns: [
       textColumn('text', { header: 'Text' }),
@@ -65,5 +65,6 @@ export const Filtering: StoryObj<Complicated> = {
       boolColumn('bool', { header: 'Boolean' }),
     ],
     data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }), bool: i % 2 === 0 })),
+    searchLabel: 'Search…',
   },
 }

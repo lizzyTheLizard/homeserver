@@ -5,7 +5,7 @@ import style from './DataTableRow.module.css'
 export interface DataTableRowProps<DataType> {
   row: DataType
   onRowClick?: (item: DataType) => void
-  columns: ColumnDefinition<unknown, unknown>[]
+  columns: ColumnDefinition<unknown>[]
   isActive?: boolean
 }
 

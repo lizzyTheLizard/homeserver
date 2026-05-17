@@ -5,18 +5,13 @@ export interface SortingOrder {
   direction: 'ASC' | 'DESC'
 }
 
-export interface Filtering {
-  key: string
-  value: unknown
-}
-
-export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], filtering: Filtering[], columns: ColumnDefinition<unknown, unknown>[]): Data[] {
+export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], searchTerm: string, columns: ColumnDefinition<unknown>[]): Data[] {
   let result = [...data]
-  filtering.forEach((filter) => {
-    const filterDef = columns.find(c => c.key === filter.key)?.filter
-    if (!filterDef) return
-    result = result.filter(row => filterDef.function(row[filter.key as keyof Data], filter.value as never))
-  })
+  if (searchTerm) {
+    result = result.filter(row =>
+      columns.some(col => col.search(row[col.key as keyof Data], searchTerm)),
+    )
+  }
   sortingOrder.forEach((sorting) => {
     const sort = columns.find(c => c.key === sorting.key)?.sort
     if (!sort) return

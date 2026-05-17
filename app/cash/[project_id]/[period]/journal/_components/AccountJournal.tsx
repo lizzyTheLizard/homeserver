@@ -5,7 +5,7 @@ import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { lastDay, Period, startDate, todayOrInPeriod } from '@/app/cash/_helper/Period'
+import { lastDay, Period, startDate, todayOrInPeriod, toUrlString } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
 import { deleteTransaction, saveTransaction } from '../server'
 import { Input } from '@/app/shared/_components/form/Input'
@@ -16,7 +16,8 @@ import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
 import { useRouter } from 'next/navigation'
 import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
 import { Currency } from '@/app/shared/_components/Currency'
-import { useMemo, useState } from 'react'
+import { AccountBadge } from '@/app/cash/_components/AccountBadge'
+import { ReactNode, useMemo, useState } from 'react'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
 import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
@@ -100,14 +101,47 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
     return saveTransaction(transaction)
   }
 
+  function renderMobile(item: AccountTransaction | OpeningBalanceTransaction): ReactNode {
+    if (!('amount' in item)) {
+      return (
+        <div key={item.id} className={style.mobileOpeningBalance}>
+          <span>{item.description}</span>
+          <span>{totalCell(item.total_balance)}</span>
+        </div>
+      )
+    }
+    const otherAccount = accounts.find(a => a.id === item.other_account_id)
+    return (
+      <div key={item.id} className={style.mobileItem} onClick={() => { showTransaction(item) }}>
+        <div className={style.mobileRow}>
+          <span className={style.mobileDesc}>{item.description ?? '—'}</span>
+          {amountCell(item.amount)}
+        </div>
+        <div className={style.mobileMeta}>
+          <span className={style.mobileAccounts}>
+            {otherAccount && <AccountBadge type={otherAccount.type} name={otherAccount.name} link={`/cash/${otherAccount.project_id}/${toUrlString(period)}/journal?accountId=${otherAccount.id}`} />}
+            <span className={style.mobileDot}>•</span>
+            <span>{item.date}</span>
+          </span>
+          <span className={style.mobileTotal}>
+            {'Total '}
+            {totalCell(item.total_balance)}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
-      <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <DataTable
         columns={columns}
         data={transactions}
+        searchLabel="Search transactions…"
         onRowClick={(transaction) => { showTransaction(transaction) }}
+        renderMobile={renderMobile}
       />
+      <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
