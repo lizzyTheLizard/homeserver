@@ -1,28 +1,18 @@
 'use client'
 import { Button, ButtonProps } from './form/Button'
-import { createPortal } from 'react-dom'
-import style from './ActionTitle.module.css'
-import { useIsClient } from '../_helper/useIsClient'
+import { useActionTitle } from './ActionTitleHelpers'
 
 export function ActionButton({ children, ...props }: ButtonProps) {
-  const isClient = useIsClient()
+  const renderInActionTitle = useActionTitle()
 
   function onClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation()
     props.onClick?.(e)
   }
 
-  const content = (
+  return renderInActionTitle(
     <Button {...props} onClick={onClick}>
       {children}
     </Button>
   )
-
-  if (!isClient) return null
-  if (typeof document === 'undefined')
-    return content
-  const actionTitleContainer = document.getElementsByClassName(style.title)
-  if (actionTitleContainer.length === 0)
-    return content
-  return createPortal(content, actionTitleContainer[0])
 }

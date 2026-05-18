@@ -1,9 +1,7 @@
 'use client'
-import { createPortal } from 'react-dom'
-import { useIsClient } from '../../_helper/useIsClient'
-import actionTitleStyle from '../ActionTitle.module.css'
 import style from './SearchBar.module.css'
 import { Input } from '../form/Input'
+import { useActionTitle } from '../ActionTitleHelpers'
 
 export interface SearchBarProps {
   label: string
@@ -12,9 +10,9 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({ label, value, onChange }: SearchBarProps) {
-  const isClient = useIsClient()
+  const renderInActionTitle = useActionTitle()
 
-  const content = (
+  return renderInActionTitle(
     <Input
       type="search"
       className={style.searchInput}
@@ -23,10 +21,4 @@ export function SearchBar({ label, value, onChange }: SearchBarProps) {
       onChange={(e) => { onChange(e.target.value) }}
     />
   )
-
-  if (!isClient) return null
-  if (typeof document === 'undefined') return content
-  const actionTitleContainer = document.getElementsByClassName(actionTitleStyle.title)
-  if (actionTitleContainer.length === 0) return content
-  return createPortal(content, actionTitleContainer[0])
 }
