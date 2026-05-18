@@ -21,6 +21,7 @@ import { ReactNode, useMemo, useState } from 'react'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
 import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 
 export interface AccountJournalProps {
   account: Account
@@ -141,6 +142,7 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
         onRowClick={(transaction) => { showTransaction(transaction) }}
         renderMobile={renderMobile}
       />
+      <PeriodPicker period={period} project_id={project_id} />
       <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <Sidebar
         id={sidebarId}

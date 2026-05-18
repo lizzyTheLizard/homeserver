@@ -8,8 +8,8 @@ export default function Loading() {
     <main>
       <ActionTitle>
         <h1>Monthly Closing</h1>
-        <PeriodPicker period={all} />
       </ActionTitle>
+      <PeriodPicker period={all} />
       <LoadingSpinner />
     </main>
   )

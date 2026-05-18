@@ -19,6 +19,7 @@ import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
 import { DateTime } from '@/app/shared/_components/DateTime'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 
 export interface JournalProps {
   accounts: Account[]
@@ -90,6 +91,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
         onRowClick={(transaction) => { showTransaction(transaction) }}
         renderMobile={renderMobile}
       />
+      <PeriodPicker period={period} project_id={project_id} />
       <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
       <Sidebar
         id={sidebarId}

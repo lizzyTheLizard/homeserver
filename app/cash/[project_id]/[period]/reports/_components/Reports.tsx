@@ -11,6 +11,7 @@ import { close, reopen } from '../server'
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import { ReportCard } from './ReportCard'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 
 export interface ReportsProps {
   project_id: string
@@ -41,6 +42,7 @@ export function Reports({ accounts, project_id, period, latestClosing, beforeTra
 
   return (
     <>
+      <PeriodPicker period={period} project_id={project_id} />
       {latestClosing?.date && latestClosing.date >= lastDay(period)
         ? (<ActionButton onClick={(e) => { showReopen(); e.stopPropagation() }}>Reopen</ActionButton>)
         : (<ActionButton onClick={(e) => { showClosing(); e.stopPropagation() }}>Close</ActionButton>)}
