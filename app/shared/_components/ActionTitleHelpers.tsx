@@ -17,7 +17,7 @@ export function useActionTitle(): (content: ReactNode) => ReactNode {
   )
 
   return (content: ReactNode) => {
-    if (!container) return null
+    if (!container) return content
     return createPortal(content, container)
   }
 }
