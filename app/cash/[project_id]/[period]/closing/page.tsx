@@ -31,8 +31,8 @@ export default async function Page({ params }: ClosingPageProps) {
       <main>
         <ActionTitle>
           <h1>Monthly Closing</h1>
-          <PeriodPicker period={period} project_id={projectId} />
         </ActionTitle>
+        <PeriodPicker period={period} project_id={projectId} />
         <ActionButton disabled variant="primary">Continue</ActionButton>
         <div>This period is not a valid monthly period.</div>
       </main>
@@ -45,8 +45,8 @@ export default async function Page({ params }: ClosingPageProps) {
           <main>
             <ActionTitle>
               <h1>Monthly Closing</h1>
-              <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <PeriodPicker period={period} project_id={projectId} />
             <ActionButton disabled variant="primary">Continue</ActionButton>
             <div>This period is already closed.</div>
           </main>
@@ -56,8 +56,8 @@ export default async function Page({ params }: ClosingPageProps) {
           <main>
             <ActionTitle>
               <h1>Monthly Closing - Init</h1>
-              <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <PeriodPicker period={period} project_id={projectId} />
             <MonthlyInit period={period} project_id={projectId} {...pageData} />
           </main>
         )
@@ -66,8 +66,8 @@ export default async function Page({ params }: ClosingPageProps) {
           <main>
             <ActionTitle>
               <h1>Monthly Closing - Neon Import</h1>
-              <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <PeriodPicker period={period} project_id={projectId} />
             <MonthlyNeon period={period} project_id={projectId} {...pageData} />
           </main>
         )
@@ -76,8 +76,8 @@ export default async function Page({ params }: ClosingPageProps) {
           <main>
             <ActionTitle>
               <h1>Monthly Closing - Shared</h1>
-              <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <PeriodPicker period={period} project_id={projectId} />
             <MonthlyShared period={period} project_id={projectId} {...pageData} />
           </main>
         )
@@ -86,8 +86,8 @@ export default async function Page({ params }: ClosingPageProps) {
           <main>
             <ActionTitle>
               <h1>Monthly Closing</h1>
-              <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <PeriodPicker period={period} project_id={projectId} />
             <MonthlyFinished period={period} {...pageData} />
           </main>
         )
@@ -96,8 +96,8 @@ export default async function Page({ params }: ClosingPageProps) {
           <main>
             <ActionTitle>
               <h1>{`Monthly Closing - ${pageData.account.name}`}</h1>
-              <PeriodPicker period={period} project_id={projectId} />
             </ActionTitle>
+            <PeriodPicker period={period} project_id={projectId} />
             <MonthlyCheckAccount project_id={projectId} period={period} {...pageData} />
           </main>
         )

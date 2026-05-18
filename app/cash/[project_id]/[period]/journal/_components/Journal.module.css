@@ -6,6 +6,71 @@
     width: 13rem;
 }
 
+.mobileItem {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid rgba(230,230,230,1);
+  cursor: pointer;
+  background: white;
+}
+
+.mobileItem:hover {
+  background: var(--default-hover-color);
+}
+
+.mobileRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.mobileDesc {
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobileMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.65);
+}
+
+.mobileAccounts {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mobileArrow {
+  color: rgba(0,0,0,0.4);
+}
+
+.mobileDot {
+  color: rgba(0,0,0,0.4);
+}
+
+.mobileTotal {
+  font-variant-numeric: tabular-nums;
+  color: rgba(0,0,0,0.5);
+}
+
+.mobileOpeningBalance {
+  padding: 0.7rem 1rem;
+  background: rgb(250,250,250);
+  font-size: 0.85rem;
+  color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: space-between;
+  font-style: italic;
+}
+
 @media print {
     .amount {
         width: 7rem;

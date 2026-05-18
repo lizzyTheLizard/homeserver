@@ -1,103 +1,54 @@
 import { CSSProperties, ReactNode } from 'react'
 import { DateTime } from '../DateTime'
 import { Checkbox } from '../../_components/form/Checkbox'
-import { Input } from '../../_components/form/Input'
-import { Select } from '../../_components/form/Select'
-import { ColumnDefinition, ColumnFilter } from './DataTable'
+import { ColumnDefinition } from './DataTable'
 import style from './DataTableColumnBuilder.module.css'
 
 export interface Options<FieldType> {
   header?: string
-  filter?: boolean
   sort?: boolean
   cell?: (value: FieldType, id: string) => ReactNode
   style?: CSSProperties
   className?: string
 }
 
-export function numberColumn(key: string, options?: Options<number>): ColumnDefinition<number, number> {
-  const filter: ColumnFilter<number, number> = {
-    component: (v, sv) => (
-      <Input
-        className={style.filter}
-        label="includes"
-        value={v?.toString()}
-        onChange={(e) => { sv(parseFloat(e.target.value)) }}
-        small={true}
-      />
-    ),
-    function: (dataValue, filterValue) => dataValue === filterValue,
-  }
+export function numberColumn(key: string, options?: Options<number>): ColumnDefinition<number> {
   return {
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: number) => value),
     sort: options?.sort === false ? undefined : (a: number, b: number) => a - b,
-    filter: options?.filter === false ? undefined : filter,
+    search: (value: number, searchTerm: string) => value.toString().startsWith(searchTerm),
     style: options?.style,
     className: options?.className,
   }
 }
 
-export function textColumn(key: string, options?: Options<string>): ColumnDefinition<string, string> {
-  const filter: ColumnFilter<string, string> = {
-    component: (v, sv) => (
-      <Input
-        className={style.filter}
-        label="includes"
-        value={v}
-        onChange={(e) => { sv(e.target.value) }}
-        small={true}
-      />
-    ),
-    function: (dataValue, filterValue) => dataValue.includes(filterValue),
-  }
+export function textColumn(key: string, options?: Options<string>): ColumnDefinition<string> {
   return {
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: string) => value),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
-    filter: options?.filter === false ? undefined : filter,
+    search: (value: string, searchTerm: string) => value.toLowerCase().includes(searchTerm.toLowerCase()),
     style: options?.style,
     className: options?.className,
   }
 }
 
-export function dateColumn(key: string, options?: Options<string>): ColumnDefinition<string, { from?: string, to?: string }> {
-  const filter: ColumnFilter<string, { from?: string, to?: string }> = {
-    component: (v, sv) => (
-      <div className={style.dateFilters}>
-        <Input label="From" type="date" value={v?.from} onChange={(e) => { sv({ from: e.target.value, to: v?.to }) }} small={true} />
-        <Input label="To" type="date" value={v?.to} onChange={(e) => { sv({ from: v?.from, to: e.target.value }) }} small={true} />
-      </div>
-    ),
-    function: (dataValue, filterValue) => {
-      if (filterValue.from && filterValue.from > dataValue) return false
-      if (filterValue.to && filterValue.to < dataValue) return false
-      return true
-    },
-  }
+export function dateColumn(key: string, options?: Options<string>): ColumnDefinition<string> {
   return {
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: string) => <DateTime date={value} oneLine></DateTime>),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
-    filter: options?.filter === false ? undefined : filter,
+    search: (value: string, searchTerm: string) => value.startsWith(searchTerm),
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),
   }
 }
 
-export function boolColumn(key: string, options?: Options<boolean>): ColumnDefinition<boolean, boolean> {
-  const filter: ColumnFilter<boolean, boolean> = {
-    component: (v, sv) => (
-      <Select className={style.filter} emptyLabel="No Filter" value={v === undefined ? '' : v ? 'true' : 'false'} onChange={(e) => { sv(e.target.value == '' ? undefined : e.target.value === 'true') }} small={true}>
-        <option value="true">True</option>
-        <option value="false">False</option>
-      </Select>
-    ),
-    function: (dataValue, filterValue) => dataValue === filterValue,
-  }
+export function boolColumn(key: string, options?: Options<boolean>): ColumnDefinition<boolean> {
   return {
     key,
     header: options?.header ?? key,
@@ -105,29 +56,19 @@ export function boolColumn(key: string, options?: Options<boolean>): ColumnDefin
       ? <Checkbox checked={true} readOnly={true} small={true} center={true} />
       : <Checkbox checked={false} readOnly={true} small={true} center={true} />),
     sort: options?.sort === false ? undefined : (a: boolean, b: boolean) => (a === b ? 0 : a ? -1 : 1),
-    filter: options?.filter === false ? undefined : filter,
+    search: () => false,
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),
   }
 }
 
-export function enumColumn(key: string, values: string[], options?: Options<string>): ColumnDefinition<string, string> {
-  const filter: ColumnFilter<string, string> = {
-    component: (v, sv) => (
-      <Select className={style.filter} emptyLabel="No Filter" value={v} onChange={(e) => { sv(e.target.value === '' ? undefined : e.target.value) }} small={true}>
-        {values.map(val => (
-          <option key={val} value={val}>{val}</option>
-        ))}
-      </Select>
-    ),
-    function: (dataValue, filterValue) => dataValue === filterValue,
-  }
+export function enumColumn(key: string, _values: string[], options?: Options<string>): ColumnDefinition<string> {
   return {
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: string) => value),
     sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
-    filter: options?.filter === false ? undefined : filter,
+    search: (value: string, searchTerm: string) => value.toLowerCase().startsWith(searchTerm.toLowerCase()),
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),
   }

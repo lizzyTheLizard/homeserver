@@ -24,6 +24,7 @@ export function History({ discussions = [] }: HistoryProps) {
         columns={columns}
         data={discussions}
         initialSortingOrder={[{ key: 'updated_at', direction: 'DESC' }]}
+        searchLabel="Search history…"
         onRowClick={(discussion) => { router.push(`/coeditor/editor?id=${discussion.id}`) }}
       />
     </>

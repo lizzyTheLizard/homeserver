@@ -28,7 +28,7 @@
         background: white;
         padding: var(--gap-small) var(--gap);
         border-top: 1px solid var(--default-border-color);
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
     }
 
     .title h1 {

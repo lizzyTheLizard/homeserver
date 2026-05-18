@@ -1,0 +1,32 @@
+.mobileItem {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(230,230,230,1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  background: white;
+}
+
+.mobileItem:hover {
+  background: var(--default-hover-color);
+}
+
+.mobileContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobileItemName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobileType {
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
+  color: rgba(0,0,0,0.6);
+}

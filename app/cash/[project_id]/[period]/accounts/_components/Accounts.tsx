@@ -3,7 +3,7 @@ import { Account } from '@/app/cash/_data/Account'
 import { ACCOUNT_TYPES, AccountType } from '@/app/cash/_data/AccountType'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { v4 as randomUUID } from 'uuid'
-import { boolColumn, enumColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { deleteAccount, saveAccount } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
@@ -11,8 +11,11 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Checkbox } from '@/app/shared/_components/form/Checkbox'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { AccountBadge } from '@/app/cash/_components/AccountBadge'
+import style from './Accounts.module.css'
+import { AccountBadgeIconColor, AccountBadgeIcon } from '@/app/cash/_components/AccountBadgeIcons'
 
 export interface AccountsProps {
   accounts: Account[]
@@ -21,7 +24,13 @@ export interface AccountsProps {
 
 const columns = [
   textColumn('name', { header: 'Name' }),
-  enumColumn('type', ACCOUNT_TYPES, { header: 'Type' }),
+  {
+    key: 'type',
+    header: 'Type',
+    cell: (value: AccountType) => <AccountBadge type={value} name={value} />,
+    sort: (a: AccountType, b: AccountType) => a.localeCompare(b),
+    search: (value: AccountType, search: string) => value.toLowerCase().startsWith(search.toLowerCase()),
+  },
   boolColumn('archived', { header: 'Archived' }),
 ]
 
@@ -45,6 +54,23 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
     openSidebar()
   }
 
+  function renderMobile(item: Account): ReactNode {
+    return (
+      <div key={item.id} className={style.mobileItem} style={{ opacity: item.archived ? 0.55 : undefined }} onClick={() => { showAccount(item) }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 16 16" fill={AccountBadgeIconColor[item.type]} style={{ flexShrink: 0 }}>
+          <path d={AccountBadgeIcon[item.type]} />
+        </svg>
+        <div className={style.mobileContent}>
+          <div className={style.mobileItemName} style={{ textDecoration: item.archived ? 'line-through' : undefined }}>{item.name}</div>
+          <div className={style.mobileType}>
+            {item.type}
+            {item.archived && <span> • archived</span>}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <ActionButton onClick={(e) => { showAccount(); e.stopPropagation() }}>Add Account</ActionButton>
@@ -52,7 +78,9 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         columns={columns}
         data={accounts}
         initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
+        searchLabel="Search accounts…"
         onRowClick={(account) => { showAccount(account) }}
+        renderMobile={renderMobile}
       />
       <Sidebar
         id={sidebarId}

@@ -3,7 +3,6 @@ import { Reports } from './_components/Reports'
 import { fromUrlString, toString } from '@/app/cash/_helper/Period'
 import { loadReports } from './server'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 
 export const metadata = {
   title: 'Cash - Reports',
@@ -25,7 +24,6 @@ export default async function Page({ params }: ReportsPageProps) {
       <main>
         <ActionTitle>
           <h1>{'Report ' + toString(period)}</h1>
-          <PeriodPicker period={period} project_id={projectId} />
         </ActionTitle>
         <Reports {...data} project_id={projectId} period={period} />
       </main>

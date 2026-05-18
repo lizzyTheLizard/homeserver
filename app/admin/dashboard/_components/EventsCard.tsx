@@ -12,7 +12,7 @@ interface Props {
 }
 
 const columns = [
-  dateColumn('time', { header: 'Time', filter: false, style: { width: '12rem' } }),
+  dateColumn('time', { header: 'Time', style: { width: '12rem' } }),
   enumColumn('level', ['INFO', 'WARN', 'ERROR'], { header: 'Level', style: { width: '6rem' }, cell: value => <span className={styles.badge + ' ' + styles['badge' + value]}>{value}</span> }),
   textColumn('message', { header: 'Message' }),
 ]

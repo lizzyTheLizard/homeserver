@@ -2,6 +2,7 @@
 import { Select } from '@/app/shared/_components/form/Select'
 import { Period, toUrlString } from '../_helper/Period'
 import { Temporal } from '@js-temporal/polyfill'
+import { useActionTitle } from '@/app/shared/_components/ActionTitleHelpers'
 
 export interface PeriodPickerProps {
   period: Period
@@ -13,6 +14,8 @@ const maxYear = Temporal.Now.plainDateISO().year
 const minYear = 2020
 
 export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPickerProps) {
+  const renderInActionTitle = useActionTitle()
+
   function defaultOnPeriodChange(p: Period) {
     const split = window.location.pathname.split('/')
     const s = window.location.search
@@ -39,7 +42,7 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
   const year = period.year?.toString() ?? ''
   const month = period.month?.toString().padStart(2, '0') ?? ''
 
-  return (
+  return renderInActionTitle(
     <>
       <Select id="year" onClick={(e) => { e.stopPropagation() }} label="Year" emptyLabel="All" value={year} onChange={(e) => { setYear(e.target.value) }}>
         {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map(y => (
@@ -61,6 +64,6 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
         <option value="11">November</option>
         <option value="12">December</option>
       </Select>
-    </>
+    </>,
   )
 }

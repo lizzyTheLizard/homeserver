@@ -15,10 +15,10 @@ import { useListState } from '@/app/shared/_helper/ListState'
 import { v4 as randomUUID } from 'uuid'
 
 const columns = [
-  numberColumn('position', { filter: false, header: '#', style: { width: '5%' } }),
-  textColumn('name', { filter: false, header: 'Name', style: { width: '25%' } }),
-  textColumn('url', { filter: false, header: 'URL', style: { width: '30%' } }),
-  textColumn('description', { filter: false, header: 'Description' }),
+  numberColumn('position', { header: '#', style: { width: '5%' } }),
+  textColumn('name', { header: 'Name', style: { width: '25%' } }),
+  textColumn('url', { header: 'URL', style: { width: '30%' } }),
+  textColumn('description', { header: 'Description' }),
 ]
 
 export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favorite[] }) {
@@ -62,7 +62,6 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
 
   return (
     <>
-      <ActionButton onClick={() => { showFavorite() }}>Add Favorite</ActionButton>
       <DataTable
         data={favorites}
         columns={columns}
@@ -70,8 +69,10 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
         activeId={id}
         renderMobile={renderMobile}
         initialSortingOrder={[{ key: 'position', direction: 'ASC' }]}
+        searchLabel="Search favorites…"
       >
       </DataTable>
+      <ActionButton onClick={() => { showFavorite() }}>Add Favorite</ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
