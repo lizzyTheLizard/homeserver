@@ -1,17 +1,23 @@
 'use client'
 import { createPortal } from 'react-dom'
-import { ReactNode } from 'react'
-import { useIsClient } from '../_helper/useIsClient'
+import { ReactNode, useSyncExternalStore } from 'react'
 import actionTitleStyle from './ActionTitle.module.css'
 
+const unsubscribe = () => undefined
+const subscribe = () => unsubscribe
+
 export function useActionTitle(): (content: ReactNode) => ReactNode {
-  const isClient = useIsClient()
+  const container = useSyncExternalStore(
+    subscribe,
+    () => {
+      const els = document.getElementsByClassName(actionTitleStyle.title)
+      return els.length > 0 ? els[0] : undefined
+    },
+    () => undefined,
+  )
 
   return (content: ReactNode) => {
-    if (!isClient) return null
-    if (typeof document === 'undefined') return content
-    const container = document.getElementsByClassName(actionTitleStyle.title)
-    if (container.length === 0) return content
-    return createPortal(content, container[0])
+    if (!container) return null
+    return createPortal(content, container)
   }
 }
