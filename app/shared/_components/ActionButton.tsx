@@ -13,6 +13,6 @@ export function ActionButton({ children, ...props }: ButtonProps) {
   return renderInActionTitle(
     <Button {...props} onClick={onClick}>
       {children}
-    </Button>
+    </Button>,
   )
 }

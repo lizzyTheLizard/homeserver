@@ -19,6 +19,6 @@ export function SearchBar({ label, value, onChange }: SearchBarProps) {
       label={label}
       value={value}
       onChange={(e) => { onChange(e.target.value) }}
-    />
+    />,
   )
 }

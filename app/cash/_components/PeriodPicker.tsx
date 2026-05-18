@@ -64,6 +64,6 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
         <option value="11">November</option>
         <option value="12">December</option>
       </Select>
-    </>
+    </>,
   )
 }
