@@ -48,7 +48,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/pg": "^8.20.0",
     "@types/pg-copy-streams": "^1.2.5",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/browser-playwright": "^4.1.6",
