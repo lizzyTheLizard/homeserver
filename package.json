@@ -21,7 +21,7 @@
     "@js-temporal/polyfill": "^0.5.1",
     "dotenv": "^17.4.2",
     "iron-session": "^8.0.4",
-    "next": "16.2.4",
+    "next": "16.2.6",
     "openai": "^6.38.0",
     "openid-client": "^6.8.4",
     "papaparse": "^5.5.3",
