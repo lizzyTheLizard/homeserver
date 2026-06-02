@@ -112,8 +112,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       chromatic:
-        specifier: ^17.0.0
-        version: 17.0.0
+        specifier: ^17.2.0
+        version: 17.2.0
       eslint:
         specifier: ^10.4.0
         version: 10.4.0
@@ -1909,8 +1909,8 @@ packages:
       '@chromatic-com/vitest':
         optional: true
 
-  chromatic@17.0.0:
-    resolution: {integrity: sha512-gYbIBg6IoqH9Ut+bVE5uTZmGzmv/aoHcFzAXaym08JZ7FkB3OSjxrq1xO/dhMPfMqpnwzycHZytYIp3N+IZr5w==}
+  chromatic@17.2.0:
+    resolution: {integrity: sha512-jxuFtNNMuxbVcM2oAAPsa1fDuygt5e1SVJpvTmvSPkVXFQGylFvApsbhDP9a94qI8QMJeUMmts4bXMqrBotWjg==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -2783,11 +2783,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.8.0:
-    resolution: {integrity: sha512-AcM7dV/5ul4EekoQ29Agm5vri8JNqRyj39o0qpX6vDF2GZrtutZl5RwgD1XnZjiTAfncsJhMI48QQH3sN87YNA==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.8.1:
@@ -4691,11 +4686,11 @@ snapshots:
 
   chromatic@16.10.0:
     dependencies:
-      semver: 7.8.0
+      semver: 7.8.1
 
-  chromatic@17.0.0:
+  chromatic@17.2.0:
     dependencies:
-      semver: 7.8.0
+      semver: 7.8.1
 
   client-only@0.0.1: {}
 
@@ -5609,8 +5604,6 @@ snapshots:
   scheduler@0.27.0: {}
 
   semver@6.3.1: {}
-
-  semver@7.8.0: {}
 
   semver@7.8.1: {}
 
