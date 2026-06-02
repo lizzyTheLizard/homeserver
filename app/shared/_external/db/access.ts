@@ -1,18 +1,11 @@
 import { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
-// global keeps the same pool promise across Next.js hot-reloads in dev mode.
-declare global {
-  var __dbPoolPromise: Promise<Pool> | undefined
-}
+var dbPoolPromise: Promise<Pool> | undefined
 
 function getPoolPromise(): Promise<Pool> {
-  global.__dbPoolPromise ??= setupPool()
-  return global.__dbPoolPromise
-}
-
-export async function initPool(): Promise<Pool> {
-  return getPoolPromise()
+  dbPoolPromise ??= setupPool()
+  return dbPoolPromise
 }
 
 /**
