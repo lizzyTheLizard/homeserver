@@ -1,7 +1,7 @@
 import { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
-var dbPoolPromise: Promise<Pool> | undefined
+let dbPoolPromise: Promise<Pool> | undefined
 
 function getPoolPromise(): Promise<Pool> {
   dbPoolPromise ??= setupPool()

@@ -14,7 +14,7 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
   1700: value => parseFloat(value), // NUMERIC
 }
 
-var phaseTimings: { connectionMs: number, migrationMs: number } | undefined = undefined
+let phaseTimings: { connectionMs: number, migrationMs: number } | undefined = undefined
 
 export function getDbPhaseTimings(): typeof phaseTimings {
   return phaseTimings
