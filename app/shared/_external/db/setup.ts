@@ -14,13 +14,10 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
   1700: value => parseFloat(value), // NUMERIC
 }
 
-// global keeps the same pool promise across Next.js hot-reloads in dev mode.
-declare global {
-  var _phaseTimings: { connectionMs: number, migrationMs: number } | undefined
-}
+let phaseTimings: { connectionMs: number, migrationMs: number } | undefined = undefined
 
-export function getDbPhaseTimings(): { connectionMs: number, migrationMs: number } | undefined {
-  return global._phaseTimings
+export function getDbPhaseTimings(): typeof phaseTimings {
+  return phaseTimings
 }
 
 /**
@@ -41,9 +38,9 @@ export async function setupPool(): Promise<Pool> {
     const migrateStart = Date.now()
     await migrateDatabase(pool)
     const migrationMs = Date.now() - migrateStart
+    phaseTimings = { connectionMs, migrationMs }
 
-    global._phaseTimings = { connectionMs, migrationMs }
-    logger.info('Database successfully connected and migrated')
+    logger.info('Database successfully connected in %dms and migrated in %dms', connectionMs, migrationMs)
     return pool
   }
   catch (error) {
