@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue *)",
+      "PowerShell(gh issue view 98 --json number,title,body,labels,comments)",
+      "Bash(command -v gh)",
+      "Read(//usr/local/bin/**)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)"
+    ]
+  }
+}
