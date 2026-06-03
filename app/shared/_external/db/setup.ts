@@ -40,7 +40,7 @@ export async function setupPool(): Promise<Pool> {
     const migrationMs = Date.now() - migrateStart
     phaseTimings = { connectionMs, migrationMs }
 
-    logger.info('Database successfully connected in %dms and migrated in %dms', connectionMs, migrationMs)
+    logger.info(`Database successfully connected in ${connectionMs}ms and migrated in ${migrationMs}ms`)
     return pool
   }
   catch (error) {

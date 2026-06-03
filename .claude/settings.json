@@ -6,7 +6,8 @@
       "Bash(command -v gh)",
       "Read(//usr/local/bin/**)",
       "Bash(git checkout *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(xargs grep -l *)"
     ]
   }
 }
