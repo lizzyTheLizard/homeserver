@@ -8,11 +8,20 @@ version: 0.1.0
 
 Guide the user from selecting a GitHub issue through implementation, commit, and PR — in a structured, checklist-driven flow.
 
+## Mode
+
+This skill uses plan mode to gate implementation.
+
+- **At the very start**, call `EnterPlanMode` before doing anything else.
+- Steps 0–3 (ongoing-check, issue selection, design check, clarifying questions) run inside plan mode.
+- **Step 4** ends plan mode: write the implementation plan to the plan file (path provided in the plan mode system message), then call `ExitPlanMode`. The user's approval of the plan is the gate between planning and coding. Do **not** ask the user via text whether the plan looks correct — the plan approval flow handles that.
+- Steps 5–8 (branch, implement, pre-commit checks, commit, PR) run after the user has approved the plan, outside plan mode.
+
 ## Workflow
 
 ### Step 0: Check if this is an ongoing implementation
 
-If the current branch is already in the form issue-#NUMBER-short-title-with-dashes, ask if you should continue with the implementation of this issue. If so, go directely to step 6
+If the current branch is already in the form issue-#NUMBER-short-title-with-dashes, ask if you should continue with the implementation of this issue. If so, go directly to step 6.
 
 ### Step 1: Select the issue
 
@@ -56,7 +65,7 @@ Stop asking once all acceptance criteria can be met without ambiguity.
 
 ### Step 4: Create an implementation plan
 
-Write a numbered implementation plan that the user must approve before any code is written. The plan must include:
+Write a numbered implementation plan to the plan file. The plan must include:
 
 1. **Branch name** — format: `issue-#NUMBER-short-title-with-dashes` (lowercase, no special characters)
 2. **Files to create or modify** — list each file and what changes are needed
@@ -65,9 +74,7 @@ Write a numbered implementation plan that the user must approve before any code 
 5. **Storybook stories** — for UI changes, list new or updated story files
 6. **Order of implementation** — a step-by-step sequence that avoids breaking intermediate states
 
-Present the plan and ask: "Does this plan look correct? Should I adjust anything before I start?"
-
-Do not write any code until the plan is approved.
+Once the plan is written to the plan file, call `ExitPlanMode`. Do not write any code until the user has approved the plan.
 
 ### Step 5: Create the branch and start implementing
 
@@ -114,43 +121,11 @@ Report the outcome of each check to the user. Only proceed to commit once all ch
 
 ### Step 7: Commit and push
 
-When the user asks to commit and push, create a commit with a short, punchy message that references the issue:
-
-```bash
-git add <relevant files>
-git commit -m "$(cat <<'EOF'
-<short imperative message> (#NUMBER)
-
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
-EOF
-)"
-git push -u origin HEAD
-```
-
-Message rules:
-- Imperative mood, present tense ("Add", "Fix", "Wire up" — not "Added" or "Adding")
-- Under 72 characters for the subject line
-- Reference the issue number in parentheses at the end: `(#NUMBER)`
+When the user asks to commit and push, follow the template in `commit-template.md` (in this skill folder).
 
 ### Step 8: Open a Pull Request
 
-When the user asks to create a PR, open one that auto-closes the issue on merge:
-
-```bash
-gh pr create --title "<short title> (#NUMBER)" --body "$(cat <<'EOF'
-## Summary
-
-<2–4 bullets describing what was done>
-
-Closes #NUMBER
-EOF
-)"
-```
-
-PR rules:
-- Title is short and clear, with the issue number in parentheses
-- Body uses `Closes #NUMBER` so GitHub auto-closes the issue on merge
-- Keep the body concise — the issue already contains the full context
+When the user asks to create a PR, follow the template in `pr-template.md` (in this skill folder).
 
 Return the PR URL to the user when done.
 

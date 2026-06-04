@@ -8,6 +8,15 @@ version: 0.1.0
 
 Guide the user from a rough idea to a well-structured GitHub issue, asking clarifying questions as needed before creating the issue.
 
+## Mode
+
+This skill always runs in edit mode — it does not require a planning phase.
+
+If plan mode is currently active when this skill is invoked:
+1. Write the single line "No planning phase — create-issue runs interactively in edit mode." to the plan file.
+2. Call `ExitPlanMode` immediately.
+3. Then proceed with Step 1 of the workflow below.
+
 ## Workflow
 
 ### Step 1: Get the initial idea
@@ -31,7 +40,7 @@ Stop asking questions once there is enough information to write a complete, unam
 
 ### Step 3: Draft the issue for review
 
-Present a draft to the user before creating the issue. Format it exactly as shown in the template below and ask the user to confirm or request changes.
+Present a draft to the user before creating the issue. Format it using `issue-template.md` (in this skill folder) and ask the user to confirm or request changes.
 
 ### Step 4: Create the issue
 
@@ -47,35 +56,6 @@ EOF
 Always use a HEREDOC to pass the body so that newlines and special characters are preserved correctly.
 
 Report the issue URL back to the user when done.
-
-## Issue Template
-
-```markdown
-## User Story
-
-<!-- 2–3 sentences. State who the user is, what they want to do, and why it matters. -->
-As a [role], I want to [action] so that [benefit].
-
-## Acceptance Criteria
-
-<!-- Bullet list. Each item is a testable condition that must be true for the issue to be considered done. -->
-- [ ] ...
-- [ ] ...
-- [ ] ...
-
-## Additional Information
-
-<!-- Include any of the following that apply; omit sections that are not relevant. -->
-
-### Technical Notes
-<!-- Architecture decisions, constraints, relevant files or components, dependencies. -->
-
-### UI / Design Requirements
-<!-- Describe screens, flows, or interactions required. Note if a design mockup is needed. -->
-
-### Out of Scope
-<!-- Explicitly state what this issue does NOT cover to prevent scope creep. -->
-```
 
 ## Guidelines
 

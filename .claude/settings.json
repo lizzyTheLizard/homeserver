@@ -2,12 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(gh issue *)",
-      "PowerShell(gh issue view 98 --json number,title,body,labels,comments)",
+      "PowerShell(gh issue *)",
       "Bash(command -v gh)",
       "Read(//usr/local/bin/**)",
       "Bash(git checkout *)",
       "Bash(git pull *)",
-      "Bash(xargs grep -l *)"
+      "Bash(xargs grep -l *)",
+      "Bash(Sort-Object *)",
+      "Edit(/.claude/skills/create-issue/**)",
+      "Edit(/.claude/skills/implement-issue/**)"
     ]
   }
 }
