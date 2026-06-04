@@ -22,7 +22,7 @@
     "dotenv": "^17.4.2",
     "iron-session": "^8.0.4",
     "next": "16.2.6",
-    "openai": "^6.41.0",
+    "openai": "^6.42.0",
     "openid-client": "^6.8.4",
     "papaparse": "^5.5.3",
     "pg": "^8.21.0",
