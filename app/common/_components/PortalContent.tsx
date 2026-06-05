@@ -85,7 +85,6 @@ export function PortalContent({ apps, weather, favorites }: PortalContentProps) 
                 </div>
               </div>
             )}
-            {favorites.length > 0 && weather && <div className={styles.bookmarksDivider} />}
             {weather && <WeatherBlock weather={weather} />}
           </div>
         </>
