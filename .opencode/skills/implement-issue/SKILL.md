@@ -1,7 +1,6 @@
 ---
 name: implement-issue
 description: Use this skill when the user wants to implement a GitHub issue. Guides the full flow from selecting an issue, gathering designs and information, creating an implementation plan, branching, working, and finally committing/pushing and opening a PR.
-version: 0.1.0
 ---
 
 # Implement GitHub Issue
@@ -12,9 +11,9 @@ Guide the user from selecting a GitHub issue through implementation, commit, and
 
 This skill uses plan mode to gate implementation.
 
-- **At the very start**, call `EnterPlanMode` before doing anything else.
+- **At the very start**, switch to plan mode (Tab key) before doing anything else.
 - Steps 0–3 (ongoing-check, issue selection, design check, clarifying questions) run inside plan mode.
-- **Step 4** ends plan mode: write the implementation plan to the plan file (path provided in the plan mode system message), then call `ExitPlanMode`. The user's approval of the plan is the gate between planning and coding. Do **not** ask the user via text whether the plan looks correct — the plan approval flow handles that.
+- **Step 4** ends plan mode: write the implementation plan to the plan file (path provided in the plan mode system message), then switch back to build mode (Tab key). The user's approval of the plan is the gate between planning and coding. Do **not** ask the user via text whether the plan looks correct — the plan approval flow handles that.
 - Steps 5–8 (branch, implement, pre-commit checks, commit, PR) run after the user has approved the plan, outside plan mode.
 
 ## Workflow
@@ -45,14 +44,14 @@ Read and summarise the issue for the user: title, user story, acceptance criteri
 
 Read the issue body and labels. If the issue involves UI changes, new screens, or visual components:
 
-- Ask the user: "This issue involves UI changes. Do you have a design ready? If so, please share it via Claude Designer."
+- Ask the user: "This issue involves UI changes. Do you have a design ready? If so, please share it."
 - If no design is available yet, pause and tell the user the issue cannot be fully planned without the design. Only continue once one is provided.
 
 If the issue is purely backend / data / configuration with no UI surface, skip this step.
 
 ### Step 3: Gather all information and ask clarifying questions
 
-Before writing the plan, make sure every question is answered. Ask **one question at a time** and wait for the answer. Cover only what is not already clear from the issue or design:
+Before writing the plan, make sure every question is answered. Ask questions. Cover only what is not already clear from the issue or design:
 
 - Are there related issues, dependencies, or blocked work?
 - Are there open questions in the issue comments that are not yet resolved?
@@ -74,7 +73,7 @@ Write a numbered implementation plan to the plan file. The plan must include:
 5. **Storybook stories** — for UI changes, list new or updated story files
 6. **Order of implementation** — a step-by-step sequence that avoids breaking intermediate states
 
-Once the plan is written to the plan file, call `ExitPlanMode`. Do not write any code until the user has approved the plan.
+Once the plan is written to the plan file, switch back to build mode (Tab key). Do not write any code until the user has approved the plan.
 
 ### Step 5: Create the branch and start implementing
 
@@ -100,22 +99,22 @@ Implement the plan step by step in the agreed order. After each logical chunk, b
 When finished the implementation, ask the user to check it and if you can commit. Do NOT commit without explicit agreement. Before you commit, run the following checks in order:
 
 1. **Lint:**
-   ```bash
-   pnpm lint
-   ```
-   Fix any lint errors before proceeding.
+    ```bash
+    pnpm lint
+    ```
+    Fix any lint errors before proceeding.
 
 2. **Tests:**
-   ```bash
-   pnpm test
-   ```
-   All tests must pass. Fix any failures before proceeding.
+    ```bash
+    pnpm test
+    ```
+    All tests must pass. Fix any failures before proceeding.
 
 3. **Chromatic (UI changes only):** If the issue involved UI component changes, run visual regression tests:
-   ```bash
-   pnpm chromatic
-   ```
-   Review any visual diffs and confirm they are intentional before committing.
+    ```bash
+    pnpm chromatic
+    ```
+    Review any visual diffs and confirm they are intentional before committing.
 
 Report the outcome of each check to the user. Only proceed to commit once all checks pass.
 
