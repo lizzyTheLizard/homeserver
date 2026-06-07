@@ -3,7 +3,7 @@ git add <relevant files>
 git commit -m "$(cat <<'EOF'
 <short imperative message> (#NUMBER)
 
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Co-Authored-By: opencode <noreply@opencode.ai>
 EOF
 )"
 git push -u origin HEAD
