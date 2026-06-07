@@ -63,7 +63,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
         )}
       </div>
       <div className={style.mobileContainer}>
-        {(currentApplication?.getLinks(effectivePath) ?? []).map(link => (
+        {(currentApplication?.getLinks(effectivePath) ?? []).filter(link => !link.hideMobile).map(link => (
           <button onClick={() => { router.push(link.href) }} key={link.href} className={style.button + ' ' + (isActiveLink(link.href, effectivePath) ? style.activeButton : '')}>
             <span>{link.text}</span>
           </button>
