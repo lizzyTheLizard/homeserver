@@ -4,7 +4,7 @@ export interface Application {
   name: string
   link: string
   description: string
-  getLinks: (path: string) => { text: string, href: string }[]
+  getLinks: (path: string) => { text: string, href: string, hideMobile?: boolean }[]
 }
 
 export const applications: Application[] = [
@@ -29,7 +29,7 @@ export const applications: Application[] = [
         { text: 'Journal', href: `/cash/${projectId}/${date}/journal` },
         { text: 'Accounts', href: `/cash/${projectId}/${date}/accounts` },
         { text: 'Reports', href: `/cash/${projectId}/${date}/reports` },
-        { text: 'Closing', href: `/cash/${projectId}/${date}/closing` },
+        { text: 'Closing', href: `/cash/${projectId}/${date}/closing`, hideMobile: true },
       ]
     },
   },
