@@ -73,7 +73,6 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
 
   return (
     <>
-      <ActionButton onClick={(e) => { showAccount(); e.stopPropagation() }}>Add Account</ActionButton>
       <DataTable
         columns={columns}
         data={accounts}
@@ -82,6 +81,7 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         onRowClick={(account) => { showAccount(account) }}
         renderMobile={renderMobile}
       />
+      <ActionButton onClick={(e) => { showAccount(); e.stopPropagation() }}>Add Account</ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
