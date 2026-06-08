@@ -5,11 +5,12 @@ export interface SortingOrder {
   direction: 'ASC' | 'DESC'
 }
 
-export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], searchTerm: string, columns: ColumnDefinition<unknown>[]): Data[] {
+export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], searchTerm: string | undefined, columns: ColumnDefinition<unknown>[]): Data[] {
   let result = [...data]
-  if (searchTerm) {
+  const normalizedSearch = searchTerm?.trim() ?? ''
+  if (normalizedSearch !== '') {
     result = result.filter(row =>
-      columns.some(col => col.search(row[col.key as keyof Data], searchTerm)),
+      columns.some(col => col.search(row[col.key as keyof Data], normalizedSearch)),
     )
   }
   sortingOrder.forEach((sorting) => {
