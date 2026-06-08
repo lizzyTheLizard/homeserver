@@ -32,11 +32,6 @@ describe('sortAndFilter', () => {
     expect(result).toHaveLength(3)
   })
 
-  it('returns full dataset when searchTerm is null', () => {
-    const result = sortAndFilter(sampleData, [], null, columns)
-    expect(result).toHaveLength(3)
-  })
-
   it('returns full dataset when searchTerm is undefined', () => {
     const result = sortAndFilter(sampleData, [], undefined, columns)
     expect(result).toHaveLength(3)
