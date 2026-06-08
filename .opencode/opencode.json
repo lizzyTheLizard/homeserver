@@ -1,4 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "lsp": true
+  "lsp": true,
+  "permission": {
+    "external_directory": {
+      "/tmp/**": "allow",
+      "*": "ask"
+    }
+  }
 }
