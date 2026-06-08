@@ -15,3 +15,9 @@
   font-size: 0.85rem;
   color: #555;
 }
+
+@media (max-width: 600px) {
+  .link {
+    align-self: center;
+  }
+}
