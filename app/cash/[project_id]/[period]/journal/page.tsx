@@ -4,6 +4,7 @@ import { loadAccountJournal, loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { AccountJournal } from './_components/AccountJournal'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import style from './_components/Journal.module.css'
 
 export const metadata = {
   title: 'Cash - Journal',
@@ -26,6 +27,7 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
       const journalData = await loadAccountJournal(period, projectId, accountId)
       return (
         <main>
+          <h1 className={style.mobileAccountTitle}>{journalData.account.name}</h1>
           <ActionTitle>
             <h1>{journalData.account.name}</h1>
           </ActionTitle>
