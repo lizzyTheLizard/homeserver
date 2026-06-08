@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { sortAndFilter } from './sortAndFilter'
 import { numberColumn, textColumn } from './DataTableColumnBuilders'
+import { ColumnDefinition } from './DataTable'
 
 interface TestRow {
   id: string
@@ -17,7 +18,7 @@ const sampleData: TestRow[] = [
 const columns = [
   textColumn('name'),
   numberColumn('age'),
-]
+] as ColumnDefinition<unknown>[]
 
 describe('sortAndFilter', () => {
   it('returns full dataset when searchTerm is empty string', () => {
@@ -32,13 +33,11 @@ describe('sortAndFilter', () => {
   })
 
   it('returns full dataset when searchTerm is null', () => {
-    // @ts-expect-error testing null searchTerm
     const result = sortAndFilter(sampleData, [], null, columns)
     expect(result).toHaveLength(3)
   })
 
   it('returns full dataset when searchTerm is undefined', () => {
-    // @ts-expect-error testing undefined searchTerm
     const result = sortAndFilter(sampleData, [], undefined, columns)
     expect(result).toHaveLength(3)
   })

@@ -110,7 +110,13 @@ When finished the implementation, ask the user to check it and if you can commit
     ```
     All tests must pass. Fix any failures before proceeding.
 
-3. **Chromatic (UI changes only):** If the issue involved UI component changes, run visual regression tests:
+3. **Build:**
+    ```bash
+    pnpm build
+    ```
+    The production build must succeed (including type checking). Fix any errors before proceeding.
+
+4. **Chromatic (UI changes only):** If the issue involved UI component changes, run visual regression tests:
     ```bash
     pnpm chromatic
     ```
