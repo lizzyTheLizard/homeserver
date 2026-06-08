@@ -12,6 +12,9 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     environment: 'jsdom',
+    onConsoleLog() {
+      return false
+    },
     projects: [{
       extends: true,
       plugins: [

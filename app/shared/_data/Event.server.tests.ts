@@ -15,6 +15,7 @@ describe('logEvent', () => {
 describe('findRecentEvents', () => {
   test('returns events ordered newest first', async () => {
     await transactional(tx => logEvent(tx, 'INFO', 'first'))
+    await new Promise(resolve => setTimeout(resolve, 100)) // Ensure different timestamps
     await transactional(tx => logEvent(tx, 'ERROR', 'second'))
 
     const events = await nontransactional(c => findRecentEvents(c))
