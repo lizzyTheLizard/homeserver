@@ -29,6 +29,10 @@ table.dataTable td {
 }
 
 @media (max-width: 600px) {
+  .container {
+    padding-bottom: calc(2 * var(--gap));
+  }
+
   .container table.dataTable {
     display: none;
   }
