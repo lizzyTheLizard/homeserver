@@ -36,7 +36,7 @@
     "@chromatic-com/storybook": "^5.2.1",
     "@electric-sql/pglite": "^0.5.2",
     "@eslint/js": "^10.0.1",
-    "@storybook/addon-a11y": "^10.4.1",
+    "@storybook/addon-a11y": "^10.4.4",
     "@storybook/addon-docs": "^10.4.2",
     "@storybook/addon-vitest": "^10.4.0",
     "@storybook/nextjs-vite": "^10.4.4",
