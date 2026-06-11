@@ -112,8 +112,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       chromatic:
-        specifier: ^17.2.0
-        version: 17.2.0
+        specifier: ^17.4.1
+        version: 17.4.1
       eslint:
         specifier: ^10.4.1
         version: 10.4.1
@@ -2052,8 +2052,8 @@ packages:
       '@chromatic-com/vitest':
         optional: true
 
-  chromatic@17.2.0:
-    resolution: {integrity: sha512-jxuFtNNMuxbVcM2oAAPsa1fDuygt5e1SVJpvTmvSPkVXFQGylFvApsbhDP9a94qI8QMJeUMmts4bXMqrBotWjg==}
+  chromatic@17.4.1:
+    resolution: {integrity: sha512-qL1f0IhOBi0Z6kpQZGR62fJzzCOdjFJLHrJw3QL9YNktj2Kl3+adlU+6psqNGfZUycKF7+pizCSbhsUQNIS/uQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -2925,16 +2925,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.8.1:
-    resolution: {integrity: sha512-rkVq3IXh+4FDGch+KwzX3aV9W3kO54GyEgpvBzSyctDA6Xtd7RJQV1xmXbeQp5v7+VzLOfVqiutSE6GICgPFvg==}
-    engines: {node: '>=10'}
-    hasBin: true
-
-  semver@7.8.2:
-    resolution: {integrity: sha512-c8jsqUZm3omBOI66G90z1Dyw5z622G8oLG+omfsHBJf3CWQTlOcwOjvOG6wtiNfW6anKm/eA39LMwMtMez2TiQ==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.8.4:
@@ -4999,11 +4989,11 @@ snapshots:
 
   chromatic@16.10.0:
     dependencies:
-      semver: 7.8.2
+      semver: 7.8.4
 
-  chromatic@17.2.0:
+  chromatic@17.4.1:
     dependencies:
-      semver: 7.8.1
+      semver: 7.8.4
 
   client-only@0.0.1: {}
 
@@ -5917,10 +5907,6 @@ snapshots:
   scheduler@0.27.0: {}
 
   semver@6.3.1: {}
-
-  semver@7.8.1: {}
-
-  semver@7.8.2: {}
 
   semver@7.8.4: {}
 
