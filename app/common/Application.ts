@@ -13,6 +13,7 @@ export const applications: Application[] = [
     description: 'Browser start page with personal favorites',
     getLinks: () => [
       { text: 'Favorites', href: '/startpage/favorites' },
+      { text: 'WhatsApp', href: '/startpage/whatsapp' },
     ],
   },
   {

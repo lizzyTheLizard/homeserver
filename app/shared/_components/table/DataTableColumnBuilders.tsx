@@ -17,8 +17,8 @@ export function numberColumn(key: string, options?: Options<number>): ColumnDefi
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: number) => value),
-    sort: options?.sort === false ? undefined : (a: number, b: number) => a - b,
-    search: (value: number, searchTerm: string) => value.toString().startsWith(searchTerm),
+    sort: options?.sort === false ? undefined : (a: number | undefined, b: number | undefined) => (a ?? 0) - (b ?? 0),
+    search: (value: number | undefined, searchTerm: string) => (value ?? 0).toString().startsWith(searchTerm),
     style: options?.style,
     className: options?.className,
   }
@@ -29,8 +29,8 @@ export function textColumn(key: string, options?: Options<string>): ColumnDefini
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: string) => value),
-    sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
-    search: (value: string, searchTerm: string) => value.toLowerCase().includes(searchTerm.toLowerCase()),
+    sort: options?.sort === false ? undefined : (a: string | undefined, b: string | undefined) => (a ?? '').localeCompare(b ?? ''),
+    search: (value: string | undefined, searchTerm: string) => (value ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
     style: options?.style,
     className: options?.className,
   }
@@ -41,8 +41,8 @@ export function dateColumn(key: string, options?: Options<string>): ColumnDefini
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: string) => <DateTime date={value} oneLine></DateTime>),
-    sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
-    search: (value: string, searchTerm: string) => value.startsWith(searchTerm),
+    sort: options?.sort === false ? undefined : (a: string | undefined, b: string | undefined) => (a ?? '').localeCompare(b ?? ''),
+    search: (value: string | undefined, searchTerm: string) => (value ?? '').startsWith(searchTerm),
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),
   }
@@ -55,7 +55,7 @@ export function boolColumn(key: string, options?: Options<boolean>): ColumnDefin
     cell: options?.cell ?? (value => value
       ? <Checkbox checked={true} readOnly={true} small={true} center={true} />
       : <Checkbox checked={false} readOnly={true} small={true} center={true} />),
-    sort: options?.sort === false ? undefined : (a: boolean, b: boolean) => (a === b ? 0 : a ? -1 : 1),
+    sort: options?.sort === false ? undefined : (a: boolean | undefined, b: boolean | undefined) => (a === b ? 0 : a ? -1 : 1),
     search: () => false,
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),
@@ -67,8 +67,8 @@ export function enumColumn(key: string, _values: string[], options?: Options<str
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value: string) => value),
-    sort: options?.sort === false ? undefined : (a: string, b: string) => a.localeCompare(b),
-    search: (value: string, searchTerm: string) => value.toLowerCase().startsWith(searchTerm.toLowerCase()),
+    sort: options?.sort === false ? undefined : (a: string | undefined, b: string | undefined) => (a ?? '').localeCompare(b ?? ''),
+    search: (value: string | undefined, searchTerm: string) => (value ?? '').toLowerCase().startsWith(searchTerm.toLowerCase()),
     style: options?.style,
     className: style.center + ' ' + (options?.className ?? ''),
   }

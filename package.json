@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
+    "@whiskeysockets/baileys": "7.0.0-rc13",
     "dotenv": "^17.4.2",
     "iron-session": "^8.0.4",
     "next": "16.2.7",
@@ -28,6 +29,7 @@
     "pg": "^8.21.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "react-qr-code": "=2.0.21",
     "uuid": "^14.0.0",
     "winston": "^3.19.0",
     "zod": "^4.4.3"
