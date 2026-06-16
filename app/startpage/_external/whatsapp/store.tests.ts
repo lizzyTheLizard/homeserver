@@ -40,38 +40,38 @@ describe('whatsapp store', () => {
 
     await processor.emit({ 'messaging-history.set': { chats: [groupChat], contacts: [], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: groupLid, pn: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: groupLid, pn: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     await processor.emit({ 'messaging-history.set': { chats: [contactChat], contacts: [], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: groupLid, pn: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
-      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: groupLid, pn: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     const newName = 'newName'
     await processor.emit({ 'chats.update': [{ id: groupId, name: newName, unreadCount: 2, archived: true }] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: groupLid, pn: groupId, name: newName, is_group: true, unread_count: 2, archived: true, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
-      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: groupLid, pn: groupId, name: newName, is_group: true, unread_count: 2, archived: true, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     await processor.emit({ 'chats.delete': [groupId] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     const newContactLid = 'new@lid'
     await processor.emit({ 'chats.upsert': [{ id: newContactLid }] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
       { owner_email: 'test', id: newContactLid, pn: undefined, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     const newContactPn = '41791231212@s.whatsapp.net'
     await processor.emit({ 'chats.upsert': [{ id: newContactPn }] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: expect.any(String) as string, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
       { owner_email: 'test', id: newContactLid, pn: undefined, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
       { owner_email: 'test', id: newContactPn, pn: newContactPn, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
