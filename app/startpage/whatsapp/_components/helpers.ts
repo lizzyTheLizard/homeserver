@@ -1,4 +1,4 @@
-import { Chat, Contact, Message } from '../_data/Chat'
+import { Chat, Contact, Message } from '../../_data/Chat'
 
 export function getChatName(chat: Chat, contacts: Contact[]): string {
   if (chat.name) return chat.name

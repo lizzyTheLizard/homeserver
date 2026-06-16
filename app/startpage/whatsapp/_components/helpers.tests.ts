@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { Chat, Contact, Message } from '../_data/Chat'
-import { getChatName, getSenderName } from './whatsapp'
+import { Chat, Contact, Message } from '../../_data/Chat'
+import { getChatName, getSenderName } from './helpers'
 
 function makeChat(overrides: Partial<Chat> = {}): Chat {
   return {

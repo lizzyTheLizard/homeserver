@@ -12,7 +12,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { getUpdates, loadChats, loadMessages } from '../server'
 import { MessageBubble } from './MessageBubble'
 import styles from './WhatsAppContent.module.css'
-import { getChatName } from '../../_helper/whatsapp'
+import { getChatName } from './helpers'
 
 const columns = [
   textColumn('hydratedName', { header: 'Name', style: { } }),
