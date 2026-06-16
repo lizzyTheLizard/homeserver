@@ -1,0 +1,23 @@
+.qrContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.qrWrapper {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.errorBox {
+  color: red;
+  margin-bottom: 1rem;
+}
+
+.promptBox {
+  margin-bottom: 1rem;
+}
+

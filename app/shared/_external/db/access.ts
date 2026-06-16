@@ -1,11 +1,13 @@
 import { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
-let dbPoolPromise: Promise<Pool> | undefined
+declare global {
+  var dbPoolPromise: Promise<Pool> | undefined
+}
 
 function getPoolPromise(): Promise<Pool> {
-  dbPoolPromise ??= setupPool()
-  return dbPoolPromise
+  globalThis.dbPoolPromise ??= setupPool()
+  return globalThis.dbPoolPromise
 }
 
 /**
