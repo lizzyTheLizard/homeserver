@@ -19,8 +19,6 @@ function getContactNameById(id: string, contacts: Contact[]): string {
     const contact = contacts.find(c => c.lid === id)
     if (contact?.name) return contact.name
     if (contact?.pn) return whatsAppNameToPhomeNumber(contact.pn)
-    // TODO: Does this happen?
-    console.warn(`Contact with lid ${id} not found in contacts list`)
     return 'Unknown contact'
   }
   else {

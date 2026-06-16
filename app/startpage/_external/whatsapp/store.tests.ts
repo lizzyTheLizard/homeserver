@@ -1,11 +1,10 @@
-// TODO Generate tests.
-
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import { cleanWhatsAppDataOfOwner, findChatsByOwner, findContactsByOwner, findMessagesByChatId } from '../../_data/Chat'
 import { createStore, Processor } from './store'
 import { BaileysEventMap, WAMessage } from '@whiskeysockets/baileys'
 import { existsSync, promises as fsp } from 'fs'
+import { LIDMappingStore } from '@whiskeysockets/baileys/lib/Signal/lid-mapping'
 
 describe('whatsapp store', () => {
   afterAll(() => {
@@ -35,36 +34,46 @@ describe('whatsapp store', () => {
 
   test('sync chats', async () => {
     const processor = createMockEmittor()
-    createStore('test').bind(processor)
+    const store = createStore('test')
+    store.bind(processor)
+    store.setLidMappingStore(lidMappingStore)
 
     await processor.emit({ 'messaging-history.set': { chats: [groupChat], contacts: [], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: groupLid, pn: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     await processor.emit({ 'messaging-history.set': { chats: [contactChat], contacts: [], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
-      { owner_email: 'test', id: contactChat.id, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: groupLid, pn: groupId, name: groupChat.name, is_group: true, unread_count: groupChat.unreadCount, archived: groupChat.archived, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     const newName = 'newName'
     await processor.emit({ 'chats.update': [{ id: groupId, name: newName, unreadCount: 2, archived: true }] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: groupId, name: newName, is_group: true, unread_count: 2, archived: true, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
-      { owner_email: 'test', id: contactChat.id, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: groupLid, pn: groupId, name: newName, is_group: true, unread_count: 2, archived: true, last_message_timestamp: '2026-06-12 01:17:36+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     await processor.emit({ 'chats.delete': [groupId] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactChat.id, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
-    const newContactId = 'new@lid'
-    await processor.emit({ 'chats.upsert': [{ id: newContactId }] })
+    const newContactLid = 'new@lid'
+    await processor.emit({ 'chats.upsert': [{ id: newContactLid }] })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactChat.id, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
-      { owner_email: 'test', id: newContactId, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: newContactLid, pn: undefined, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+    ])
+
+    const newContactPn = '41791231212@s.whatsapp.net'
+    await processor.emit({ 'chats.upsert': [{ id: newContactPn }] })
+    await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
+      { owner_email: 'test', id: contactLid, pn: contactId, name: undefined, is_group: false, unread_count: contactChat.unreadCount, archived: contactChat.archived, last_message_timestamp: '1994-10-02 20:46:52+01', updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: newContactLid, pn: undefined, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', id: newContactPn, pn: newContactPn, name: undefined, is_group: false, unread_count: undefined, archived: undefined, last_message_timestamp: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
   })
 
@@ -84,23 +93,25 @@ describe('whatsapp store', () => {
 
   test('sync contacts', async () => {
     const processor = createMockEmittor()
-    createStore('test').bind(processor)
+    const store = createStore('test')
+    store.bind(processor)
+    store.setLidMappingStore(lidMappingStore)
 
     await processor.emit({ 'messaging-history.set': { chats: [], contacts: [contact], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findContactsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactId, name: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', lid: contactLid, pn: contactId, name: undefined, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
     const newName = 'newName'
     await processor.emit({ 'contacts.update': [{ id: contactId, name: newName }] })
     await expect(nontransactional(c => findContactsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactId, name: newName, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', lid: contactLid, pn: contactId, name: newName, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
 
+    // Do not add groups as contacts
     await processor.emit({ 'contacts.upsert': [groupContact] })
     await expect(nontransactional(c => findContactsByOwner(c, 'test'))).resolves.toEqual([
-      { owner_email: 'test', id: contactId, name: newName, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
-      { owner_email: 'test', id: groupContact.id, name: groupContact.name, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
+      { owner_email: 'test', lid: contactLid, pn: contactId, name: newName, updated_at: expect.any(String) as string, created_at: expect.any(String) as string },
     ])
   })
 
@@ -140,7 +151,7 @@ describe('whatsapp store', () => {
       await processor.emit(event)
     }
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toHaveLength(635)
-    await expect(nontransactional(c => findContactsByOwner(c, 'test'))).resolves.toHaveLength(662)
+    await expect(nontransactional(c => findContactsByOwner(c, 'test'))).resolves.toHaveLength(706)
   })
 })
 
@@ -154,6 +165,7 @@ function createMockEmittor(): Processor & { emit: (event: Partial<BaileysEventMa
 }
 
 const groupId = '120363422812012748@g.us'
+const groupLid = '40604687938382@lid'
 
 const groupMessage = {
   key: {
@@ -221,10 +233,11 @@ const groupContact = {
 }
 
 const contactId = '41797291365@s.whatsapp.net'
+const contactLid = '40832618938382@lid'
 
 const contact = {
   id: contactId,
-  lid: '40604687938382@lid',
+  lid: contactLid,
   phoneNumber: '41797291365@s.whatsapp.net',
 }
 
@@ -283,5 +296,10 @@ const contactChat = {
   lidOriginType: 'general',
   commentsCount: 1000000,
   locked: false,
-  accountLid: contact.lid,
+  accountLid: contactLid,
 }
+
+const lidMappingStore: LIDMappingStore = {
+  getLIDForPN: (pn: string) => Promise.resolve(pn === contactId ? contactLid : pn == groupId ? groupLid : null),
+  getPNForLID: (lid: string) => Promise.resolve(lid === contactLid ? contactId : lid === groupLid ? groupId : null),
+} as unknown as LIDMappingStore

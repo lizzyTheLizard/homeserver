@@ -160,10 +160,7 @@ export function createStore(owner: string): WhatsAppStore {
     if (message.albumMessage) return '[Album]'
     if (message.audioMessage) return '[Audio]'
     if (message.pollCreationMessageV3) return '[Poll: ' + (message.pollCreationMessageV3.name ?? 'no text') + ']'
-    // TODO: Handle the filled out template?
     if (message.templateMessage) return '[Template]'
-    // TODO: Should we filter those messages out instead of returning a placeholder content?
-    if (message.associatedChildMessage) return '[Associated child message]'
     logger.warn(`Unknown message type: ${JSON.stringify(message, null, 2)}`)
     return '[Unknown message type]'
   }

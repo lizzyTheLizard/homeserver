@@ -95,15 +95,13 @@ export async function updateAuthState(client: Queryable, ownerEmail: string, aut
 }
 
 export async function deleteChatsById(client: Queryable, ownerEmail: string, chatIds: string[]): Promise<void> {
-  // TODO: Bulk query?
   for (const chatId of chatIds) {
     await client.query('DELETE FROM wa_message WHERE owner_email = $1 AND chat_id = $2', [ownerEmail, chatId])
-    await client.query('DELETE FROM wa_chat WHERE owner_email = $1 AND id = $2', [ownerEmail, chatId])
+    await client.query('DELETE FROM wa_chat WHERE owner_email = $1 AND (id = $2 OR pn = $2)', [ownerEmail, chatId])
   }
 }
 
 export async function updateChats(client: Queryable, ownerEmail: string, chat: (Partial<ChatInput> & { id: string })[]): Promise<void> {
-  // TODO: Builk query? or do it outside so that we at least have proper error handling?
   for (const c of chat) {
     await client.query(
       `INSERT INTO wa_chat (id, pn, owner_email, name, is_group, unread_count, archived, last_message_timestamp, created_at, updated_at )
@@ -121,7 +119,6 @@ export async function updateChats(client: Queryable, ownerEmail: string, chat: (
 }
 
 export async function updateContacts(client: Queryable, ownerEmail: string, contacts: (Partial<ContactInput> & { lid: string })[]): Promise<void> {
-  // TODO: Builk query?
   for (const contact of contacts) {
     await client.query(
       `INSERT INTO wa_contact (lid, pn, owner_email, name, created_at, updated_at)
