@@ -8,7 +8,7 @@ export default function Loading() {
       <ActionTitle>
         <h1>WhatsApp</h1>
       </ActionTitle>
-      <WhatsAppContent chats={[]} contacts={[]} lidMappings={[]} />
+      <WhatsAppContent chats={[]} contacts={[]} />
       <LoadingSpinner></LoadingSpinner>
     </main>
   )

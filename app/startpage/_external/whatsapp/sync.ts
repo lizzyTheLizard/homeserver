@@ -1,133 +1,139 @@
-import makeWASocket, { UserFacingSocketConfig, WABrowserDescription, ConnectionState, proto, BaileysEventMap } from '@whiskeysockets/baileys'
+import makeWASocket, { WABrowserDescription, ConnectionState } from '@whiskeysockets/baileys'
 import { logger } from '@/app/shared/logger'
-import { ILogger } from '@whiskeysockets/baileys/lib/Utils/logger'
 import { createExportableAuth } from './auth'
 import { createStore } from './store'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { findAuthStateByOwner, updateAuthState } from '../../_data/Chat'
-
-export interface Callbacks {
-  qrCallback: (qr: string) => void
-  authCallback: () => void
-  readyCallback: () => void
-}
+import { AuthStateInput, findAuthStateByOwner, updateAuthState } from '../../_data/Chat'
 
 export interface SyncHandler {
-  close: () => Promise<void>
-  finished: Promise<void>
+  start: () => void
+  close: () => void
+  onQrCode: (callback: (qr: string) => void) => void
+  onAuth: (callback: () => void) => void
+  onReady: (callback: () => void) => void
+  onFinished: (callback: (error?: Error) => void) => void
 }
 
-export async function startSync(owner: string, callbacks: Callbacks, afterLogin?: boolean): Promise<SyncHandler> {
+export async function startSync(owner: string): Promise<SyncHandler> {
+  let qrCodeCallback: ((qr: string) => void) | undefined
+  let authCallback: (() => void) | undefined
+  let readyCallback: (() => void) | undefined
+  let finishedCallback: ((error?: Error) => void) | undefined
+  let sock: ReturnType<typeof makeWASocket> | undefined
+
   const authState = await nontransactional(async c => findAuthStateByOwner(c, owner))
-  const auth = createExportableAuth(authState)
+  let auth = createExportableAuth(authState)
   const browser = ['Gutschi.site', 'Desktop', '1.0.0'] as WABrowserDescription
-  const config: UserFacingSocketConfig = { auth, browser, logger: getLogger(), markOnlineOnConnect: false }
-  const sock = makeWASocket(config)
-  const store = createStore(owner, sock.ev)
+  const store = createStore(owner)
 
-  const finished = new Promise<void>((resolve, reject) => {
-    function connectionUpdate(update: Partial<ConnectionState>): void {
-      if (update.qr) {
-        showQr(update.qr)
-        return
-      }
-      if (update.connection === 'open') {
-        logger.debug('Connection to WhatsApp established')
-        if (!afterLogin) callbacks.readyCallback()
-        return
-      }
-      if (update.connection !== 'close') {
-        /* do nothing, wait for next update */
-        return
-      }
-      if (!update.lastDisconnect?.error) {
-        handleClose()
-        return
-      }
-      if (!('output' in update.lastDisconnect.error)) failed(update.lastDisconnect.error)
-      else if (update.lastDisconnect.error.output.statusCode !== 515) failed(update.lastDisconnect.error)
-      else authSuccess()
-    }
-
-    function disconnect() {
-      sock.ev.off('connection.update', connectionUpdate)
-      sock.ev.off('messaging-history.set', historyUpdate)
-    }
-
-    function handleClose() {
-      disconnect()
-      resolve()
-    }
-
-    function failed(error: Error) {
-      disconnect()
-      logger.warn('Failed to sync WhatsApp history', error)
-      sock.end(error).catch((err: unknown) => { logger.warn('Failed to close WhatsApp connection after failure', err) })
-      reject(error)
-    }
-
-    function historyUpdate(update: BaileysEventMap['messaging-history.set']): void {
-      if (update.syncType === proto.HistorySync.HistorySyncType.RECENT && afterLogin) {
-        // There are more messages afterwards, so just wait a bit to get themn as well
-        setTimeout(() => { callbacks.readyCallback() }, 1000)
-      }
-    }
-
-    function showQr(qr: string): void {
-      logger.debug('Received QR code for authentication')
-      if (afterLogin) failed(new Error('Received QR code update during WhatsApp sync after login'))
-      try {
-        callbacks.qrCallback(qr)
-      }
-      catch (error: unknown) {
-        failed(error instanceof Error ? error : new Error(String(error)))
-      }
-    }
-
-    function authSuccess(): void {
-      logger.debug('Authentication successful, re-syncing...')
-      callbacks.authCallback()
-      disconnect()
-      store.reset()
-        .then(() => startSync(owner, callbacks, true))
-        .then(async (newHandler) => {
-          handler.close = () => newHandler.close()
-          await newHandler.finished
-        }).then(() => { resolve() })
-        .catch((error: unknown) => {
-          failed(error instanceof Error ? error : new Error(String(error)))
-        })
-    }
-
-    function credentialUpdate() {
-      transactional(async (client) => {
-        await updateAuthState(client, owner, auth.toAuthState())
-      }).catch((error: unknown) => {
-        logger.warn('Failed to update WhatsApp credentials in database', error instanceof Error ? error : new Error(String(error)))
-      })
-    }
-
-    sock.ev.on('creds.update', credentialUpdate)
-    sock.ev.on('connection.update', connectionUpdate)
-    sock.ev.on('messaging-history.set', historyUpdate)
-  })
-
-  const handler = {
-    close: async () => { await sock.end(undefined); await finished },
-    finished,
+  function onError(error: unknown): void {
+    const arg = error instanceof Error ? error : new Error(String(error))
+    logger.debug(`Closing WhatsApp sync for ${owner} due to error ${arg}`)
+    close(arg)
   }
 
-  return handler
+  function close(error?: Error): void {
+    if (sock) {
+      const sockCpy = sock
+      sock = undefined
+      sockCpy.end(error).catch(onClosed)
+    }
+    else if (finishedCallback) {
+      finishedCallback(error)
+    }
+  }
+
+  function onClosed(error?: Error): void {
+    if (!error) {
+      logger.debug(`WhatsApp sync connection closed for ${owner} without error`)
+      if (finishedCallback) finishedCallback()
+      return
+    }
+    if (isInvalidAuthError(error)) {
+      logger.warn(`WhatsApp sync for ${owner} requires re-authentication due to invalid auth state`)
+      auth = createExportableAuth(undefined)
+      store.reset().then(start).catch(onError)
+      return
+    }
+    if (isRequiredReconnectError(error)) {
+      logger.debug(`WhatsApp sync connection closed for ${owner} due to required reconnect`)
+      authCallback?.()
+      store.reset().then(startAgainAfterLogin).catch(onError)
+      return
+    }
+    if (finishedCallback) finishedCallback(error instanceof Error ? error : new Error(String(error)))
+  }
+
+  function start() {
+    sock = makeWASocket({ auth, browser, logger: baileysLogger, markOnlineOnConnect: false, syncFullHistory: true, emitOwnEvents: true })
+    if (!authState) credentialUpdate(owner, auth.toAuthState(), onError)
+    sock.ev.on('creds.update', () => { credentialUpdate(owner, auth.toAuthState(), onError) })
+    sock.ev.on('connection.update', (update) => { connectionUpdate(update, onClosed, qrCodeCallback, readyCallback) })
+    store.setLidMappingStore(sock.signalRepository.lidMapping)
+    store.bind(sock.ev)
+  }
+
+  function startAgainAfterLogin() {
+    sock = makeWASocket({ auth, browser, logger: baileysLogger, markOnlineOnConnect: false, syncFullHistory: true, emitOwnEvents: true })
+    sock.ev.on('creds.update', () => { credentialUpdate(owner, auth.toAuthState(), onError) })
+    sock.ev.on('connection.update', (update) => { connectionUpdateAfterLogin(update, onClosed, onError) })
+    if (readyCallback) store.onInitialSyncFinished(readyCallback)
+    store.setLidMappingStore(sock.signalRepository.lidMapping)
+    store.bind(sock.ev)
+  }
+
+  return {
+    start: start,
+    onQrCode: (callback) => { qrCodeCallback = callback },
+    onAuth: (callback) => { authCallback = callback },
+    onReady: (callback) => { readyCallback = callback },
+    onFinished: (callback) => { finishedCallback = callback },
+    close: close,
+  }
 }
 
-function getLogger(): ILogger {
-  return {
-    level: logger.level,
-    child: () => getLogger(),
-    trace: () => { /* empty */ },
-    debug: () => { /* empty */ },
-    info: () => { /* empty */ },
-    warn: () => { /* empty */ },
-    error: () => { /* empty */ },
-  }
+const baileysLogger = {
+  level: logger.level,
+  child: () => baileysLogger,
+  trace: () => { /* empty */ },
+  debug: () => { /* empty */ },
+  info: () => { /* empty */ },
+  warn: () => { /* empty */ },
+  error: () => { /* empty */ },
+}
+
+function credentialUpdate(owner: string, authState: AuthStateInput, onError: (error?: Error) => void): void {
+  transactional(client => updateAuthState(client, owner, authState)).catch(onError)
+}
+
+function connectionUpdate(update: Partial<ConnectionState>, onClose: (error?: Error) => void, onQr?: (qr: string) => void, onReady?: () => void): void {
+  if (update.qr) onQr?.(update.qr)
+  else if (update.connection === 'open') onReady?.()
+  else if (update.connection !== 'close') { /* do nothing, wait for next update */ }
+  else onClose(update.lastDisconnect?.error)
+}
+
+function isInvalidAuthError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  if (!('output' in error)) return false
+  if (typeof error.output !== 'object' || error.output === null) return false
+  if (!('statusCode' in error.output)) return false
+  if (error.output.statusCode !== 401) return false
+  return true
+}
+
+function isRequiredReconnectError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  if (!('output' in error)) return false
+  if (typeof error.output !== 'object' || error.output === null) return false
+  if (!('statusCode' in error.output)) return false
+  if (error.output.statusCode !== 515) return false
+  return true
+}
+
+function connectionUpdateAfterLogin(update: Partial<ConnectionState>, onClose: (error?: Error) => void, onErr: (error: Error) => void): void {
+  if (update.qr) onErr(new Error('Received QR code update during WhatsApp sync after login'))
+  else if (update.connection === 'open') { /* do nothing, wait for next update */ }
+  else if (update.connection !== 'close') { /* do nothing, wait for next update */ }
+  else onClose(update.lastDisconnect?.error)
 }

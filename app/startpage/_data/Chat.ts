@@ -7,6 +7,7 @@ export interface AuthStateInput {
 
 export interface ChatInput {
   id: string
+  pn: string | undefined
   name: string | undefined
   is_group: boolean
   unread_count: number | undefined
@@ -24,20 +25,15 @@ export interface MessageInput {
 }
 
 export interface ContactInput {
-  id: string
-  name: string | undefined
-}
-
-export interface LidMappingInput {
-  lid: string
   pn: string
+  lid: string
+  name: string | undefined
 }
 
 export type Chat = Entity<ChatInput>
 export type Message = Entity<MessageInput>
 export type Contact = Entity<ContactInput>
 export type AuthState = Entity<AuthStateInput>
-export type LidMapping = Entity<LidMappingInput>
 
 export interface HistoryUpdate {
   authState: AuthStateInput
@@ -79,32 +75,11 @@ export async function findContactsByOwner(client: Queryable, ownerEmail: string)
   return result.rows.map(removeNull)
 }
 
-export async function findLidMappingsByOwner(client: Queryable, ownerEmail: string): Promise<LidMapping[]> {
-  const result = await client.query<LidMapping>(
-    'SELECT * FROM wa_lid_mapping WHERE owner_email = $1',
-    [ownerEmail],
-  )
-  return result.rows.map(removeNull)
-}
-
 export async function cleanWhatsAppDataOfOwner(client: Queryable, ownerEmail: string): Promise<void> {
   await client.query('DELETE FROM wa_auth WHERE owner_email = $1', [ownerEmail])
   await client.query('DELETE FROM wa_chat WHERE owner_email = $1', [ownerEmail])
   await client.query('DELETE FROM wa_message WHERE owner_email = $1', [ownerEmail])
   await client.query('DELETE FROM wa_contact WHERE owner_email = $1', [ownerEmail])
-}
-
-export async function updateLidMapping(client: Queryable, ownerEmail: string, lidMapping: LidMappingInput[]): Promise<void> {
-  for (const mapping of lidMapping) {
-    await client.query(
-      `INSERT INTO wa_lid_mapping (lid, pn, owner_email, created_at, updated_at)
-       VALUES ($1, $2, $3, NOW(), NOW())
-       ON CONFLICT (lid) DO UPDATE SET
-         pn           = COALESCE($2, wa_lid_mapping.pn),
-         updated_at   = NOW()`,
-      [mapping.lid, mapping.pn, ownerEmail],
-    )
-  }
 }
 
 export async function updateAuthState(client: Queryable, ownerEmail: string, authState: AuthStateInput): Promise<void> {
@@ -131,30 +106,31 @@ export async function updateChats(client: Queryable, ownerEmail: string, chat: (
   // TODO: Builk query? or do it outside so that we at least have proper error handling?
   for (const c of chat) {
     await client.query(
-      `INSERT INTO wa_chat (id, owner_email, name, is_group, unread_count, archived, last_message_timestamp, created_at, updated_at )
-       VALUES ($1, $2, $3, COALESCE($4, FALSE), $5, $6, $7, NOW(), NOW())
+      `INSERT INTO wa_chat (id, pn, owner_email, name, is_group, unread_count, archived, last_message_timestamp, created_at, updated_at )
+       VALUES ($1, $2, $3, $4, COALESCE($5, FALSE), $6, $7, $8, NOW(), NOW())
        ON CONFLICT (id) DO UPDATE SET
-         name          = COALESCE($3, wa_chat.name),
-         is_group      = COALESCE($4, wa_chat.is_group),
-         unread_count  = COALESCE($5, wa_chat.unread_count),
-         archived      = COALESCE($6, wa_chat.archived),
-         last_message_timestamp = COALESCE($7, wa_chat.last_message_timestamp),
+         name          = COALESCE($4, wa_chat.name),
+         is_group      = COALESCE($5, wa_chat.is_group),
+         unread_count  = COALESCE($6, wa_chat.unread_count),
+         archived      = COALESCE($7, wa_chat.archived),
+         last_message_timestamp = COALESCE($8, wa_chat.last_message_timestamp),
          updated_at    = NOW()`,
-      [c.id, ownerEmail, c.name, c.is_group, c.unread_count, c.archived, c.last_message_timestamp],
+      [c.id, c.pn, ownerEmail, c.name, c.is_group, c.unread_count, c.archived, c.last_message_timestamp],
     )
   }
 }
 
-export async function updateContacts(client: Queryable, ownerEmail: string, contacts: (Partial<ContactInput> & { id: string })[]): Promise<void> {
+export async function updateContacts(client: Queryable, ownerEmail: string, contacts: (Partial<ContactInput> & { lid: string })[]): Promise<void> {
   // TODO: Builk query?
   for (const contact of contacts) {
     await client.query(
-      `INSERT INTO wa_contact (id, owner_email, name, created_at, updated_at)
-       VALUES ($1, $2, $3, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE SET
-         name         = COALESCE($3, wa_contact.name),
+      `INSERT INTO wa_contact (lid, pn, owner_email, name, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, NOW(), NOW())
+       ON CONFLICT (lid) DO UPDATE SET
+         pn           = COALESCE($2, wa_contact.pn),
+         name         = COALESCE($4, wa_contact.name),
          updated_at   = NOW()`,
-      [contact.id, ownerEmail, contact.name],
+      [contact.lid, contact.pn, ownerEmail, contact.name],
     )
   }
 }

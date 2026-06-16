@@ -24,7 +24,8 @@ describe('whatsapp store', () => {
 
   test('irrelevant updates', async () => {
     const processor = createMockEmittor()
-    createStore('test', processor)
+    createStore('test').bind(processor)
+
     await processor.emit({ 'connection.update': { connection: 'connecting', receivedPendingNotifications: false } })
     await processor.emit({ 'creds.update': { lastAccountSyncTimestamp: 1781247212 } })
     await processor.emit({ 'messaging-history.status': { syncType: 0, status: 'complete', explicit: true } })
@@ -34,7 +35,7 @@ describe('whatsapp store', () => {
 
   test('sync chats', async () => {
     const processor = createMockEmittor()
-    createStore('test', processor)
+    createStore('test').bind(processor)
 
     await processor.emit({ 'messaging-history.set': { chats: [groupChat], contacts: [], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toEqual([
@@ -69,7 +70,8 @@ describe('whatsapp store', () => {
 
   test('reset', async () => {
     const processor = createMockEmittor()
-    const store = createStore('test', processor)
+    const store = createStore('test')
+    store.bind(processor)
 
     await processor.emit({ 'messaging-history.set': { chats: [{ id: 'chatId', unreadCount: 1, archived: false }], contacts: [{ id: 'contactId', name: 'test' }], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findChatsByOwner(c, 'test'))).resolves.toHaveLength(1)
@@ -82,7 +84,7 @@ describe('whatsapp store', () => {
 
   test('sync contacts', async () => {
     const processor = createMockEmittor()
-    createStore('test', processor)
+    createStore('test').bind(processor)
 
     await processor.emit({ 'messaging-history.set': { chats: [], contacts: [contact], messages: [], syncType: 1 } })
     await expect(nontransactional(c => findContactsByOwner(c, 'test'))).resolves.toEqual([
@@ -104,7 +106,7 @@ describe('whatsapp store', () => {
 
   test('sync messages', async () => {
     const processor = createMockEmittor()
-    createStore('test', processor)
+    createStore('test').bind(processor)
 
     await processor.emit({ 'messaging-history.set': { chats: [groupChat], contacts: [], messages: [groupMessage], syncType: 1 } })
     await expect(nontransactional(c => findMessagesByChatId(c, 'test', groupId))).resolves.toEqual([
@@ -119,7 +121,7 @@ describe('whatsapp store', () => {
 
   test('Sync messages from myself', async () => {
     const processor = createMockEmittor()
-    createStore('test', processor)
+    createStore('test').bind(processor)
 
     const myMessage: WAMessage = { ...contactMessage, key: { ...contactMessage.key, fromMe: true } }
     await processor.emit({ 'messaging-history.set': { chats: [contactChat], contacts: [], messages: [myMessage], syncType: 1 } })
@@ -130,7 +132,7 @@ describe('whatsapp store', () => {
 
   test.skipIf(!existsSync(__dirname + '/testdata.json'))('fullload', async () => {
     const processor = createMockEmittor()
-    createStore('test', processor)
+    createStore('test').bind(processor)
 
     const fileContent = await fsp.readFile(__dirname + '/testdata.json', 'utf-8')
     const fullload = JSON.parse(fileContent) as BaileysEventMap[]

@@ -8,24 +8,27 @@ CREATE TABLE IF NOT EXISTS wa_auth (
 CREATE INDEX IF NOT EXISTS idx_wa_auth_owner_email ON wa_auth (owner_email);
 
 CREATE TABLE IF NOT EXISTS wa_contact (
-  id           TEXT        PRIMARY KEY,
+  lid          TEXT        PRIMARY KEY,
+  pn           TEXT        DEFAULT NULL,
   owner_email  TEXT        NOT NULL,
-  name         TEXT        NOT NULL DEFAULT '',
-  phone_number TEXT,
+  name         TEXT        DEFAULT NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS wa_chat (
-  id            TEXT        PRIMARY KEY,
+  id           TEXT        PRIMARY KEY,
+  pn            TEXT        DEFAULT NULL,
   owner_email   TEXT        NOT NULL,
-  name          TEXT        NOT NULL DEFAULT '',
+  name          TEXT        DEFAULT NULL,
   is_group      BOOLEAN     NOT NULL DEFAULT FALSE,
-  unread_count  INTEGER     NOT NULL DEFAULT 0,
-  archived      BOOLEAN     NOT NULL DEFAULT FALSE,
+  unread_count  INTEGER     DEFAULT NULL,
+  archived      BOOLEAN     DEFAULT NULL,
+  last_message_timestamp TIMESTAMPTZ DEFAULT NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE INDEX IF NOT EXISTS idx_wa_chat_owner_archived ON wa_chat (owner_email, archived);
 
 CREATE TABLE IF NOT EXISTS wa_message (
@@ -37,8 +40,9 @@ CREATE TABLE IF NOT EXISTS wa_message (
   content     TEXT,
   timestamp   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  FOREIGN KEY (chat_id) REFERENCES wa_chat(id) ON DELETE CASCADE
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
 
 

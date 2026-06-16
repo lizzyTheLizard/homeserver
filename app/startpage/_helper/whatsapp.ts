@@ -1,32 +1,33 @@
-import { Chat, Contact, LidMapping, Message } from '../_data/Chat'
+import { Chat, Contact, Message } from '../_data/Chat'
 
-export function getChatName(chat: Chat, contacts: Contact[], lidMappings: LidMapping[]): string {
+export function getChatName(chat: Chat, contacts: Contact[]): string {
   if (chat.name) return chat.name
   if (chat.is_group) {
     console.warn('Group chat without name found: ', chat)
     return 'Unnamed group'
   }
-  return getContactNameById(chat.id, contacts, lidMappings)
+  return getContactNameById(chat.id, contacts)
 }
 
-export function getSenderName(message: Message, contacts: Contact[], lidMappings: LidMapping[]): string | undefined {
+export function getSenderName(message: Message, contacts: Contact[]): string | undefined {
   if (!message.sender_id) return undefined
-  return getContactNameById(message.sender_id, contacts, lidMappings)
+  return getContactNameById(message.sender_id, contacts)
 }
 
-function getContactNameById(id: string, contacts: Contact[], lidMappings: LidMapping[]): string {
-  const contact = contacts.find(c => c.id === id)
-  if (contact) {
-    if (!contact.name.endsWith('@lid')) return contact.name
+function getContactNameById(id: string, contacts: Contact[]): string {
+  if (id.endsWith('@lid')) {
+    const contact = contacts.find(c => c.lid === id)
+    if (contact?.name) return contact.name
+    if (contact?.pn) return whatsAppNameToPhomeNumber(contact.pn)
+    // TODO: Does this happen?
+    console.warn(`Contact with lid ${id} not found in contacts list`)
+    return 'Unknown contact'
   }
-  if ((id.endsWith('@lid'))) {
-    const lidMapping = lidMappings.find(lm => lm.lid === id)
-    if (!lidMapping) {
-      return 'Unknown contact'
-    }
-    return whatsAppNameToPhomeNumber(lidMapping.pn)
+  else {
+    const contact = contacts.find(c => c.pn === id)
+    if (contact?.name) return contact.name
+    return whatsAppNameToPhomeNumber(id)
   }
-  return whatsAppNameToPhomeNumber(id)
 }
 
 function whatsAppNameToPhomeNumber(whatsappid: string): string {

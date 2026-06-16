@@ -42,7 +42,7 @@ function makeLidMapping(overrides: Partial<LidMapping> = {}): LidMapping {
 function makeMessage(overrides: Partial<Message> = {}): Message {
   return {
     id: 'msg1',
-    chat_id: 'chat1',
+    chat_lid: 'chat1',
     sender_id: undefined,
     content: 'Hello',
     mentioned: undefined,
@@ -92,11 +92,11 @@ describe('getChatName', () => {
     expect(getChatName(chat, [], [])).toBe('+491701234567')
   })
 
-  test('falls back to lid lookup when contact name ends with @lid', () => {
+  test('Use also lid contacts', () => {
     const chat = makeChat({ id: '123@lid', name: undefined })
-    const contacts = [makeContact({ id: '123@lid', name: 'some@lid' })]
     const lidMappings = [makeLidMapping({ lid: '123@lid', pn: '41791234567@s.whatsapp.net' })]
-    expect(getChatName(chat, contacts, lidMappings)).toBe('+41 79 123 45 67')
+    const contacts = [makeContact({ id: '41791234567@s.whatsapp.net', name: 'Contact Name' })]
+    expect(getChatName(chat, contacts, lidMappings)).toBe('Contact Name')
   })
 })
 
