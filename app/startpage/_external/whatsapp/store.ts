@@ -6,6 +6,7 @@ import { PoolClient } from 'pg'
 import { transactional } from '@/app/shared/_external/db/access'
 import { promises as fsp } from 'fs'
 import { LIDMappingStore } from '@whiskeysockets/baileys/lib/Signal/lid-mapping'
+import { tmpdir } from 'os'
 
 export interface Processor { process: (handler: (events: Partial<BaileysEventMap>) => Promise<void>) => void }
 
@@ -189,7 +190,7 @@ export function createStore(owner: string): WhatsAppStore {
     const oneLine = JSON.stringify(e, BufferJSON.replacer)
     logger.debug(`Received WhatsApp event: ${oneLine.length > 100 ? oneLine.substring(0, 100) + '...' : oneLine}`)
     const multiLine = JSON.stringify(e, BufferJSON.replacer, 2)
-    await fsp.appendFile('/tmp/whatsapp-events.log', multiLine + '\n')
+    await fsp.appendFile(`${tmpdir()}/whatsapp-events.log`, multiLine + '\n')
 
     for (const key of Object.keys(e) as (keyof BaileysEventMap)[]) {
       switch (key) {
