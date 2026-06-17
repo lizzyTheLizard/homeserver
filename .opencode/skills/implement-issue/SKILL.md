@@ -44,7 +44,9 @@ Read and summarise the issue for the user: title, user story, acceptance criteri
 
 Read the issue body and labels. If the issue involves UI changes, new screens, or visual components:
 
-- Ask the user: "This issue involves UI changes. Do you have a design ready? If so, please share it."
+- First check the `design/` folder for existing designs related to this issue (look for matching app name, component name, or screen name).
+- If a design exists in `design/`, reference it in the implementation plan and confirm with the user that it is the correct one.
+- If no design is found in `design/`, ask the user: "This issue involves UI changes. Do you have a design ready? If so, please share it."
 - If no design is available yet, pause and tell the user the issue cannot be fully planned without the design. Only continue once one is provided.
 
 If the issue is purely backend / data / configuration with no UI surface, skip this step.

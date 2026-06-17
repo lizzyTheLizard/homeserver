@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cash — Designs</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="Icon.jsx"></script>
+<script type="text/babel" src="Components.jsx"></script>
+<script src="data.js"></script>
+<script type="text/babel" src="CashCommon.jsx"></script>
+<script type="text/babel" src="JournalScreens.jsx"></script>
+<script type="text/babel" src="AccountsScreens.jsx"></script>
+<script type="text/babel" src="AccountBookingsScreens.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body, #root { margin: 0; padding: 0; height: 100%; }
+  body { font-family: sans-serif; background: rgb(245,243,240); color: black; }
+  /* Make sure inline links inside frames don't underline weirdly */
+  a { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+// Wrap each screen in a fixed-size frame so the artboard pixels match the design intent.
+function Frame({ children, width, height }) {
+  return (
+    <div style={{
+      width, height, background: 'white', overflow: 'hidden', position: 'relative',
+      fontFamily: 'sans-serif', color: 'black',
+    }}>{children}</div>
+  );
+}
+
+const DESKTOP_W = 1440;
+const DESKTOP_H = 900;
+const MOBILE_W  = 390;
+const MOBILE_H  = 844;
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="journal" title="Journal" subtitle="All bookings across the system — filter / sort / edit via sidebar.">
+        <DCArtboard id="journal-desktop" label="Desktop" width={DESKTOP_W} height={DESKTOP_H}>
+          <Frame width={DESKTOP_W} height={DESKTOP_H}>
+            <JournalDesktop />
+          </Frame>
+        </DCArtboard>
+        <DCArtboard id="journal-mobile" label="Mobile" width={MOBILE_W} height={MOBILE_H}>
+          <Frame width={MOBILE_W} height={MOBILE_H}>
+            <JournalMobile />
+          </Frame>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="accounts" title="Accounts" subtitle="The chart of accounts — name, type, archived flag.">
+        <DCArtboard id="accounts-desktop" label="Desktop" width={DESKTOP_W} height={DESKTOP_H}>
+          <Frame width={DESKTOP_W} height={DESKTOP_H}>
+            <AccountsDesktop />
+          </Frame>
+        </DCArtboard>
+        <DCArtboard id="accounts-mobile" label="Mobile" width={MOBILE_W} height={MOBILE_H}>
+          <Frame width={MOBILE_W} height={MOBILE_H}>
+            <AccountsMobile />
+          </Frame>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="account-bookings" title="Account Bookings" subtitle="Single-account journal: opens when you click any account link. Shows running total + opening balance.">
+        <DCArtboard id="ab-desktop" label="Desktop · Neon" width={DESKTOP_W} height={DESKTOP_H}>
+          <Frame width={DESKTOP_W} height={DESKTOP_H}>
+            <AccountBookingsDesktop />
+          </Frame>
+        </DCArtboard>
+        <DCArtboard id="ab-mobile" label="Mobile · Neon" width={MOBILE_W} height={MOBILE_H}>
+          <Frame width={MOBILE_W} height={MOBILE_H}>
+            <AccountBookingsMobile />
+          </Frame>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

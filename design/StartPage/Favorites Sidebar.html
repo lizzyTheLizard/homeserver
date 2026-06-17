@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favorites Sidebar — Gutschi.site</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="../Icon.jsx"></script>
+<script type="text/babel" src="../design-canvas.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: sans-serif; background: #f0f0f0; }
+  #root { height: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+function Btn({ variant = 'primary', children }) {
+  const cols = {
+    primary:   { background: 'rgba(0,0,220,1)',  color: 'white', borderColor: 'rgba(0,0,150,1)' },
+    secondary: { background: 'white',            color: 'black', borderColor: 'rgba(200,200,200,1)' },
+    danger:    { background: 'rgba(220,0,0,1)',  color: 'white', borderColor: 'rgba(150,0,0,1)' },
+  };
+  return (
+    <button style={{
+      width: '100%', height: '2.5rem', borderRadius: '6px',
+      fontFamily: 'sans-serif', fontSize: '0.9rem', cursor: 'pointer',
+      border: '1px solid', ...cols[variant],
+    }}>{children}</button>
+  );
+}
+
+function Inp({ label, value }) {
+  return (
+    <div style={{ position: 'relative', flexShrink: 0 }}>
+      <input readOnly value={value} placeholder=" " style={{
+        display: 'block', fontFamily: 'sans-serif',
+        padding: '1rem 0.5rem 0.25rem 0.5rem',
+        borderRadius: '6px', border: '1px solid rgba(200,200,200,1)',
+        width: '100%', height: '2.5rem', fontSize: '1rem', background: 'white',
+      }} />
+      <label style={{
+        color: 'rgba(0,0,0,0.6)', position: 'absolute',
+        left: '0.5rem', top: '0.1rem', fontSize: '0.65rem', pointerEvents: 'none',
+      }}>{label}</label>
+    </div>
+  );
+}
+
+/* Grows to fill remaining space in the flex column */
+function DescArea({ value }) {
+  return (
+    <div style={{ position: 'relative', flexGrow: 1, minHeight: '80px' }}>
+      <label style={{
+        fontSize: '0.65rem', color: 'rgba(0,0,0,0.6)',
+        position: 'absolute', left: '0.5rem', top: '0.25rem', pointerEvents: 'none', zIndex: 1,
+      }}>Description</label>
+      <textarea readOnly value={value} style={{
+        width: '100%', height: '100%', resize: 'none',
+        border: '1px solid rgba(200,200,200,1)', borderRadius: '6px',
+        padding: '1.25rem 0.5rem 0.5rem',
+        fontFamily: 'sans-serif', fontSize: '0.95rem', lineHeight: 1.5,
+        outline: 'none', background: 'white',
+      }} />
+    </div>
+  );
+}
+
+function SidebarShell({ title, subtitle, actionsArea, height }) {
+  return (
+    <div style={{
+      width: '368px', height,
+      borderLeft: '2px solid rgba(0,0,220,0.25)',
+      borderTop: '1px solid rgba(200,200,200,1)',
+      borderBottom: '1px solid rgba(200,200,200,1)',
+      background: 'white', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+    }}>
+      {/* Form — grows to fill available height */}
+      <div style={{ flexGrow: 1, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', minHeight: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.25rem', flexShrink: 0 }}>
+          <h1 style={{ margin: 0, fontSize: '1.2rem', flexGrow: 1 }}>{title}</h1>
+          <button style={{
+            background: 'transparent', border: 'none', cursor: 'default',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '2.5rem', height: '2.5rem', borderRadius: '6px',
+            color: '#333', flexShrink: 0, margin: '-0.25rem', opacity: 0.4,
+          }}>
+            <Icon name="close" style={{ width: '1.75rem', height: '1.75rem' }} />
+          </button>
+        </div>
+        {subtitle && <p style={{ fontWeight: 600, flexShrink: 0 }}>{subtitle}</p>}
+        <Inp label="Position" value={subtitle ? '1' : ''} />
+        <Inp label="Name"     value={subtitle || ''} />
+        <Inp label="URL"      value={subtitle ? 'https://github.com' : ''} />
+        <DescArea             value={subtitle ? 'Source code hosting' : ''} />
+      </div>
+
+      {/* Actions — pinned to bottom */}
+      <div style={{
+        flexShrink: 0, padding: '0.75rem 1rem',
+        borderTop: '1px solid rgba(200,200,200,1)',
+        display: 'flex', flexDirection: 'column', gap: '0.5rem',
+      }}>
+        {actionsArea}
+      </div>
+    </div>
+  );
+}
+
+/* ── A: New favorite ───────────────────────────────────────── */
+function StateNew() {
+  return (
+    <SidebarShell
+      title="New favorite"
+      subtitle={null}
+      height={440}
+      actionsArea={<Btn variant="primary">Save</Btn>}
+    />
+  );
+}
+
+/* ── B: Edit existing ──────────────────────────────────────── */
+function StateEdit() {
+  return (
+    <SidebarShell
+      title="Edit favorite"
+      subtitle="GitHub"
+      height={460}
+      actionsArea={<>
+        <Btn variant="primary">Save</Btn>
+        <Btn variant="danger">Delete</Btn>
+      </>}
+    />
+  );
+}
+
+/* ── C: Delete confirmation — Save/Delete replaced by confirm panel ── */
+function StateDelete() {
+  return (
+    <SidebarShell
+      title="Edit favorite"
+      subtitle="GitHub"
+      height={520}
+      actionsArea={<>
+        <div style={{
+          padding: '0.65rem 0.75rem',
+          border: '1px solid rgba(220,0,0,0.3)', borderRadius: '6px',
+          background: 'rgba(220,0,0,0.05)',
+        }}>
+          <p style={{ fontSize: '0.85rem' }}>
+            Delete <strong>GitHub</strong>? This cannot be undone.
+          </p>
+        </div>
+        <Btn variant="danger">Confirm delete</Btn>
+        <Btn variant="secondary">Cancel</Btn>
+      </>}
+    />
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas title="Favorites — Sidebar states">
+      <DCSection id="states" title="Sidebar states">
+        <DCArtboard id="new"    label="A — New favorite"        width={390} height={460}><StateNew /></DCArtboard>
+        <DCArtboard id="edit"   label="B — Edit favorite"       width={390} height={480}><StateEdit /></DCArtboard>
+        <DCArtboard id="delete" label="C — Delete confirmation" width={390} height={540}><StateDelete /></DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

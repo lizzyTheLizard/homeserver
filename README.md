@@ -67,6 +67,10 @@ Postgres is accessed through one connection pool created lazily on first use. Tw
 
 Per-row ownership is keyed on the user's email (`owner_email`). There is no `users` table — the email comes from the OIDC `email` claim and is denormalised onto every domain row.
 
+## Design
+
+All design files live in [design/](design/) and can be edited with [OpenDesign](https://open-design.ai/). The folder contains component designs, screen mockups, and exported artifacts for the various apps.
+
 ## Repository layout
 
 ```

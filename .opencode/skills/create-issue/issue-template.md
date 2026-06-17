@@ -18,7 +18,9 @@ As a [role], I want to [action] so that [benefit].
 <!-- Architecture decisions, constraints, relevant files or components, dependencies. -->
 
 ### UI / Design Requirements
-<!-- Describe screens, flows, or interactions required. Note if a design mockup is needed. -->
+<!-- Describe screens, flows, or interactions required. Note if a design mockup is needed. If a design exists in the design/ folder, link to it here. -->
+
+[Design](design/)
 
 ### Out of Scope
 <!-- Explicitly state what this issue does NOT cover to prevent scope creep. -->

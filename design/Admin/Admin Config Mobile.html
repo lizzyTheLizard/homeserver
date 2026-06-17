@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Config Mobile — Gutschi.site</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="../android-frame.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: sans-serif; background: #e8e8e8; display: flex; align-items: center; justify-content: center; }
+  #root { height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const SECTIONS = [
+  {
+    id: 'app', label: 'Application',
+    entries: [
+      { key: 'APP_URL',      value: 'https://www.gutschi.site' },
+      { key: 'PORT',         value: '3000' },
+      { key: 'NODE_ENV',     value: 'production' },
+      { key: 'ADMIN_EMAIL',  value: 'matthias@gutschi.site' },
+      { key: 'COOKIE_NAME',  value: 'homeserver_session' },
+      { key: 'TURBOPACK',    value: '1' },
+    ],
+  },
+  {
+    id: 'build', label: 'Build',
+    entries: [
+      { key: 'GIT_BRANCH',      value: 'main' },
+      { key: 'GIT_COMMIT_HASH', value: '648125fbebd1b57431816525 1c12b3a5d877eb38' },
+      { key: 'GITHUB_RUN_ID',   value: '24817205370' },
+    ],
+  },
+  {
+    id: 'runtime', label: 'Runtime',
+    entries: [
+      { key: 'NODE_VERSION', value: '20.2' },
+      { key: 'YARN_VERSION', value: '1.22.22' },
+      { key: 'HOSTNAME',     value: 'homenode' },
+      { key: 'RAM',          value: '128' },
+      { key: 'TZ',           value: 'Europe/Zurich' },
+      { key: 'PATH',         value: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin', truncate: true },
+    ],
+  },
+  {
+    id: 'auth', label: 'Auth / OIDC',
+    entries: [
+      { key: 'CLNT_ID',         value: 'f79682fe-0761-4361-aa2e-317957284c3a' },
+      { key: 'CLNT_SLCL',       value: 'Homeserver' },
+      { key: 'OID_EP',          value: 'https://login.microsoftonline.com/tenant/v2.0/.well-known/openid-configuration', truncate: true },
+      { key: 'SESSION_PASSWORD', value: 'baee820bmebd9tae0fa3tbadfhg1meg3TF5DFG', secret: true },
+      { key: 'OPLN_API_KEY',     value: 'a6ba2d2-4c4c-4927-bad2-b801adf65fd7', secret: true },
+    ],
+  },
+  {
+    id: 'db', label: 'Database',
+    entries: [
+      { key: 'DB_CONNECTION_STRING', value: 'postgres://user:password@100.120.0.1:5432/homeserver', secret: true },
+    ],
+  },
+  {
+    id: 'infra', label: 'Infrastructure',
+    entries: [
+      { key: 'SCW_APPLICATION_ID',     value: 'dc4a9fe98-1241-442d-d2d0-aba84a598f1e' },
+      { key: 'SCW_APPLICATION_CPU',    value: '70' },
+      { key: 'SCW_APPLICATION_MEMORY', value: '256' },
+      { key: 'SCW_APPLICATION_NAME',   value: 'www.gutschi.site' },
+      { key: 'SCW_NAMESPACE_ID',       value: 'f3dafd4a-171-47ae-b7ab-59cae9abd627' },
+      { key: 'KURENBTFLS_PORT',        value: 'tcp/100.120.0.1:443' },
+    ],
+  },
+];
+
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
+      {children}
+    </div>
+  );
+}
+
+function ConfigRow({ entry, showSecrets }) {
+  const [expanded, setExpanded] = useState(false);
+  const isSecret  = entry.secret;
+  const isTrunc   = entry.truncate;
+  const val       = entry.value;
+  const masked    = '••••••••••••••••';
+  const display   = isSecret && !showSecrets ? masked : (isTrunc && !expanded ? val.slice(0, 40) + '…' : val);
+  const canToggle = (isSecret && showSecrets) || isTrunc;
+
+  return (
+    <div style={{ padding: '0.35rem 0', borderBottom: '1px solid rgba(200,200,200,0.5)' }}>
+      <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#888', marginBottom: '0.15rem' }}>{entry.key}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+        <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', wordBreak: 'break-all', color: isSecret && !showSecrets ? '#ccc' : 'black' }}>{display}</span>
+        {canToggle && (
+          <button onClick={() => setExpanded(v => !v)} style={{
+            fontSize: '0.65rem', color: 'rgba(0,0,220,1)', background: 'none', border: 'none',
+            cursor: 'pointer', padding: 0, whiteSpace: 'nowrap', flexShrink: 0,
+          }}>{expanded ? 'less' : 'more'}</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ConfigCard({ section, showSecrets, query }) {
+  const filtered = section.entries.filter(e => !query || e.key.toLowerCase().includes(query.toLowerCase()) || e.value.toLowerCase().includes(query.toLowerCase()));
+  if (filtered.length === 0) return null;
+  return (
+    <div style={{ border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '1rem', background: 'white' }}>
+      <SectionLabel>{section.label}</SectionLabel>
+      {filtered.map(e => <ConfigRow key={e.key} entry={e} showSecrets={showSecrets} />)}
+    </div>
+  );
+}
+
+function AdminConfigMobile() {
+  const [tab, setTab]             = useState('config');
+  const [query, setQuery]         = useState('');
+  const [showSecrets, setSecrets] = useState(false);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'white' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '2.75rem', padding: '0 1rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1rem', fontWeight: 600 }}>Admin</span>
+        <div style={{ flexGrow: 1 }} />
+        <a href="../Start Page Mobile.html" title="Dashboard" style={{
+          color: 'white', textDecoration: 'none',
+          width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg>
+        </a>
+        <a href="#" onClick={e => e.preventDefault()} title="Logout" style={{
+          color: 'white', textDecoration: 'none',
+          width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
+        </a>
+      </div>
+
+      {/* Tab bar */}
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(200,200,200,1)', flexShrink: 0 }}>
+        {['Dashboard', 'Metrics', 'Config', 'Cash'].map(t => (
+          <button key={t} onClick={() => setTab(t.toLowerCase())} style={{
+            flex: 1, height: '2.5rem', fontSize: '0.75rem', fontFamily: 'sans-serif',
+            border: 'none', background: 'transparent', cursor: 'pointer',
+            borderBottom: tab === t.toLowerCase() ? '2px solid rgba(0,0,220,1)' : '2px solid transparent',
+            color: tab === t.toLowerCase() ? 'rgba(0,0,220,1)' : '#555',
+            fontWeight: tab === t.toLowerCase() ? 600 : 400,
+          }}>{t}</button>
+        ))}
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {SECTIONS.map(s => <ConfigCard key={s.id} section={s} showSecrets={showSecrets} query={query} />)}
+      </div>
+
+      {/* Filter + secrets — pinned to bottom */}
+      <div style={{ flexShrink: 0, padding: '0.75rem 1rem', borderTop: '1px solid rgba(200,200,200,1)', background: 'white', display: 'flex', gap: '0.5rem' }}>
+        <input
+          value={query} onChange={e => setQuery(e.target.value)}
+          placeholder="Filter keys…"
+          style={{
+            flexGrow: 1, height: '2.5rem', fontSize: '0.85rem',
+            border: '1px solid rgba(200,200,200,1)', borderRadius: '6px',
+            padding: '0 0.75rem', fontFamily: 'sans-serif', outline: 'none',
+          }}
+          onFocus={e => e.target.style.borderColor = 'rgba(0,0,220,1)'}
+          onBlur={e => e.target.style.borderColor = 'rgba(200,200,200,1)'}
+        />
+        <button onClick={() => setSecrets(v => !v)} style={{
+          height: '2.5rem', padding: '0 0.75rem', borderRadius: '6px', cursor: 'pointer',
+          fontFamily: 'sans-serif', fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0,
+          background: showSecrets ? 'rgba(220,0,0,0.08)' : 'white',
+          border: `1px solid ${showSecrets ? 'rgba(220,0,0,0.4)' : 'rgba(200,200,200,1)'}`,
+          color: showSecrets ? 'rgba(150,0,0,1)' : '#444',
+        }}>
+          {showSecrets ? 'Hide secrets' : 'Show secrets'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AndroidDevice>
+      <AdminConfigMobile />
+    </AndroidDevice>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

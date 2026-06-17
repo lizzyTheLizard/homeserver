@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Metrics Mobile — Gutschi.site</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="../android-frame.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: sans-serif; background: #e8e8e8; display: flex; align-items: center; justify-content: center; }
+  #root { height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+function fmtUptime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h && `${h}h`, m && `${m}m`, `${sec}s`].filter(Boolean).join(' ');
+}
+
+const GENERAL = [
+  { label: 'Memory', value: '39.25 MB' },
+  { label: 'Uptime', value: fmtUptime(2121) },
+];
+const COEDITOR = [
+  { label: 'Users',               value: '2' },
+  { label: 'Discussions (total)', value: '5' },
+  { label: 'Discussions (day)',   value: '0' },
+  { label: 'Commands (total)',    value: '9' },
+  { label: 'Commands (day)',      value: '0' },
+];
+const CASH = [
+  { label: 'Users',                         value: '1' },
+  { label: 'Projects',                      value: '1',    accent: 'rgba(0,0,220,1)' },
+  { label: 'Accounts',                      value: '28' },
+  { label: 'Transactions (total)',           value: '2408' },
+  { label: 'Transactions (day)',             value: '0' },
+  { label: 'Transactions (30 days)',         value: '24' },
+  { label: 'Transactions (calendar month)', value: '24' },
+];
+
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
+      {children}
+    </div>
+  );
+}
+
+function KV({ label, value, accent }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem', padding: '0.35rem 0', borderBottom: '1px solid rgba(200,200,200,0.5)' }}>
+      <span style={{ fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: '0.75rem', color: accent || 'black', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+    </div>
+  );
+}
+
+function Card({ children }) {
+  return (
+    <div style={{ border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '1rem', background: 'white' }}>
+      {children}
+    </div>
+  );
+}
+
+function AdminMetricsMobile() {
+  const [tab, setTab] = useState('metrics');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'white' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '2.75rem', padding: '0 1rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1rem', fontWeight: 600 }}>Admin</span>
+        <div style={{ flexGrow: 1 }} />
+        <a href="../Start Page Mobile.html" title="Dashboard" style={{
+          color: 'white', textDecoration: 'none',
+          width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg>
+        </a>
+        <a href="#" onClick={e => e.preventDefault()} title="Logout" style={{
+          color: 'white', textDecoration: 'none',
+          width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
+        </a>
+      </div>
+
+      {/* Tab bar */}
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(200,200,200,1)', background: 'white', flexShrink: 0 }}>
+        {['Dashboard', 'Metrics', 'Config', 'Cash'].map(t => (
+          <button key={t} onClick={() => setTab(t.toLowerCase())} style={{
+            flex: 1, height: '2.5rem', fontSize: '0.75rem', fontFamily: 'sans-serif',
+            border: 'none', background: 'transparent', cursor: 'pointer',
+            borderBottom: tab === t.toLowerCase() ? '2px solid rgba(0,0,220,1)' : '2px solid transparent',
+            color: tab === t.toLowerCase() ? 'rgba(0,0,220,1)' : '#555',
+            fontWeight: tab === t.toLowerCase() ? 600 : 400,
+          }}>{t}</button>
+        ))}
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <Card>
+          <SectionLabel>General</SectionLabel>
+          {GENERAL.map(m => <KV key={m.label} label={m.label} value={m.value} />)}
+        </Card>
+        <Card>
+          <SectionLabel>CoEditor</SectionLabel>
+          {COEDITOR.map(m => <KV key={m.label} label={m.label} value={m.value} />)}
+        </Card>
+        <Card>
+          <SectionLabel>Cash</SectionLabel>
+          {CASH.map(m => <KV key={m.label} label={m.label} value={m.value} accent={m.accent} />)}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AndroidDevice>
+      <AdminMetricsMobile />
+    </AndroidDevice>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

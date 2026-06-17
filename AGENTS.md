@@ -56,6 +56,10 @@ if (!isClient) return null
 
 This returns `false` on the server and `true` after hydration — no extra render, no flash of empty content.
 
+## Design
+
+All design files are in the `design/` folder — component designs, screen mockups, and exported artifacts. Edit them with OpenDesign.
+
 ## Environment Variables
 
 Required in production (see `.env.example` for full list):

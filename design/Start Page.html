@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start Page — Gutschi.site</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="Icon.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: white; }
+  #root { min-height: 100%; display: flex; flex-direction: column; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "siteName": "Homeserver",
+  "weatherCity": "Zürich",
+  "weatherTemp": 17,
+  "weatherCondition": "Partly cloudy"
+}/*EDITMODE-END*/;
+
+const APPS = [
+  { key: 'cash',      name: 'Cash',      icon: 'cash',      description: 'Bookkeeping' },
+  { key: 'coeditor',  name: 'CoEditor',  icon: 'coeditor',  description: 'Document editor' },
+  { key: 'admin',     name: 'Admin',     icon: 'admin',     description: 'Server admin' },
+  { key: 'startpage', name: 'StartPage', icon: 'startpage', description: 'Browser start page' },
+];
+
+const BOOKMARKS = [
+  { label: 'GitHub',   url: 'https://github.com' },
+  { label: 'Outlook',  url: 'https://outlook.com' },
+  { label: 'Scaleway', url: 'https://scaleway.com' },
+  { label: 'OneDrive', url: 'https://onedrive.live.com' },
+];
+
+const MOCK_STATUS = {
+  forecast: [
+    { time: '12:00', temp: 30, condition: 'Cloudy' },
+    { time: '21:00', temp: 15, condition: 'Rain' },
+  ],
+  tasks: [
+    { text: 'Review Q2 budget report', tag: 'Today' },
+    { text: 'Call back Dr. Müller', tag: 'Today' },
+    { text: 'Update homeserver backup config', tag: 'Yesterday', urgent: true },
+  ],
+  whatsapp: {
+    needReply: [
+      { from: 'Thomas', what: 'wants to know if you come to dinner on Saturday', ago: '2h ago' },
+      { from: 'Sarah', what: 'wants to send her the document', ago: '4h ago' },
+      { from: 'Familie', what: 'wants to know what time works for the call', ago: 'yesterday', urgent: true },
+    ],
+    unarchived: 3,
+    unread: 7,
+  },
+  emails: {
+    needReply: [
+      { from: 'Stefan Meier', what: 'want infos about the project meeting next week', ago: '1d ago' },
+      { from: 'Oliver Braun', what: 'has a question about Q2 numbers', ago: '2d ago', urgent: true },
+      { from: 'MIGROS', what: 'has weekly specials', ago: '3d ago' },
+    ],
+    unread: 3,
+    focus: 5,
+    other: 12,
+  },
+};
+
+const INITIAL_ACTIONS = [
+  'Answer Thomas (WhatsApp)',
+  'Reply to Oliver Braun',
+  'Get news summary',
+  'Show full inbox',
+];
+
+function getTimeOfDay() {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 18) return 'afternoon';
+  return 'evening';
+}
+
+function getAIResponse(input) {
+  const q = input.toLowerCase();
+  if (q.includes('thomas')) {
+    return {
+      text: 'Thomas asked: "Coming to dinner on Saturday?"\n\nDraft reply:',
+      detail: '"Hey Thomas! Yes, I\'ll be there Saturday — what time and where?"',
+      actions: ['Send this reply', 'Edit before sending', 'Skip'],
+    };
+  }
+  if (q.includes('sarah')) {
+    return {
+      text: 'Sarah asked: "Can you send me the document?"\n\nI\'ll need more context. Which document might she mean?',
+      actions: ['Ask her which document', 'Remind me tomorrow', 'Skip'],
+    };
+  }
+  if (q.includes('familie')) {
+    return {
+      text: 'Familie asked: "What time works for the call?"\n\nDraft reply:',
+      detail: '"Sunday afternoon works for me — how about 15:00?"',
+      actions: ['Send this reply', 'Edit before sending', 'Skip'],
+    };
+  }
+  if (q.includes('oliver') || (q.includes('q2') && q.includes('email'))) {
+    return {
+      text: 'Oliver Braun wrote: "Quick question — do you have the Q2 summary ready? We need it for Thursday\'s review call."\n\nDraft reply:',
+      detail: '"Hi Oliver, I\'ll have the Q2 summary ready by Wednesday EOD and send it over."',
+      actions: ['Send this reply', 'Open in Outlook', 'Skip'],
+    };
+  }
+  if (q.includes('stefan')) {
+    return {
+      text: 'Stefan Meier wrote: "Just confirming the project meeting for next Thursday at 14:00. Let me know if that still works."\n\nDraft reply:',
+      detail: '"Hi Stefan, Thursday at 14:00 works great. See you then!"',
+      actions: ['Send this reply', 'Suggest different time', 'Skip'],
+    };
+  }
+  if (q.includes('news')) {
+    return {
+      text: 'Today\'s headlines:\n• ECB holds rates steady — European markets up 0.8%\n• Summer rail schedule changes from June 22 in Switzerland\n• EU AI regulation framework enters final voting phase\n• Zürich: Tram line 10 detour via Helvetiaplatz until August',
+      actions: ['More on ECB', 'Local Zürich news', 'Save to reading list'],
+    };
+  }
+  if (q.includes('inbox') || (q.includes('full') && q.includes('email'))) {
+    return {
+      text: 'Your inbox (5 unread):\n– Nespresso — Order #48291 confirmed\n– Zalando — Return processed, refund in 3–5 days\n– Stefan Meier — Project meeting next week\n– Oliver Braun — Q2 numbers question\n– MIGROS — Weekly specials',
+      actions: ['Reply to Stefan Meier', 'Reply to Oliver Braun', 'Open Outlook'],
+    };
+  }
+  if (q.includes('weather') || q.includes('rain') || q.includes('forecast')) {
+    return {
+      text: 'Forecast for Zürich:\nNow: 17°C, partly cloudy\n17:00 → 16°C, cloudy\n18:00 → 15°C, cloudy\n19:00 → 14°C, rain beginning\n20:00 → 13°C, rain\n21:00 → 13°C, clearing\n\nRain arrives around 19:00 — bring an umbrella if heading out tonight.',
+      actions: ['5-day forecast', 'Set rain alert'],
+    };
+  }
+  if (q.includes('task') || q.includes('todo')) {
+    return {
+      text: 'Your tasks:\n1. Review Q2 budget report ← due today\n2. Call back Dr. Müller\n3. Update homeserver backup config (this week)',
+      actions: ['Mark Q2 report done', 'Set reminder for Dr. Müller', 'Add new task'],
+    };
+  }
+  if (q.includes('whatsapp') || (q.includes('message') && !q.includes('email'))) {
+    return {
+      text: 'WhatsApp messages waiting:\n• Thomas (2h): "Coming to dinner on Saturday?"\n• Sarah (4h): "Can you send me the document?"\n• Familie (yesterday): "What time for the call?"',
+      actions: ['Answer Thomas', 'Answer Sarah', 'Answer Familie'],
+    };
+  }
+  if (q === 'send this reply' || q === 'skip' || q.includes('done') || q.includes('sent')) {
+    return {
+      text: 'Done. Anything else I can help with?',
+      actions: ['Show tasks', 'Check WhatsApp', 'Get news summary'],
+    };
+  }
+  if (q.includes('hello') || q.includes('hi') || q.includes('hallo') || q.includes('hey')) {
+    return {
+      text: 'Hello! Ask me about your emails, messages, tasks, weather, or news — or tap a suggestion.',
+      actions: ['Show tasks', 'Check emails', 'Get news summary', 'Weather forecast'],
+    };
+  }
+  return {
+    text: 'I can help with that. What would you like to check?',
+    actions: ['Tasks', 'Emails', 'WhatsApp messages', 'News & weather'],
+  };
+}
+
+// ── Clock ──────────────────────────────────────────────────────────
+function useClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ── Status overview ────────────────────────────────────────────────
+function StatusOverview({ tweaks }) {
+  const urgent = { color: 'rgba(185,30,30,0.9)', fontWeight: 600 };
+
+  return (
+    <div style={{ fontSize: '0.92rem', lineHeight: 1.68, color: '#1a1a2e' }}>
+      <div style={{ marginBottom: '0.85rem', color: '#333' }}>
+        Good {getTimeOfDay()}! Here's your overview for today.
+      </div>
+
+      <div style={{ marginBottom: '0.7rem' }}>
+        The weather in {tweaks.weatherCity} is currently <strong>{tweaks.weatherTemp}°C, {tweaks.weatherCondition}</strong>. During the day, expect <strong>{MOCK_STATUS.forecast.map(f => `${f.temp}°C and ${f.condition.toLowerCase()} at ${f.time}`).join(', ')}</strong>.
+      </div>
+
+      <div style={{ marginBottom: '0.7rem' }}>
+        You have <strong>{MOCK_STATUS.tasks.length} tasks</strong> pending: {MOCK_STATUS.tasks.map((t, i) => (
+          <span key={i}>
+            <span>{t.text}</span>
+            <span style={t.urgent ? urgent : { color: '#666' }}> ({t.tag})</span>
+            {i < MOCK_STATUS.tasks.length - 1 ? ', ' : ''}
+          </span>
+        ))}.
+      </div>
+
+      <div style={{ marginBottom: '0.7rem' }}>
+        You have <strong>{MOCK_STATUS.whatsapp.unarchived}</strong> unarchived chats with <strong>{MOCK_STATUS.whatsapp.unread}</strong> new messages. {MOCK_STATUS.whatsapp.needReply.map((t, i) => (
+          <span key={i}>
+            <strong>{t.from}</strong> {t.what}
+            <span style={t.urgent ? urgent : { color: '#666' }}> ({t.ago})</span>
+            {i < MOCK_STATUS.whatsapp.needReply.length - 1 ? ', ' : ''}
+          </span>
+        ))}.
+      </div>
+
+      <div>
+        You have <strong>{MOCK_STATUS.emails.focus}</strong> emails in focus (<strong>{MOCK_STATUS.emails.unread}</strong> unread) and <strong>{MOCK_STATUS.emails.other}</strong> in other. {MOCK_STATUS.emails.needReply.map((t, i) => (
+          <span key={i}>
+            <strong>{t.from}</strong> {t.what}
+            <span style={t.urgent ? urgent : { color: '#666' }}> ({t.ago})</span>
+            {i < MOCK_STATUS.emails.needReply.length - 1 ? ', ' : ''}
+          </span>
+        ))}.
+      </div>
+    </div>
+  );
+}
+
+// ── Chat components ────────────────────────────────────────────────
+function UserMessage({ msg }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{
+        background: 'rgba(0,0,210,1)', color: 'white',
+        padding: '0.6rem 1.05rem', borderRadius: '18px 18px 4px 18px',
+        maxWidth: '80%', fontSize: '0.9rem', lineHeight: 1.5,
+      }}>
+        {msg.text}
+      </div>
+    </div>
+  );
+}
+
+function AiMessage({ msg, tweaks }) {
+  return (
+    <div>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '4px 18px 18px 18px',
+        padding: '0.9rem 1.1rem',
+        fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
+      }}>
+        {msg.type === 'status'
+          ? <StatusOverview tweaks={tweaks} />
+          : (
+            <div>
+              <span style={{ whiteSpace: 'pre-line' }}>{msg.text}</span>
+              {msg.detail && (
+                <div style={{
+                  marginTop: '0.6rem', padding: '0.5rem 0.8rem',
+                  background: 'rgba(0,0,180,0.07)',
+                  borderRadius: '8px', fontStyle: 'italic', color: '#333',
+                }}>{msg.detail}</div>
+              )}
+            </div>
+          )
+        }
+      </div>
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div style={{ display: 'inline-flex' }}>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '4px 18px 18px 18px',
+        padding: '0.75rem 1rem',
+        display: 'flex', gap: '5px', alignItems: 'center',
+      }}>
+        {[0, 0.18, 0.36].map((delay, i) => (
+          <div key={i} style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: 'rgba(0,0,180,0.4)',
+            animation: `bounce 1.1s ${delay}s infinite`,
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Chat window ────────────────────────────────────────────────────
+function AIChatWindow({ tweaks }) {
+  const [messages, setMessages] = useState([
+    { id: 0, role: 'ai', type: 'status', actions: INITIAL_ACTIONS },
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = 0;
+  }, [messages, isTyping]);
+
+  function send(text) {
+    const t = text.trim();
+    if (!t) return;
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: t }]);
+    setInput('');
+    setIsTyping(true);
+    setTimeout(() => {
+      const r = getAIResponse(t);
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', ...r }]);
+      setIsTyping(false);
+    }, 650 + Math.random() * 450);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    send(input);
+  }
+
+  const canSend = input.trim().length > 0;
+  const latestActions = messages.length > 0 ? messages[messages.length - 1].actions : null;
+
+  return (
+    <div style={{ width: '100%', maxWidth: '1200px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Input — pill */}
+      <form onSubmit={handleSubmit} style={{
+        display: 'flex', alignItems: 'center',
+        background: 'white',
+        border: '1.5px solid rgba(0,0,0,0.13)',
+        borderRadius: '28px',
+        padding: '0.3rem 0.3rem 0.3rem 1.25rem',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        gap: '0.5rem',
+      }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Ask me anything…"
+          style={{
+            flexGrow: 1, height: '2.1rem', fontSize: '0.95rem',
+            border: 'none', padding: '0', fontFamily: 'inherit', outline: 'none',
+            background: 'transparent', color: '#1a1a2e',
+          }}
+        />
+        <button type="submit" style={{
+          width: '2.2rem', height: '2.2rem', borderRadius: '50%', flexShrink: 0,
+          background: canSend ? 'rgba(0,0,210,1)' : 'rgba(215,215,225,1)',
+          border: 'none', cursor: canSend ? 'pointer' : 'default',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.15s',
+        }}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 11V2M2 6.5l4.5-4.5 4.5 4.5" stroke={canSend ? 'white' : '#aaa'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </form>
+
+      {/* Suggestion chips */}
+      {latestActions && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', padding: '0.8rem 0.2rem 0.4rem' }}>
+          {latestActions.map(a => (
+            <button key={a} onClick={() => send(a)} style={{
+              padding: '0.33rem 0.85rem',
+              background: 'rgba(0,0,210,0.07)',
+              border: '1px solid rgba(0,0,210,0.22)',
+              borderRadius: '20px', cursor: 'pointer',
+              fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+              fontFamily: 'inherit', fontWeight: 500,
+              transition: 'background 0.12s, border-color 0.12s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+            >{a}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Messages — newest first */}
+      <div ref={listRef} style={{
+        overflowY: 'auto', padding: '0.5rem 0 1rem',
+        display: 'flex', flexDirection: 'column', gap: '0.75rem',
+      }}>
+        {isTyping && <TypingIndicator />}
+        {[...messages].reverse().map(msg =>
+          msg.role === 'ai'
+            ? <AiMessage key={msg.id} msg={msg} tweaks={tweaks} />
+            : <UserMessage key={msg.id} msg={msg} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Tweaks panel ───────────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweaks, visible }) {
+  if (!visible) return null;
+  function update(key, val) {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  }
+  return (
+    <div style={{
+      position: 'fixed', bottom: '1rem', right: '1rem', zIndex: 1000,
+      background: 'white', border: '1px solid rgba(200,200,200,1)', borderRadius: '8px',
+      padding: '1rem', width: '260px', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+    }}>
+      <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tweaks</div>
+      {[['siteName', 'Site name'], ['weatherCity', 'Weather city'], ['weatherCondition', 'Condition']].map(([k, label]) => (
+        <div key={k}>
+          <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+          <input value={tweaks[k]} onChange={e => update(k, e.target.value)} style={{
+            width: '100%', height: '2rem', fontSize: '0.85rem',
+            border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+            fontFamily: 'inherit',
+          }} />
+        </div>
+      ))}
+      <div>
+        <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temperature (°C)</div>
+        <input type="number" value={tweaks.weatherTemp} onChange={e => update('weatherTemp', Number(e.target.value))} style={{
+          width: '100%', height: '2rem', fontSize: '0.85rem',
+          border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+          fontFamily: 'inherit',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────
+function App() {
+  const now = useClock();
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'white' }}>
+      {/* Top bar */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,210,1)', color: 'white',
+        height: '2.5rem', padding: '0 1.5rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.01em' }}>{tweaks.siteName}</span>
+        <div style={{ flexGrow: 1 }} />
+        <a href="#" onClick={e => e.preventDefault()} style={{
+          color: 'white', textDecoration: 'none', fontSize: '0.8rem',
+          padding: '0 0.75rem', height: '2.5rem', display: 'flex', alignItems: 'center', opacity: 0.8,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.background = 'transparent'; }}>
+          Logout
+        </a>
+      </div>
+
+      {/* Main */}
+      <div style={{
+        flexGrow: 1, display: 'flex', flexDirection: 'column',
+        height: 'calc(100vh - 2.5rem)', overflowY: 'auto',
+        alignItems: 'center', padding: '2rem', gap: '1.75rem',
+      }}>
+        {/* Clock */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '4rem', fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1, color: 'rgba(0,0,210,1)' }}>{fmtTime(now)}</div>
+          <div style={{ fontSize: '0.95rem', color: '#888', marginTop: '0.5rem', letterSpacing: '0.01em' }}>{fmtDate(now)}</div>
+        </div>
+
+        {/* AI Chat */}
+        <AIChatWindow tweaks={tweaks} />
+
+        {/* App cards */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {APPS.map(app => (
+            <a key={app.key} href="#" onClick={e => e.preventDefault()} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              padding: '1.25rem 2rem', width: '160px',
+              border: '1px solid rgba(0,0,0,0.1)', borderRadius: '10px',
+              textDecoration: 'none', color: '#1a1a2e', background: 'white',
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgb(245,246,252)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'; }}>
+              <Icon name={app.icon} style={{ width: '3.5rem', height: '3.5rem', marginBottom: '0.6rem' }} />
+              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{app.name}</div>
+              <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.2rem' }}>{app.description}</div>
+            </a>
+          ))}
+        </div>
+
+        {/* Bookmarks */}
+        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {BOOKMARKS.map(b => (
+            <a key={b.label} href={b.url} target="_blank" rel="noopener" style={{
+              padding: '0.32rem 0.85rem',
+              border: '1px solid rgba(0,0,0,0.1)', borderRadius: '6px',
+              textDecoration: 'none', color: '#555', fontSize: '0.85rem',
+              background: 'white', transition: 'background 0.15s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgb(245,246,252)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'white'}>
+              {b.label}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

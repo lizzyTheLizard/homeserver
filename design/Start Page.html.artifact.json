@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Start Page.html",
+  "entry": "Start Page.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-09T10:44:01.210Z",
+  "updatedAt": "2026-06-09T10:44:01.210Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

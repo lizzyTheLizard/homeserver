@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Start Page Mobile.html",
+  "entry": "Start Page Mobile.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-09T10:44:20.582Z",
+  "updatedAt": "2026-06-09T10:46:34.662Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

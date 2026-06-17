@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Metrics</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: sans-serif; background: white; }
+  #root { height: 100%; display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+function fmtUptime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h && `${h}h`, m && `${m}m`, `${sec}s`].filter(Boolean).join(' ');
+}
+
+const GENERAL = [
+  { label: 'Memory', value: '39.25 MB' },
+  { label: 'Uptime', value: fmtUptime(2121) },
+];
+
+const COEDITOR = [
+  { label: 'Users',                value: '2' },
+  { label: 'Discussions (total)',  value: '5' },
+  { label: 'Discussions (day)',    value: '0' },
+  { label: 'Commands (total)',     value: '9' },
+  { label: 'Commands (day)',       value: '0' },
+];
+
+const CASH = [
+  { label: 'Users',                        value: '1' },
+  { label: 'Projects',                     value: '1',    accent: 'rgba(0,0,220,1)' },
+  { label: 'Accounts',                     value: '28' },
+  { label: 'Transactions (total)',          value: '2408' },
+  { label: 'Transactions (day)',            value: '0' },
+  { label: 'Transactions (30 days)',        value: '24' },
+  { label: 'Transactions (calendar month)', value: '24' },
+];
+
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem' }}>
+      {children}
+    </div>
+  );
+}
+
+function KV({ label, value, accent }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', padding: '0.45rem 0', borderBottom: '1px solid rgba(200,200,200,0.6)' }}>
+      <span style={{ fontSize: '0.8rem', color: '#555', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: '0.875rem', color: accent || 'black', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+    </div>
+  );
+}
+
+function Card({ children, style }) {
+  return (
+    <div style={{ border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '1.25rem', background: 'white', display: 'flex', flexDirection: 'column', ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function NavLink({ children, active, onClick }) {
+  return (
+    <a href="#" onClick={e => { e.preventDefault(); onClick && onClick(); }} style={{
+      color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+      padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center',
+      borderBottom: active ? '0.2rem solid white' : 'none',
+      paddingTop: active ? '0.2rem' : '0',
+    }}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+      {children}
+    </a>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState('metrics');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '4rem', padding: '0 1.5rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1.5rem', fontWeight: 600, marginRight: '0.5rem' }}>Admin</span>
+        <nav style={{ display: 'flex' }}>
+          {['Dashboard', 'Metrics', 'Config', 'Cash'].map(t => (
+            <NavLink key={t} active={tab === t.toLowerCase()} onClick={() => setTab(t.toLowerCase())}>{t}</NavLink>
+          ))}
+        </nav>
+        <div style={{ flexGrow: 1 }} />
+        {['All Applications', 'Logout'].map(t => (
+          <NavLink key={t}>{t}</NavLink>
+        ))}
+      </div>
+
+      {/* Content */}
+      <main style={{ flexGrow: 1, padding: '2rem 1.5rem' }}>
+        <h1 style={{ textAlign: 'left', fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>Metrics</h1>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', alignItems: 'stretch' }}>
+
+          {/* General */}
+          <Card>
+            <SectionLabel>General</SectionLabel>
+            {GENERAL.map(m => <KV key={m.label} label={m.label} value={m.value} />)}
+          </Card>
+
+          {/* CoEditor */}
+          <Card>
+            <SectionLabel>CoEditor</SectionLabel>
+            {COEDITOR.map(m => <KV key={m.label} label={m.label} value={m.value} />)}
+          </Card>
+
+          {/* Cash */}
+          <Card>
+            <SectionLabel>Cash</SectionLabel>
+            {CASH.map(m => <KV key={m.label} label={m.label} value={m.value} accent={m.accent} />)}
+          </Card>
+
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

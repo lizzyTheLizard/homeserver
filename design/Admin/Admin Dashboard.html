@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Dashboard</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="../Icon.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: sans-serif; background: white; }
+  #root { height: 100%; display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ── Data ──────────────────────────────────────────────────────
+const BUILD = {
+  branch: 'main',
+  commitShort: '648125f',
+  commitUrl: 'https://github.com',
+  action: '24817205370',
+  origin: 'GitHub',
+};
+const RUN = {
+  instanceFull: '0194f1d0-bccd-4782-b7f0-b13a82a1cfdf',
+  uptime: 79,
+  environment: 'production',
+};
+const CONFIG = {
+  databaseEnv: 'prod',
+  databaseUrl: 'https://db.gutschi.site',
+  appUrlHref: 'https://www.gutschi.site',
+  appUrl: 'www.gutschi.site',
+  clientEnv: 'Homeserver',
+  clientUrl: 'https://auth.gutschi.site',
+};
+const METRICS = [
+  { label: 'Memory',                     value: '35.37 MB' },
+  { label: 'CoEditor commands (day)',     value: '0' },
+  { label: 'CoEditor commands (30 days)', value: '0' },
+  { label: 'Cash transactions (day)',     value: '0' },
+  { label: 'Cash transactions (30 days)', value: '24' },
+];
+const LOGS = [
+  { time: '07:33:51', level: 'INFO',  msg: 'Server started on port 3000' },
+  { time: '07:33:52', level: 'INFO',  msg: 'Connected to database' },
+  { time: '07:34:10', level: 'INFO',  msg: 'OpenID connect configured' },
+  { time: '07:41:03', level: 'WARN',  msg: 'Disk usage above 75% on /var' },
+  { time: '07:55:28', level: 'INFO',  msg: 'Cash report generated' },
+];
+
+// ── Shared components ─────────────────────────────────────────
+function fmtTwoLine(isoString) {
+  const d = new Date(isoString);
+  const datePart = d.toLocaleDateString('de-CH', { weekday: 'long', day: '2-digit', month: '2-digit', year: '2-digit' });
+  const timePart = d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return { datePart, timePart };
+}
+
+const BUILD_STARTED = fmtTwoLine('2026-04-23T04:44:08Z');
+const RUN_STARTED = fmtTwoLine('2026-04-23T07:33:51.828Z');
+
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem' }}>
+      {children}
+    </div>
+  );
+}
+
+function KV({ label, value, mono, link, accent, href }) {
+  const valStyle = {
+    fontSize: '0.875rem',
+    fontFamily: mono ? 'monospace' : 'sans-serif',
+    color: link ? 'rgba(0,0,220,1)' : accent ? accent : 'black',
+    textDecoration: link ? 'underline' : 'none',
+    cursor: link ? 'pointer' : 'default',
+    wordBreak: 'break-all',
+    textAlign: 'right',
+    maxWidth: '60%',
+  };
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', padding: '0.45rem 0', borderBottom: '1px solid rgba(200,200,200,0.6)' }}>
+      <span style={{ fontSize: '0.8rem', color: '#555', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</span>
+      {link && href
+        ? <a href={href} target="_blank" rel="noopener" style={valStyle}>{value}</a>
+        : <span style={valStyle}>{value}</span>
+      }
+    </div>
+  );
+}
+
+function Card({ children, style }) {
+  return (
+    <div style={{ border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '1.25rem', background: 'white', display: 'flex', flexDirection: 'column', ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function NavLink({ children, active, onClick }) {
+  return (
+    <a href="#" onClick={e => { e.preventDefault(); onClick && onClick(); }} style={{
+      color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+      padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center',
+      borderBottom: active ? '0.2rem solid white' : 'none',
+      paddingTop: active ? '0.2rem' : '0',
+    }}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+      {children}
+    </a>
+  );
+}
+
+function LevelBadge({ level }) {
+  const colors = {
+    INFO: { bg: 'rgba(0,0,220,0.08)', color: 'rgba(0,0,150,1)' },
+    WARN: { bg: 'rgba(220,120,0,0.1)', color: 'rgba(160,80,0,1)' },
+    ERROR: { bg: 'rgba(220,0,0,0.1)', color: 'rgba(150,0,0,1)' },
+  };
+  const c = colors[level] || colors.INFO;
+  return (
+    <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '3px', background: c.bg, color: c.color, letterSpacing: '0.04em' }}>
+      {level}
+    </span>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState('dashboard');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '4rem', padding: '0 1.5rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1.5rem', fontWeight: 600, marginRight: '0.5rem' }}>Admin</span>
+        <nav style={{ display: 'flex' }}>
+          {['Dashboard', 'Metrics', 'Config', 'Cash'].map(t => (
+            <NavLink key={t} active={tab === t.toLowerCase()} onClick={() => setTab(t.toLowerCase())}>{t}</NavLink>
+          ))}
+        </nav>
+        <div style={{ flexGrow: 1 }} />
+        {['All Applications', 'Logout'].map(t => (
+          <NavLink key={t}>{t}</NavLink>
+        ))}
+      </div>
+
+      {/* Dashboard content */}
+      <main style={{ flexGrow: 1, padding: '2rem 1.5rem' }}>
+        <h1 style={{ textAlign: 'left', fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>Dashboard</h1>
+
+        {/* Top 4 cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1rem', alignItems: 'stretch' }}>
+
+          {/* Build */}
+          <Card>
+            <SectionLabel>Build</SectionLabel>
+            <KV label="Branch"  value={BUILD.branch}       link />
+            <KV label="Commit"  value={BUILD.commitShort}  mono link href={BUILD.commitUrl} />
+            <KV label="Action"  value={BUILD.action}       link />
+            <KV label="Origin"  value={BUILD.origin} />
+            <KV label="Built"   value={<><div>{BUILD_STARTED.datePart}</div><div>{BUILD_STARTED.timePart}</div></>} />
+          </Card>
+
+          {/* Run */}
+          <Card>
+            <SectionLabel>Run</SectionLabel>
+            <KV label="Instance"    value={RUN.instanceFull} />
+            <KV label="Started" value={<><div>{RUN_STARTED.datePart}</div><div>{RUN_STARTED.timePart}</div></>} />
+            <KV label="Uptime (s)"  value={RUN.uptime} />
+            <KV label="Environment" value={RUN.environment} accent="rgba(30,150,30,1)" />
+          </Card>
+
+          {/* Config */}
+          <Card>
+            <SectionLabel>Config</SectionLabel>
+            <KV label="Database" value={CONFIG.databaseEnv} link href={CONFIG.databaseUrl} />
+            <KV label="App URL"  value={CONFIG.appUrl} link href={CONFIG.appUrlHref} />
+            <KV label="Client ID" value={CONFIG.clientEnv}   link href={CONFIG.clientUrl} />
+            <div style={{ marginTop: 'auto', paddingTop: '1rem', textAlign: 'center' }}>
+              <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '0.85rem', color: 'rgba(0,0,220,1)', textDecoration: 'underline' }}>View all →</a>
+            </div>
+          </Card>
+
+          {/* Metrics */}
+          <Card>
+            <SectionLabel>Metrics</SectionLabel>
+            {METRICS.map(m => (
+              <KV key={m.label} label={m.label} value={m.value} />
+            ))}
+            <div style={{ marginTop: 'auto', paddingTop: '1rem', textAlign: 'center' }}>
+              <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '0.85rem', color: 'rgba(0,0,220,1)', textDecoration: 'underline' }}>View all →</a>
+            </div>
+          </Card>
+        </div>
+
+        {/* Logs */}
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <SectionLabel>Events</SectionLabel>
+            <div style={{ flexGrow: 1 }} />
+            <a href="#" onClick={e => e.preventDefault()} style={{ fontSize: '0.85rem', color: 'rgba(0,0,220,1)', textDecoration: 'underline' }}>View logs →</a>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            <thead>
+              <tr>
+                {['Time', 'Level', 'Message'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '0.4rem 0.75rem', borderBottom: '2px solid rgba(200,200,200,1)', fontWeight: 600, fontSize: '0.75rem', color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {LOGS.map((l, i) => (
+                <tr key={i}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgb(240,240,240)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'white'}>
+                  <td style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid rgba(200,200,200,0.6)', fontFamily: 'monospace', color: '#555', whiteSpace: 'nowrap' }}>{l.time}</td>
+                  <td style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid rgba(200,200,200,0.6)', whiteSpace: 'nowrap' }}><LevelBadge level={l.level} /></td>
+                  <td style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid rgba(200,200,200,0.6)', fontFamily: 'monospace' }}>{l.msg}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

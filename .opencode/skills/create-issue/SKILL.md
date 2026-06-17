@@ -22,7 +22,7 @@ Identify gaps in understanding before drafting anything. Cover the following are
 - **Who benefits?** Who is the user/role this is for? (needed for the User Story)
 - **What is the success condition?** How do we know when this is done? (needed for acceptance criteria)
 - **Scope / edge cases** — are there known constraints, error cases, or out-of-scope items?
-- **UI / design needed?** Does this feature require a new screen, form, or visual design? If yes, capture the design requirements.
+- **UI / design needed?** Does this feature require a new screen, form, or visual design? Check the `design/` folder to see if a design already exists. If yes, capture the design requirements and link to the existing design. If no, add a note that a design is needed before the issue can be implemented.
 - **Technical constraints** — relevant architecture decisions, dependencies, or implementation notes the developer should know.
 - **Priority / context** — is there a deadline or dependency on another issue?
 
@@ -51,5 +51,5 @@ Report the issue URL back to the user when done.
 
 - Keep the User Story to 2–3 sentences. Avoid implementation details there — save those for Additional Information.
 - Acceptance criteria must be testable and written as observable outcomes ("the user can…", "the system returns…"), not implementation steps. Keep them to 3-5 max
-- If a UI design is needed, say so explicitly in the UI / Design Requirements section so it is not overlooked.
+- If a UI design is needed, say so explicitly in the UI / Design Requirements section so it is not overlooked. If a design already exists in `design/`, include a link to it.
 - Omit empty sections from the final issue body — do not leave placeholder comments in the posted issue.
