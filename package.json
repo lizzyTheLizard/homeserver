@@ -40,7 +40,7 @@
     "@electric-sql/pglite": "^0.5.2",
     "@eslint/js": "^10.0.1",
     "@storybook/addon-a11y": "^10.4.5",
-    "@storybook/addon-docs": "^10.4.5",
+    "@storybook/addon-docs": "^10.4.6",
     "@storybook/addon-vitest": "^10.4.5",
     "@storybook/nextjs-vite": "^10.4.5",
     "@storybook/react": "^10.4.5",
