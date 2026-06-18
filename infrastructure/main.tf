@@ -48,7 +48,7 @@ resource "scaleway_container" "www_gutschi_site" {
   max_scale       = 1
   privacy         = "public"
   cpu_limit       = 100
-  memory_limit    = 128
+  memory_limit    = 256
   deploy          = true
   environment_variables = {
     APP_URL="https://www.gutschi.site",
@@ -82,7 +82,7 @@ resource "scaleway_container" "test_gutschi_site" {
   max_scale       = 1
   privacy         = "public"
   cpu_limit       = 100
-  memory_limit    = 128
+  memory_limit    = 256
   deploy          = false
   environment_variables = {
     APP_URL="https://test.gutschi.site",
