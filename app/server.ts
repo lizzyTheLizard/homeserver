@@ -34,7 +34,7 @@ export async function sendMessage(messages: Message[]): ActionResponse<{ message
   return toResponse(nontransactional(async () => {
     await getAuthenticatedUserSession('startpage')
     validateObject(messages, MessagesSchema)
-    return await askAssistant(messages, true)
+    return await askAssistant(messages)
   }))
 }
 

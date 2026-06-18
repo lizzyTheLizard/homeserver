@@ -47,7 +47,7 @@ describe('detailedWeatherTool', () => {
     expect(parsedResult.sunrise).toBeDefined()
     expect(parsedResult.sunset).toBeDefined()
     expect(parsedResult[today.toString() + 'T00:00']).toEqual({
-      temperature_2m: expect.any(Number),
+      temperature: expect.any(Number),
       relative_humidity_2m: expect.any(Number),
       precipitation: expect.any(Number),
       precipitation_probability: expect.any(Number),
@@ -57,7 +57,7 @@ describe('detailedWeatherTool', () => {
       weather_condition: expect.any(String),
     })
     expect(parsedResult[today.toString() + 'T23:00']).toEqual({
-      temperature_2m: expect.any(Number),
+      temperature: expect.any(Number),
       relative_humidity_2m: expect.any(Number),
       precipitation: expect.any(Number),
       precipitation_probability: expect.any(Number),

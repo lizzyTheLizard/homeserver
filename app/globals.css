@@ -23,7 +23,14 @@ main {
 
 .fullscreen {
   /* Full screen without header and footer */
-  height: calc(100% - 4rem);
+  height: calc(100vh - 4rem);
+}
+
+@media (max-width: 600px) {
+  .fullscreen {
+    height: calc(100vh - 4rem - 1px);
+    padding-bottom: 0;
+  }
 }
 
 h1 {
