@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/common/auth/auth'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import type { UserSession } from '@/app/shared/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { CommandInput, createCommand } from '../_data/Command'
 import { ExecuteCommandInput } from './server'
 import { createOrModifyTemplate } from '../_data/Template'
@@ -12,8 +12,8 @@ import { aiPort } from '../_external/AiPort'
 import { createDiscussion, findDiscussionByOwner } from '../_data/Discussion'
 
 // Mock the auth module
-vi.mock('@/app/common/auth/auth', async () => {
-  const actual = await vi.importActual('@/app/common/auth/auth')
+vi.mock('@/app/shared/auth/auth', async () => {
+  const actual = await vi.importActual('@/app/shared/auth/auth')
   return {
     ...actual,
     getAuthenticatedUserSession: vi.fn(),

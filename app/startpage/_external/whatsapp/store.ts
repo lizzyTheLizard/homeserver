@@ -1,5 +1,5 @@
 import { BaileysEventMap, BufferJSON, Chat, ChatUpdate, Contact, proto, toNumber, WAMessage, WAMessageKey, WAMessageUpdate } from '@whiskeysockets/baileys'
-import { ChatInput, cleanWhatsAppDataOfOwner, ContactInput, deleteChatsById, deleteMessages, MessageInput, updateChats, updateContacts, updateMessages } from '../../_data/Chat'
+import { ChatInput, cleanWhatsAppDataOfOwner, ContactInput, deleteChatsById, deleteMessages, MessageInput, updateChats, updateContacts, updateMessages } from '../../_data/Whatsapp'
 import { logger } from '@/app/shared/logger'
 import { Mutex } from 'async-mutex'
 import { PoolClient } from 'pg'
@@ -187,8 +187,6 @@ export function createStore(owner: string): WhatsAppStore {
   }
 
   async function process(e: Partial<BaileysEventMap>) {
-    const oneLine = JSON.stringify(e, BufferJSON.replacer)
-    logger.debug(`Received WhatsApp event: ${oneLine.length > 100 ? oneLine.substring(0, 100) + '...' : oneLine}`)
     const multiLine = JSON.stringify(e, BufferJSON.replacer, 2)
     await fsp.appendFile(`${tmpdir()}/whatsapp-events.log`, multiLine + '\n')
 

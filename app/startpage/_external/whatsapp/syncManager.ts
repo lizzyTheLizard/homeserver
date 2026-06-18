@@ -1,5 +1,5 @@
 'use server'
-import { UserSession } from '@/app/common/auth/auth'
+import { UserSession } from '@/app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
 import { transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'

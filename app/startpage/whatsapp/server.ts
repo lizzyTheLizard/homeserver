@@ -1,8 +1,8 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { Chat, Contact, findChatsByOwner, findContactsByOwner, findMessagesByChatId, Message } from '@/app/startpage/_data/Chat'
+import { Chat, Contact, findChatsByOwner, findContactsByOwner, findMessagesByChatId, Message } from '@/app/startpage/_data/Whatsapp'
 import { getRunningSyncData, RunningSyncStatus } from '../_external/whatsapp/syncManager'
 
 export async function loadChats(): Promise<[Chat[], Contact[]]> {

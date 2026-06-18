@@ -2,7 +2,7 @@
 
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../_data/Profile'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { z } from 'zod'

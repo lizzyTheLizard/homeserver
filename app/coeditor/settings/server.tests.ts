@@ -1,15 +1,15 @@
 import { describe, expect, test, vi } from 'vitest'
 import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/common/auth/auth'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import type { UserSession } from '@/app/shared/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createOrModifyTemplate, findTemplateById } from '../_data/Template'
 import { deleteProfile, deleteTemplate, loadSettings, saveProfile, saveTemplate } from './server'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { createOrModifyProfile, findProfileByOwnerAndLanguage } from '../_data/Profile'
 
 // Mock the auth module
-vi.mock('@/app/common/auth/auth', async () => {
-  const actual = await vi.importActual('@/app/common/auth/auth')
+vi.mock('@/app/shared/auth/auth', async () => {
+  const actual = await vi.importActual('@/app/shared/auth/auth')
   return {
     ...actual,
     getAuthenticatedUserSession: vi.fn(),

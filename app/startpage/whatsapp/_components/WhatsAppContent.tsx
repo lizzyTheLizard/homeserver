@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useState } from 'react'
 import QRCode from 'react-qr-code'
-import { Chat, Contact, Message } from '@/app/startpage/_data/Chat'
+import { Chat, Contact, Message } from '@/app/startpage/_data/Whatsapp'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { textColumn, boolColumn, numberColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { initialWhatsAppState, whatsAppStateReducer } from './WhatsAppState'

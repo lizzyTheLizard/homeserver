@@ -1,4 +1,4 @@
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { config } from '@/app/shared/config'
 import { v4 as randomUUID } from 'uuid'
 import { LineItem } from '../_components/DashboardCard'

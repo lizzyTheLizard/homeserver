@@ -1,0 +1,25 @@
+.clockBlock {
+  text-align: center;
+  padding: calc(var(--gap) * 2) 0;
+}
+
+.clock {
+  font-size: 4.5rem;
+  font-weight: 300;
+  color: var(--primary-background-color);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.date {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .clockBlock {
+    display: none;
+  }
+}

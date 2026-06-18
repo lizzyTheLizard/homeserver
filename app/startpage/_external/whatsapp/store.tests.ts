@@ -1,6 +1,6 @@
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
-import { cleanWhatsAppDataOfOwner, findChatsByOwner, findContactsByOwner, findMessagesByChatId } from '../../_data/Chat'
+import { cleanWhatsAppDataOfOwner, findChatsByOwner, findContactsByOwner, findMessagesByChatId } from '../../_data/Whatsapp'
 import { createStore, Processor } from './store'
 import { BaileysEventMap, WAMessage } from '@whiskeysockets/baileys'
 import { existsSync, promises as fsp } from 'fs'

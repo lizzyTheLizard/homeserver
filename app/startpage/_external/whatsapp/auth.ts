@@ -1,5 +1,5 @@
 import { AuthenticationCreds, AuthenticationState, BufferJSON, initAuthCreds, SignalDataTypeMap, proto, SignalDataSet } from '@whiskeysockets/baileys'
-import { AuthStateInput } from '../../_data/Chat'
+import { AuthStateInput } from '../../_data/Whatsapp'
 
 export interface ExportableAuthState extends AuthenticationState {
   toAuthState: () => AuthStateInput

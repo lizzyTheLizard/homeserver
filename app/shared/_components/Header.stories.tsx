@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Header } from './Header'
 
 const meta = {
-  title: 'Common/Header',
+  title: 'Shared/Header',
   component: Header,
   tags: ['autodocs'],
   args: {
@@ -46,7 +46,7 @@ export const MobileMultipleTabs: StoryObj<typeof meta> = {
 
 export const NoSession: StoryObj<typeof meta> = {
   args: {
-    path: '/auth/common/out',
+    path: '/auth/shared/out',
     hasSession: false,
     accessibleApplications: [],
   },

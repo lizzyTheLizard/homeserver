@@ -10,6 +10,6 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logger.warn('Error during login callback', error)
-    return Response.redirect(config.APP_URL + '/common/auth/error')
+    return Response.redirect(config.APP_URL + '/shared/auth/error')
   }
 }

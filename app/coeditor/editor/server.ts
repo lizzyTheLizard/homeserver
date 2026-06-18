@@ -1,5 +1,5 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createDiscussion, Discussion, DiscussionInput, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
 import { findTemplateById, findTemplatesByOwner, Template } from '../_data/Template'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'

@@ -1,7 +1,7 @@
 'use client'
 
 import style from './Header.module.css'
-import { Application, applications } from '../Application'
+import { Application, applications } from '@/app/shared/Application'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Icon } from '@/app/shared/_components/Icon'
@@ -57,8 +57,8 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
           )}
         {hasSession && (
           <>
-            <a href="/common/auth/logout" className={linkClass('/common/auth/logout', false)}>Logout</a>
-            <a href="/common/auth/logout" className={linkClass('/common/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></a>
+            <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', false)}>Logout</a>
+            <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></a>
           </>
         )}
       </div>

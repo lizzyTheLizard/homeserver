@@ -3,7 +3,7 @@ import { logger } from '@/app/shared/logger'
 import { createExportableAuth } from './auth'
 import { createStore } from './store'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { AuthStateInput, findAuthStateByOwner, updateAuthState } from '../../_data/Chat'
+import { AuthStateInput, findAuthStateByOwner, updateAuthState } from '../../_data/Whatsapp'
 
 export interface SyncHandler {
   start: () => void

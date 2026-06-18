@@ -3,8 +3,8 @@ import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { initialize, addNeonTransactions, NeonTransactionInput, addSharedTransactions, markAsChecked, loadData } from './server'
 import { Account, AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
-import type { UserSession } from '@/app/common/auth/auth'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import type { UserSession } from '@/app/shared/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createMonthlyClosing, findForPeriod, Monthly, type MonthlyInput, type SharedTransaction } from '@/app/cash/_data/Monthly'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { findAllTransactions } from '@/app/cash/_data/Transaction'
@@ -13,8 +13,8 @@ import { Closing, createClosing } from '@/app/cash/_data/Closing'
 import { AccountTransaction, createAccountTransaction, type AccountTransactionInput } from '@/app/cash/_data/AccountTransaction'
 
 // Mock the auth module
-vi.mock('@/app/common/auth/auth', async () => {
-  const actual = await vi.importActual('@/app/common/auth/auth')
+vi.mock('@/app/shared/auth/auth', async () => {
+  const actual = await vi.importActual('@/app/shared/auth/auth')
   return {
     ...actual,
     getAuthenticatedUserSession: vi.fn(),

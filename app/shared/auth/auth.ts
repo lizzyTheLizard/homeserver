@@ -34,7 +34,7 @@ export async function startLogin(request: Request): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
   const parameters: Record<string, string> = {
-    redirect_uri: `${config.APP_URL}/common/auth/callback`,
+    redirect_uri: `${config.APP_URL}/shared/auth/callback`,
     scope: 'openid profile email',
     code_challenge,
     state: client.randomState(),
