@@ -11,7 +11,7 @@ export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
     const user = await getUserSession()
     if (user) {
-      redirect(config.APP_URL + '/common/auth/logout')
+      redirect(config.APP_URL + '/shared/auth/logout')
     }
     else {
       return (

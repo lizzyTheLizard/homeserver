@@ -1,4 +1,4 @@
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { LineItem } from '../_components/DashboardCard'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'

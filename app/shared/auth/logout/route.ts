@@ -9,7 +9,7 @@ export async function GET() {
   }
   catch (error) {
     logger.warn('Error during logout', error)
-    return redirect(config.APP_URL + '/common/auth/error')
+    return redirect(config.APP_URL + '/shared/auth/error')
   }
-  return redirect(config.APP_URL + '/common/auth/out')
+  return redirect(config.APP_URL + '/shared/auth/out')
 }

@@ -1,7 +1,9 @@
 import { serverPageFunction } from './shared/_helper/PageFunction'
-import { PortalContent } from './common/_components/PortalContent'
-import { loadPortalData } from './server'
-import { connection } from 'next/server'
+import { getInitialGreeting, loadPortalData, sendMessage } from './server'
+import { AiChatWindow } from './startpage/_components/AiChatWindow'
+import { Clock } from './startpage/_components/Clock'
+import { Portal } from './startpage/_components/Portal'
+import { Favorites } from './startpage/_components/Favorites'
 
 export const metadata = {
   title: 'Gutschi.site - Dashboard',
@@ -9,12 +11,13 @@ export const metadata = {
 
 export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
-    // No prerendering as we want to show the current weather and the user's favorites, which may change frequently.
-    await connection()
-    const { apps, weather, favorites } = await loadPortalData()
+    const { apps, favorites } = await loadPortalData()
     return (
-      <main>
-        <PortalContent apps={apps} weather={weather} favorites={favorites} />
+      <main className="fullscreen">
+        <Clock />
+        <AiChatWindow getInitialGreeting={getInitialGreeting} sendMessage={sendMessage} />
+        <Portal apps={apps} />
+        <Favorites items={favorites} />
       </main>
     )
   })

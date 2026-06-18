@@ -1,6 +1,6 @@
 'use server'
 import { createOrModifyProject, findAllProjects, ProjectInput, removeProjectAsAdmin } from '@/app/cash/_data/Project'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'

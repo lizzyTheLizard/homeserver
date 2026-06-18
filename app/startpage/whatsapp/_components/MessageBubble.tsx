@@ -2,7 +2,7 @@
 
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MessageBubble.module.css'
-import { Contact, Message } from '../../_data/Chat'
+import { Contact, Message } from '../../_data/Whatsapp'
 import { getSenderName } from './helpers'
 
 export function MessageBubble({ message, contacts }: { message: Message, contacts: Contact[] }) {

@@ -1,7 +1,7 @@
 'use server'
 import { createMonthlyClosing, findBeforePeriod, findForPeriod, modifyMonthlyClosing, Monthly, MonthlyInput, SharedTransaction } from '@/app/cash/_data/Monthly'
 import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject } from '@/app/shared/_helper/validation'

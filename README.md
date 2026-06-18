@@ -79,9 +79,8 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 │   ├── admin/          Admin portal
 │   ├── cash/           Bookkeeping app  (see [app/cash/CASH.md](app/cash/CASH.md))
 │   ├── coeditor/       AI editor
-│   ├── common/         Auth, header, weather block, portal page
-│   ├── startpage/      Personal startpage settings
-│   └── shared/         Cross-cutting helpers, components, DB access
+│   ├── startpage/      Personal startpage settings and components
+│   └── shared/         Cross-cutting helpers, components, DB access, authentication
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Terraform (Scaleway, Terraform Cloud, see [infrastructure/README.md](infrastructure/README.md))
 ├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → deploy)

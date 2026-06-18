@@ -7,16 +7,16 @@ import { loadJournal, saveTransaction, deleteTransaction, loadAccountJournal } f
 import { createOrModifyProject, ProjectInput } from '@/app/cash/_data/Project'
 import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
 import { createTransaction } from '@/app/cash/_data/Transaction'
-import { UserSession } from '@/app/common/auth/auth'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { UserSession } from '@/app/shared/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createClosing } from '@/app/cash/_data/Closing'
 import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
 import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 import { Temporal } from '@js-temporal/polyfill'
 
 // Mock the auth module
-vi.mock('@/app/common/auth/auth', async () => {
-  const actual = await vi.importActual('@/app/common/auth/auth')
+vi.mock('@/app/shared/auth/auth', async () => {
+  const actual = await vi.importActual('@/app/shared/auth/auth')
   return {
     ...actual,
     getAuthenticatedUserSession: vi.fn(),

@@ -1,4 +1,4 @@
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 export interface ConfigEntry {
   key: string

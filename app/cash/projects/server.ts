@@ -1,5 +1,5 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/common/auth/auth'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { findProjectsByOwner } from '../_data/Project'
 import { nontransactional } from '@/app/shared/_external/db/access'
 

@@ -21,6 +21,11 @@ main {
   min-height: 100%;
 }
 
+.fullscreen {
+  /* Full screen without header and footer */
+  height: calc(100% - 4rem);
+}
+
 h1 {
   text-align: left;
   font-size: 1.5rem;
