@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   logging: false,
-  output: 'standalone',
 }
 
 export default nextConfig
