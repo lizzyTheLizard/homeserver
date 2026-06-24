@@ -113,7 +113,6 @@ export function AiChatWindow() {
           </svg>
         </button>
       </form>
-
     </div>
   )
 }

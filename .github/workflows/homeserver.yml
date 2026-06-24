@@ -8,7 +8,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
           - name: Setup
             uses: ./.github/actions/setup
           - name: Lint
@@ -18,7 +18,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
           - name: Setup
             uses: ./.github/actions/setup
           - name: Cache Playwright Browsers
@@ -39,7 +39,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
             with:
                fetch-depth: 0
           - name: Setup
@@ -55,7 +55,7 @@ jobs:
         runs-on: ubuntu-latest        
         steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
           - name: Set up Docker Buildx
             uses: docker/setup-buildx-action@v4
           - name: Get Datetime
@@ -95,7 +95,7 @@ jobs:
             CONFIG_DIRECTORY: "./"
         steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
           - name: Upload Configuration
             uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.2
             id: apply-upload
@@ -134,7 +134,7 @@ jobs:
             registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur
         steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
           - name: Set Environment Variables (Prod)
             if : github.ref == 'refs/heads/main'
             run: |
