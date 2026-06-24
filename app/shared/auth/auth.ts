@@ -7,6 +7,7 @@ import { logEvent } from '@/app/shared/_data/Event'
 import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
+import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 export interface UserSession {
   name: string
@@ -14,13 +15,18 @@ export interface UserSession {
   applications: string[]
 }
 
-export async function getUserSession(): Promise<UserSession | undefined> {
-  const session = await getSession()
+export interface CookieStore {
+  get: (name: string) => { name: string, value: string } | undefined
+  set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void, (options: ResponseCookie): void }
+}
+
+export async function getUserSession(cookies?: CookieStore): Promise<UserSession | undefined> {
+  const session = await getSession(cookies)
   return session.userInfo
 }
 
-export async function getAuthenticatedUserSession(app?: string): Promise<UserSession> {
-  const user = await getUserSession()
+export async function getAuthenticatedUserSession(app?: string, cookies?: CookieStore): Promise<UserSession> {
+  const user = await getUserSession(cookies)
   if (!user) {
     throw authenticationFailed(`No user session found`)
   }
@@ -107,8 +113,8 @@ interface SessionData {
   originalUrlRelative?: string
 }
 
-async function getSession(): Promise<IronSession<SessionData>> {
-  const cookiesList = await cookies()
+async function getSession(alreadyParsedCookies?: CookieStore): Promise<IronSession<SessionData>> {
+  const cookiesList = alreadyParsedCookies ?? await cookies()
   const settings = {
     cookieName: config.SESSION.COOKIE_NAME,
     password: config.SESSION.SESSION_PASSWORD,

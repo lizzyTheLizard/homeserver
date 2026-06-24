@@ -21,6 +21,7 @@ export async function migrateDatabase(pool: Pool, upToIncluding?: string): Promi
     logger.debug('Starting Database Migrations')
     const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
+    logger.debug(`Found ${existing.length.toString()} existing and ${planned.length.toString()} planned migrations`)
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned, upToIncluding)
     await client.query('COMMIT')
@@ -44,7 +45,6 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
     );
   `)
   const result = await client.query<DatabaseMigration>(`SELECT name, hash, run_on FROM migrations;`)
-  logger.debug(`Found ${result.rows.length.toString()} existing migrations`)
   return result.rows
 }
 
@@ -59,7 +59,6 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
     const hash = createHash('sha256').update(content).digest('hex')
     result.push({ content, hash, name, tmp: name.startsWith('XXX_') })
   }
-  logger.debug(`Found ${result.length.toString()} planned migrations`)
   return result
 }
 
@@ -101,7 +100,6 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
     const e = existing.find(m => m.name === p.name)
     if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
-      logger.debug(`Migration ${p.name} has already run on ${e.run_on}`)
       if (p.name === upToIncluding) break
       continue
     }

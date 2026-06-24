@@ -16,8 +16,10 @@
     "prodToDev": "node --import tsx --env-file .env ./app/shared/_external/db/prodToDev.ts"
   },
   "dependencies": {
+    "@ai-sdk/deepinfra": "^2.0.55",
     "@js-temporal/polyfill": "^0.5.1",
     "@whiskeysockets/baileys": "7.0.0-rc13",
+    "ai": "^6.0.208",
     "async-mutex": "^0.5.0",
     "dotenv": "^17.4.2",
     "iron-session": "^8.0.4",
@@ -31,10 +33,10 @@
     "react-dom": "19.2.7",
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.2.0",
-    "socket.io": "^4.8.3",
     "tsx": "^4.22.4",
     "uuid": "^14.0.0",
     "winston": "^3.19.0",
+    "ws": "^8.21.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -55,6 +57,7 @@
     "@types/pg-copy-streams": "^1.2.5",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/browser-playwright": "^4.1.9",
     "@vitest/coverage-v8": "^4.1.9",

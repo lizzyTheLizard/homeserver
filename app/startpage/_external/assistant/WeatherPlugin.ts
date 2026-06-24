@@ -1,5 +1,6 @@
+import { tool } from 'ai'
+import { z } from 'zod/v4'
 import { Temporal } from '@js-temporal/polyfill'
-import { ToolDefinition } from './Tool'
 
 const FALLBACK_LAT = 46.948
 const FALLBACK_LON = 7.4474
@@ -18,24 +19,20 @@ export async function getLocation(): Promise<{ lon: number, lat: number }> {
   }
 }
 
-export const weatherForcastTool: ToolDefinition = {
-  type: 'function',
-  function: {
-    name: 'get_weather_forecast',
-    description: 'Get a detailed weather forecast for 5 days, starting from a specific date, for a specific location',
-    parameters: {
-      type: 'object',
-      properties: { startDay: { type: 'string', description: 'Date for the weather forecast in YYYY-MM-DD format' }, latitude: { type: 'number', description: 'Latitude of the location' }, longitude: { type: 'number', description: 'Longitude of the location' } },
-      required: ['startDay', 'latitude', 'longitude'],
-    },
-  },
-  execute: async (args: { startDay: string, latitude: number, longitude: number }) => {
-    const endDate = Temporal.PlainDate.from(args.startDay).add({ days: 4 }).toString()
-    const params = { daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant', start_date: args.startDay, end_date: endDate }
-    const data = await openmeteoRequest(args.latitude, args.longitude, params)
+export const weatherForcastTool = tool({
+  description: 'Get a detailed weather forecast for 5 days, starting from a specific date, for a specific location',
+  inputSchema: z.object({
+    startDay: z.string().describe('Date for the weather forecast in YYYY-MM-DD format'),
+    latitude: z.number().describe('Latitude of the location'),
+    longitude: z.number().describe('Longitude of the location'),
+  }),
+  execute: async ({ startDay, latitude, longitude }) => {
+    const endDate = Temporal.PlainDate.from(startDay).add({ days: 4 }).toString()
+    const params = { daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant', start_date: startDay, end_date: endDate }
+    const data = await openmeteoRequest(latitude, longitude, params)
     return JSON.stringify(parseOpenMeteoData(data.daily))
   },
-}
+})
 
 export async function shortWeatherOverview(latitude: number, longitude: number): Promise<unknown> {
   const today = Temporal.Now.plainDateISO().toString()
@@ -54,32 +51,29 @@ export async function shortWeatherOverview(latitude: number, longitude: number):
   const tomorrowEvening = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO().add({ days: 1 }).with({ hour: 18, minute: 0 }))
   return { sunrise, sunset, current, midday, evening, tomorrowMorning, tomorrowMidday, tomorrowEvening }
 }
+
 function getShortWeatherOverview(hourly: Record<string, Record<string, unknown>>, time: Temporal.PlainDateTime): unknown {
   const timeStr = time.toString().substring(0, 13) + ':00'
   const weather = hourly[timeStr]
   return { temperature: weather.temperature, condition: weather.weather_condition, precipitation: weather.precipitation }
 }
 
-export const detailedWeatherTool: ToolDefinition = {
-  type: 'function',
-  function: {
-    name: 'get_detailed_weather',
-    description: 'Get the detailed weather for a specific location and day',
-    parameters: {
-      type: 'object',
-      properties: { date: { type: 'string', description: 'Date for the detailed weather in YYYY-MM-DD format' }, latitude: { type: 'number', description: 'Latitude of the location' }, longitude: { type: 'number', description: 'Longitude of the location' } },
-      required: ['date', 'latitude', 'longitude'],
-    },
-  },
-  execute: async (args: { date: string, latitude: number, longitude: number }) => {
-    const params = { hourly: 'temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m', daily: 'sunrise,sunset', start_date: args.date, end_date: args.date }
-    const data = await openmeteoRequest(args.latitude, args.longitude, params)
+export const detailedWeatherTool = tool({
+  description: 'Get the detailed weather for a specific location and day',
+  inputSchema: z.object({
+    date: z.string().describe('Date for the detailed weather in YYYY-MM-DD format'),
+    latitude: z.number().describe('Latitude of the location'),
+    longitude: z.number().describe('Longitude of the location'),
+  }),
+  execute: async ({ date, latitude, longitude }) => {
+    const params = { hourly: 'temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m', daily: 'sunrise,sunset', start_date: date, end_date: date }
+    const data = await openmeteoRequest(latitude, longitude, params)
     const daily = parseOpenMeteoData(data.daily)
-    const sunrise = daily[args.date].sunrise
-    const sunset = daily[args.date].sunset
+    const sunrise = daily[date].sunrise
+    const sunset = daily[date].sunset
     return JSON.stringify({ sunrise, sunset, ...parseOpenMeteoData(data.hourly) })
   },
-}
+})
 
 const CACHE_TTL_MS = 10 * 60 * 1000
 const cache = new Map<string, { data: { hourly?: unknown, daily?: unknown }, timestamp: number }>()
@@ -121,8 +115,7 @@ function parseOpenMeteoData(hourlyOrDaily: unknown): Record<string, Record<strin
       if (key === 'temperature_2m') timeResult.temperature = value[index]
       else if (key === 'weather_code') {
         timeResult.weather_condition = WMO_CONDITIONS[value[index] as number]
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-        if (timeResult.weather_condition === undefined) throw new Error('Unknown WMO code: ' + value[index])
+        if (timeResult.weather_condition === undefined) throw new Error('Unknown WMO code: ' + String(value[index]))
       }
       else timeResult[key] = value[index]
     }

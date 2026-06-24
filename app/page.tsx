@@ -1,5 +1,5 @@
 import { serverPageFunction } from './shared/_helper/PageFunction'
-import { getInitialGreeting, loadPortalData, sendMessage } from './server'
+import { loadPortalData } from './server'
 import { AiChatWindow } from './startpage/_components/AiChatWindow'
 import { Clock } from './startpage/_components/Clock'
 import { Portal } from './startpage/_components/Portal'
@@ -15,7 +15,7 @@ export default async function Page() {
     return (
       <main className="fullscreen">
         <Clock />
-        <AiChatWindow getInitialGreeting={getInitialGreeting} sendMessage={sendMessage} />
+        <AiChatWindow />
         <Portal apps={apps} />
         <Favorites items={favorites} />
       </main>

@@ -2,13 +2,18 @@
 import { describe, expect, test } from 'vitest'
 import { detailedWeatherTool, weatherForcastTool } from './WeatherPlugin'
 import { Temporal } from '@js-temporal/polyfill'
+import type { ToolExecutionOptions } from 'ai'
+
+const executionOptions: ToolExecutionOptions = { toolCallId: 'test', messages: [] }
 
 describe('weatherForcastTool', () => {
   test('should return a valid weather forecast', async () => {
     const today = Temporal.Now.plainDateISO()
     const tomorrow = today.add({ days: 1 })
-    const result = await weatherForcastTool.execute({ startDay: today.toString(), latitude: 52.52, longitude: 13.405 })
-    const parsedResult = JSON.parse(result) as Record<string, Record<string, unknown>>
+    const execute = weatherForcastTool.execute
+    if (!execute) throw new Error('execute not defined')
+    const result = await execute({ startDay: today.toString(), latitude: 52.52, longitude: 13.404 }, executionOptions)
+    const parsedResult = JSON.parse(result as string) as Record<string, Record<string, unknown>>
     expect(parsedResult).toBeDefined()
     expect(typeof parsedResult).toBe('object')
     expect(parsedResult[today.toString()]).toEqual({
@@ -40,8 +45,10 @@ describe('weatherForcastTool', () => {
 describe('detailedWeatherTool', () => {
   test('should return a valid daily weather detail', async () => {
     const today = Temporal.Now.plainDateISO()
-    const result = await detailedWeatherTool.execute({ date: today.toString(), latitude: 52.52, longitude: 13.405 })
-    const parsedResult = JSON.parse(result) as Record<string, Record<string, unknown>>
+    const execute = detailedWeatherTool.execute
+    if (!execute) throw new Error('execute not defined')
+    const result = await execute({ date: today.toString(), latitude: 52.52, longitude: 13.405 }, executionOptions)
+    const parsedResult = JSON.parse(result as string) as Record<string, Record<string, unknown>>
     expect(parsedResult).toBeDefined()
     expect(typeof parsedResult).toBe('object')
     expect(parsedResult.sunrise).toBeDefined()
