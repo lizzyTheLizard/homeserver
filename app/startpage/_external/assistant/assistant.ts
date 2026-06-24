@@ -1,6 +1,6 @@
 import { ToolLoopAgent, ToolSet } from 'ai'
 import { createDeepInfra } from '@ai-sdk/deepinfra'
-import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from './WeatherPlugin'
+import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from './weather'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 
