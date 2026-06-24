@@ -1,13 +1,9 @@
 import { Pool, PoolClient } from 'pg'
 import { logger } from '../../logger'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-import path from 'path'
 import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
 import { splitSql } from './splitSql'
-import { config } from '../../config'
 
 /**
  * Migrate the DB to the latest version. This function should be called through setup only.
@@ -49,7 +45,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 }
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
-  const migrationsDir = getMigrationDir()
+  const migrationsDir = './db'
   const names = (await fs.readdir(migrationsDir))
     .filter(n => n.endsWith('.sql'))
     .sort()
@@ -60,15 +56,6 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
     result.push({ content, hash, name, tmp: name.startsWith('XXX_') })
   }
   return result
-}
-
-function getMigrationDir(): string {
-  const filename = fileURLToPath(import.meta.url)
-  const currentDir = dirname(filename)
-  if (config.NODE_ENV === 'development') {
-    return path.resolve(currentDir, '../../../../db')
-  }
-  return path.resolve(currentDir, '../../../../../db')
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {

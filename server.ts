@@ -22,10 +22,13 @@ async function main() {
 }
 
 async function loadConfig() {
-  const dotenv = await import('dotenv')
-  const result = dotenv.config({ quiet: true })
-  if (result.error) console.warn('> Warning: Could not load .env file, proceeding with environment variables only', result.error)
-  else console.log(`> Loaded ${Object.keys(result.parsed ?? {}).length.toString()} environment variables from .env file`)
+  const fs = await import('fs')
+  if (fs.existsSync('.env')) {
+    const dotenv = await import('dotenv')
+    const result = dotenv.config({ quiet: true })
+    if (result.error) console.warn('> Warning: Could not load .env file, proceeding with environment variables only', result.error)
+    else console.log(`> Loaded ${Object.keys(result.parsed ?? {}).length.toString()} environment variables from .env file`)
+  }
   const dev = process.env.NODE_ENV !== 'production'
   const hostname = process.env.HOSTNAME ?? 'localhost'
   const port = parseInt(process.env.PORT ?? '3000', 10)

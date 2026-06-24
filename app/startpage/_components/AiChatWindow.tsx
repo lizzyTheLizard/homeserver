@@ -75,14 +75,14 @@ export function AiChatWindow() {
             ),
         )}
 
-        {(state.current === 'working' || state.current === 'initializing') && !state.currentMessage && (
+        {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (
           <div className={styles.typingIndicator}>
             <span className={styles.dot} />
             <span className={styles.dot} style={{ animationDelay: '0.18s' }} />
             <span className={styles.dot} style={{ animationDelay: '0.36s' }} />
           </div>
         )}
-        {(state.currentMessage) && (
+        {(state.currentMessage.trim().length > 0) && (
           <div className={styles.aiMessage}>
             <div className={styles.aiBubble}>
               <Markdown>{state.currentMessage}</Markdown>
