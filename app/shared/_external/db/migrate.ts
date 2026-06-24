@@ -1,13 +1,9 @@
 import { Pool, PoolClient } from 'pg'
 import { logger } from '../../logger'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-import path from 'path'
 import { promises as fs } from 'fs'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
 import { splitSql } from './splitSql'
-import { config } from '../../config'
 
 /**
  * Migrate the DB to the latest version. This function should be called through setup only.
@@ -21,6 +17,7 @@ export async function migrateDatabase(pool: Pool, upToIncluding?: string): Promi
     logger.debug('Starting Database Migrations')
     const planned = await getAllPlannedMigrations()
     const existing = await getAllExistingMigrations(client)
+    logger.debug(`Found ${existing.length.toString()} existing and ${planned.length.toString()} planned migrations`)
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned, upToIncluding)
     await client.query('COMMIT')
@@ -44,12 +41,11 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
     );
   `)
   const result = await client.query<DatabaseMigration>(`SELECT name, hash, run_on FROM migrations;`)
-  logger.debug(`Found ${result.rows.length.toString()} existing migrations`)
   return result.rows
 }
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
-  const migrationsDir = getMigrationDir()
+  const migrationsDir = './db'
   const names = (await fs.readdir(migrationsDir))
     .filter(n => n.endsWith('.sql'))
     .sort()
@@ -59,17 +55,7 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
     const hash = createHash('sha256').update(content).digest('hex')
     result.push({ content, hash, name, tmp: name.startsWith('XXX_') })
   }
-  logger.debug(`Found ${result.length.toString()} planned migrations`)
   return result
-}
-
-function getMigrationDir(): string {
-  const filename = fileURLToPath(import.meta.url)
-  const currentDir = dirname(filename)
-  if (config.NODE_ENV === 'development') {
-    return path.resolve(currentDir, '../../../../db')
-  }
-  return path.resolve(currentDir, '../../../../../db')
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {
@@ -101,7 +87,6 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
     const e = existing.find(m => m.name === p.name)
     if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
-      logger.debug(`Migration ${p.name} has already run on ${e.run_on}`)
       if (p.name === upToIncluding) break
       continue
     }

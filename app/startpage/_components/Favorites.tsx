@@ -12,7 +12,6 @@ export function Favorites({ items }: { items: FavoriteInfo[] }) {
   return (
     <>
       <div className={styles.section}>
-        <div className={styles.label}>Bookmarks</div>
         <div className={styles.row}>
           {items.map(fav => (
             <a

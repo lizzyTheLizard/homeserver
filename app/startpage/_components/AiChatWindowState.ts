@@ -1,36 +1,53 @@
-import { Message } from '../_external/assistant/Message'
-
-export interface AiChatState {
-  current: 'initializing' | 'failed' | 'ready' | 'typing'
-  messages: Message[]
-  latestActions: string[]
+export interface Message {
+  id: number
+  role: 'assistant' | 'user'
+  content: string
 }
-
-export type AiChatStateAction = { type: 'INITIALIZED', messages: Message[], actions: string[] }
-  | { type: 'FAILED', error: unknown }
-  | { type: 'SEND', message: Message }
-  | { type: 'RECEIVED', messages: Message[], actions: string[] }
+export interface AiChatState {
+  current: 'initializing' | 'failed' | 'ready' | 'working'
+  actions: string[]
+  messages: Message[]
+  currentMessage: string
+}
 
 export const initialAiChatState: AiChatState = {
   current: 'initializing',
+  actions: [],
   messages: [],
-  latestActions: [],
+  currentMessage: '',
 }
+
+export type AiChatStateAction = { type: 'RECEIVED', chunk: string | undefined }
+  | { type: 'ACTIONS', actions: string[] | undefined }
+  | { type: 'FINISH' }
+  | { type: 'SEND', message: string }
+  | { type: 'ERROR', error: unknown }
 
 export function aiChatStateReducer(state: AiChatState, action: AiChatStateAction): AiChatState {
   switch (action.type) {
-    case 'INITIALIZED':
-      return { current: 'ready', messages: action.messages, latestActions: action.actions }
-    case 'FAILED':
-      console.log('AI chat failed:', action.error)
-      return { current: 'failed', messages: [...state.messages, getErrorMessage(action.error)], latestActions: [] }
+    case 'ACTIONS':
+      return { ...state, actions: action.actions ?? [] }
     case 'SEND':
-      return { current: 'typing', messages: [...state.messages, action.message], latestActions: [] }
+      return { current: 'working', actions: [], messages: addSendMessage(state, action.message), currentMessage: '' }
+    case 'FINISH':
+      return { ...state, current: 'ready', messages: addFinishMessage(state), currentMessage: '' }
     case 'RECEIVED':
-      return { current: 'ready', messages: [...state.messages, ...action.messages], latestActions: action.actions }
+      return { ...state, currentMessage: state.currentMessage + (action.chunk ?? '') }
+    case 'ERROR':
+      return { current: 'failed', actions: [], messages: addErrorMessage(state, action.error), currentMessage: '' }
   }
 }
 
-function getErrorMessage(error: unknown): Message {
-  return { id: -1, hidden: false, role: 'assistant', content: 'Sorry, an error occurred: ' + String(error) }
+function addSendMessage(state: AiChatState, message: string): Message[] {
+  return [...state.messages, { role: 'user', content: message, id: state.messages.length }]
+}
+
+function addFinishMessage(state: AiChatState): Message[] {
+  if (!state.currentMessage) return state.messages
+  return [...state.messages, { role: 'assistant', content: state.currentMessage, id: state.messages.length }]
+}
+
+function addErrorMessage(state: AiChatState, error: unknown): Message[] {
+  console.warn('Error occurred in assistant:', error)
+  return [...state.messages, { role: 'assistant', content: 'Sorry, an error occurred: ' + String(error), id: state.messages.length }]
 }

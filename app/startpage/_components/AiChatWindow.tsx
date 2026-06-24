@@ -3,42 +3,46 @@
 import { useState, useEffect, useRef, useReducer } from 'react'
 import styles from './AiChatWindow.module.css'
 import { aiChatStateReducer, initialAiChatState } from './AiChatWindowState'
-import { InitialContext, Message } from '../_external/assistant/Message'
-import { getLocation } from '../_external/assistant/WeatherPlugin'
-import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
+import { getLocation } from '../_external/assistant/weather'
 import Markdown from 'react-markdown'
 
-interface AiChatWindowProps {
-  getInitialGreeting: (initialContext: InitialContext) => ActionResponse<{ messages: Message[], actions: string[] }>
-  sendMessage: (messages: Message[]) => ActionResponse<{ messages: Message[], actions: string[] }>
-}
-
-export function AiChatWindow({ getInitialGreeting, sendMessage }: AiChatWindowProps) {
+export function AiChatWindow() {
   const [state, dispatch] = useReducer(aiChatStateReducer, initialAiChatState)
   const [input, setInput] = useState('')
-  const listRef = useRef<HTMLDivElement>(null)
   const canSend = input.trim().length > 0
+  const listRef = useRef<HTMLDivElement>(null)
+  const socketRef = useRef<WebSocket | undefined>(undefined)
 
   useEffect(() => {
-    if (state.current !== 'initializing') return
-    getInitialContext()
-      .then(ctx => getInitialGreeting(ctx))
-      .then((response) => {
-        console.log('Initial greeting response:', response)
-        if (response.success) { dispatch({ type: 'INITIALIZED', messages: response.data.messages, actions: response.data.actions }) }
-        else { dispatch({ type: 'FAILED', error: response.error }) }
-      })
-      .catch((error: unknown) => { dispatch({ type: 'FAILED', error }) })
-  }, [state, getInitialGreeting])
+    const websocket = new WebSocket('/ws/assistant')
+    websocket.onopen = async () => {
+      const context = { location: await getLocation() }
+      websocket.send(JSON.stringify({ type: 'initialize', initialContext: context }))
+    }
+    websocket.onmessage = (event) => {
+      const data = JSON.parse(event.data as string) as { type: string, chunk?: string, actions?: string[], error?: string }
+      if (data.type === 'stream_response') {
+        dispatch({ type: 'RECEIVED', chunk: data.chunk })
+      }
+      else if (data.type === 'got_actions') {
+        dispatch({ type: 'ACTIONS', actions: data.actions })
+      }
+      else if (data.type === 'error') {
+        dispatch({ type: 'ERROR', error: data.error ?? 'Unknown error' })
+      }
+      else if (data.type === 'finished_response') {
+        dispatch({ type: 'FINISH' })
+      }
+    }
+    websocket.onerror = (error) => { dispatch({ type: 'ERROR', error: error }) }
+    socketRef.current = websocket
+    return () => { websocket.close() }
+  }, [])
 
-  // Always scroll to the top to show latest messages
+  // Always scroll to the bottom to show latest messages
   useEffect(() => {
-    if (listRef.current) { listRef.current.scrollTop = 0 }
+    if (listRef.current) { listRef.current.scrollTop = listRef.current.scrollHeight }
   }, [state])
-
-  async function getInitialContext(): Promise<InitialContext> {
-    return { location: await getLocation() }
-  }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -48,21 +52,53 @@ export function AiChatWindow({ getInitialGreeting, sendMessage }: AiChatWindowPr
   function send(text: string) {
     const t = text.trim()
     if (!t) return
-    const message: Message = { id: state.messages.length, role: 'user', content: t, hidden: false }
+    dispatch({ type: 'SEND', message: t })
     setInput('')
-    dispatch({ type: 'SEND', message })
-    console.log('Send message:', message)
-    sendMessage([...state.messages, message])
-      .then((response) => {
-        console.log('Got response', response)
-        if (response.success) { dispatch({ type: 'RECEIVED', messages: response.data.messages, actions: response.data.actions }) }
-        else { dispatch({ type: 'FAILED', error: response.error }) }
-      })
-      .catch((error: unknown) => { dispatch({ type: 'FAILED', error }) })
+    socketRef.current?.send(JSON.stringify({ type: 'message', message: t }))
   }
 
   return (
     <div className={styles.window}>
+      <div ref={listRef} className={styles.messageList}>
+        {state.messages.map(msg => msg.role === 'assistant'
+          ? (
+              <div key={'message_' + msg.id.toString()} className={styles.aiMessage}>
+                <div className={styles.aiBubble}>
+                  <Markdown>{msg.content}</Markdown>
+                </div>
+              </div>
+            )
+          : (
+              <div key={'message_' + msg.id.toString()} className={styles.userMessage}>
+                <div className={styles.userBubble}>{msg.content}</div>
+              </div>
+            ),
+        )}
+
+        {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (
+          <div className={styles.typingIndicator}>
+            <span className={styles.dot} />
+            <span className={styles.dot} style={{ animationDelay: '0.18s' }} />
+            <span className={styles.dot} style={{ animationDelay: '0.36s' }} />
+          </div>
+        )}
+        {(state.currentMessage.trim().length > 0) && (
+          <div className={styles.aiMessage}>
+            <div className={styles.aiBubble}>
+              <Markdown>{state.currentMessage}</Markdown>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {state.actions.length > 0 && (
+        <div className={styles.chips}>
+          {state.actions.map((a, index) => (
+            <button key={'action_' + index.toString()} onClick={() => { send(a) }} className={styles.chip}>{a}</button>
+          ))}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className={styles.inputRow}>
         <input
           disabled={state.current !== 'ready'}
@@ -77,39 +113,6 @@ export function AiChatWindow({ getInitialGreeting, sendMessage }: AiChatWindowPr
           </svg>
         </button>
       </form>
-
-      {state.latestActions.length > 0 && (
-        <div className={styles.chips}>
-          {state.latestActions.map((a, index) => (
-            <button key={'action_' + index.toString()} onClick={() => { send(a) }} className={styles.chip}>{a}</button>
-          ))}
-        </div>
-      )}
-
-      <div ref={listRef} className={styles.messageList}>
-        {(state.current === 'typing' || state.current === 'initializing') && (
-          <div className={styles.typingIndicator}>
-            <span className={styles.dot} />
-            <span className={styles.dot} style={{ animationDelay: '0.18s' }} />
-            <span className={styles.dot} style={{ animationDelay: '0.36s' }} />
-          </div>
-        )}
-        {state.messages.filter(m => 'content' in m).filter(m => !m.hidden).reverse().map(msg =>
-          msg.role === 'assistant'
-            ? (
-                <div key={'message_' + msg.id.toString()} className={styles.aiMessage}>
-                  <div className={styles.aiBubble}>
-                    <Markdown>{msg.content}</Markdown>
-                  </div>
-                </div>
-              )
-            : (
-                <div key={'message_' + msg.id.toString()} className={styles.userMessage}>
-                  <div className={styles.userBubble}>{msg.content}</div>
-                </div>
-              ),
-        )}
-      </div>
     </div>
   )
 }

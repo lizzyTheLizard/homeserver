@@ -63,11 +63,11 @@ export const config: Config = {
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),
-    ISSUER: required('ISSUER', 'http://localhost:3000'),
+    ISSUER: required('ISSUER', 'https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0'),
     CLIENT_SECRET: required('CLIENT_SECRET', 'dev-only-client-secret'),
   },
   SESSION: {
-    COOKIE_NAME: required('COOKIE_NAME', 'coeditor-session'),
+    COOKIE_NAME: required('COOKIE_NAME', 'homeserver-session'),
     SESSION_PASSWORD: required('SESSION_PASSWORD', 'dev-only-session-password-must-be-32-chars-long'),
   },
   NODE_PUBLIC_LOCALE: optional('NODE_PUBLIC_LOCALE', 'de-CH'),

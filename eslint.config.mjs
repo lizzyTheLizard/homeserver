@@ -18,7 +18,7 @@ export default defineConfig([
   reactHooks.configs.flat.recommended,
   ...storybook.configs['flat/recommended'],
   reactRefresh.configs.vite,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'storybook-static/**', 'design/**']),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'storybook-static/**', 'design/**', 'dist/**']),
   {
     languageOptions: {
       globals: {
