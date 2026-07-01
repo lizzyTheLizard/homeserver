@@ -28,7 +28,7 @@ main {
 
 @media (max-width: 600px) {
   .fullscreen {
-    height: calc(100vh - 4rem - 1px);
+    height: calc(100vh - 4rem - 3rem - 1px);
     padding-bottom: 0;
   }
 }
