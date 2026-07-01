@@ -63,7 +63,7 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
       getStatus().then((r) => {
         if (!r.success) setError(r.error)
         else if (status.type !== r.data.type) router.refresh()
-        else if (status.type === 'needAuth' && r.data.qr !== status.qr) router.refresh()
+        else if (status.type === 'needAuth' && status.qr !== status.qr) router.refresh()
       }).catch((err: unknown) => {
         setError(err instanceof Error ? err.message : new String(err).toString())
       })
