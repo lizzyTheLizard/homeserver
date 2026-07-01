@@ -2,17 +2,13 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getUserSession, startLogin } from './app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
-import { triggerWhatsappSync } from './app/startpage/_external/whatsapp/syncManager'
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const session = await getUserSession()
   let response: NextResponse
   if (request.nextUrl.pathname.startsWith('/_next/'))
     return NextResponse.next()
-  if (session) {
-    await triggerWhatsappSync(session)
-    response = NextResponse.next()
-  }
+  if (session) response = NextResponse.next()
   else if (request.nextUrl.pathname.startsWith('/shared/auth/'))
     response = NextResponse.next()
   else if (request.headers.get('X-Requested-With') === 'XMLHttpRequest')

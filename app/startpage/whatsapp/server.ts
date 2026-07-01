@@ -2,29 +2,31 @@
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { Chat, Contact, findChatsByOwner, findContactsByOwner, findMessagesByChatId, Message } from '@/app/startpage/_data/Whatsapp'
-import { getRunningSyncData, RunningSyncStatus } from '../_external/whatsapp/syncManager'
+import { getHandler, getStore } from '../_external/whatsapp'
+import { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import { logger } from '@/app/shared/logger'
 
-export async function loadChats(): Promise<[Chat[], Contact[]]> {
+export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus }> {
   const user = await getAuthenticatedUserSession('startpage')
-  return nontransactional(async (c) => {
-    return [
-      (await findChatsByOwner(c, user.email)).filter(chat => chat.unread_count !== undefined && chat.archived !== undefined),
-      await findContactsByOwner(c, user.email),
-    ]
-  })
+  const store = await getStore(user)
+  const handler = await getHandler(user)
+  const chats = store.getChats()
+  const status = handler.getStatus()
+  logger.info(`Loaded ${chats.length.toString()} chats and status ${status.type} for user ${user.email}`)
+  return { chats, status }
 }
 
 export async function loadMessages(chatId: string): Promise<Message[]> {
   const user = await getAuthenticatedUserSession('startpage')
-  return nontransactional(async (c) => {
-    return findMessagesByChatId(c, user.email, chatId)
-  })
+  const store = await getStore(user)
+  return store.getMessagesForChat(chatId)
 }
 
-export async function getUpdates(): ActionResponse<RunningSyncStatus> {
+export async function getStatus(): ActionResponse<SyncStatus> {
   return toResponse(nontransactional(async () => {
     const user = await getAuthenticatedUserSession('startpage')
-    return getRunningSyncData(user)
+    const handler = await getHandler(user)
+    const status = handler.getStatus()
+    return status
   }))
 }

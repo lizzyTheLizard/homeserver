@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, expect, test } from 'vitest'
-import { detailedWeatherTool, weatherForcastTool } from './weather'
+import { detailedWeatherTool, weatherForcastTool } from './assistant/weather'
 import { Temporal } from '@js-temporal/polyfill'
 import type { ToolExecutionOptions } from 'ai'
 

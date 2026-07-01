@@ -14,8 +14,11 @@ async function main() {
   else console.log('> Starting production server')
 
   const handle = await prepareReactApp(options)
+  console.log(`> React app prepared`)
   const server = await createServer(handle)
+  console.log(`> HTTP server created`)
   await registerAssistantWebSocket(server)
+  console.log(`> Assistant WebSocket server registered`)
   server.listen(options.port, () => {
     console.log(`> Ready on http://${options.hostname}:${options.port.toString()}`)
   })
