@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { textColumn, boolColumn, numberColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { textColumn, boolColumn, numberColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
@@ -14,9 +14,10 @@ import QRCode from 'react-qr-code'
 
 const columns = [
   textColumn('name', { header: 'Name', style: { } }),
-  boolColumn('is_group', { header: 'Group', style: { width: '15%' } }),
+  boolColumn('isGroup', { header: 'Group', style: { width: '15%' } }),
   boolColumn('archived', { header: 'Archived', style: { width: '15%' } }),
-  numberColumn('unread_count', { header: 'Unread', style: { width: '15%' } }),
+  numberColumn('unreadCount', { header: 'Unread', style: { width: '15%' } }),
+  dateColumn('lastMessage', { header: 'Last Message', style: { width: '15%' } }),
 ]
 
 export function WhatsAppContent({ chats, status }: { chats: Chat[], status: SyncStatus }) {
@@ -39,6 +40,21 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
       setMessagesLoading(false)
       openSidebar()
     })
+  }
+
+  function renderMobile(c: ChatPlus): ReactNode {
+    return (
+      <div key={c.id} className={styles.mobileItem} onClick={() => { showMessages(c) }}>
+        <div className={styles.mobileItemName}>
+          {c.name}
+        </div>
+        <div className={styles.mobileDesc}>
+          {c.archived ? 'Archived • ' : ''}
+          {c.unreadCount > 0 ? `${c.unreadCount.toString()} unread • ` : ''}
+          {c.lastMessage ? `Last: ${new Date(c.lastMessage).toLocaleString()}` : ''}
+        </div>
+      </div>
+    )
   }
 
   useEffect(() => {
@@ -69,10 +85,11 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   return (
     <>
       <DataTable
-        data={chats.map(chat => ({ ...chat, id: chat.jid }))}
+        data={chats.map(chat => format(chat))}
         columns={columns}
         onRowClick={showMessages}
         initialSortingOrder={[{ key: 'unread_count', direction: 'DESC' }]}
+        renderMobile={renderMobile}
         searchLabel="Search chats…"
       />
       <Sidebar id={sidebarId} title={selectedChat ?? ''} type="Chat" noDelete>
@@ -84,4 +101,13 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
       </Sidebar>
     </>
   )
+}
+
+interface ChatPlus extends Chat {
+  lastMessage: string | undefined
+  id: string
+}
+
+function format(chat: Chat): ChatPlus {
+  return { ...chat, id: chat.jid, lastMessage: chat.lastMessageTimestamp ? new Date(chat.lastMessageTimestamp * 1000).toISOString() : undefined }
 }
