@@ -1,3 +1,22 @@
+import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
+export interface AiPortInput {
+  text?: string
+  selection_start?: number
+  selection_end?: number
+  language: string
+  profile?: string
+  context: string
+  title?: string
+  custom_command?: string
+  predefined_command?: PredefinedCommandType
+}
+
+export async function aiPort(input: AiPortInput, commandsSoFar: Command[]): Promise<CommandResult> {
+  await new Promise(resolve => setTimeout(resolve, 100)) // Simulate a delay for the AI response
+  throw new Error('aiPort function is not implemented. Please implement the aiPort function to communicate with the AI service. Input was ' + JSON.stringify(input) + ' and commandsSoFar was ' + JSON.stringify(commandsSoFar))
+}
+
+/*
 import OpenAI from 'openai'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
@@ -52,18 +71,18 @@ function createSystemMessage(input: AiPortInput): ChatCompletionMessageParam {
     context: input.context,
     language: input.language,
   }
-  return { role: 'system', content: `You are an AI editor that helps users to edit text documents. 
+  return { role: 'system', content: `You are an AI editor that helps users to edit text documents.
     You can edit texts based on a given profile and context. You will get your input in the form of a JSON object with the following fields:
   - title: The current title of the document, if any. It is not given, the document has no title so far.
   - text: The whole text of the document so far. If not given, no text is present.
-  - command: The command that the user wants to execute. 
-  - selection: The selected part of the text, if any. If not given, all text is selected. 
+  - command: The command that the user wants to execute.
+  - selection: The selected part of the text, if any. If not given, all text is selected.
 
   You then execute the command on the selected text (or the whole text if no selection is given) based on the profile and the context. You will answer with a JSON object with the following fields:
   - text: The text as changed by the command. If a selection has been send, this only has to be the replacement of the selected text. This field has to be present.
   - title: The new title of the document. The title must be max 256 characters long. For short texts, the title can be the text itself, for longer texts, it should be a summary of the text. If the old title still fits you can keep it. This field has to be present.
   - error: If an error occurred, this field contains the error message. If no error occurred, this field is not present.
-    
+
   Generate the text using the following profile and context:
   ${JSON.stringify(context)}
   ` }
@@ -144,3 +163,4 @@ const responseFormat: ResponseFormatJSONSchema = {
     schema: z.toJSONSchema(AiResponseSchema, { target: 'draft-7' }),
   },
 }
+*/

@@ -1,156 +1,129 @@
-import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import { Queryable, removeNull } from '@/app/shared/_external/db/access'
+import { logger } from '@/app/shared/logger'
+import crypto from 'crypto'
 
-export interface AuthStateInput {
-  creds: string
-  keys: string
+export interface WhatsAppStore {
+  auth: string
+  chats: Record<string, string>
+  contacts: Record<string, string>
+  messages: Record<string, string>
 }
 
-export interface ChatInput {
+export async function getWhatsappState(client: Queryable, ownerEmail: string): Promise<WhatsAppStore | undefined> {
+  const authResult = await client.query<{ auth: string }>('SELECT auth FROM wa_auth WHERE owner_email = $1', [ownerEmail])
+  if (authResult.rows.length === 0) return undefined
+  const auth = removeNull(authResult.rows[0]).auth
+  const data = await client.query<{ type: string, id: string, obj: string }>('SELECT type, id, obj FROM wa_data WHERE owner_email = $1', [ownerEmail])
+  const chats: Record<string, string> = {}
+  const contacts: Record<string, string> = {}
+  const messages: Record<string, string> = {}
+  for (const row of data.rows) {
+    if (row.type === 'chat') chats[row.id] = row.obj
+    else if (row.type === 'contact') contacts[row.id] = row.obj
+    else if (row.type === 'message') messages[row.id] = row.obj
+  }
+  return { auth, chats, contacts, messages }
+}
+
+export async function setWhatsappState(client: Queryable, ownerEmail: string, data: WhatsAppStore): Promise<void> {
+  const totalStart = Date.now()
+  logger.debug(`Storing whatsApp state for owner ${ownerEmail}`)
+
+  // First update the auth data. This is a single row, so we can just update it.
+  const resultAuth = await client.query('SELECT * FROM wa_auth WHERE owner_email = $1', [ownerEmail])
+  if (resultAuth.rows.length > 0)
+    await client.query('UPDATE wa_auth SET auth = $1 WHERE owner_email = $2', [data.auth, ownerEmail])
+  else
+    await client.query('INSERT INTO wa_auth (owner_email, auth) VALUES ($1, $2)', [ownerEmail, data.auth])
+  logger.debug(`Updated wa_auth for owner ${ownerEmail}`)
+
+  // Collect all data to be inserted/updated/deleted
+  const rows: { type: string, id: string, obj: string, hash: string }[] = []
+  for (const [id, obj] of Object.entries(data.chats)) rows.push({ type: 'chat', id, obj, hash: getHash(obj) })
+  for (const [id, obj] of Object.entries(data.contacts)) rows.push({ type: 'contact', id, obj, hash: getHash(obj) })
+  for (const [id, obj] of Object.entries(data.messages)) rows.push({ type: 'message', id, obj, hash: getHash(obj) })
+
+  // Get the existing data from the database.
+  const resultExisting = await client.query<ExistingWhatsAppDataRow>('SELECT type, id, hash FROM wa_data WHERE owner_email = $1', [ownerEmail])
+  const existingData = resultExisting.rows
+
+  // Now we can delete the staled data, update the changed data and insert the new data.
+  await deleteStaledData(client, ownerEmail, existingData, rows)
+  await updateChangedData(client, ownerEmail, existingData, rows)
+  await insertNewData(client, ownerEmail, existingData, rows)
+
+  logger.debug(`WhatsApp state for owner ${ownerEmail} set in ${(Date.now() - totalStart).toString()}ms`)
+}
+
+function getHash(obj: string): string {
+  return crypto.createHash('md5').update(obj).digest('hex')
+}
+
+async function deleteStaledData(client: Queryable, ownerEmail: string, existingData: ExistingWhatsAppDataRow[], rows: WhatsAppDataRow[]): Promise<void> {
+  // Delete all rows that are not in the new data any more
+  const toDelete = existingData.filter(row => !rows.some(r => r.type === row.type && r.id === row.id)).map(row => row.id)
+  await client.query('DELETE FROM wa_data WHERE owner_email = $1 AND id IN ($2)', [ownerEmail, toDelete])
+  logger.debug(`Deleted ${toDelete.length.toString()} rows from wa_data for owner ${ownerEmail}`)
+}
+
+const batchSize = 100
+const maxBatches = 100
+
+async function updateChangedData(client: Queryable, ownerEmail: string, existingData: ExistingWhatsAppDataRow[], rows: WhatsAppDataRow[]): Promise<void> {
+  // With the update we have to trick a bit... There can be A LOT of rows, so we have to do it in batches
+  const toUpdate = rows.filter(row => existingData.some(r => r.type === row.type && r.id === row.id && r.hash !== row.hash))
+  logger.debug(`Updating ${toUpdate.length.toString()} rows in wa_data for owner ${ownerEmail}`)
+  let alredyInserted = 0
+  for (let i = 0; i < maxBatches; i += 1) {
+    const batch = toUpdate.slice(alredyInserted, alredyInserted + batchSize)
+    // Check if we are done
+    if (batch.length === 0) {
+      logger.debug(`Updated ${alredyInserted.toString()} rows in wa_data for owner ${ownerEmail}`)
+      return
+    }
+    // Pg does not directely support updating multiple rows. So we have to create the query manually. Use placeholders for the values to avoid SQL injection.
+    let placeholderCounter = 1
+    const query = `UPDATE wa_data SET obj = data.dobj, hash = data.dhash FROM (VALUES ${batch.map(b => `('${ownerEmail}', '${b.type}', $${(placeholderCounter++).toString()}, $${(placeholderCounter++).toString()}, '${b.hash}')`).join(', ')}) AS data(downer, dtype, did, dobj, dhash)  WHERE owner_email = data.downer AND type = data.dtype AND id = data.did `
+    const params = batch.flatMap(b => [b.id, b.obj])
+    await client.query(query, params)
+    alredyInserted += batch.length
+  }
+  throw new Error(`Could not update all data in ${maxBatches.toString()} Batches. This should never happen.`)
+}
+
+async function insertNewData(client: Queryable, ownerEmail: string, existingData: ExistingWhatsAppDataRow[], rows: WhatsAppDataRow[]): Promise<void> {
+  // With the insert we have to trick a bit... There can be A LOT of rows, so we have to do it in batches
+  const toInsert = rows.filter(row => !existingData.some(r => r.type === row.type && r.id === row.id))
+  logger.debug(`Inserting ${toInsert.length.toString()} rows into wa_data for owner ${ownerEmail}`)
+  const batchSize = 100
+  const maxBatches = 100
+  let alredyInserted = 0
+  for (let i = 0; i < maxBatches; i += 1) {
+    const batch = toInsert.slice(alredyInserted, alredyInserted + batchSize)
+    // Check if we are done
+    if (batch.length === 0) {
+      logger.debug(`Inserted ${alredyInserted.toString()} rows into wa_data for owner ${ownerEmail}`)
+      return
+    }
+    // Pg does not directely support inserting multiple rows. So we have to create the query manually. Use placeholders for the values to avoid SQL injection.
+    let placeholderCounter = 1
+    const query = `INSERT INTO wa_data (owner_email, type, id, obj, hash) VALUES ${batch.map(b => `('${ownerEmail}', '${b.type}', $${(placeholderCounter++).toString()}, $${(placeholderCounter++).toString()}, '${b.hash}')`).join(', ')};`
+    const params = batch.flatMap(b => [b.id, b.obj])
+    await client.query(query, params)
+    alredyInserted += batch.length
+  }
+  throw new Error(`Could not enter all data in ${maxBatches.toString()} Batches. This should never happen.`)
+}
+
+interface WhatsAppDataRow {
+  type: string
   id: string
-  pn: string | undefined
-  name: string | undefined
-  is_group: boolean
-  unread_count: number | undefined
-  archived: boolean | undefined
-  last_message_timestamp: string | undefined
+  obj: string
+  hash: string
 }
 
-export interface MessageInput {
+interface ExistingWhatsAppDataRow {
+  type: string
   id: string
-  chat_id: string
-  sender_id?: string
-  content: string
-  mentioned?: boolean
-  timestamp: string
-}
-
-export interface ContactInput {
-  pn: string
-  lid: string
-  name: string | undefined
-}
-
-export type Chat = Entity<ChatInput>
-export type Message = Entity<MessageInput>
-export type Contact = Entity<ContactInput>
-export type AuthState = Entity<AuthStateInput>
-
-export interface HistoryUpdate {
-  authState: AuthStateInput
-  chats: ChatInput[]
-  contacts: ContactInput[]
-  messages: MessageInput[]
-  clean: boolean
-}
-
-export async function findChatsByOwner(client: Queryable, ownerEmail: string): Promise<Chat[]> {
-  const result = await client.query<Chat>(
-    'SELECT * FROM wa_chat WHERE owner_email = $1 ORDER BY name ASC',
-    [ownerEmail],
-  )
-  return result.rows.map(removeNull)
-}
-
-export async function findMessagesByChatId(client: Queryable, ownerEmail: string, chatId: string): Promise<Message[]> {
-  const result = await client.query<Message>(
-    'SELECT * FROM wa_message WHERE owner_email = $1 AND chat_id = $2 ORDER BY timestamp DESC',
-    [ownerEmail, chatId],
-  )
-  return result.rows.map(removeNull)
-}
-
-export async function findAuthStateByOwner(client: Queryable, ownerEmail: string): Promise<AuthState | undefined> {
-  const result = await client.query<AuthState>(
-    'SELECT creds FROM wa_auth WHERE owner_email = $1',
-    [ownerEmail],
-  )
-  return removeNull(result.rows[0])
-}
-
-export async function findContactsByOwner(client: Queryable, ownerEmail: string): Promise<Contact[]> {
-  const result = await client.query<Contact>(
-    'SELECT * FROM wa_contact WHERE owner_email = $1 ORDER BY name ASC',
-    [ownerEmail],
-  )
-  return result.rows.map(removeNull)
-}
-
-export async function cleanWhatsAppDataOfOwner(client: Queryable, ownerEmail: string): Promise<void> {
-  await client.query('DELETE FROM wa_auth WHERE owner_email = $1', [ownerEmail])
-  await client.query('DELETE FROM wa_chat WHERE owner_email = $1', [ownerEmail])
-  await client.query('DELETE FROM wa_message WHERE owner_email = $1', [ownerEmail])
-  await client.query('DELETE FROM wa_contact WHERE owner_email = $1', [ownerEmail])
-}
-
-export async function updateAuthState(client: Queryable, ownerEmail: string, authState: AuthStateInput): Promise<void> {
-  await client.query(
-    `INSERT INTO wa_auth (owner_email, creds, keys, created_at, updated_at)
-     VALUES ($1, $2, $3, NOW(), NOW())
-     ON CONFLICT (owner_email) DO UPDATE SET
-       creds      = EXCLUDED.creds,
-       keys       = EXCLUDED.keys,
-       updated_at = NOW()`,
-    [ownerEmail, authState.creds, authState.keys],
-  )
-}
-
-export async function deleteChatsById(client: Queryable, ownerEmail: string, chatIds: string[]): Promise<void> {
-  for (const chatId of chatIds) {
-    await client.query('DELETE FROM wa_message WHERE owner_email = $1 AND chat_id = $2', [ownerEmail, chatId])
-    await client.query('DELETE FROM wa_chat WHERE owner_email = $1 AND (id = $2 OR pn = $2)', [ownerEmail, chatId])
-  }
-}
-
-export async function updateChats(client: Queryable, ownerEmail: string, chat: (Partial<ChatInput> & { id: string })[]): Promise<void> {
-  for (const c of chat) {
-    await client.query(
-      `INSERT INTO wa_chat (id, pn, owner_email, name, is_group, unread_count, archived, last_message_timestamp, created_at, updated_at )
-       VALUES ($1, $2, $3, $4, COALESCE($5, FALSE), $6, $7, $8, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE SET
-         name          = COALESCE($4, wa_chat.name),
-         is_group      = COALESCE($5, wa_chat.is_group),
-         unread_count  = COALESCE($6, wa_chat.unread_count),
-         archived      = COALESCE($7, wa_chat.archived),
-         last_message_timestamp = COALESCE($8, wa_chat.last_message_timestamp),
-         updated_at    = NOW()`,
-      [c.id, c.pn, ownerEmail, c.name, c.is_group, c.unread_count, c.archived, c.last_message_timestamp],
-    )
-  }
-}
-
-export async function updateContacts(client: Queryable, ownerEmail: string, contacts: (Partial<ContactInput> & { lid: string })[]): Promise<void> {
-  for (const contact of contacts) {
-    await client.query(
-      `INSERT INTO wa_contact (lid, pn, owner_email, name, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())
-       ON CONFLICT (lid) DO UPDATE SET
-         pn           = COALESCE($2, wa_contact.pn),
-         name         = COALESCE($4, wa_contact.name),
-         updated_at   = NOW()`,
-      [contact.lid, contact.pn, ownerEmail, contact.name],
-    )
-  }
-}
-
-export async function deleteMessages(client: Queryable, ownerEmail: string, messageIds: string[]): Promise<void> {
-  for (const messageId of messageIds) {
-    await client.query('DELETE FROM wa_message WHERE owner_email = $1 AND id = $2', [ownerEmail, messageId])
-  }
-}
-
-export async function updateMessages(client: Queryable, ownerEmail: string, messages: (Partial<MessageInput> & { id: string })[]): Promise<void> {
-  for (const msg of messages) {
-    await client.query(
-      `INSERT INTO wa_message (id, owner_email, chat_id, sender_id, mentioned, content, timestamp, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, COALESCE($5, FALSE), $6, $7, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE SET
-         chat_id      = COALESCE($3, wa_message.chat_id),
-         sender_id    = COALESCE($4, wa_message.sender_id),
-         mentioned    = COALESCE($5, wa_message.mentioned),
-         content      = COALESCE($6, wa_message.content),
-         timestamp    = COALESCE($7, wa_message.timestamp),
-         updated_at   = NOW()`,
-      [msg.id, ownerEmail, msg.chat_id, msg.sender_id, msg.mentioned, msg.content, msg.timestamp],
-    )
-  }
+  hash: string
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useReducer } from 'react'
 import styles from './AiChatWindow.module.css'
 import { aiChatStateReducer, initialAiChatState } from './AiChatWindowState'
-import { getLocation } from '../_external/assistant/weather'
+import { getLocation } from '../_external/weather'
 import Markdown from 'react-markdown'
 
 export function AiChatWindow() {

@@ -3,3 +3,5 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   sharp: true
+minimumReleaseAgeExclude:
+  - '@lizzythelizard/whatsapp-mcp'
