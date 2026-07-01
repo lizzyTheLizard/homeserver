@@ -2,7 +2,7 @@
 import type { NextServerOptions } from 'next/dist/server/next'
 import type { Server, RequestListener, IncomingMessage } from 'http'
 import type { WebSocket } from 'ws'
-import type { InitialContext } from './app/startpage/_external/assistant/assistant'
+import type { InitialContext } from './app/startpage/_external/assistant'
 import type { CookieStore } from './app/shared/auth/auth'
 import type Stream from 'stream'
 
@@ -55,7 +55,7 @@ async function createServer(handle: RequestListener): Promise<Server> {
 async function registerAssistantWebSocket(server: Server) {
   const { WebSocketServer } = await import('ws')
   const { getAuthenticatedUserSession } = await import('./app/shared/auth/auth')
-  const { createAssistantInstance } = await import('./app/startpage/_external/assistant/assistant')
+  const { createAssistantInstance } = await import('./app/startpage/_external/assistant')
   const { validateObject, validateString } = await import('./app/shared/_helper/validation')
   const z = await import('zod')
 

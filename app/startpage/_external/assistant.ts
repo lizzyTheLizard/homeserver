@@ -1,9 +1,9 @@
 import { ToolLoopAgent, ToolSet } from 'ai'
 import { createDeepInfra } from '@ai-sdk/deepinfra'
-import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from '../weather'
+import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from './weather'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
-import { getLocationDescription, locationByNameTool } from '../geolocation'
+import { getLocationDescription, locationByNameTool } from './geolocation'
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
