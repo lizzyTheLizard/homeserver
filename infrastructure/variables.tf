@@ -22,6 +22,11 @@ variable "session_password" {
   type = string
   sensitive = true
 }
+variable "deepinfra_api_key" {
+  type = string
+  sensitive = true
+}
+
 
 variable "admin_email" {
   type = string

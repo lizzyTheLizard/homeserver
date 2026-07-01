@@ -1,9 +1,8 @@
 
-output "OPENAI_API_KEY" {
+output "SCALEWAY_API_KEY" {
   value = scaleway_iam_api_key.gutschi_site.secret_key
   sensitive = true
 }
-
 
 output "DB_CONNECTION_STRING_TEST" {
   value = format("postgres://%s:%s@%s?%s",
