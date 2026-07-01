@@ -34,7 +34,7 @@ See [.env.example](.env.example) for the full list. The most important ones:
 | `ADMIN_EMAIL`            | Email allowed into the Admin app                 |
 | `CLIENT_ID`/`CLIENT_SECRET`/`ISSUER` | OIDC application credentials         |
 | `COOKIE_NAME`/`SESSION_PASSWORD` | iron-session cookie name + secret        |
-| `AI_BASE_URL`/`OPENAI_API_KEY`/`AI_MODEL` | CoEditor LLM endpoint           |
+| `DEEPINFRA_API_KEY` | Deepinfra LLM endpoint           |
 
 In production every required var must be set; the app fails fast on startup otherwise.
 

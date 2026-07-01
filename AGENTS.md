@@ -68,4 +68,4 @@ Required in production (see `.env.example` for full list):
 - `ADMIN_EMAIL` — Email allowed into the Admin app
 - `CLIENT_ID`/`CLIENT_SECRET`/`ISSUER` — OIDC application credentials
 - `COOKIE_NAME`/`SESSION_PASSWORD` — iron-session cookie name + secret
-- `OPENAI_API_KEY` — Required for CoEditor AI features
+- `DEEPINFRA_API_KEY` — Required for CoEditor AI features

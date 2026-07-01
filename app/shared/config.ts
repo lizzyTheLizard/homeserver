@@ -55,7 +55,7 @@ export const config: Config = {
   WEATHER_DETAIL_URL: required('WEATHER_DETAIL_URL', 'http://localhost:3000/weather-detail'),
   GRAFANA_URL: optional('GRAFANA_URL', 'https://0e73b082-b389-4c17-9bc1-62b013f1f0d1.dashboard.cockpit.scaleway.com/d/3c11436f-6c62-4303-b951-9337fa444515/cockpit-home-copy?orgId=1&from=now-24h&to=now&timezone=browser&var-metrics=cf48grbvnjqioc&var-Filters=message%7C%3D%7C%5B2026-01-09T21:00:26.687Z%5D%20info:%20Unauthenticated%20access%20from%20user%20agent%20%27Mozilla%2F5.0%20%28Windows%20NT%206.1;%20WOW64%29%20AppleWebKit%2F537.36%20%28KHTML__gfc__%20like%20Gecko%29%20Chrome%2F45.0.2454.85%20Safari%2F537.36%27&var-container_name=gutschisitewsdlddur-test-gutschi-site&var-log_filter=&viewPanel=panel-1'),
   AI: {
-    API_KEY: required('OPENAI_API_KEY', 'dev-only-key'),
+    API_KEY: required('DEEPINFRA_API_KEY', 'dev-only-key'),
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),

@@ -38,10 +38,15 @@ const APPS = [
 ];
 
 const BOOKMARKS = [
-  { label: 'GitHub',   url: 'https://github.com' },
-  { label: 'Outlook',  url: 'https://outlook.com' },
-  { label: 'Scaleway', url: 'https://scaleway.com' },
-  { label: 'OneDrive', url: 'https://onedrive.live.com' },
+  { label: 'SwissQuote',       url: 'https://swissquote.ch' },
+  { label: 'Berner KB',        url: 'https://bekb.ch' },
+  { label: 'PostFinance',      url: 'https://postfinance.ch' },
+  { label: 'APV Hosting',      url: '#' },
+  { label: 'APV Datenbank',    url: '#' },
+  { label: 'Gutschi Hoststar', url: 'https://my.hoststar.ch' },
+  { label: 'Gutschi Scaleway', url: 'https://console.scaleway.com' },
+  { label: 'Outlook',          url: 'https://outlook.com' },
+  { label: 'GitHub',           url: 'https://github.com' },
 ];
 
 const MOCK_STATUS = {
@@ -256,7 +261,7 @@ function AiMessage({ msg, tweaks }) {
     <div>
       <div style={{
         background: 'rgb(236,237,245)',
-        borderRadius: '4px 18px 18px 18px',
+        borderRadius: '18px 18px 18px 4px',
         padding: '0.9rem 1.1rem',
         fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
       }}>
@@ -285,8 +290,8 @@ function TypingIndicator() {
     <div style={{ display: 'inline-flex' }}>
       <div style={{
         background: 'rgb(236,237,245)',
-        borderRadius: '4px 18px 18px 18px',
-        padding: '0.75rem 1rem',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.65rem 0.85rem',
         display: 'flex', gap: '5px', alignItems: 'center',
       }}>
         {[0, 0.18, 0.36].map((delay, i) => (
@@ -311,7 +316,7 @@ function AIChatWindow({ tweaks }) {
   const listRef = useRef(null);
 
   useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = 0;
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages, isTyping]);
 
   function send(text) {
@@ -336,10 +341,49 @@ function AIChatWindow({ tweaks }) {
   const latestActions = messages.length > 0 ? messages[messages.length - 1].actions : null;
 
   return (
-    <div style={{ width: '100%', maxWidth: '1200px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <>
+      <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
 
-      {/* Input — pill */}
+          {/* Messages — normal order, auto-scroll to bottom */}
+          <div ref={listRef} style={{
+            flex: 1, minHeight: 0, overflowY: 'auto',
+            display: 'flex', flexDirection: 'column', gap: '0.75rem',
+            paddingTop: '0.5rem', paddingBottom: '0.75rem',
+          }}>
+            {messages.map(msg =>
+              msg.role === 'ai'
+                ? <AiMessage key={msg.id} msg={msg} tweaks={tweaks} />
+                : <UserMessage key={msg.id} msg={msg} />
+            )}
+            {isTyping && <TypingIndicator />}
+          </div>
+
+          {/* Suggestion chips */}
+          {latestActions && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', padding: '0 0.2rem 0.5rem' }}>
+              {latestActions.map(a => (
+                <button key={a} onClick={() => send(a)} style={{
+                  padding: '0.33rem 0.85rem',
+                  background: 'rgba(0,0,210,0.07)',
+                  border: '1px solid rgba(0,0,210,0.22)',
+                  borderRadius: '20px', cursor: 'pointer',
+                  fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+                  fontFamily: 'inherit', fontWeight: 500,
+                  transition: 'background 0.12s, border-color 0.12s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+                >{a}</button>
+              ))}
+            </div>
+          )}
+
+          {/* Input — pill */}
+        </div>
+      </div>
       <form onSubmit={handleSubmit} style={{
+        width: '100%', maxWidth: '1200px',  
         display: 'flex', alignItems: 'center',
         background: 'white',
         border: '1.5px solid rgba(0,0,0,0.13)',
@@ -370,40 +414,7 @@ function AIChatWindow({ tweaks }) {
           </svg>
         </button>
       </form>
-
-      {/* Suggestion chips */}
-      {latestActions && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', padding: '0.8rem 0.2rem 0.4rem' }}>
-          {latestActions.map(a => (
-            <button key={a} onClick={() => send(a)} style={{
-              padding: '0.33rem 0.85rem',
-              background: 'rgba(0,0,210,0.07)',
-              border: '1px solid rgba(0,0,210,0.22)',
-              borderRadius: '20px', cursor: 'pointer',
-              fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
-              fontFamily: 'inherit', fontWeight: 500,
-              transition: 'background 0.12s, border-color 0.12s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
-            >{a}</button>
-          ))}
-        </div>
-      )}
-
-      {/* Messages — newest first */}
-      <div ref={listRef} style={{
-        overflowY: 'auto', padding: '0.5rem 0 1rem',
-        display: 'flex', flexDirection: 'column', gap: '0.75rem',
-      }}>
-        {isTyping && <TypingIndicator />}
-        {[...messages].reverse().map(msg =>
-          msg.role === 'ai'
-            ? <AiMessage key={msg.id} msg={msg} tweaks={tweaks} />
-            : <UserMessage key={msg.id} msg={msg} />
-        )}
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -482,44 +493,44 @@ function App() {
       {/* Main */}
       <div style={{
         flexGrow: 1, display: 'flex', flexDirection: 'column',
-        height: 'calc(100vh - 2.5rem)', overflowY: 'auto',
-        alignItems: 'center', padding: '2rem', gap: '1.75rem',
+        height: 'calc(100vh - 2.5rem)', overflow: 'hidden',
+        alignItems: 'center', padding: '2rem', gap: '1.5rem',
       }}>
         {/* Clock */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '4rem', fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1, color: 'rgba(0,0,210,1)' }}>{fmtTime(now)}</div>
-          <div style={{ fontSize: '0.95rem', color: '#888', marginTop: '0.5rem', letterSpacing: '0.01em' }}>{fmtDate(now)}</div>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: '3.5rem', fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1, color: 'rgba(0,0,210,1)' }}>{fmtTime(now)}</div>
+          <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.4rem', letterSpacing: '0.01em' }}>{fmtDate(now)}</div>
         </div>
 
-        {/* AI Chat */}
+        {/* AI Chat — fills remaining space */}
         <AIChatWindow tweaks={tweaks} />
 
         {/* App cards */}
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', flexShrink: 0 }}>
           {APPS.map(app => (
             <a key={app.key} href="#" onClick={e => e.preventDefault()} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-              padding: '1.25rem 2rem', width: '160px',
+              padding: '0.9rem 1.5rem', width: '140px',
               border: '1px solid rgba(0,0,0,0.1)', borderRadius: '10px',
               textDecoration: 'none', color: '#1a1a2e', background: 'white',
               transition: 'background 0.15s, border-color 0.15s',
             }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgb(245,246,252)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.25)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'; }}>
-              <Icon name={app.icon} style={{ width: '3.5rem', height: '3.5rem', marginBottom: '0.6rem' }} />
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{app.name}</div>
-              <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.2rem' }}>{app.description}</div>
+              <Icon name={app.icon} style={{ width: '2.8rem', height: '2.8rem', marginBottom: '0.4rem' }} />
+              <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{app.name}</div>
+              <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '0.15rem' }}>{app.description}</div>
             </a>
           ))}
         </div>
 
         {/* Bookmarks */}
-        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', flexShrink: 0, paddingBottom: '0.5rem' }}>
           {BOOKMARKS.map(b => (
             <a key={b.label} href={b.url} target="_blank" rel="noopener" style={{
-              padding: '0.32rem 0.85rem',
+              padding: '0.3rem 0.75rem',
               border: '1px solid rgba(0,0,0,0.1)', borderRadius: '6px',
-              textDecoration: 'none', color: '#555', fontSize: '0.85rem',
+              textDecoration: 'none', color: '#555', fontSize: '0.8rem',
               background: 'white', transition: 'background 0.15s',
             }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgb(245,246,252)'}
