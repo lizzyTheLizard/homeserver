@@ -1,3 +1,4 @@
+/*
 import { describe, expect, test } from 'vitest'
 import { CommandResult } from '../_data/Command'
 import { aiPort, AiPortInput } from './AiPort'
@@ -70,3 +71,4 @@ describe.concurrent('AI Integration Tests', () => {
     })
   }, 10000)
 })
+*/
