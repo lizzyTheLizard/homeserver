@@ -3,6 +3,7 @@ import { createDeepInfra } from '@ai-sdk/deepinfra'
 import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from '../weather'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
+import { getLocationDescription, locationByNameTool } from '../geolocation'
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
@@ -17,9 +18,9 @@ export interface Assistant {
   send(message: string): void
 }
 
-const deepinfra = createDeepInfra({ baseURL: config.AI.BASE_URL, apiKey: config.AI.API_KEY })
-const model = deepinfra('Qwen/Qwen3.6-35B-A3B')
-const tools = { get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool } satisfies ToolSet
+const deepinfra = createDeepInfra({ apiKey: config.AI.API_KEY })
+const model = deepinfra('google/gemma-4-31B-it-turbo')
+const tools = { get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool, get_location_by_name: locationByNameTool } satisfies ToolSet
 
 export function createAssistantInstance(): Assistant {
   logger.debug(`Creating assistant instance with ${Object.keys(tools).length.toString()} tools and model ${model.modelId}`)
@@ -32,37 +33,45 @@ export function createAssistantInstance(): Assistant {
   }
 
   function emitError(error: unknown) {
-    if (error instanceof Error)
-      emit({ type: 'error', error })
-    emit({ type: 'error', error: new Error(`Unknown error: ${String(error)}`) })
+    if (error instanceof Error) emit({ type: 'error', error })
+    else emit({ type: 'error', error: new Error(`Unknown error: ${String(error)}`) })
   }
 
   async function send(message: string): Promise<void> {
     if (!agent) throw new Error('Assistant not initialized')
     if (running) throw new Error('Assistant is already processing a message')
     running = true
-    const result = await agent.stream({ prompt: message })
-    for await (const chunk of result.textStream) {
-      emit({ type: 'stream_response', chunk })
+    try {
+      const result = await agent.stream({ prompt: message })
+      for await (const chunk of result.textStream) {
+        emit({ type: 'stream_response', chunk })
+      }
+      emit({ type: 'finished_response' })
+      const actionsResp = await agent.generate({ prompt: getActionPrompt() })
+      const actions = JSON.parse(actionsResp.text) as string[]
+      emit({ type: 'got_actions', actions })
     }
-    running = false
-    emit({ type: 'finished_response' })
-    const actionsResp = await agent.generate({ prompt: getActionPrompt() })
-    const actions = JSON.parse(actionsResp.text) as string[]
-    emit({ type: 'got_actions', actions })
+    finally {
+      running = false
+    }
   }
 
   async function initialize(initialContext: InitialContext): Promise<void> {
     logger.debug(`Initializing assistant with context: ${JSON.stringify(initialContext)}`)
     const instructions = await getInstructions(initialContext)
     running = true
-    agent = new ToolLoopAgent({ model, tools, instructions })
-    const result = await agent.stream({ prompt: getInitialMessage() })
-    for await (const chunk of result.textStream) { emit({ type: 'stream_response', chunk }) }
-    running = false
-    emit({ type: 'finished_response' })
-    const actions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather']
-    emit({ type: 'got_actions', actions })
+    agent = new ToolLoopAgent({ model, tools, instructions, temperature: 0.4, maxRetries: 0 })
+    try {
+      const result = await agent.stream({ prompt: getInitialMessage() })
+      for await (const chunk of result.textStream)
+        emit({ type: 'stream_response', chunk })
+      emit({ type: 'finished_response' })
+      const actions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather']
+      emit({ type: 'got_actions', actions })
+    }
+    finally {
+      running = false
+    }
   }
 
   const result: Assistant = {
@@ -77,6 +86,7 @@ async function getInstructions(initialContext: InitialContext): Promise<string> 
   const context = {
     time: new Date().toLocaleString(),
     location: initialContext.location,
+    locationDescription: await getLocationDescription(initialContext.location),
     weather: await shortWeatherOverview(initialContext.location.lat, initialContext.location.lon),
   }
 
@@ -99,18 +109,20 @@ function getInitialMessage(): string {
   
   Good {timeofday}!
 
-  {Totally one paragraph, 3-4 sentences, no newlines}Currently the weather is **{currentWeather and temperature}** in **{currentLocation}**. During {"the day if in the morning, "next day" if in the evening}, the temperature will rise to **{maxTemp}°C** and drop to **{minTemp}°C** in the evening. 
+  {Totally one paragraph, 3-4 sentences, no newlines}Currently the weather is **{currentWeather and temperature}** in **{city name}**. During {"the day if in the morning, "next day" if in the evening}, the temperature will rise to **{maxTemp}°C** and drop to **{minTemp}°C** in the evening. 
   The sun will rise at **{sunrise}** and set at **{sunset}**. {Say something about the precipitation, for example "There is a high chance of rain in the afternoon" or "No rain expected"}
   {say something about the wind if it is notable"} {say something about clothing, e.g. "It's a good day for shorts and a t-shirt" or "Better wear a jacket today", "So do not forget your umbrella!"}
   `
 }
 
+// THis is not workign that great... Imrpove it!
 function getActionPrompt(): string {
   return `Based on the conversation so far, list the next actions the assistant should take to help the user. 
     Only list actions that are directly relevant to the users needs and can be executed with the available tools. 
     Do not list more than 5 actions.
-    An action must be a short command, for example "Get Todays Weather", "Get Weekly Forecast", "What about tomorrow?".
-    Return an array of strings in JSON format, for example ["Get Todays Weather", "Get Weekly Forecast"].
+    An action must be a short command, for example "Get Todays Weather", "Get Weekly Forecast", "What about tomorrow?". It should not include any explanations or additional text, only the action itself.
+    Do not include actions already executed. Do not include actions that are not relevant to the users needs. Do not include actions that cannot be executed with the available tools.
+    Return an array of strings in JSON format, for example ["Get Todays Weather", "Get Weekly Forecast"]. Do NOT fence the JSON in markdown. 
     Do not return any explanations, only the array of strings. Try to come up with at least one action. If there are no relevant actions, return an empty array.
   `
 }
