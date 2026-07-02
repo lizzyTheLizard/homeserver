@@ -47,7 +47,7 @@ async function initialize(handler: AssistantHandler, initialContext: InitialCont
   const model = deepinfra('google/gemma-4-31B-it-turbo')
   const instructions = await getInstructions(initialContext)
   const tools = await getTools()
-  handler.agent = new ToolLoopAgent({ model, tools, instructions, temperature: 0.4, maxRetries: 0 })
+  handler.agent = new ToolLoopAgent({ model, tools, instructions, temperature: 0.4, providerOptions: { deepinfra: { service_tier: 'priority' } } })
   // TODO: Imrpove this when other connectors are available
   const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather']
   await send(handler, await getInitialMessage(), initialActions)
@@ -81,10 +81,15 @@ async function send(handler: AssistantHandler, message: string, fixedActions?: s
     handler.isRunning = true
   })
   try {
-    const result = await handler.agent.stream({ prompt: message })
+    // TODO Streaming is not working here for tools calls and gemma. Maybe a bug in deepinfra?
+    /*
+     const result = await handler.agent.stream({ prompt: message })
     for await (const chunk of result.textStream) {
       handler.emit({ type: 'stream_response', chunk })
     }
+      */
+    const result = await handler.agent.generate({ prompt: message })
+    handler.emit({ type: 'stream_response', chunk: result.text })
     handler.emit({ type: 'finished_response' })
     if (fixedActions) {
       handler.emit({ type: 'got_actions', actions: fixedActions })
@@ -96,7 +101,7 @@ async function send(handler: AssistantHandler, message: string, fixedActions?: s
     }
   }
   catch (error: unknown) {
-    logger.debug(`Assistant failed to process message: ${new String(error).toString()}`)
+    logger.debug(`Assistant failed to process message: ${error instanceof Error ? error.message : String(error)}`)
   }
 
   finally {

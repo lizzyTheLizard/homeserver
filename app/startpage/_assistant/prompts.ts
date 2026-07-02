@@ -31,12 +31,13 @@ export async function getSkillTools(skillDir?: string): Promise<ToolSet> {
     const skillPath = join(skillDir, dir.name)
     const skill = await loadSkillTool(skillPath)
     if (!skill) continue
-    skillTools[skill.name] = tool({
+    skillTools[`load_skill_${skill.name}`] = tool({
       description: skill.description,
       inputSchema: z.object({}),
       execute: skill.execute,
     })
   }
+  logger.debug(`Loaded ${Object.keys(skillTools).length.toString()} skill tools from ${skillDir}`)
   return skillTools
 }
 
@@ -60,14 +61,15 @@ async function parseMetadata(skillDirPath: string): Promise<{ name: string, desc
     return undefined
   }
   const skillFilePath = join(skillDirPath, skillFile)
-  const content = await fs.readFile(skillFilePath, 'utf-8')
-  const metadata = /---\n([\s\S]*?)\n[^\S\r\n]*---/.exec(content)
+  const content = (await fs.readFile(skillFilePath, 'utf-8'))
+
+  const metadata = /---\r?\n([\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
   if (!metadata) {
     logger.warn(`Skill file ${skillFilePath} has invalid frontmatter, metadata is missing`)
     return undefined
   }
   const frontmatter: Record<string, string> = {}
-  for (const line of metadata[1].split('\n')) {
+  for (const line of metadata[1].split(/\r?\n/)) {
     const colonIndex = line.indexOf(':')
     if (colonIndex > 0) {
       const key = line.slice(0, colonIndex).trim()
@@ -88,6 +90,7 @@ async function parseMetadata(skillDirPath: string): Promise<{ name: string, desc
 }
 
 async function loadSkill(name: string, skillDirPath: string): Promise<string> {
+  logger.debug(`Loading skill ${name} from ${skillDirPath}`)
   const files = await fs.readdir(skillDirPath)
   const fileContents: Record<string, string> = {}
   for (const file of files) {
