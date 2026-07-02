@@ -28,7 +28,7 @@ $isOpenCodeWorkspace = $currentPath.StartsWith($worktreeRoot, [StringComparison]
 if (-not $isOpenCodeWorkspace) { Write-Host "Not in an OpenCode workspace" }
 ```
 
-If the check fails, tell the user they must create an OpenCode workspace first by running `opencode` in this directory or using the OpenCode CLI to create a workspace. The skill cannot proceed outside an OpenCode workspace.
+If the check fails, tell the user they must create an OpenCode workspace first. The skill cannot proceed outside an OpenCode workspace.
 
 ### Step 1: Select or confirm the issue
 
@@ -73,14 +73,22 @@ git checkout -b issue-#<NUMBER>-<kebab-title>
 git push -u origin HEAD
 ```
 
-Optionally create an empty initial commit to mark the start of work:
+### Step 6: Transition the issue to "In Progress"
+First get the project item ID for this issue:
 
 ```bash
-git commit --allow-empty -m "chore: start work on #<NUMBER>"
-git push
+# Cross-reference the issue number in the project to find the item ID
+gh project item-list 1 --owner lizzyTheLizard --format json
 ```
 
-### Step 6: Report
+Then set the new status:
+
+```bash
+gh project item-edit 1 --owner lizzyTheLizard --item-id "<item-id>" --field-id PVTSSF_lAHOANavlM4BbECkzhV3Oko --single-select-option-id "<new-status-option-id>"
+```
+
+
+### Step 7: Report
 
 Tell the user:
 - The branch name and that it's based on the latest origin/main

@@ -34,14 +34,13 @@ If not on a matching branch, suggest running `start-implementing` first.
 gh issue view <NUMBER> --json number,title,body,labels,comments
 ```
 
-Also check for any existing design files in `design/` that may be relevant (read the `design/` folder structure).
+### Step 3: Verify the issue is in "In Progress" status
 
-### Step 3: Verify the issue is in "Todo" status
-
-Check the issue's project status. If not in "Todo":
+Check the issue's project status. If not in "In Progress":
 - If in "Planning" → suggest `refine-issue`
 - If in "UI" → suggest `implement-ui-design`
-- If in "In Progress" or "Done" → already being worked on
+- If in "Todo" → suggest `start-implementing` to create a branch and start implementation
+- If in "Done" → nothing to do
 
 ### Step 4: Auto-generate change list from the issue
 
@@ -66,12 +65,7 @@ Remind the user: this skill can be called multiple times. If there are many chan
 
 ### Step 6: Implement the selected changes
 
-Implement the changes following the project conventions from `AGENTS.md`:
-- Use `"use client"` only when browser interactivity is required
-- CSS modules (`*.module.css`) for styling
-- Server actions in `server.ts` files beside pages
-- DB access via `transactional(fn)` / `nontransactional(fn)`
-- Tests for any new functionality
+Implement the changes following the project conventions from `AGENTS.md`
 
 ### Step 7: User review
 

@@ -79,7 +79,13 @@ EOF
 git push
 ```
 
-### Step 8: Update the issue
+### Step 8: Transition the issue status if needed
+
+Check if all design work appears to be done:
+- If all done → ask the user: "All UI appear complete. Would you like to finish the design?" If yes, transition the issue to "Todo" and tell the user that the issue is now ready for implementation via `implement-issue`.
+- If more remain → report: "X design tasks remain. You can continue implementation with `implement-ui-design` or use `implement-issue` when all design work is done."
+
+### Step 9: Update the issue
 
 Add a comment describing what was designed and linking to the design files:
 
@@ -92,9 +98,3 @@ The following designs were created/updated:
 
 Status transitioned: UI → Todo"
 ```
-
-### Step 9: Transition the issue status if needed
-
-Check if all design work appears to be done:
-- If all done → ask the user: "All UI appear complete. Would you like to finish the design?" If yes, transition the issue to "Todo" and tell the user that the issue is now ready for implementation via `implement-issue`.
-- If more remain → report: "X design tasks remain. You can continue implementation with `implement-ui-design` or use `implement-issue` when all design work is done."

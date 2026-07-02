@@ -36,7 +36,7 @@ Identify gaps in understanding before drafting anything. Cover the following are
 - **Scope / edge cases** — are there known constraints, error cases, or out-of-scope items?
 - **UI / design needed?** Does this feature require a new screen, form, or visual design? Check the `design/` folder to see if a design already exists.
 - **Technical constraints** — relevant architecture decisions, dependencies, or implementation notes.
-- **Priority / milestone** — which milestone does this belong to? (available: "Personal Assistant", "Cash improvements", "New CoEditor")
+- **Priority / milestone** — which milestone does this belong to? (check github for existing milestones)
 - **Labels** — which labels apply? (e.g. `StartPage`, `Cash`, `CoEditor`, `improvement`, `enhancement`, `bug`)
 
 Stop asking questions once there is enough information to write a complete, unambiguous issue.
