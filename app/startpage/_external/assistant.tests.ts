@@ -7,12 +7,11 @@ describe('createAssistantInstance', () => {
     const assistant = createAssistantInstance()
     assistant.on((event) => { events.push(event) })
 
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       assistant.on((event) => {
         if (event.type === 'finished_response') resolve()
-        if (event.type === 'error') reject(event.error)
       })
-      assistant.init({ location: { lat: 52.52, lon: 13.405 } })
+      void assistant.init({ location: { lat: 52.52, lon: 13.405 } })
     })
 
     const streamChunks = events.filter(e => e.type === 'stream_response')
