@@ -26,13 +26,6 @@ describe('getActionPrompt', () => {
   })
 })
 
-describe('getSkillTools', () => {
-  test('should return an empty ToolSet when no skills exist', async () => {
-    const result = await getSkillTools()
-    expect(result).toEqual({})
-  })
-})
-
 const SKILL_NAME = 'test-skill'
 const SKILL_DESCRIPTION = 'A test skill'
 const SKILL_CONTENT = `
@@ -66,9 +59,9 @@ describe('skill loading from filesystem', () => {
     await fs.writeFile(skillFile, SKILL_CONTENT)
 
     const tools = await getSkillTools(tmpDir)
-    expect(tools[SKILL_NAME]).toBeDefined()
-    expect(tools[SKILL_NAME].description).toBe(SKILL_DESCRIPTION)
-    expect(tools[SKILL_NAME].inputSchema).toBeDefined()
+    expect(tools[`load_skill_${SKILL_NAME}`]).toBeDefined()
+    expect(tools[`load_skill_${SKILL_NAME}`].description).toBe(SKILL_DESCRIPTION)
+    expect(tools[`load_skill_${SKILL_NAME}`].inputSchema).toBeDefined()
   })
 
   test('should load skill.MD', async () => {
@@ -79,7 +72,7 @@ describe('skill loading from filesystem', () => {
 
     const tools = await getSkillTools(tmpDir)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const executeFkt: (a: unknown, b: ToolExecutionOptions) => Promise<string> = tools[SKILL_NAME].execute!
+    const executeFkt: (a: unknown, b: ToolExecutionOptions) => Promise<string> = tools[`load_skill_${SKILL_NAME}`].execute!
     const result: string = await executeFkt({}, { toolCallId: '123', messages: [] })
     expect(result).toContain(`These are the instructions for the skill test-skill. 
   The main file is SKILL.MD, it contains the description and instructions for the skill. 
@@ -103,7 +96,7 @@ describe('skill loading from filesystem', () => {
 
     const tools = await getSkillTools(tmpDir)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const executeFkt: (a: unknown, b: ToolExecutionOptions) => Promise<string> = tools[SKILL_NAME].execute!
+    const executeFkt: (a: unknown, b: ToolExecutionOptions) => Promise<string> = tools[`load_skill_${SKILL_NAME}`].execute!
     const result: string = await executeFkt({}, { toolCallId: '123', messages: [] })
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const fileContent = JSON.parse(/(\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>

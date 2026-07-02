@@ -3,10 +3,10 @@ import { logger } from '@/app/shared/logger'
 export function createLoggingFetch(fetch: typeof global.fetch): typeof global.fetch {
   return async (resource, init) => {
     const requestStartTime = Date.now()
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    const bodyString = init?.body?.toString() ?? ''
+    const resourceUrl = resource instanceof Request ? resource.url : resource.toString()
+    const bodyString = init?.body ? String(init.body) : '' // eslint-disable-line @typescript-eslint/no-base-to-string
     const requestSize = bodyString.length
-    logger.debug(`Sending llm request of size ${requestSize.toString()} bytes to ${resource.toString()}`)
+    logger.debug(`Sending llm request of size ${requestSize.toString()} bytes to ${resourceUrl}`)
     // console.log(JSON.stringify(JSON.parse(bodyString), null, 2))
 
     const response = await fetch(resource, init)
