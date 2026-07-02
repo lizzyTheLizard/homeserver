@@ -16,16 +16,16 @@ function useClock() {
 export function Clock() {
   const now = useClock()
   const isClient = useIsClient()
-
-  if (!isClient) return null
+  const timeString = isClient ? now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '\u00A0'
+  const dateString = isClient ? now.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '\u00A0'
 
   return (
     <div className={styles.clockBlock}>
       <div className={styles.clock}>
-        {now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        {timeString}
       </div>
       <div className={styles.date}>
-        {now.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        {dateString}
       </div>
     </div>
   )

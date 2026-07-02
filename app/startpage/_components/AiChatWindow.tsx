@@ -14,8 +14,10 @@ export function AiChatWindow() {
   const socketRef = useRef<WebSocket | undefined>(undefined)
 
   useEffect(() => {
+    console.log('Opening WebSocket connection to /ws/assistant')
     const websocket = new WebSocket('/ws/assistant')
     websocket.onopen = async () => {
+      console.log('WebSocket connection opened')
       const context = { location: await getLocation() }
       websocket.send(JSON.stringify({ type: 'initialize', initialContext: context }))
     }
@@ -34,7 +36,8 @@ export function AiChatWindow() {
         dispatch({ type: 'FINISH' })
       }
     }
-    websocket.onerror = (error) => { dispatch({ type: 'ERROR', error: error }) }
+    websocket.onerror = (error) => { console.warn('WebSocket error:', error) }
+    websocket.onclose = (event) => { console.log('WebSocket closed:', event.code, event.reason) }
     socketRef.current = websocket
     return () => { websocket.close() }
   }, [])
