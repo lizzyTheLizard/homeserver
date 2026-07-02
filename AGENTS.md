@@ -14,6 +14,21 @@ To run a single test file:
 pnpm vitest run path/to/file.tests.ts
 ```
 
+## Issue Workflow (OpenCode Skills)
+
+Six skills manage the full issue lifecycle in the Homeserver project. Each handles a specific phase:
+
+| Skill | Triggers from → to | What it does |
+|---|---|---|
+| `create-issue` | Idea → Planning / UI / Todo | Gathers requirements, creates the GitHub issue, links to the Homeserver project, sets status and milestone |
+| `refine-issue` | Planning → UI / Todo | Refines an unclear issue by asking questions, updating the body, and transitioning to the next stage |
+| `start-implementing` | Todo / UI | Validates issue state, creates `issue-#N-kebab-title` branch from latest `origin/main`, pushes it |
+| `implement-ui-design` | UI → Todo | Shows UI changes to make, implements them in `design/` only, commits, transitions status to Todo |
+| `implement-issue` | Todo | Derives a change list from the issue body, implements selected items, commits, updates the issue |
+| `implementation-finish` | Todo → Done | Runs all checks (lint, test, build, Chromatic), verifies tasks complete, creates a PR with auto-merge |
+
+**Typical flow:** `create-issue` → `refine-issue` (if needed) → `implement-ui-design` (if needed) → `start-implementing` → `implement-issue` → `implementation-finish`
+
 ## Architecture
 
 **Next.js App Router** — pages are React Server Components by default. Use `"use client"` only when browser interactivity is required. Data mutations go through Next.js Server Actions, not a separate API layer.

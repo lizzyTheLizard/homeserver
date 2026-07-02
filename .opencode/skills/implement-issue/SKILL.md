@@ -1,146 +1,134 @@
 ---
 name: implement-issue
-description: Use this skill when the user wants to implement a GitHub issue. Guides the full flow from selecting an issue, gathering designs and information, creating an implementation plan, branching, working, and finally committing/pushing and opening a PR.
+description: Implements code changes for an issue that is in "Todo" status. Auto-generates a change list from the issue body, implements selected items, commits, and updates the issue. Can be called multiple times for the same issue.
 ---
 
-# Implement GitHub Issue
+# Implement Issue
 
-Guide the user from selecting a GitHub issue through implementation, commit, and PR — in a structured, checklist-driven flow.
+Implements code changes for an issue in "Todo" status. Shows the user a list of changes derived from the issue, implements selected items, commits, and updates progress.
 
-## Mode
+## Project Constants
 
-This skill uses plan mode to gate implementation.
-
-- **At the very start**, switch to plan mode (Tab key) before doing anything else.
-- Steps 0–3 (ongoing-check, issue selection, design check, clarifying questions) run inside plan mode.
-- **Step 4** ends plan mode: write the implementation plan to the plan file (path provided in the plan mode system message), then switch back to build mode (Tab key). The user's approval of the plan is the gate between planning and coding. Do **not** ask the user via text whether the plan looks correct — the plan approval flow handles that.
-- Steps 5–8 (branch, implement, pre-commit checks, commit, PR) run after the user has approved the plan, outside plan mode.
+- **Project owner:** lizzyTheLizard
+- **Project number:** 1
+- **Status field ID:** `PVTSSF_lAHOANavlM4BbECkzhV3Oko`
+  - Todo: `f75ad846`
+  - In Progress: `47fc9ee4`
+  - Done: `98236657`
 
 ## Workflow
 
-### Step 0: Check if this is an ongoing implementation
+### Step 1: Verify workspace context
 
-If the current branch is already in the form issue-#NUMBER-short-title-with-dashes, ask if you should continue with the implementation of this issue. If so, go directly to step 6.
-
-### Step 1: Select the issue
-
-If the user has not already specified an issue number, list open issues so they can pick one:
+Check that we are on a branch matching `issue-#<NUMBER>-*`. Extract the issue number:
 
 ```bash
-gh issue list --state open
+git rev-parse --abbrev-ref HEAD
 ```
 
-Ask the user which issue they want to work on if it is not already clear.
+If not on a matching branch, suggest running `start-implementing` first.
 
-Once an issue is identified, fetch its full details:
+### Step 2: Fetch the issue details
 
 ```bash
 gh issue view <NUMBER> --json number,title,body,labels,comments
 ```
 
-Read and summarise the issue for the user: title, user story, acceptance criteria, and any technical notes.
+Also check for any existing design files in `design/` that may be relevant (read the `design/` folder structure).
 
-### Step 2: Check whether UI / design work is involved
+### Step 3: Verify the issue is in "Todo" status
 
-Read the issue body and labels. If the issue involves UI changes, new screens, or visual components:
+Check the issue's project status. If not in "Todo":
+- If in "Planning" → suggest `refine-issue`
+- If in "UI" → suggest `implement-ui-design`
+- If in "In Progress" or "Done" → already being worked on
 
-- First check the `design/` folder for existing designs related to this issue (look for matching app name, component name, or screen name).
-- If a design exists in `design/`, reference it in the implementation plan and confirm with the user that it is the correct one.
-- If no design is found in `design/`, ask the user: "This issue involves UI changes. Do you have a design ready? If so, please share it."
-- If no design is available yet, pause and tell the user the issue cannot be fully planned without the design. Only continue once one is provided.
+### Step 4: Auto-generate change list from the issue
 
-If the issue is purely backend / data / configuration with no UI surface, skip this step.
+Parse the issue body to extract:
+- **Acceptance Criteria** — each `- [ ]` item is a potential task
+- **Technical Notes** — files to modify or create
+- **UI / Design Requirements** — reference to `design/` files
+- **Task lists** in the body or comments
 
-### Step 3: Gather all information and ask clarifying questions
+Derive a structured change list. Examples:
+- Create a new database migration file: `db/<description>.sql`
+- Add a new server action in `app/<page>/server.ts`
+- Create a new component: `app/<page>/_components/<name>.tsx`
+- Add tests: `<file>.tests.ts`, `<file>.server.tests.ts`
+- Add Storybook stories: `<file>.stories.ts`
 
-Before writing the plan, make sure every question is answered. Ask questions. Cover only what is not already clear from the issue or design:
+### Step 5: Present the change list to the user
 
-- Are there related issues, dependencies, or blocked work?
-- Are there open questions in the issue comments that are not yet resolved?
-- Are there edge cases or error states not covered by the acceptance criteria?
-- For UI changes: does the design cover all required states (loading, empty, error)?
-- Are there database schema changes or migrations required?
-- Are there any known constraints (performance, security, backwards compatibility)?
+Show the derived list and let the user select which items to implement now (one, several, or all).
 
-Stop asking once all acceptance criteria can be met without ambiguity.
+Remind the user: this skill can be called multiple times. If there are many changes, select a subset for this session.
 
-### Step 4: Create an implementation plan
+### Step 6: Implement the selected changes
 
-Write a numbered implementation plan to the plan file. The plan must include:
+Implement the changes following the project conventions from `AGENTS.md`:
+- Use `"use client"` only when browser interactivity is required
+- CSS modules (`*.module.css`) for styling
+- Server actions in `server.ts` files beside pages
+- DB access via `transactional(fn)` / `nontransactional(fn)`
+- Tests for any new functionality
 
-1. **Branch name** — format: `issue-#NUMBER-short-title-with-dashes` (lowercase, no special characters)
-2. **Files to create or modify** — list each file and what changes are needed
-3. **Database migrations** — list any new migration files needed
-4. **Tests** — list new or updated test files (`*.tests.ts` for unit, `server.tests.ts` for integration)
-5. **Storybook stories** — for UI changes, list new or updated story files
-6. **Order of implementation** — a step-by-step sequence that avoids breaking intermediate states
+### Step 7: User review
 
-Once the plan is written to the plan file, switch back to build mode (Tab key). Do not write any code until the user has approved the plan.
+Ask the user to review the changes. Do not commit until the user approves.
 
-### Step 5: Create the branch and start implementing
+### Step 8: Pre-commit checks
 
-Once the user approves the plan, ensure the working tree starts from a clean, up-to-date main:
-
-```bash
-git checkout main
-git pull
-```
-
-If there are uncommitted changes on the current branch, stop and ask the user how to handle them before switching.
-
-Then create and switch to the feature branch:
+Before committing, run:
 
 ```bash
-git checkout -b issue-#NUMBER-short-title-with-dashes
+pnpm lint
 ```
 
-Implement the plan step by step in the agreed order. After each logical chunk, briefly report what was done and what comes next.
+```bash
+pnpm vitest run <affected-test-files>
+```
 
-### Step 6: Pre-commit checks
+Fix any issues found.
 
-When finished the implementation, ask the user to check it and if you can commit. Do NOT commit without explicit agreement. Before you commit, run the following checks in order:
+### Step 9: Commit and push
 
-1. **Lint:**
-    ```bash
-    pnpm lint
-    ```
-    Fix any lint errors before proceeding.
+When the user approves and checks pass:
 
-2. **Tests:**
-    ```bash
-    pnpm test
-    ```
-    All tests must pass. Fix any failures before proceeding.
+```bash
+git add <relevant files>
+git commit -m "$(cat <<'EOF'
+<short imperative message> (#<NUMBER>)
 
-3. **Build:**
-    ```bash
-    pnpm build
-    ```
-    The production build must succeed (including type checking). Fix any errors before proceeding.
+Co-Authored-By: opencode <noreply@opencode.ai>
+EOF
+)"
+git push
+```
 
-4. **Chromatic (UI changes only):** If the issue involved UI component changes, run visual regression tests:
-    ```bash
-    pnpm chromatic
-    ```
-    Review any visual diffs and confirm they are intentional before committing.
+**Message rules:**
+- Imperative mood, present tense ("Add", "Fix", "Wire up" — not "Added" or "Adding")
+- Under 72 characters for the subject line
+- Reference the issue number in parentheses at the end: `(#NUMBER)`
 
-Report the outcome of each check to the user. Only proceed to commit once all checks pass.
+### Step 10: Update the issue
 
-### Step 7: Commit and push
+Add a comment describing what was implemented:
 
-When the user asks to commit and push, follow the template in `commit-template.md` (in this skill folder).
+```bash
+gh issue comment <NUMBER> --body "## Implementation Progress
 
-### Step 8: Open a Pull Request
+Completed:
+- [task description]
+- [task description]
 
-When the user asks to create a PR, follow the template in `pr-template.md` (in this skill folder).
+[Additional implementation notes]"
+```
 
-Return the PR URL to the user when done.
+Update the issue body to check off completed tasks if the body contained task lists.
 
-## Guidelines
+### Step 11: Check completeness
 
-- Never write code before the implementation plan is approved.
-- Never commit without running lint and tests first.
-- Always run Chromatic when UI components change — visual regressions are caught here, not in unit tests.
-- Always use `Closes #NUMBER` in the PR body.
-- One clarifying question at a time — never ask multiple questions in a single message.
-- If the issue changes significantly during implementation (scope creep, new information), flag it to the user and revise the plan before continuing.
+Check if all tasks and acceptance criteria appear to be done:
+- If all done → ask the user: "All tasks appear complete. Would you like to finish the implementation? This will run final checks and create a PR." If yes, trigger `implementation-finish`.
+- If more remain → report: "X tasks remain. You can continue implementation or use `implementation-finish` when all tasks are done."

@@ -1,0 +1,12 @@
+# OpenCode Skills
+
+Six skills are available under `.opencode/skills/`:
+
+1. **create-issue** — Creates a new issue, connects to Homeserver project, sets status (Planning/UI/Todo) and milestone
+2. **refine-issue** — Refines an issue in Planning phase, transitions to UI or Todo
+3. **start-implementing** — Prepares workspace (branch from main, pushed) for an issue in Todo/UI status
+4. **implement-ui-design** — Implements UI design changes (design/ folder only), transitions UI → Todo
+5. **implement-issue** — Implements code for an issue in Todo status, partial commits supported
+6. **implementation-finish** — Final checks, PR creation, auto-merge
+
+See each skill's `SKILL.md` for full workflow.
