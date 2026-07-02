@@ -17,7 +17,7 @@
     "prodToDev": "node --import tsx --env-file .env ./app/shared/_external/db/prodToDev.ts"
   },
   "dependencies": {
-    "@ai-sdk/deepinfra": "^2.0.55",
+    "@ai-sdk/deepinfra": "^3.0.3",
     "@js-temporal/polyfill": "^0.5.1",
     "@lizzythelizard/whatsapp-mcp": "^1.0.0",
     "ai": "^7.0.11",
