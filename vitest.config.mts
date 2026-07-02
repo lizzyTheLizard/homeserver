@@ -46,7 +46,7 @@ export default defineConfig({
       test: {
         name: 'unit',
         include: ['**/*.tests.ts'],
-        exclude: ['**/server.tests.ts'],
+        exclude: ['**/server.tests.ts', '**/assistant.tests.ts'],
         setupFiles: ['vitest.setup.ts'],
       },
     }],

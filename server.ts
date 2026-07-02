@@ -74,11 +74,11 @@ async function registerAssistantWebSocket(server: Server) {
       const msg = JSON.parse(data.toString()) as InputSchema
       if (msg.type === 'initialize') {
         validateObject(msg.initialContext, InitialContextSchema)
-        assistant.init(msg.initialContext)
+        assistant.init(msg.initialContext).catch((e: unknown) => { console.error('> Assistant init error', e) })
       }
       else {
         validateString(msg.message)
-        assistant.send(msg.message)
+        assistant.send(msg.message).catch((e: unknown) => { console.error('> Assistant send error', e) })
       }
     })
     assistant.on((event) => { ws.send(JSON.stringify(event)) })
