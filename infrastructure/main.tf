@@ -1,3 +1,5 @@
+/** General Stuff  */
+
 resource "scaleway_iam_application" "gutschi_site" {
   name = "Gutschi.Site Backend Application"
 }
@@ -21,21 +23,18 @@ resource "scaleway_iam_policy" "gutschi_site" {
   }
 }
 
+resource "scaleway_container_namespace" "gutschi_site" {
+  name            = "gutschi-site"
+  description     = "Gutschi.site Homeserver"
+}
+
+/**  Production */
+
+
 resource "scaleway_sdb_sql_database" "www_gutschi_site" {
   name            = "www-gutschi-site"
   min_cpu         = 0
   max_cpu         = 1
-}
-
-resource "scaleway_sdb_sql_database" "test_gutschi_site" {
-  name            = "test-gutschi-site"
-  min_cpu         = 0
-  max_cpu         = 1
-}
-
-resource "scaleway_container_namespace" "gutschi_site" {
-  name            = "gutschi-site"
-  description     = "Gutschi.site Homeserver"
 }
 
 resource "scaleway_container" "www_gutschi_site" {
@@ -47,8 +46,8 @@ resource "scaleway_container" "www_gutschi_site" {
   min_scale       = 0
   max_scale       = 1
   privacy         = "public"
-  cpu_limit       = 100
-  memory_limit    = 256
+  cpu_limit       = 250
+  memory_limit    = 512
   deploy          = true
   environment_variables = {
     APP_URL="https://www.gutschi.site",
@@ -71,6 +70,19 @@ resource "scaleway_container" "www_gutschi_site" {
     ),
     DEEPINFRA_API_KEY = var.deepinfra_api_key
   }
+}
+
+resource scaleway_container_domain "www_gutschi_site" {
+  container_id = scaleway_container.www_gutschi_site.id
+  hostname     = "www.gutschi.site"
+}
+
+/** Test / Dev environment */
+
+resource "scaleway_sdb_sql_database" "test_gutschi_site" {
+  name            = "test-gutschi-site"
+  min_cpu         = 0
+  max_cpu         = 1
 }
 
 resource "scaleway_container" "test_gutschi_site" {
@@ -108,12 +120,9 @@ resource "scaleway_container" "test_gutschi_site" {
   }
 }
 
-resource scaleway_container_domain "www_gutschi_site" {
-  container_id = scaleway_container.www_gutschi_site.id
-  hostname     = "www.gutschi.site"
-}
-
 resource scaleway_container_domain "test_gutschi_site" {
   container_id = scaleway_container.test_gutschi_site.id
   hostname     = "test.gutschi.site"
 }
+
+
