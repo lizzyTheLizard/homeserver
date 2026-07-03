@@ -52,18 +52,12 @@ Read the issue body and any existing comments. Identify gaps covering:
 
 Ask questions one at a time. Stop once the issue can be unambiguously understood and implemented.
 
-### Step 4: Determine the next status
-
-- **UI** — if the issue needs a UI design before implementation can start, and the business requirements are clear enough
-- **Todo** — if no UI design is needed (or a design already exists) and the issue is ready for implementation
-- **Stay in Planning** — if significant gaps remain that cannot be resolved now
-
-### Step 5: Draft the issue for review
+### Step 4: Draft the issue for review
 
 Present a draft of the updated issue to the user before updating it. Format it using `issue-template.md` (in this skill folder) and ask the user to confirm or request changes. Do not update the issue until the user approves the draft.
 
 
-### Step 6: Update the issue body
+### Step 5: Update the issue body
 
 ```bash
 gh issue edit <NUMBER> --body "$(cat <<'EOF'
@@ -72,13 +66,12 @@ EOF
 )"
 ```
 
-Update labels and milestone as needed:
+### Step 6: Determine the next status
 
-```bash
-gh issue edit <NUMBER> --label "<labels>" --milestone "<milestone>"
-```
+- **UI** — if the issue needs a UI design before implementation can start, and the business requirements are clear enough
+- **Todo** — if no UI design is needed (or a design already exists) and the issue is ready for implementation
+- **Stay in Planning** — if significant gaps remain that cannot be resolved now
 
-### Step 7: Transition the project status
 
 First get the project item ID for this issue:
 
@@ -92,6 +85,15 @@ Then set the new status:
 ```bash
 gh project item-edit 1 --owner lizzyTheLizard --item-id "<item-id>" --field-id PVTSSF_lAHOANavlM4BbECkzhV3Oko --single-select-option-id "<new-status-option-id>"
 ```
+
+### Step 7: Check Labels and Milestone
+
+Check if the issue has the correct labels and milestone. If not, update them. Ask the user if the labels and milestone are correct, and if not, what they should be. Then run:
+
+```bash
+gh issue edit <NUMBER> --label "<label1,label2>" --milestone "<milestone>"
+``` 
+
 
 ### Step 8: Report
 
