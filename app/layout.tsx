@@ -17,7 +17,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
   return (
     <html lang="en">
       <body>
-        <link rel="stylesheet" href="global.css" />
+        <link rel="stylesheet" href="/global.css" />
         <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
         <SidebarContainer>
           {children}
