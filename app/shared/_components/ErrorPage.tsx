@@ -1,5 +1,4 @@
 'use client'
-import style from './ErrorPage.module.css'
 
 export type ErrorPageProps = { error: Error } | { message: string, name: string }
 
@@ -19,7 +18,7 @@ export function ErrorPage(props: ErrorPageProps) {
         {' '}
         <a href="#" onClick={(e) => { history.back(); e.preventDefault() }}>go back to the last page</a>
       </p>
-      {'error' in props && (<div className={style.errorStack}>{props.error.stack}</div>)}
+      {'error' in props && (<div style={{ whiteSpace: 'pre-wrap', color: 'red', fontSize: 'small' }}>{props.error.stack}</div>)}
     </main>
   )
 }
