@@ -55,6 +55,7 @@ resource "scaleway_container" "www_gutschi_site" {
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
     COOKIE_NAME="session",
+    LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
     WEATHER_API_LOCATION="46.9471,7.4441",
     WEATHER_DETAIL_URL="https://www.srf.ch/meteo/wetter/Bern/46.9471,7.4441"
@@ -89,6 +90,7 @@ resource "scaleway_container" "test_gutschi_site" {
     CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
     ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
     COOKIE_NAME="session",
+    LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
     WEATHER_API_LOCATION="46.9471,7.4441",
     WEATHER_DETAIL_URL="https://www.srf.ch/meteo/wetter/Bern/46.9471,7.4441"

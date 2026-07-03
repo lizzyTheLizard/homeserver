@@ -1,11 +1,3 @@
-variable "access_key" {
-  type = string
-  sensitive = true
-}
-variable "secret_key" {
-  type = string
-  sensitive = true
-}
 variable "organization_id" {
   type = string
   sensitive = false
@@ -13,6 +5,23 @@ variable "organization_id" {
 variable "project_id" {
   type = string
   sensitive = false
+}
+variable "log_level" {
+  type = string
+  sensitive = false
+  default = "info"
+}
+variable "admin_email" {
+  type = string
+  sensitive = false
+}
+variable "access_key" {
+  type = string
+  sensitive = true
+}
+variable "secret_key" {
+  type = string
+  sensitive = true
 }
 variable "client_secret" {
   type = string
@@ -25,11 +34,6 @@ variable "session_password" {
 variable "deepinfra_api_key" {
   type = string
   sensitive = true
-}
-
-
-variable "admin_email" {
-  type = string
 }
 
 terraform {
