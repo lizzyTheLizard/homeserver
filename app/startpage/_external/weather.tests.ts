@@ -44,7 +44,6 @@ describe('detailedWeatherTool', () => {
   test('should return a valid daily weather detail', async () => {
     const today = Temporal.Now.plainDateISO()
     const execute = detailedWeatherTool.execute
-    if (!execute) throw new Error('execute not defined')
     const result = await execute({ date: today.toString(), latitude: 52.52, longitude: 13.405 }, executionOptions)
     const parsedResult = JSON.parse(result as string) as Record<string, Record<string, unknown>>
     expect(parsedResult).toBeDefined()

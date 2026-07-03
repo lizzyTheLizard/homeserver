@@ -72,8 +72,7 @@ describe('skill loading from filesystem', () => {
 
     const tools = await getSkillTools(tmpDir)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const executeFkt: (a: unknown, b: ToolExecutionOptions) => Promise<string> = tools[`load_skill_${SKILL_NAME}`].execute!
-    const result: string = await executeFkt({}, { toolCallId: '123', messages: [] })
+    const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
     expect(result).toContain(`These are the instructions for the skill test-skill. 
   The main file is SKILL.MD, it contains the description and instructions for the skill. 
   The other files in the skill directory are additional resources that may be needed to execute the skill. 
@@ -96,8 +95,7 @@ describe('skill loading from filesystem', () => {
 
     const tools = await getSkillTools(tmpDir)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const executeFkt: (a: unknown, b: ToolExecutionOptions) => Promise<string> = tools[`load_skill_${SKILL_NAME}`].execute!
-    const result: string = await executeFkt({}, { toolCallId: '123', messages: [] })
+    const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const fileContent = JSON.parse(/(\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
     expect(fileContent['SKILL.md']).toBe(SKILL_CONTENT)
