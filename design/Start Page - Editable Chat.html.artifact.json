@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Start Page - Editable Chat.html",
+  "entry": "Start Page - Editable Chat.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-03T15:51:56.295Z",
+  "updatedAt": "2026-07-03T15:51:56.295Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

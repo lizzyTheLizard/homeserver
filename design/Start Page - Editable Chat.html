@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start Page — Gutschi.site (Editable Chat)</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="Icon.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: white; }
+  #root { min-height: 100%; display: flex; flex-direction: column; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "siteName": "Homeserver",
+  "weatherCity": "Zürich",
+  "weatherTemp": 17,
+  "weatherCondition": "Partly cloudy"
+}/*EDITMODE-END*/;
+
+const APPS = [
+  { key: 'cash',      name: 'Cash',      icon: 'cash',      description: 'Bookkeeping' },
+  { key: 'coeditor',  name: 'CoEditor',  icon: 'coeditor',  description: 'Document editor' },
+  { key: 'admin',     name: 'Admin',     icon: 'admin',     description: 'Server admin' },
+  { key: 'startpage', name: 'StartPage', icon: 'startpage', description: 'Browser start page' },
+];
+
+// ── Message parser ─────────────────────────────────────────────────
+function parseMessage(text) {
+  const parts = [];
+  const regex = /~~~input\n([\s\S]*?)\n~~~/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'editable', content: match[1] });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+  return parts;
+}
+
+// ── EditableBlock ────────────────────────────────────────────────────
+function EditableBlock({ content, onEdit }) {
+  const [state, setState] = useState('viewing');
+  const [editValue, setEditValue] = useState(content);
+  const [revised, setRevised] = useState(null);
+  const textareaRef = useRef(null);
+
+  function handleClick() {
+    setEditValue(content);
+    setState('editing');
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.select();
+      }
+    }, 50);
+  }
+
+  function handleOk() {
+    if (editValue !== content) {
+      setRevised(editValue);
+      setState('revised');
+      if (onEdit) onEdit(editValue);
+    } else {
+      setState('viewing');
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleOk();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setEditValue(content);
+      setState('viewing');
+    }
+  }
+
+  if (state === 'revised') {
+    return (
+      <div style={{ marginTop: '0.6rem' }}>
+        <div style={{
+          fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
+          letterSpacing: '0.05em', color: '#999', marginBottom: '0.25rem',
+        }}>Edited</div>
+        <div style={{
+          padding: '0.6rem 0.8rem',
+          background: 'rgba(0,180,0,0.06)',
+          borderLeft: '3px solid rgba(0,180,0,0.4)',
+          borderRadius: '6px',
+          fontSize: '0.9rem', lineHeight: 1.55, color: '#1a1a2e',
+        }}>
+          {revised}
+        </div>
+        <div style={{
+          marginTop: '0.5rem', fontSize: '0.78rem', color: '#aaa',
+          fontStyle: 'italic',
+        }}>
+          <span style={{ textDecoration: 'line-through', color: '#bbb' }}>{content}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (state === 'editing') {
+    return (
+      <div style={{ marginTop: '0.6rem' }}>
+        <div style={{
+          position: 'relative',
+          border: '2px solid rgba(0,0,210,0.25)',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          transition: 'border-color 0.15s',
+        }}>
+          <textarea
+            ref={textareaRef}
+            value={editValue}
+            onChange={e => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            style={{
+              width: '100%', minHeight: '4.5rem',
+              padding: '0.6rem 0.8rem',
+              border: 'none', outline: 'none', resize: 'vertical',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+              fontSize: '0.9rem', lineHeight: 1.55, color: '#1a1a2e',
+              background: '#fafaff',
+            }}
+          />
+          <div style={{
+            display: 'flex', justifyContent: 'flex-end', gap: '0.4rem',
+            padding: '0.4rem 0.5rem',
+            background: 'rgba(0,0,210,0.03)',
+            borderTop: '1px solid rgba(0,0,210,0.08)',
+          }}>
+            <button onClick={() => { setEditValue(content); setState('viewing'); }}
+              style={{
+                padding: '0.3rem 0.75rem', borderRadius: '6px',
+                border: '1px solid rgba(0,0,0,0.15)',
+                background: 'white', cursor: 'pointer',
+                fontSize: '0.8rem', color: '#555',
+                fontFamily: 'inherit', fontWeight: 500,
+              }}>
+              Cancel
+            </button>
+            <button onClick={handleOk}
+              style={{
+                padding: '0.3rem 0.9rem', borderRadius: '6px',
+                border: 'none',
+                background: 'rgba(0,0,210,1)', color: 'white', cursor: 'pointer',
+                fontSize: '0.8rem', fontFamily: 'inherit', fontWeight: 600,
+              }}>
+              OK
+            </button>
+          </div>
+        </div>
+        <div style={{ fontSize: '0.72rem', color: '#bbb', marginTop: '0.25rem' }}>
+          ⌘⏎ to confirm · Esc to cancel
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={handleClick}
+      style={{
+        marginTop: '0.6rem', padding: '0.6rem 0.8rem',
+        background: 'rgba(0,0,210,0.06)',
+        border: '1px solid rgba(0,0,210,0.13)',
+        borderLeft: '3px solid rgba(0,0,210,0.35)',
+        borderRadius: '6px', cursor: 'pointer',
+        fontSize: '0.9rem', lineHeight: 1.55, color: '#1a1a2e',
+        transition: 'background 0.12s, border-color 0.12s',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.1)'; e.currentTarget.style.borderLeftColor = 'rgba(0,0,210,0.6)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.06)'; e.currentTarget.style.borderLeftColor = 'rgba(0,0,210,0.35)'; }}
+    >
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
+        letterSpacing: '0.05em', color: 'rgba(0,0,210,0.55)', marginBottom: '0.15rem' }}>
+        Editable · click to edit
+      </div>
+      <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>
+    </div>
+  );
+}
+
+// ── AI message (with editable parts) ──────────────────────────────
+function AiMessage({ msg, tweaks }) {
+  if (msg.type === 'status') {
+    return (
+      <div>
+        <div style={{
+          background: 'rgb(236,237,245)',
+          borderRadius: '18px 18px 18px 4px',
+          padding: '0.9rem 1.1rem',
+          fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
+        }}>
+          <StatusOverview tweaks={tweaks} />
+        </div>
+      </div>
+    );
+  }
+
+  const parts = parseMessage(msg.text);
+
+  return (
+    <div>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.9rem 1.1rem',
+        fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
+      }}>
+        {parts.map((part, i) =>
+          part.type === 'editable'
+            ? <EditableBlock key={i} content={part.content} />
+            : <span key={i} style={{ whiteSpace: 'pre-line' }}>{part.content}</span>
+        )}
+        {msg.detail && (
+          <div style={{
+            marginTop: '0.6rem', padding: '0.5rem 0.8rem',
+            background: 'rgba(0,0,180,0.07)',
+            borderRadius: '8px', fontStyle: 'italic', color: '#333',
+          }}>{msg.detail}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserMessage({ msg }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{
+        background: 'rgba(0,0,210,1)', color: 'white',
+        padding: '0.6rem 1.05rem', borderRadius: '18px 18px 4px 18px',
+        maxWidth: '80%', fontSize: '0.9rem', lineHeight: 1.5,
+      }}>
+        {msg.text}
+      </div>
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div style={{ display: 'inline-flex' }}>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.65rem 0.85rem',
+        display: 'flex', gap: '5px', alignItems: 'center',
+      }}>
+        {[0, 0.18, 0.36].map((delay, i) => (
+          <div key={i} style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: 'rgba(0,0,180,0.4)',
+            animation: `bounce 1.1s ${delay}s infinite`,
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Mock data ──────────────────────────────────────────────────────
+function getTimeOfDay() {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 18) return 'afternoon';
+  return 'evening';
+}
+
+const MOCK_STATUS = {
+  forecast: [
+    { time: '12:00', temp: 30, condition: 'Cloudy' },
+    { time: '21:00', temp: 15, condition: 'Rain' },
+  ],
+  tasks: [
+    { text: 'Review Q2 budget report', tag: 'Today' },
+    { text: 'Call back Dr. Müller', tag: 'Today' },
+    { text: 'Update homeserver backup config', tag: 'Yesterday', urgent: true },
+  ],
+  whatsapp: {
+    needReply: [
+      { from: 'Thomas', what: 'wants to know if you come to dinner on Saturday', ago: '2h ago' },
+      { from: 'Sarah', what: 'wants to send her the document', ago: '4h ago' },
+      { from: 'Familie', what: 'wants to know what time works for the call', ago: 'yesterday', urgent: true },
+    ],
+    unarchived: 3,
+    unread: 7,
+  },
+  emails: {
+    needReply: [
+      { from: 'Stefan Meier', what: 'want infos about the project meeting next week', ago: '1d ago' },
+      { from: 'Oliver Braun', what: 'has a question about Q2 numbers', ago: '2d ago', urgent: true },
+      { from: 'MIGROS', what: 'has weekly specials', ago: '3d ago' },
+    ],
+    unread: 3,
+    focus: 5,
+    other: 12,
+  },
+};
+
+const INITIAL_ACTIONS = [
+  'Edit the draft reply',
+  'Approve and send',
+  'Start fresh',
+];
+
+// ── Status overview ──────────────────────────────────────────────
+function StatusOverview({ tweaks }) {
+  const urgent = { color: 'rgba(185,30,30,0.9)', fontWeight: 600 };
+  return (
+    <div style={{ fontSize: '0.92rem', lineHeight: 1.68, color: '#1a1a2e' }}>
+      <div style={{ marginBottom: '0.85rem', color: '#333' }}>
+        Good {getTimeOfDay()}! Here's your overview for today.
+      </div>
+      <div style={{ marginBottom: '0.7rem' }}>
+        The weather in {tweaks.weatherCity} is currently <strong>{tweaks.weatherTemp}°C, {tweaks.weatherCondition}</strong>.
+      </div>
+      <div style={{ marginBottom: '0.7rem' }}>
+        You have <strong>{MOCK_STATUS.tasks.length} tasks</strong> pending.
+      </div>
+      <div style={{ marginBottom: '0.7rem' }}>
+        You have <strong>{MOCK_STATUS.whatsapp.unarchived}</strong> unarchived chats with <strong>{MOCK_STATUS.whatsapp.unread}</strong> new messages.
+      </div>
+      <div>
+        You have <strong>{MOCK_STATUS.emails.focus}</strong> emails in focus.
+      </div>
+    </div>
+  );
+}
+
+// ── Clock ───────────────────────────────────────────────────────
+function useClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ── Chat window ────────────────────────────────────────────────
+function AIChatWindow({ tweaks }) {
+  const [messages, setMessages] = useState([
+    {
+      id: 0, role: 'ai', type: 'message',
+      text: `Hi Thomas! I've drafted a reply for you.\n\n~~~input\nHey Thomas! Yes, I'll be there Saturday — what time and where? Should I bring anything?\n~~~\n\nFeel free to edit the draft above before I send it. Let me know if you'd like me to adjust the tone or add more details.`,
+      actions: INITIAL_ACTIONS,
+    },
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages, isTyping]);
+
+  function send(text) {
+    const t = text.trim();
+    if (!t) return;
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: t }]);
+    setInput('');
+    setIsTyping(true);
+    setTimeout(() => {
+      const r = getAIResponse(t);
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', ...r }]);
+      setIsTyping(false);
+    }, 650 + Math.random() * 450);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    send(input);
+  }
+
+  const canSend = input.trim().length > 0;
+  const latestActions = messages.length > 0 ? messages[messages.length - 1].actions : null;
+
+  return (
+    <>
+      <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div ref={listRef} style={{
+            flex: 1, minHeight: 0, overflowY: 'auto',
+            display: 'flex', flexDirection: 'column', gap: '0.75rem',
+            paddingTop: '0.5rem', paddingBottom: '0.75rem',
+          }}>
+            {messages.map(msg =>
+              msg.role === 'ai'
+                ? <AiMessage key={msg.id} msg={msg} tweaks={tweaks} />
+                : <UserMessage key={msg.id} msg={msg} />
+            )}
+            {isTyping && <TypingIndicator />}
+          </div>
+
+          {latestActions && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', padding: '0 0.2rem 0.5rem' }}>
+              {latestActions.map(a => (
+                <button key={a} onClick={() => send(a)} style={{
+                  padding: '0.33rem 0.85rem',
+                  background: 'rgba(0,0,210,0.07)',
+                  border: '1px solid rgba(0,0,210,0.22)',
+                  borderRadius: '20px', cursor: 'pointer',
+                  fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+                  fontFamily: 'inherit', fontWeight: 500,
+                  transition: 'background 0.12s, border-color 0.12s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+                >{a}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <form onSubmit={handleSubmit} style={{
+        width: '100%', maxWidth: '1200px',
+        display: 'flex', alignItems: 'center',
+        background: 'white',
+        border: '1.5px solid rgba(0,0,0,0.13)',
+        borderRadius: '28px',
+        padding: '0.3rem 0.3rem 0.3rem 1.25rem',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        gap: '0.5rem',
+      }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Ask me anything…"
+          style={{
+            flexGrow: 1, height: '2.1rem', fontSize: '0.95rem',
+            border: 'none', padding: '0', fontFamily: 'inherit', outline: 'none',
+            background: 'transparent', color: '#1a1a2e',
+          }}
+        />
+        <button type="submit" style={{
+          width: '2.2rem', height: '2.2rem', borderRadius: '50%', flexShrink: 0,
+          background: canSend ? 'rgba(0,0,210,1)' : 'rgba(215,215,225,1)',
+          border: 'none', cursor: canSend ? 'pointer' : 'default',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.15s',
+        }}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 11V2M2 6.5l4.5-4.5 4.5 4.5" stroke={canSend ? 'white' : '#aaa'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </form>
+    </>
+  );
+}
+
+// Simplify getAIResponse for this copy
+function getAIResponse(input) {
+  const q = input.toLowerCase();
+  if (q.includes('edit') || q.includes('draft') || q.includes('reply')) {
+    return {
+      text: 'I\'ve noted your changes. The draft now reads:\n\n~~~input\n' +
+        'Hey Thomas! Yes, I\'ll be there Saturday — 19:00 works. Let me know if you need me to bring anything!\n' +
+        '~~~\n\nReady to send or want to refine further?',
+      actions: ['Approve and send', 'Refine again', 'Cancel'],
+    };
+  }
+  if (q.includes('approve') || q.includes('send')) {
+    return {
+      text: 'Sent! I\'ll notify you when Thomas replies.',
+      actions: ['Got it'],
+    };
+  }
+  if (q.includes('thomas')) {
+    return {
+      text: 'Thomas asked: "Coming to dinner on Saturday?"\n\nDraft reply:\n\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where?\n~~~',
+      actions: ['Edit the draft reply', 'Approve and send', 'Skip'],
+    };
+  }
+  return {
+    text: 'I can help draft replies to your messages. What would you like to work on?',
+    actions: ['Draft email reply', 'Draft WhatsApp reply', 'Something else'],
+  };
+}
+
+// ── Tweaks panel ──────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweaks, visible }) {
+  if (!visible) return null;
+  function update(key, val) {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  }
+  return (
+    <div style={{
+      position: 'fixed', bottom: '1rem', right: '1rem', zIndex: 1000,
+      background: 'white', border: '1px solid rgba(200,200,200,1)', borderRadius: '8px',
+      padding: '1rem', width: '260px', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+    }}>
+      <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tweaks</div>
+      {[['siteName', 'Site name'], ['weatherCity', 'Weather city'], ['weatherCondition', 'Condition']].map(([k, label]) => (
+        <div key={k}>
+          <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+          <input value={tweaks[k]} onChange={e => update(k, e.target.value)} style={{
+            width: '100%', height: '2rem', fontSize: '0.85rem',
+            border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+            fontFamily: 'inherit',
+          }} />
+        </div>
+      ))}
+      <div>
+        <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temperature (°C)</div>
+        <input type="number" value={tweaks.weatherTemp} onChange={e => update('weatherTemp', Number(e.target.value))} style={{
+          width: '100%', height: '2rem', fontSize: '0.85rem',
+          border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+          fontFamily: 'inherit',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ── App ──────────────────────────────────────────────────────────
+function App() {
+  const now = useClock();
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'white' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '4rem', padding: '0 1.5rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1.5rem', fontWeight: 600, marginRight: '0.5rem' }}>{tweaks.siteName}</span>
+        <nav style={{ display: 'flex' }}>
+          {APPS.map(app => (
+            <a key={app.key} href="#"
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              style={{
+                color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+                padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
+              }}>
+              <Icon name={app.icon} style={{ width: '1rem', height: '1rem' }} />
+              {app.name}
+            </a>
+          ))}
+        </nav>
+        <div style={{ flexGrow: 1 }} />
+        <a href="#"
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          style={{
+            color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+            padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center',
+          }}>
+          Logout
+        </a>
+      </div>
+
+      <div style={{
+        flexGrow: 1, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+        alignItems: 'center', padding: '1.5rem 2rem 1rem', gap: '1rem',
+      }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: '3.5rem', fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1, color: 'rgba(0,0,210,1)' }}>{fmtTime(now)}</div>
+          <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.4rem', letterSpacing: '0.01em' }}>{fmtDate(now)}</div>
+        </div>
+
+        <AIChatWindow tweaks={tweaks} />
+      </div>
+
+      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
