@@ -44,6 +44,7 @@ interface AssistantHandler {
 async function initialize(handler: AssistantHandler, initialContext: InitialContext): Promise<void> {
   const loggingFetch = createLoggingFetch(globalThis.fetch)
   const deepinfra = createDeepInfra({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
+  // const model = deepinfra('meta-llama/Llama-3.3-70B-Instruct-Turbo')
   const model = deepinfra('google/gemma-4-31B-it-turbo')
   const instructions = await getInstructions(initialContext)
   const tools = await getTools()
@@ -83,7 +84,7 @@ async function send(handler: AssistantHandler, message: string, fixedActions?: s
   try {
     // TODO Streaming is not working here for tools calls and gemma. Maybe a bug in deepinfra?
     /*
-     const result = await handler.agent.stream({ prompt: message })
+    const result = await handler.agent.stream({ prompt: message })
     for await (const chunk of result.textStream) {
       handler.emit({ type: 'stream_response', chunk })
     }
