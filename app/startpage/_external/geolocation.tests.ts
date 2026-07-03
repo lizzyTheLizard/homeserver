@@ -23,8 +23,7 @@ describe('getLocationByName', () => {
 describe('locationByNameTool', () => {
   test('should return coordinates for Tokyo within 1 degree', async () => {
     const execute = locationByNameTool.execute
-    if (!execute) throw new Error('execute not defined')
-    const result = await execute({ name: 'Tokyo' }, { toolCallId: 'test', messages: [] }) as { lat: number, lon: number }
+    const result = await execute({ name: 'Tokyo' }, { toolCallId: 'test', messages: [], context: {} }) as { lat: number, lon: number }
     expect(result.lat).toBeGreaterThan(35)
     expect(result.lat).toBeLessThan(36)
     expect(result.lon).toBeGreaterThan(139)

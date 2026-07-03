@@ -12,7 +12,7 @@ jobs:
           - name: Setup
             uses: ./.github/actions/setup
           - name: Lint
-            run: pnpm run lint
+            run: pnpm run lint:ci
     test:
         name: Test Application (Unit)
         runs-on: ubuntu-latest

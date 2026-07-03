@@ -2,16 +2,14 @@
 import { describe, expect, test } from 'vitest'
 import { detailedWeatherTool, weatherForcastTool } from './weather'
 import { Temporal } from '@js-temporal/polyfill'
-import type { ToolExecutionOptions } from 'ai'
 
-const executionOptions: ToolExecutionOptions = { toolCallId: 'test', messages: [] }
+const executionOptions = { toolCallId: 'test', messages: [], context: {} }
 
 describe('weatherForcastTool', () => {
   test('should return a valid weather forecast', async () => {
     const today = Temporal.Now.plainDateISO()
     const tomorrow = today.add({ days: 1 })
     const execute = weatherForcastTool.execute
-    if (!execute) throw new Error('execute not defined')
     const result = await execute({ startDay: today.toString(), latitude: 52.52, longitude: 13.404 }, executionOptions)
     const parsedResult = JSON.parse(result as string) as Record<string, Record<string, unknown>>
     expect(parsedResult).toBeDefined()
