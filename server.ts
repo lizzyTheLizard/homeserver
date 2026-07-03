@@ -1,5 +1,5 @@
 // Import only types here and import all the rest at runtime. This allows us to get better log messages if startup fails
-import type { NextServerOptions, RequestHandler } from 'next/dist/server/next'
+import type { RequestHandler } from 'next/dist/server/next'
 import type { Server, IncomingMessage, ServerResponse } from 'http'
 import type { Logger } from 'winston'
 import type { WebSocketServer } from 'ws'
