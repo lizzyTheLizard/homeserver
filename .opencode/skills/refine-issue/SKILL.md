@@ -58,7 +58,12 @@ Ask questions one at a time. Stop once the issue can be unambiguously understood
 - **Todo** — if no UI design is needed (or a design already exists) and the issue is ready for implementation
 - **Stay in Planning** — if significant gaps remain that cannot be resolved now
 
-### Step 5: Update the issue body
+### Step 5: Draft the issue for review
+
+Present a draft of the updated issue to the user before updating it. Format it using `issue-template.md` (in this skill folder) and ask the user to confirm or request changes. Do not update the issue until the user approves the draft.
+
+
+### Step 6: Update the issue body
 
 ```bash
 gh issue edit <NUMBER> --body "$(cat <<'EOF'
@@ -73,7 +78,7 @@ Update labels and milestone as needed:
 gh issue edit <NUMBER> --label "<labels>" --milestone "<milestone>"
 ```
 
-### Step 6: Transition the project status
+### Step 7: Transition the project status
 
 First get the project item ID for this issue:
 
@@ -88,6 +93,6 @@ Then set the new status:
 gh project item-edit 1 --owner lizzyTheLizard --item-id "<item-id>" --field-id PVTSSF_lAHOANavlM4BbECkzhV3Oko --single-select-option-id "<new-status-option-id>"
 ```
 
-### Step 7: Report
+### Step 8: Report
 
 Tell the user the issue has been refined and what status it now has. If it transitioned to "Todo", suggest they can use `start-implementing` to begin work.
