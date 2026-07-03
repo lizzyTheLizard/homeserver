@@ -3,7 +3,6 @@ import { promises as fs } from 'fs'
 import { join } from 'path'
 import { getSystemMessage, getInitialMessage, getActionPrompt, getSkillTools } from './prompts'
 import { tmpdir } from 'os'
-import { ToolExecutionOptions } from 'ai'
 
 describe('getSystemMessage', () => {
   test('should return the content of system.md', async () => {
