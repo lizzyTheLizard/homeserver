@@ -6,6 +6,7 @@ import type { WebSocketServer } from 'ws'
 import type { output } from 'zod/v4/core'
 import type Stream from 'stream'
 import type { CookieStore } from './app/shared/auth/auth'
+import { ResponseCookie, stringifyCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 main().catch((e: unknown) => { console.error('> Error starting server', e) })
 
@@ -52,7 +53,7 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
   await app.prepare()
   const handler = app.getRequestHandler()
   const http = await import('http')
-  const server = http.createServer((req, res) => { reactRequestHandler(handler, options, req, res).catch(logger.error) })
+  const server = http.createServer((req, res) => { reactRequestHandler(handler, options, req, res).catch((e: unknown) => logger.error('Error handling request', e)) })
   logger.debug(`React app created`)
   return server
 }
@@ -74,7 +75,8 @@ async function reactRequestHandler(handler: RequestHandler, options: Options, re
     res.end('Unauthorized')
   }
   else {
-    const redirectTo = await startLogin(url)
+    const cookies = parseCookie(req, res)
+    const redirectTo = await startLogin(url, cookies)
     res.writeHead(302, { Location: redirectTo.href })
     res.end()
   }
@@ -129,7 +131,7 @@ function handleWsConnectionError(e: unknown, socket: Stream.Duplex, logger: Logg
   socket.destroy()
 }
 
-function parseCookie(req: IncomingMessage): CookieStore {
+function parseCookie(req: IncomingMessage, res?: ServerResponse): CookieStore {
   const cookiesHeader = req.headers.cookie
   const cookies: Record<string, string> = {}
   if (cookiesHeader) {
@@ -140,7 +142,16 @@ function parseCookie(req: IncomingMessage): CookieStore {
   }
   return {
     get: (name: string) => ({ name, value: cookies[name] }),
-    set: () => { throw new Error('Cookie setting is not supported in this context') },
+    set: (nameOrOptions: string | ResponseCookie, value?: string, options?: Partial<ResponseCookie>) => {
+      if (!res) throw new Error('Cannot set cookie without response object')
+      if (typeof nameOrOptions !== 'string') {
+        res.appendHeader('Set-Cookie', stringifyCookie(nameOrOptions))
+      }
+      else {
+        const cookie: ResponseCookie = { name: nameOrOptions, value: value ?? '', ...options }
+        res.appendHeader('Set-Cookie', stringifyCookie(cookie))
+      }
+    },
   }
 }
 

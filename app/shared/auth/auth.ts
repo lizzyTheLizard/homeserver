@@ -36,7 +36,7 @@ export async function getAuthenticatedUserSession(app?: string, cookies?: Cookie
   return user
 }
 
-export async function startLogin(urlOrRequest: URL | Request): Promise<URL> {
+export async function startLogin(urlOrRequest: URL | Request, cookies?: CookieStore): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
   const parameters: Record<string, string> = {
@@ -48,7 +48,7 @@ export async function startLogin(urlOrRequest: URL | Request): Promise<URL> {
     prompt: 'select_account',
   }
 
-  const session = await getSession()
+  const session = await getSession(cookies)
   session.userInfo = undefined
   session.code_verifier = code_verifier
   session.state = parameters.state
