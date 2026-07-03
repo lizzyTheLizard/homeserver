@@ -28,7 +28,7 @@ $isOpenCodeWorkspace = $currentPath.StartsWith($worktreeRoot, [StringComparison]
 if (-not $isOpenCodeWorkspace) { Write-Host "Not in an OpenCode workspace" }
 ```
 
-If the check fails, tell the user they must create an OpenCode workspace first. The skill cannot proceed outside an OpenCode workspace.
+If the check fails, ask the user if they want to create an OpenCode workspace first. Only proceed if they confirm that they do not want to.
 
 ### Step 1: Select or confirm the issue
 
