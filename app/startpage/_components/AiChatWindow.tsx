@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, useReducer } from 'react'
-import styles from './AiChatWindow.module.css'
 import { aiChatStateReducer, initialAiChatState } from './AiChatWindowState'
 import { getLocation } from '../_external/weather'
-import Markdown from 'react-markdown'
+import { AiMessageBubble } from './AiMessageBubble'
+import styles from './AiChatWindow.module.css'
 
 export function AiChatWindow() {
   const [state, dispatch] = useReducer(aiChatStateReducer, initialAiChatState)
@@ -63,34 +63,14 @@ export function AiChatWindow() {
   return (
     <div className={styles.window}>
       <div ref={listRef} className={styles.messageList}>
-        {state.messages.map(msg => msg.role === 'assistant'
-          ? (
-              <div key={'message_' + msg.id.toString()} className={styles.aiMessage}>
-                <div className={styles.aiBubble}>
-                  <Markdown>{msg.content}</Markdown>
-                </div>
-              </div>
-            )
-          : (
-              <div key={'message_' + msg.id.toString()} className={styles.userMessage}>
-                <div className={styles.userBubble}>{msg.content}</div>
-              </div>
-            ),
-        )}
-
+        {state.messages.map(msg => (
+          <AiMessageBubble key={'message_' + msg.id.toString()} role={msg.role} content={msg.content} />
+        ))}
         {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (
-          <div className={styles.typingIndicator}>
-            <span className={styles.dot} />
-            <span className={styles.dot} style={{ animationDelay: '0.18s' }} />
-            <span className={styles.dot} style={{ animationDelay: '0.36s' }} />
-          </div>
+          <AiMessageBubble role="assistant" content="" typing={true} />
         )}
         {(state.currentMessage.trim().length > 0) && (
-          <div className={styles.aiMessage}>
-            <div className={styles.aiBubble}>
-              <Markdown>{state.currentMessage}</Markdown>
-            </div>
-          </div>
+          <AiMessageBubble role="assistant" content={state.currentMessage} />
         )}
       </div>
 
