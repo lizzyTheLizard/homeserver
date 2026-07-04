@@ -23,6 +23,12 @@ resource "scaleway_iam_policy" "gutschi_site" {
   }
 }
 
+resource "scaleway_registry_namespace" "gutschi_site" {
+  name            = "gutschi-site"
+  description     = "Gutschi.site Homeserver"
+  is_public       = false
+}
+
 resource "scaleway_container_namespace" "gutschi_site" {
   name            = "gutschi-site"
   description     = "Gutschi.site Homeserver"
@@ -41,7 +47,7 @@ resource "scaleway_container" "www_gutschi_site" {
   name            = "www-gutschi-site"
   description     = "React-Application incl. backend"
   namespace_id    = scaleway_container_namespace.gutschi_site.id
-  registry_image  = "${scaleway_container_namespace.gutschi_site.registry_endpoint}/www_gutschi_site:latest"
+  image  = "${scaleway_registry_namespace.gutschi_site.endpoint}/www_gutschi_site:latest"
   port            = 3000
   min_scale       = 0
   max_scale       = 1
@@ -87,7 +93,7 @@ resource "scaleway_container" "test_gutschi_site" {
   name            = "test-gutschi-site"
   description     = "React-Application incl. backend (TEST)"
   namespace_id    = scaleway_container_namespace.gutschi_site.id
-  registry_image  = "${scaleway_container_namespace.gutschi_site.registry_endpoint}/www_gutschi_site:test"
+  image  = "${scaleway_registry_namespace.gutschi_site.endpoint}/www_gutschi_site:test"
   port            = 3000
   min_scale       = 0
   max_scale       = 1
