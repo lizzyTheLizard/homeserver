@@ -11,15 +11,20 @@ export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (
   const [editValue, setEditValue] = useState(content)
   const [revised, setRevised] = useState<string | null>(null)
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
+  const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
+  const viewRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   function handleEdit() {
+    if (viewRef.current) {
+      const rect = viewRef.current.getBoundingClientRect()
+      setDimensions({ width: rect.width, height: rect.height })
+    }
     setEditValue(content)
     setState('editing')
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus()
-        textareaRef.current.select()
       }
     }, 50)
   }
@@ -72,13 +77,15 @@ export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (
             onChange={(e) => { setEditValue(e.target.value) }}
             onKeyDown={handleKeyDown}
             onSelectionChange={setSelection}
+            keepSelection={true}
+            style={dimensions ? { width: dimensions.width, height: dimensions.height } : undefined}
             className={styles.editableTextarea}
           />
           <div className={styles.editableEditingToolbar}>
             <button onClick={handleCancel} className={styles.editableCancelBtn}>
               Cancel
             </button>
-            <button onClick={handleOk} className={styles.editableOkBtn}>
+            <button onClick={handleOk} className={styles.editableOkBtn} disabled={editValue === content}>
               OK
             </button>
           </div>
@@ -89,7 +96,7 @@ export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (
   }
 
   return (
-    <div onClick={handleEdit} className={styles.editableView}>
+    <div ref={viewRef} onClick={handleEdit} className={styles.editableView}>
       <div className={styles.editableViewLabel}>Editable &middot; click to edit</div>
       <div className={styles.editableViewContent}>{content}</div>
     </div>
