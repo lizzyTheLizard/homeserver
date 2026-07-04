@@ -15,6 +15,14 @@ variable "admin_email" {
   type = string
   sensitive = false
 }
+variable "client_id" {
+  type = string
+  sensitive = false
+}
+variable "issuer" {
+  type = string
+  sensitive = false
+}
 variable "access_key" {
   type = string
   sensitive = true
@@ -31,7 +39,7 @@ variable "session_password" {
   type = string
   sensitive = true
 }
-variable "deepinfra_api_key" {
+variable "ai_api_key" {
   type = string
   sensitive = true
 }
@@ -48,7 +56,6 @@ terraform {
       source = "scaleway/scaleway"
     }
   }
-  required_version = ">= 0.13"
 }
 
 provider "scaleway" {

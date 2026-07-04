@@ -20,6 +20,7 @@ export const initialAiChatState: AiChatState = {
 export type AiChatStateAction = { type: 'RECEIVED', chunk: string | undefined }
   | { type: 'ACTIONS', actions: string[] | undefined }
   | { type: 'FINISH' }
+  | { type: 'TOOL_CALL' }
   | { type: 'SEND', message: string }
   | { type: 'ERROR', error: unknown }
 
@@ -33,6 +34,8 @@ export function aiChatStateReducer(state: AiChatState, action: AiChatStateAction
       return { ...state, current: 'ready', messages: addFinishMessage(state), currentMessage: '' }
     case 'RECEIVED':
       return { ...state, currentMessage: state.currentMessage + (action.chunk ?? '') }
+    case 'TOOL_CALL':
+      return { ...state, currentMessage: '' }
     case 'ERROR':
       return { current: 'failed', actions: [], messages: addErrorMessage(state, action.error), currentMessage: '' }
   }

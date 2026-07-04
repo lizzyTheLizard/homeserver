@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@ai-sdk/deepinfra": "^3.0.3",
+    "@ai-sdk/openai-compatible": "^3.0.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@lizzythelizard/whatsapp-mcp": "^1.0.0",
     "ai": "^7.0.11",

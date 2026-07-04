@@ -23,18 +23,11 @@ export function AiChatWindow() {
     }
     websocket.onmessage = (event) => {
       const data = JSON.parse(event.data as string) as { type: string, chunk?: string, actions?: string[], error?: string }
-      if (data.type === 'stream_response') {
-        dispatch({ type: 'RECEIVED', chunk: data.chunk })
-      }
-      else if (data.type === 'got_actions') {
-        dispatch({ type: 'ACTIONS', actions: data.actions })
-      }
-      else if (data.type === 'error') {
-        dispatch({ type: 'ERROR', error: data.error ?? 'Unknown error' })
-      }
-      else if (data.type === 'finished_response') {
-        dispatch({ type: 'FINISH' })
-      }
+      if (data.type === 'stream_response') dispatch({ type: 'RECEIVED', chunk: data.chunk })
+      if (data.type === 'tool_call') dispatch({ type: 'TOOL_CALL' })
+      if (data.type === 'got_actions') dispatch({ type: 'ACTIONS', actions: data.actions })
+      if (data.type === 'error') dispatch({ type: 'ERROR', error: data.error ?? 'Unknown error' })
+      if (data.type === 'finished_response') dispatch({ type: 'FINISH' })
     }
     websocket.onerror = (error) => { console.warn('WebSocket error:', error) }
     websocket.onclose = (event) => { console.log('WebSocket closed:', event.code, event.reason) }

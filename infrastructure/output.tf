@@ -45,13 +45,3 @@ output "www-container_id" {
   value = scaleway_container.www_gutschi_site.id
   description = "WWW Container ID"
 }
-
-output "test_gutschi_site" {
-    value = scaleway_container.test_gutschi_site.domain_name
-    description = "test.gutschi.site"
-}
-
-output "www_gutschi_site" {
-    value = scaleway_container.www_gutschi_site.domain_name
-    description = "www.gutschi.site"
-}
