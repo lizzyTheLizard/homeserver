@@ -6,10 +6,9 @@ import styles from './EditableBlock.module.css'
 
 type EditState = 'viewing' | 'editing'
 
-export function EditableBlock({ content, onEdit, editable }: { content: string, onEdit?: (editedText: string) => void, editable?: boolean }) {
+export function EditableBlock({ content, onEdit, onSelectionChange, editable }: { content: string, onEdit?: (editedText: string) => void, onSelectionChange?: (selection?: Selection) => void, editable?: boolean }) {
   const [state, setState] = useState<EditState>('viewing')
   const [editValue, setEditValue] = useState(content)
-  const [selection, setSelection] = useState<Selection | undefined>(undefined)
   const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
   const viewRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -59,7 +58,7 @@ export function EditableBlock({ content, onEdit, editable }: { content: string, 
             value={editValue}
             onChange={(e) => { setEditValue(e.target.value) }}
             onKeyDown={handleKeyDown}
-            onSelectionChange={setSelection}
+            onSelectionChange={onSelectionChange}
             keepSelection={true}
             style={dimensions ? { width: dimensions.width, height: dimensions.height } : undefined}
             className={styles.editableTextarea}

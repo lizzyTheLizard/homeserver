@@ -8,7 +8,7 @@ import { validateObject } from './shared/_helper/validation'
 export function createAssistantWebSocketServer(): { name: string, server: WebSocketServer, canHandle: (request: IncomingMessage) => boolean } {
   const inputSchema = z.union([
     z.object({ type: z.literal('initialize'), initialContext: z.object({ location: z.object({ lat: z.number(), lon: z.number() }) }) }),
-    z.object({ type: z.literal('message'), message: z.string() }),
+    z.object({ type: z.literal('message'), message: z.string(), selection: z.object({ start: z.number(), end: z.number(), text: z.string() }).optional() }),
   ])
 
   const canHandle = (request: IncomingMessage) => request.url?.startsWith('/ws/assistant') ?? false
@@ -24,7 +24,7 @@ export function createAssistantWebSocketServer(): { name: string, server: WebSoc
           logger.error('Error initializing assistant', e)
         })
       else
-        assistant.send(msg.message).catch((e: unknown) => {
+        assistant.send(msg.message, msg.selection).catch((e: unknown) => {
           ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message to assistant' }))
           logger.error('Error sending message to assistant', e)
         })

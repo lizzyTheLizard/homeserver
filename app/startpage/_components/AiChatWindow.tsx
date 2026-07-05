@@ -4,11 +4,13 @@ import { useState, useEffect, useRef, useReducer } from 'react'
 import { aiChatStateReducer, initialAiChatState } from './AiChatWindowState'
 import { getLocation } from '../_external/weather'
 import { AiMessageBubble } from './AiMessageBubble'
+import { type Selection } from '@/app/shared/_components/form/Textarea'
 import styles from './AiChatWindow.module.css'
 
 export function AiChatWindow() {
   const [state, dispatch] = useReducer(aiChatStateReducer, initialAiChatState)
   const [input, setInput] = useState('')
+  const [selection, setSelection] = useState<Selection | undefined>(undefined)
   const canSend = input.trim().length > 0
   const listRef = useRef<HTMLDivElement>(null)
   const socketRef = useRef<WebSocket | undefined>(undefined)
@@ -50,7 +52,7 @@ export function AiChatWindow() {
     if (!t) return
     dispatch({ type: 'SEND', message: t })
     setInput('')
-    socketRef.current?.send(JSON.stringify({ type: 'message', message: t }))
+    socketRef.current?.send(JSON.stringify({ type: 'message', message: t, selection }))
   }
 
   function handleEdit(editedText: string) {
@@ -72,6 +74,7 @@ export function AiChatWindow() {
             content={msg.content}
             editable={state.current === 'working' && msg.role === 'assistant' && index === state.messages.length - 1}
             onEdit={handleEdit}
+            onSelectionChange={setSelection}
           />
         ))}
         {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (

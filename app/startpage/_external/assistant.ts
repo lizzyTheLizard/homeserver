@@ -6,6 +6,7 @@ import { getSkillTools } from './skills'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from './llmLogger'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { type Selection } from '@/app/shared/_components/form/Textarea'
 import fs from 'fs'
 import { join } from 'path'
 
@@ -29,7 +30,7 @@ export type AssistantEvent = { type: 'stream_response', chunk: string }
 export interface Assistant {
   on(listener: (event: AssistantEvent) => void): void
   init(initialContext: InitialContext): Promise<void>
-  send(message: string): Promise<void>
+  send(message: string, selection?: Selection): Promise<void>
 }
 
 export function createAssistantInstance(): Assistant {
@@ -40,7 +41,7 @@ export function createAssistantInstance(): Assistant {
   return {
     on: listener => listeners.push(listener),
     init: initialContext => initialize(handler, initialContext),
-    send: (message) => { return send(handler, message, undefined, true) },
+    send: (message, selection) => { return send(handler, message, selection, undefined, true) },
   }
 }
 
@@ -52,7 +53,7 @@ interface AssistantHandler {
 
 async function initialize(handler: AssistantHandler, initialContext: InitialContext): Promise<void> {
   handler.instructions = await getSystemMessage(initialContext)
-  await send(handler, initialMessage, initialActions, false)
+  await send(handler, initialMessage, undefined, initialActions, false)
 }
 
 async function getSystemMessage(initialContext: InitialContext): Promise<string> {
@@ -66,8 +67,12 @@ async function getSystemMessage(initialContext: InitialContext): Promise<string>
   return instructions
 }
 
-async function send(handler: AssistantHandler, prompt: string, fixedActions?: string[], useTools?: boolean): Promise<void> {
-  handler.messages.push({ role: 'user', content: prompt })
+async function send(handler: AssistantHandler, prompt: string, selection?: Selection, fixedActions?: string[], useTools?: boolean): Promise<void> {
+  let fullPrompt = prompt
+  if (selection) {
+    fullPrompt += `\n\nThe user has selected the following text: "${selection.text}" (position ${selection.start.toString()}-${selection.end.toString()})`
+  }
+  handler.messages.push({ role: 'user', content: fullPrompt })
   const options = { ...agentSettings,
     tools: (useTools ? tools : undefined) as ToolSet,
     toolChoice: (useTools ? 'auto' : 'none') as ToolChoice<Record<string, unknown>>,
