@@ -131,7 +131,7 @@ jobs:
         runs-on: ubuntu-latest
         if: github.actor != 'dependabot[bot]'        
         env:
-            registry: rg.fr-par.scw.cloud/funcscwgutschisitewsdlddur
+            registry: rg.fr-par.scw.cloud/gutschi-site
         steps:
           - name: Checkout
             uses: actions/checkout@v7

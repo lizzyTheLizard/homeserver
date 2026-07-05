@@ -1,16 +1,28 @@
-import { ToolLoopAgent, ToolSet } from 'ai'
-import { createDeepInfra } from '@ai-sdk/deepinfra'
+import { generateText, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
 import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from './weather'
 import { config } from '@/app/shared/config'
 import { getLocationDescription, locationByNameTool } from './geolocation'
-import { getSkillTools, getSystemMessage, getInitialMessage, getActionPrompt } from '../_assistant/prompts'
-import { Mutex } from '@electric-sql/pglite'
+import { getSkillTools } from './skills'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from './llmLogger'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import fs from 'fs'
+import { join } from 'path'
+
+const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
+const actionPrompt = fs.readFileSync(join(ASSISTANT_DIR, 'action.md'), 'utf-8')
+const initialMessage = fs.readFileSync(join(ASSISTANT_DIR, 'initial.md'), 'utf-8')
+const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
+const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather']
+const tools = { ...getSkillTools(join(ASSISTANT_DIR, 'skills')), get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool, get_location_by_name: locationByNameTool } satisfies ToolSet
+const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: createLoggingFetch(globalThis.fetch) })
+const model = opencode('deepseek-v4-flash')
+const agentSettings = { model, reasoning: 'none' as const, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
 export type AssistantEvent = { type: 'stream_response', chunk: string }
+  | { type: 'tool_call' }
   | { type: 'finished_response' }
   | { type: 'got_actions', actions: string[] }
 
@@ -21,91 +33,67 @@ export interface Assistant {
 }
 
 export function createAssistantInstance(): Assistant {
-  const handler: AssistantHandler = { isRunning: false, agent: undefined, emit }
   const listeners: ((event: AssistantEvent) => void)[] = []
-
-  function emit(event: AssistantEvent) {
-    listeners.forEach((l) => { l(event) })
-  }
-
+  const handler: AssistantHandler = { messages: [], instructions: '', emit: (e) => {
+    listeners.forEach((l) => { l(e) })
+  } }
   return {
     on: listener => listeners.push(listener),
     init: initialContext => initialize(handler, initialContext),
-    send: (message) => { return send(handler, message) },
+    send: (message) => { return send(handler, message, undefined, true) },
   }
 }
 
 interface AssistantHandler {
-  isRunning: boolean
-  agent: ToolLoopAgent<never, ToolSet> | undefined
+  messages: ModelMessage[]
+  instructions: string
   emit: (event: AssistantEvent) => void
 }
 
 async function initialize(handler: AssistantHandler, initialContext: InitialContext): Promise<void> {
-  const loggingFetch = createLoggingFetch(globalThis.fetch)
-  const deepinfra = createDeepInfra({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
-  // const model = deepinfra('meta-llama/Llama-3.3-70B-Instruct-Turbo')
-  const model = deepinfra('google/gemma-4-31B-it-turbo')
-  const instructions = await getInstructions(initialContext)
-  const tools = await getTools()
-  handler.agent = new ToolLoopAgent({ model, tools, instructions, temperature: 0.4, providerOptions: { deepinfra: { service_tier: 'priority' } } })
-  // TODO: Imrpove this when other connectors are available
-  const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather']
-  await send(handler, await getInitialMessage(), initialActions)
+  handler.instructions = await getSystemMessage(initialContext)
+  await send(handler, initialMessage, initialActions, false)
 }
 
-async function getInstructions(initialContext: InitialContext): Promise<string> {
+async function getSystemMessage(initialContext: InitialContext): Promise<string> {
   const context = {
     time: new Date().toLocaleString(),
     location: initialContext.location,
     locationDescription: await getLocationDescription(initialContext.location),
     weather: await shortWeatherOverview(initialContext.location.lat, initialContext.location.lon),
   }
-  const systemMessage = await getSystemMessage()
   const instructions = `${systemMessage}\n\nThe current context is ${JSON.stringify(context)}  `
   return instructions
 }
 
-async function getTools(): Promise<ToolSet> {
-  const skillTools = await getSkillTools()
-  const baseTools = { get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool, get_location_by_name: locationByNameTool } satisfies ToolSet
-  const tools = { ...baseTools, ...skillTools } as ToolSet
-  return tools
-}
-
-const mutex = new Mutex()
-
-async function send(handler: AssistantHandler, message: string, fixedActions?: string[]): Promise<void> {
-  if (!handler.agent) throw new Error('Assistant is not initialized')
-  await mutex.runExclusive(() => {
-    if (handler.isRunning) throw new Error('Assistant is already processing a message')
-    handler.isRunning = true
-  })
-  try {
-    // TODO Streaming is not working here for tools calls and gemma. Maybe a bug in deepinfra?
-    /*
-    const result = await handler.agent.stream({ prompt: message })
-    for await (const chunk of result.textStream) {
+async function send(handler: AssistantHandler, prompt: string, fixedActions?: string[], useTools?: boolean): Promise<void> {
+  handler.messages.push({ role: 'user', content: prompt })
+  const options = { ...agentSettings,
+    tools: (useTools ? tools : undefined) as ToolSet,
+    toolChoice: (useTools ? 'auto' : 'none') as ToolChoice<Record<string, unknown>>,
+    instructions: handler.instructions,
+    messages: handler.messages,
+  }
+  for (let i = 0; i < 5; i++) {
+    const result = streamText(options)
+    for await (const chunk of result.textStream)
       handler.emit({ type: 'stream_response', chunk })
-    }
-      */
-    const result = await handler.agent.generate({ prompt: message })
-    handler.emit({ type: 'stream_response', chunk: result.text })
-    handler.emit({ type: 'finished_response' })
-    if (fixedActions) {
-      handler.emit({ type: 'got_actions', actions: fixedActions })
-    }
-    else {
-      const actionsResp = await handler.agent.generate({ prompt: await getActionPrompt() })
-      const actions = JSON.parse(actionsResp.text) as string[]
-      handler.emit({ type: 'got_actions', actions })
-    }
+    const responseText = await result.responseMessages
+    responseText.forEach(m => handler.messages.push(m))
+    const toolCalls = await result.toolCalls
+    if (toolCalls.length == 0) break
+    if (i == 4) throw new Error('Assistant made too many tool calls, stopping after 5 iterations')
+    logger.debug(`Assistant made ${toolCalls.length.toString()} tool calls, continuing to next iteration`)
+    handler.emit({ type: 'tool_call' })
   }
-  catch (error: unknown) {
-    logger.debug(`Assistant failed to process message: ${error instanceof Error ? error.message : String(error)}`)
-  }
+  handler.emit({ type: 'finished_response' })
 
-  finally {
-    handler.isRunning = false
+  if (fixedActions) {
+    handler.emit({ type: 'got_actions', actions: fixedActions })
+    return
   }
+  const messagesCpy = [...handler.messages, { role: 'user', content: actionPrompt }] satisfies ModelMessage[]
+  const actionsResp = await generateText({ ...agentSettings, instructions: handler.instructions, toolChoice: 'none', messages: messagesCpy })
+  const actions = JSON.parse(actionsResp.text) as string[]
+  handler.emit({ type: 'got_actions', actions })
 }

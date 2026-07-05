@@ -1,29 +1,8 @@
 import { describe, expect, test, beforeEach, afterEach } from 'vitest'
 import { promises as fs } from 'fs'
 import { join } from 'path'
-import { getSystemMessage, getInitialMessage, getActionPrompt, getSkillTools } from './prompts'
+import { getSkillTools } from './skills'
 import { tmpdir } from 'os'
-
-describe('getSystemMessage', () => {
-  test('should return the content of system.md', async () => {
-    const result = await getSystemMessage()
-    expect(result).toContain('You are the assistant for a personal homeserver dashboard.')
-  })
-})
-
-describe('getInitialMessage', () => {
-  test('should return the content of initial.md', async () => {
-    const result = await getInitialMessage()
-    expect(result).toContain('Good {timeofday}!')
-  })
-})
-
-describe('getActionPrompt', () => {
-  test('should return the content of action.md', async () => {
-    const result = await getActionPrompt()
-    expect(result).toContain('Based on the conversation so far')
-  })
-})
 
 const SKILL_NAME = 'test-skill'
 const SKILL_DESCRIPTION = 'A test skill'
@@ -46,8 +25,8 @@ describe('skill loading from filesystem', () => {
     await fs.rm(tmpDir, { recursive: true, force: true })
   })
 
-  test('empty dir', async () => {
-    const tools = await getSkillTools(tmpDir)
+  test('empty dir', () => {
+    const tools = getSkillTools(tmpDir)
     expect(tools).toEqual({})
   })
 
@@ -57,7 +36,7 @@ describe('skill loading from filesystem', () => {
     await fs.mkdir(skillDir, { recursive: true })
     await fs.writeFile(skillFile, SKILL_CONTENT)
 
-    const tools = await getSkillTools(tmpDir)
+    const tools = getSkillTools(tmpDir)
     expect(tools[`load_skill_${SKILL_NAME}`]).toBeDefined()
     expect(tools[`load_skill_${SKILL_NAME}`].description).toBe(SKILL_DESCRIPTION)
     expect(tools[`load_skill_${SKILL_NAME}`].inputSchema).toBeDefined()
@@ -69,7 +48,7 @@ describe('skill loading from filesystem', () => {
     await fs.mkdir(skillDir, { recursive: true })
     await fs.writeFile(skillFile, SKILL_CONTENT)
 
-    const tools = await getSkillTools(tmpDir)
+    const tools = getSkillTools(tmpDir)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
     expect(result).toContain(`These are the instructions for the skill test-skill. 
@@ -92,7 +71,7 @@ describe('skill loading from filesystem', () => {
     const dataFile = join(skillDir, 'data.json')
     await fs.writeFile(dataFile, JSON.stringify({ key: 'value' }))
 
-    const tools = await getSkillTools(tmpDir)
+    const tools = getSkillTools(tmpDir)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

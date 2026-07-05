@@ -23,6 +23,12 @@ resource "scaleway_iam_policy" "gutschi_site" {
   }
 }
 
+resource "scaleway_registry_namespace" "gutschi_site" {
+  name            = "gutschi-site"
+  description     = "Gutschi.site Homeserver"
+  is_public       = false
+}
+
 resource "scaleway_container_namespace" "gutschi_site" {
   name            = "gutschi-site"
   description     = "Gutschi.site Homeserver"
@@ -41,23 +47,21 @@ resource "scaleway_container" "www_gutschi_site" {
   name            = "www-gutschi-site"
   description     = "React-Application incl. backend"
   namespace_id    = scaleway_container_namespace.gutschi_site.id
-  registry_image  = "${scaleway_container_namespace.gutschi_site.registry_endpoint}/www_gutschi_site:latest"
+  image  = "${scaleway_registry_namespace.gutschi_site.endpoint}/www_gutschi_site:latest"
   port            = 3000
   min_scale       = 0
   max_scale       = 1
   privacy         = "public"
   cpu_limit       = 250
-  memory_limit    = 512
-  deploy          = true
+  memory_limit_bytes = 512000000
   environment_variables = {
     APP_URL="https://www.gutschi.site",
-    CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
-    ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
+    CLIENT_ID=var.client_id,
+    ISSUER=var.issuer,
     COOKIE_NAME="session",
     LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
-    WEATHER_API_LOCATION="46.9471,7.4441",
-    WEATHER_DETAIL_URL="https://www.srf.ch/meteo/wetter/Bern/46.9471,7.4441"
+    AI_BASE_URL="https://opencode.ai/zen/go/v1"
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
@@ -68,7 +72,7 @@ resource "scaleway_container" "www_gutschi_site" {
       split("?" , trimprefix(scaleway_sdb_sql_database.www_gutschi_site.endpoint, "postgres://"))[0],
       "sslmode=verify-full",
     ),
-    DEEPINFRA_API_KEY = var.deepinfra_api_key
+    AI_API_KEY = var.ai_api_key
   }
 }
 
@@ -89,23 +93,21 @@ resource "scaleway_container" "test_gutschi_site" {
   name            = "test-gutschi-site"
   description     = "React-Application incl. backend (TEST)"
   namespace_id    = scaleway_container_namespace.gutschi_site.id
-  registry_image  = "${scaleway_container_namespace.gutschi_site.registry_endpoint}/www_gutschi_site:test"
+  image  = "${scaleway_registry_namespace.gutschi_site.endpoint}/www_gutschi_site:test"
   port            = 3000
   min_scale       = 0
   max_scale       = 1
   privacy         = "public"
   cpu_limit       = 100
-  memory_limit    = 256
-  deploy          = false
+  memory_limit_bytes = 256000000
   environment_variables = {
     APP_URL="https://test.gutschi.site",
-    CLIENT_ID="f79682fe-0761-4361-aa2e-317957284c3a",
-    ISSUER="https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0",
+    CLIENT_ID=var.client_id,
+    ISSUER=var.issuer,
     COOKIE_NAME="session",
     LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
-    WEATHER_API_LOCATION="46.9471,7.4441",
-    WEATHER_DETAIL_URL="https://www.srf.ch/meteo/wetter/Bern/46.9471,7.4441"
+    AI_BASE_URL="https://opencode.ai/zen/go/v1"
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
@@ -116,7 +118,7 @@ resource "scaleway_container" "test_gutschi_site" {
       split("?" , trimprefix(scaleway_sdb_sql_database.test_gutschi_site.endpoint, "postgres://"))[0],
       "sslmode=verify-full",
     ),
-    DEEPINFRA_API_KEY = var.deepinfra_api_key
+    AI_API_KEY = var.ai_api_key
   }
 }
 

@@ -26,7 +26,7 @@ output "DB_CONNECTION_STRING_PROD" {
 
 output "docker_image_name" {
   value = format("rg.fr-par.scw.cloud/%s/www_gutschi_site",
-    scaleway_container_namespace.gutschi_site.registry_endpoint 
+    scaleway_registry_namespace.gutschi_site.endpoint 
   )
   description = "Docker Image Name"
 }
@@ -47,11 +47,11 @@ output "www-container_id" {
 }
 
 output "test_gutschi_site" {
-    value = scaleway_container.test_gutschi_site.domain_name
+    value = scaleway_container.test_gutschi_site.public_endpoint
     description = "test.gutschi.site"
 }
 
 output "www_gutschi_site" {
-    value = scaleway_container.www_gutschi_site.domain_name
+    value = scaleway_container.www_gutschi_site.public_endpoint
     description = "www.gutschi.site"
 }

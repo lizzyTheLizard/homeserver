@@ -1,35 +1,16 @@
 import { logger } from '@/app/shared/logger'
 import { tool, ToolSet } from 'ai'
-import { promises as fs } from 'fs'
+import fs from 'fs'
 import { join } from 'path'
 import z from 'zod'
 
-const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
-const SKILLS_DIR = join(ASSISTANT_DIR, 'skills')
-const SYSTEM_MD_PATH = join(ASSISTANT_DIR, 'system.md')
-const INITIAL_MD_PATH = join(ASSISTANT_DIR, 'initial.md')
-const ACTION_MD_PATH = join(ASSISTANT_DIR, 'action.md')
-
-export async function getSystemMessage(): Promise<string> {
-  return fs.readFile(SYSTEM_MD_PATH, 'utf-8')
-}
-
-export async function getInitialMessage(): Promise<string> {
-  return fs.readFile(INITIAL_MD_PATH, 'utf-8')
-}
-
-export async function getActionPrompt(): Promise<string> {
-  return fs.readFile(ACTION_MD_PATH, 'utf-8')
-}
-
-export async function getSkillTools(skillDir?: string): Promise<ToolSet> {
+export function getSkillTools(skillDir: string): ToolSet {
   const skillTools: ToolSet = {}
-  skillDir = skillDir ?? SKILLS_DIR
-  const filesInSkillDir = await fs.readdir(skillDir, { withFileTypes: true })
+  const filesInSkillDir = fs.readdirSync(skillDir, { withFileTypes: true })
   const dirs = filesInSkillDir.filter(f => !f.name.startsWith('.') && f.isDirectory())
   for (const dir of dirs) {
     const skillPath = join(skillDir, dir.name)
-    const skill = await loadSkillTool(skillPath)
+    const skill = loadSkillTool(skillPath)
     if (!skill) continue
     skillTools[`load_skill_${skill.name}`] = tool({
       description: skill.description,
@@ -41,8 +22,8 @@ export async function getSkillTools(skillDir?: string): Promise<ToolSet> {
   return skillTools
 }
 
-async function loadSkillTool(skillDirPath: string): Promise<ParsedSkill | undefined> {
-  const metadata = await parseMetadata(skillDirPath)
+function loadSkillTool(skillDirPath: string): ParsedSkill | undefined {
+  const metadata = parseMetadata(skillDirPath)
   if (!metadata) return undefined
 
   logger.debug(`Loading skill from ${skillDirPath}`)
@@ -53,15 +34,15 @@ async function loadSkillTool(skillDirPath: string): Promise<ParsedSkill | undefi
   }
 }
 
-async function parseMetadata(skillDirPath: string): Promise<{ name: string, description: string } | undefined> {
-  const files = await fs.readdir(skillDirPath)
+function parseMetadata(skillDirPath: string): { name: string, description: string } | undefined {
+  const files = fs.readdirSync(skillDirPath)
   const skillFile = files.find(f => f.toLowerCase() === 'skill.md')
   if (!skillFile) {
     logger.warn(`Skill directory ${skillDirPath} does not contain SKILL.md, skipping`)
     return undefined
   }
   const skillFilePath = join(skillDirPath, skillFile)
-  const content = (await fs.readFile(skillFilePath, 'utf-8'))
+  const content = fs.readFileSync(skillFilePath, 'utf-8')
 
   const metadata = /---\r?\n([\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
   if (!metadata) {
@@ -91,11 +72,11 @@ async function parseMetadata(skillDirPath: string): Promise<{ name: string, desc
 
 async function loadSkill(name: string, skillDirPath: string): Promise<string> {
   logger.debug(`Loading skill ${name} from ${skillDirPath}`)
-  const files = await fs.readdir(skillDirPath)
+  const files = await fs.promises.readdir(skillDirPath)
   const fileContents: Record<string, string> = {}
   for (const file of files) {
     const filePath = join(skillDirPath, file)
-    const content = await fs.readFile(filePath, 'utf-8')
+    const content = await fs.promises.readFile(filePath, 'utf-8')
     fileContents[file] = content
   }
   return `These are the instructions for the skill ${name}. 

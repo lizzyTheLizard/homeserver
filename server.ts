@@ -3,9 +3,9 @@ import type { RequestHandler } from 'next/dist/server/next'
 import type { Server, IncomingMessage, ServerResponse } from 'http'
 import type { Logger } from 'winston'
 import type { WebSocketServer } from 'ws'
-import type { output } from 'zod/v4/core'
 import type Stream from 'stream'
 import type { CookieStore } from './app/shared/auth/auth'
+import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 main().catch((e: unknown) => { console.error('> Error starting server', e) })
 
@@ -52,7 +52,7 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
   await app.prepare()
   const handler = app.getRequestHandler()
   const http = await import('http')
-  const server = http.createServer((req, res) => { reactRequestHandler(handler, options, req, res).catch(logger.error) })
+  const server = http.createServer((req, res) => { reactRequestHandler(handler, options, req, res).catch((e: unknown) => logger.error('Error handling request', e)) })
   logger.debug(`React app created`)
   return server
 }
@@ -67,14 +67,15 @@ async function reactRequestHandler(handler: RequestHandler, options: Options, re
   if (publicDoNotLogPaths.some(i => url.pathname.startsWith(i)))
     return handler(req, res)
   options.logger.debug(`${method} ${url.toString()}`)
-  if (await isAllowed(req))
+  if (await isAllowed(req, res))
     await handler(req, res)
   else if (isXHttpRequest(req)) {
     res.writeHead(401, { 'Content-Type': 'text/plain' })
     res.end('Unauthorized')
   }
   else {
-    const redirectTo = await startLogin(url)
+    const cookies = await parseCookie(req, res)
+    const redirectTo = await startLogin(url, cookies)
     res.writeHead(302, { Location: redirectTo.href })
     res.end()
   }
@@ -90,9 +91,9 @@ function isXHttpRequest(req: IncomingMessage): boolean {
   return requestWithHeaders?.includes('XMLHttpRequest') ?? false
 }
 
-async function isAllowed(req: IncomingMessage): Promise<boolean> {
+async function isAllowed(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
   const { getUserSession } = await import('./app/shared/auth/auth')
-  const cookies = parseCookie(req)
+  const cookies = await parseCookie(req, res)
   const session = await getUserSession(cookies)
   if (session) return true
   if (req.url?.startsWith('/shared/auth/')) return true
@@ -100,27 +101,35 @@ async function isAllowed(req: IncomingMessage): Promise<boolean> {
 }
 
 async function registerWebSockets(server: Server, logger: Logger) {
-  const { getAuthenticatedUserSession } = await import('./app/shared/auth/auth')
-
-  const webSocketHandlers = [await createAssistantWebSocketServer(logger)]
-
+  const { createAssistantWebSocketServer } = await import('./app/server')
+  const webSocketHandlers: { name: string, server: WebSocketServer, canHandle: (request: IncomingMessage) => boolean }[] = [
+    createAssistantWebSocketServer(),
+  ]
   server.on('upgrade', (request, socket, head) => {
     try {
       const url = request.url
       if (!url) throw new Error('WebSocket upgrade request received without URL')
       const handler = webSocketHandlers.find(h => h.canHandle(request))
       if (!handler) return
-      const cookies = parseCookie(request)
-      getAuthenticatedUserSession('startpage', cookies)
-        .then(() => { handler.server.handleUpgrade(request, socket, head, (ws) => { handler.server.emit('connection', ws, request) }) })
-        .then(() => { logger.info(`WS ${url} connected`) })
-        .catch((e: unknown) => { handleWsConnectionError(e, socket, logger) })
+      withAuthentication(request, socket, logger, () => {
+        handler.server.handleUpgrade(request, socket, head, (ws) => { handler.server.emit('connection', ws, request) })
+        logger.info(`WS ${url} connected`)
+      })
     }
     catch (e: unknown) {
       handleWsConnectionError(e, socket, logger)
     }
   })
-  logger.debug(`Set up ${webSocketHandlers.length.toString()} WebSocket handlers`)
+  logger.debug(`Registered WebSocket(s) ${webSocketHandlers.map(h => h.name).join(', ')}`)
+}
+function withAuthentication(req: IncomingMessage, socket: Stream.Duplex, logger: Logger, fn: () => Promise<void> | void): void {
+  parseCookie(req)
+    .then(async (c) => {
+      const { getAuthenticatedUserSession } = await import('./app/shared/auth/auth')
+      await getAuthenticatedUserSession('startpage', c)
+      await fn()
+    })
+    .catch((e: unknown) => { handleWsConnectionError(e, socket, logger) })
 }
 
 function handleWsConnectionError(e: unknown, socket: Stream.Duplex, logger: Logger) {
@@ -129,7 +138,9 @@ function handleWsConnectionError(e: unknown, socket: Stream.Duplex, logger: Logg
   socket.destroy()
 }
 
-function parseCookie(req: IncomingMessage): CookieStore {
+async function parseCookie(req: IncomingMessage, res?: ServerResponse): Promise<CookieStore> {
+  const { stringifyCookie } = await import('next/dist/compiled/@edge-runtime/cookies')
+
   const cookiesHeader = req.headers.cookie
   const cookies: Record<string, string> = {}
   if (cookiesHeader) {
@@ -140,35 +151,15 @@ function parseCookie(req: IncomingMessage): CookieStore {
   }
   return {
     get: (name: string) => ({ name, value: cookies[name] }),
-    set: () => { throw new Error('Cookie setting is not supported in this context') },
+    set: (nameOrOptions: string | ResponseCookie, value?: string, options?: Partial<ResponseCookie>) => {
+      if (!res) throw new Error('Cannot set cookie without response object')
+      if (typeof nameOrOptions !== 'string') {
+        res.appendHeader('Set-Cookie', stringifyCookie(nameOrOptions))
+      }
+      else {
+        const cookie: ResponseCookie = { name: nameOrOptions, value: value ?? '', ...options }
+        res.appendHeader('Set-Cookie', stringifyCookie(cookie))
+      }
+    },
   }
-}
-
-async function createAssistantWebSocketServer(logger: Logger): Promise<{ server: WebSocketServer, canHandle: (request: IncomingMessage) => boolean }> {
-  const { WebSocketServer } = await import('ws')
-  const { createAssistantInstance } = await import('./app/startpage/_external/assistant')
-  const { validateObject } = await import('./app/shared/_helper/validation')
-  const z = await import('zod')
-
-  const inputSchema = z.union([
-    z.object({ type: z.literal('initialize'), initialContext: z.object({ location: z.object({ lat: z.number(), lon: z.number() }) }) }),
-    z.object({ type: z.literal('message'), message: z.string() }),
-  ])
-
-  const canHandle = (request: IncomingMessage) => request.url?.startsWith('/ws/assistant') ?? false
-  const server = new WebSocketServer({ noServer: true })
-  server.on('connection', (ws) => {
-    const assistant = createAssistantInstance()
-    ws.on('message', (data: Buffer) => {
-      const msg = JSON.parse(data.toString()) as output<typeof inputSchema>
-      validateObject(msg, inputSchema)
-      if (msg.type === 'initialize')
-        assistant.init(msg.initialContext).catch((e: unknown) => { logger.error('Error initializing assistant', e) })
-      else
-        assistant.send(msg.message).catch((e: unknown) => { logger.error('Error sending message to assistant', e) })
-    })
-    assistant.on((event) => { ws.send(JSON.stringify(event)) })
-  })
-  logger.debug(`Assistant websocket set up at /ws/assistant`)
-  return { server, canHandle }
 }
