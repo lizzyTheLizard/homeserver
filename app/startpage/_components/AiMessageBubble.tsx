@@ -4,18 +4,15 @@ import Markdown from 'react-markdown'
 import { EditableBlock } from './EditableBlock'
 import styles from './AiMessageBubble.module.css'
 
-const markdownComponents = {
-  code({ className, children }: React.ComponentPropsWithoutRef<'code'>) {
-    if (className?.includes('language-input')) {
+export function AiMessageBubble({ role, content, typing, editable, onEdit }: { role: string, content: string, typing?: boolean, editable?: boolean, onEdit?: (editedText: string) => void }) {
+  const markdownComponents = {
+    code({ className, children }: React.ComponentPropsWithoutRef<'code'>) {
+      if (!className?.includes('language-input')) return <code className={className}>{children}</code>
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      const content = String(Array.isArray(children) ? children.join('') : children ?? '')
-      return <EditableBlock content={content} />
-    }
-    return <code className={className}>{children}</code>
-  },
-}
-
-export function AiMessageBubble({ role, content, typing }: { role: string, content: string, typing?: boolean }) {
+      const text = String(Array.isArray(children) ? children.join('') : children ?? '')
+      return <EditableBlock content={text} onEdit={onEdit} editable={editable} />
+    },
+  }
   if (typing) return (
     <div className={styles.typingIndicator}>
       <span className={styles.dot} />

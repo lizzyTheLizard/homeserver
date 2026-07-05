@@ -9,6 +9,7 @@ const meta = {
     role: { control: 'select', options: ['user', 'assistant'] },
     content: { control: 'text' },
     typing: { control: 'boolean' },
+    editable: { control: 'boolean' },
   },
 } satisfies Meta<typeof AiMessageBubble>
 export default meta
@@ -52,6 +53,16 @@ export const EditableBeforeEdit: StoryObj<typeof meta> = {
     role: 'assistant',
     content: EDITABLE_CONTENT,
     typing: false,
+    editable: true,
+  },
+}
+
+export const InputBlockNotEditable: StoryObj<typeof meta> = {
+  args: {
+    role: 'assistant',
+    content: EDITABLE_CONTENT,
+    typing: false,
+    editable: false,
   },
 }
 
@@ -60,6 +71,7 @@ export const EditableDuringEdit: StoryObj<typeof meta> = {
     role: 'assistant',
     content: EDITABLE_CONTENT,
     typing: false,
+    editable: true,
   },
   play: async ({ canvasElement }) => {
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -75,6 +87,7 @@ export const EditableAfterEdit: StoryObj<typeof meta> = {
     role: 'assistant',
     content: EDITABLE_CONTENT,
     typing: false,
+    editable: true,
   },
   play: async ({ canvasElement }) => {
     await new Promise(resolve => setTimeout(resolve, 100))

@@ -53,17 +53,32 @@ export function AiChatWindow() {
     socketRef.current?.send(JSON.stringify({ type: 'message', message: t }))
   }
 
+  function handleEdit(editedText: string) {
+    const text = `I updated the text
+    ~~~input
+    ${editedText}
+    ~~~
+    `
+    send(text)
+  }
+
   return (
     <div className={styles.window}>
       <div ref={listRef} className={styles.messageList}>
-        {state.messages.map(msg => (
-          <AiMessageBubble key={'message_' + msg.id.toString()} role={msg.role} content={msg.content} />
+        {state.messages.map((msg, index) => (
+          <AiMessageBubble
+            key={'message_' + msg.id.toString()}
+            role={msg.role}
+            content={msg.content}
+            editable={state.current === 'working' && msg.role === 'assistant' && index === state.messages.length - 1}
+            onEdit={handleEdit}
+          />
         ))}
         {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (
-          <AiMessageBubble role="assistant" content="" typing={true} />
+          <AiMessageBubble role="assistant" content="" typing={true} editable={false} />
         )}
         {(state.currentMessage.trim().length > 0) && (
-          <AiMessageBubble role="assistant" content={state.currentMessage} />
+          <AiMessageBubble role="assistant" content={state.currentMessage} editable={false} />
         )}
       </div>
 

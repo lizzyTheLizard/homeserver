@@ -4,12 +4,11 @@ import { useState, useRef } from 'react'
 import { Textarea, type Selection } from '@/app/shared/_components/form/Textarea'
 import styles from './EditableBlock.module.css'
 
-type EditState = 'viewing' | 'editing' | 'revised'
+type EditState = 'viewing' | 'editing'
 
-export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (value: string, selection?: Selection) => void }) {
+export function EditableBlock({ content, onEdit, editable }: { content: string, onEdit?: (editedText: string) => void, editable?: boolean }) {
   const [state, setState] = useState<EditState>('viewing')
   const [editValue, setEditValue] = useState(content)
-  const [revised, setRevised] = useState<string | null>(null)
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
   const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
   const viewRef = useRef<HTMLDivElement>(null)
@@ -35,13 +34,9 @@ export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (
 
   function handleOk() {
     if (editValue !== content) {
-      setRevised(editValue)
-      setState('revised')
-      if (onEdit) onEdit(editValue, selection)
+      if (onEdit) onEdit(editValue)
     }
-    else {
-      setState('viewing')
-    }
+    setState('viewing')
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -53,18 +48,6 @@ export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (
       e.preventDefault()
       handleCancel()
     }
-  }
-
-  if (state === 'revised' && revised !== null) {
-    return (
-      <div className={styles.editableRevised}>
-        <div className={styles.editableRevisedLabel}>Edited</div>
-        <div className={styles.editableRevisedContent}>{revised}</div>
-        <div className={styles.editableRevisedOriginal}>
-          <span className={styles.editableRevisedStrike}>{content}</span>
-        </div>
-      </div>
-    )
   }
 
   if (state === 'editing') {
@@ -91,6 +74,14 @@ export function EditableBlock({ content, onEdit }: { content: string, onEdit?: (
           </div>
         </div>
         <div className={styles.editableHint}>&#x2318;&#x23CE; to confirm &middot; Esc to cancel</div>
+      </div>
+    )
+  }
+
+  if (!editable) {
+    return (
+      <div ref={viewRef} className={`${styles.editableView} ${styles.editableViewDisabled}`}>
+        <div className={styles.editableViewContent}>{content}</div>
       </div>
     )
   }

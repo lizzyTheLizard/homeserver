@@ -17,6 +17,10 @@
   border-left-color: rgba(0,0,210,0.6);
 }
 
+.editableViewDisabled {
+  cursor: not-allowed;
+}
+
 .editableViewLabel {
   font-size: 0.7rem;
   font-weight: 600;
@@ -109,40 +113,4 @@
   font-size: 0.72rem;
   color: #bbb;
   margin-top: 0.25rem;
-}
-
-.editableRevised {
-  margin-top: 0.6rem;
-}
-
-.editableRevisedLabel {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #999;
-  margin-bottom: 0.25rem;
-}
-
-.editableRevisedContent {
-  padding: 0.6rem 0.8rem;
-  background: rgba(0,180,0,0.06);
-  border-left: 3px solid rgba(0,180,0,0.4);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: #1a1a2e;
-  white-space: pre-wrap;
-}
-
-.editableRevisedOriginal {
-  margin-top: 0.5rem;
-  font-size: 0.78rem;
-  color: #aaa;
-  font-style: italic;
-}
-
-.editableRevisedStrike {
-  text-decoration: line-through;
-  color: #bbb;
 }

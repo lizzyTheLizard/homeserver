@@ -1,8 +1,8 @@
 {
   "version": 1,
   "kind": "html",
-  "title": "Start Page - Editable Chat.html",
-  "entry": "Start Page - Editable Chat.html",
+  "title": "Start Page — Gutschi.site (Editable Chat)",
+  "entry": "start-page-editable-chat.html",
   "renderer": "html",
   "status": "complete",
   "exports": [
@@ -10,10 +10,13 @@
     "pdf",
     "zip"
   ],
-  "createdAt": "2026-07-03T15:51:56.295Z",
-  "updatedAt": "2026-07-03T15:51:56.295Z",
+  "primary": true,
+  "createdAt": "2026-07-05T11:19:28.746Z",
+  "updatedAt": "2026-07-05T11:19:28.769Z",
+  "sourceSkillId": "agent-browser",
   "metadata": {
-    "inferred": true,
-    "reconciled": true
+    "identifier": "start-page-editable-chat",
+    "artifactType": "text/html",
+    "inferred": false
   }
 }
