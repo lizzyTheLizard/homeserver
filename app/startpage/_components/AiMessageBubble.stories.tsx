@@ -111,6 +111,14 @@ export const EditableAfterEdit: StoryObj<typeof meta> = {
   },
 }
 
+export const EditableResponse: StoryObj<typeof meta> = {
+  args: {
+    role: 'user',
+    content: 'I updated the text\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where? Should I bring anything?\n~~~',
+    typing: false,
+  },
+}
+
 export const AllVariants: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', maxWidth: '600px' }}>

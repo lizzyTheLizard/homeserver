@@ -18,7 +18,23 @@
 }
 
 .editableViewDisabled {
-  cursor: not-allowed;
+  cursor: inherit;
+}
+
+.editableViewDisabled:hover {
+  background: rgba(0,0,210,0.06);
+  border-left-color: rgba(0,0,210,0.13);
+}
+
+
+.editableViewResponse {
+  background: rgba(255,255,255,0.8);
+  border: none;
+  cursor: inherit;
+}
+
+.editableViewResponse:hover {
+  background: rgba(255,255,255,0.8);
 }
 
 .editableViewLabel {

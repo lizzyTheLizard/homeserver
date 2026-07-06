@@ -6,7 +6,6 @@ import { getSkillTools } from './skills'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from './llmLogger'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import { type Selection } from '@/app/shared/_components/form/Textarea'
 import fs from 'fs'
 import { join } from 'path'
 
@@ -14,7 +13,7 @@ const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const actionPrompt = fs.readFileSync(join(ASSISTANT_DIR, 'action.md'), 'utf-8')
 const initialMessage = fs.readFileSync(join(ASSISTANT_DIR, 'initial.md'), 'utf-8')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
-const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather']
+const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather', 'Return an editable field']
 const tools = { ...getSkillTools(join(ASSISTANT_DIR, 'skills')), get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool, get_location_by_name: locationByNameTool } satisfies ToolSet
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: createLoggingFetch(globalThis.fetch) })
 const model = opencode('deepseek-v4-flash')
@@ -30,7 +29,7 @@ export type AssistantEvent = { type: 'stream_response', chunk: string }
 export interface Assistant {
   on(listener: (event: AssistantEvent) => void): void
   init(initialContext: InitialContext): Promise<void>
-  send(message: string, selection?: Selection): Promise<void>
+  send(message: string): Promise<void>
 }
 
 export function createAssistantInstance(): Assistant {
@@ -41,7 +40,7 @@ export function createAssistantInstance(): Assistant {
   return {
     on: listener => listeners.push(listener),
     init: initialContext => initialize(handler, initialContext),
-    send: (message, selection) => { return send(handler, message, selection, undefined, true) },
+    send: (message) => { return send(handler, message, undefined, true) },
   }
 }
 
@@ -53,7 +52,7 @@ interface AssistantHandler {
 
 async function initialize(handler: AssistantHandler, initialContext: InitialContext): Promise<void> {
   handler.instructions = await getSystemMessage(initialContext)
-  await send(handler, initialMessage, undefined, initialActions, false)
+  await send(handler, initialMessage, initialActions, false)
 }
 
 async function getSystemMessage(initialContext: InitialContext): Promise<string> {
@@ -67,12 +66,8 @@ async function getSystemMessage(initialContext: InitialContext): Promise<string>
   return instructions
 }
 
-async function send(handler: AssistantHandler, prompt: string, selection?: Selection, fixedActions?: string[], useTools?: boolean): Promise<void> {
-  let fullPrompt = prompt
-  if (selection) {
-    fullPrompt += `\n\nThe user has selected the following text: "${selection.text}" (position ${selection.start.toString()}-${selection.end.toString()})`
-  }
-  handler.messages.push({ role: 'user', content: fullPrompt })
+async function send(handler: AssistantHandler, prompt: string, fixedActions?: string[], useTools?: boolean): Promise<void> {
+  handler.messages.push({ role: 'user', content: prompt })
   const options = { ...agentSettings,
     tools: (useTools ? tools : undefined) as ToolSet,
     toolChoice: (useTools ? 'auto' : 'none') as ToolChoice<Record<string, unknown>>,

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "kind": "html",
-  "title": "Start Page — Gutschi.site (Editable Chat)",
+  "title": "Start Page — Editable Chat",
   "entry": "start-page-editable-chat.html",
   "renderer": "html",
   "status": "complete",
@@ -11,8 +11,8 @@
     "zip"
   ],
   "primary": true,
-  "createdAt": "2026-07-05T11:19:28.746Z",
-  "updatedAt": "2026-07-05T11:19:28.769Z",
+  "createdAt": "2026-07-05T20:13:27.407Z",
+  "updatedAt": "2026-07-05T20:13:27.418Z",
   "sourceSkillId": "agent-browser",
   "metadata": {
     "identifier": "start-page-editable-chat",

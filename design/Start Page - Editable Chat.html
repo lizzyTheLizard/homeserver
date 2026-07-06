@@ -1,5 +1,5 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -290,18 +290,17 @@ function UserMessage({ msg }) {
       }}>
         <div>{msg.text}</div>
 
-        {/* Updated draft block — now inside the same blue user bubble */}
         {msg.codeBlock && (
           <div style={{
             padding: '0.6rem 0.8rem',
-            background: 'rgba(255,255,255,0.12)',
+            background: 'rgba(255,255,255,0.8)',
             border: '1px solid rgba(255,255,255,0.18)',
             borderLeft: '3px solid rgba(255,255,255,0.35)',
             borderRadius: '6px',
-            fontSize: '0.9rem', lineHeight: 1.55, color: 'white',
+            fontSize: '0.9rem', lineHeight: 1.55, color: 'black',
           }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
-              letterSpacing: '0.05em', color: 'rgba(255,255,255,0.55)', marginBottom: '0.15rem' }}>
+              letterSpacing: '0.05em', color: 'rgba(0,0,210,0.35)', marginBottom: '0.15rem' }}>
               Updated draft
             </div>
             <div style={{ whiteSpace: 'pre-wrap' }}>{msg.codeBlock}</div>
@@ -587,62 +586,108 @@ function TweaksPanel({ tweaks, setTweaks, visible }) {
       <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tweaks</div>
       {[['siteName', 'Site name'], ['weatherCity', 'Weather city'], ['weatherCondition', 'Condition']].map(([k, label]) => (
         <div key={k}>
-          <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-          <input value={tweaks[k]} onChange={e => update(k, e.target.value)}
+          <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem' }}>{label}</div>
+          <input
+            value={tweaks[k]}
+            onChange={e => update(k, e.target.value)}
             style={{
               width: '100%', padding: '0.35rem 0.5rem',
               border: '1px solid rgba(0,0,0,0.15)', borderRadius: '6px',
-              fontSize: '0.85rem', fontFamily: 'inherit',
+              fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none',
             }}
           />
         </div>
       ))}
+      <div>
+        <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem' }}>Weather temp</div>
+        <input
+          type="number"
+          value={tweaks.weatherTemp}
+          onChange={e => update('weatherTemp', parseInt(e.target.value) || 0)}
+          style={{
+            width: '100%', padding: '0.35rem 0.5rem',
+            border: '1px solid rgba(0,0,0,0.15)', borderRadius: '6px',
+            fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none',
+          }}
+        />
+      </div>
     </div>
   );
 }
 
-// ── App shell ───────────────────────────────────────────────────────
+// ── App shell ──────────────────────────────────────────────────────
 function App() {
   const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
   const now = useClock();
-  const [showTweaks, setShowTweaks] = useState(false);
+  const currentApp = APPS.find(a => a.key === 'startpage') || APPS[0];
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === ',' && e.metaKey) {
+        e.preventDefault();
+        setTweaksVisible(v => !v);
+      }
+      if (e.key === 'Escape' && tweaksVisible) {
+        setTweaksVisible(false);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tweaksVisible]);
 
   return (
-    <div id="root" style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'white' }}>
       {/* Header */}
-      <header style={{
+      <header data-od-id="app-header" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0.6rem 1.2rem',
+        padding: '0.7rem 1.4rem',
         borderBottom: '1px solid rgba(0,0,0,0.08)',
-        flexShrink: 0,
+        background: 'white',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1a1a2e' }}>{tweaks.siteName}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: 'rgba(0,0,210,1)', color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 700, fontSize: '0.85rem',
+          }}>G</div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '0.95rem', color: '#1a1a2e' }}>{tweaks.siteName}</div>
+            <div style={{ fontSize: '0.72rem', color: '#999' }}>gutschi.site</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ fontSize: '0.85rem', color: '#777' }}>{fmtTime(now)}</span>
-          <span style={{ fontSize: '0.85rem', color: '#777' }}>{fmtDate(now)}</span>
-          <button onClick={() => setShowTweaks(p => !p)} style={{
-            background: 'none', border: '1px solid rgba(0,0,0,0.12)', borderRadius: '6px',
-            padding: '0.25rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem',
-            color: '#777', fontFamily: 'inherit',
-          }}>
-            {showTweaks ? 'Hide' : 'Tweaks'}
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          {APPS.map(app => (
+            <a key={app.key} href="#" onClick={e => e.preventDefault()} style={{
+              display: 'flex', alignItems: 'center', gap: '0.35rem',
+              padding: '0.3rem 0.5rem', borderRadius: '6px',
+              background: app.key === 'startpage' ? 'rgba(0,0,210,0.06)' : 'transparent',
+              textDecoration: 'none', color: app.key === 'startpage' ? 'rgba(0,0,180,1)' : '#666',
+              fontSize: '0.82rem', fontWeight: 500,
+              transition: 'background 0.12s',
+            }}>
+              <Icon name={app.icon} size={16} />
+              {app.name}
+            </a>
+          ))}
+        </div>
+        <div style={{ fontSize: '0.85rem', color: '#555', fontWeight: 500 }}>
+          {fmtTime(now)} · {fmtDate(now)}
         </div>
       </header>
 
-      {/* Body */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem 1.5rem 1rem', overflow: 'hidden' }}>
+      {/* Body: chat takes remaining space */}
+      <main data-od-id="app-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem 1.4rem 1.4rem', gap: '0.75rem' }}>
         <AIChatWindow tweaks={tweaks} />
-      </div>
+      </main>
 
-      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={showTweaks} />
+      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible} />
     </div>
   );
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>

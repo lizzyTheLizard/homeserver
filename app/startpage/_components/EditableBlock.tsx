@@ -1,17 +1,21 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Textarea, type Selection } from '@/app/shared/_components/form/Textarea'
+import { useState, useRef, useEffect } from 'react'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
 import styles from './EditableBlock.module.css'
 
 type EditState = 'viewing' | 'editing'
 
-export function EditableBlock({ content, onEdit, onSelectionChange, editable }: { content: string, onEdit?: (editedText: string) => void, onSelectionChange?: (selection?: Selection) => void, editable?: boolean }) {
+export function EditableBlock({ content, onEdit, editable, response }: { content: string, onEdit?: (editedText: string) => void, editable?: boolean, response: boolean }) {
   const [state, setState] = useState<EditState>('viewing')
   const [editValue, setEditValue] = useState(content)
   const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
   const viewRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    console.log('EditableBlock content changed, updating editValue')
+  }, [])
 
   function handleEdit() {
     if (viewRef.current) {
@@ -58,8 +62,6 @@ export function EditableBlock({ content, onEdit, onSelectionChange, editable }: 
             value={editValue}
             onChange={(e) => { setEditValue(e.target.value) }}
             onKeyDown={handleKeyDown}
-            onSelectionChange={onSelectionChange}
-            keepSelection={true}
             style={dimensions ? { width: dimensions.width, height: dimensions.height } : undefined}
             className={styles.editableTextarea}
           />
@@ -73,6 +75,14 @@ export function EditableBlock({ content, onEdit, onSelectionChange, editable }: 
           </div>
         </div>
         <div className={styles.editableHint}>&#x2318;&#x23CE; to confirm &middot; Esc to cancel</div>
+      </div>
+    )
+  }
+
+  if (response) {
+    return (
+      <div ref={viewRef} className={`${styles.editableView} ${styles.editableViewResponse}`}>
+        <div className={styles.editableViewContent}>{content}</div>
       </div>
     )
   }
