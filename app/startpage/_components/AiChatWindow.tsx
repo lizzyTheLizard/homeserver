@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, useReducer } from 'react'
-import styles from './AiChatWindow.module.css'
 import { aiChatStateReducer, initialAiChatState } from './AiChatWindowState'
 import { getLocation } from '../_external/weather'
-import Markdown from 'react-markdown'
+import { AiMessageBubble } from './AiMessageBubble'
+import styles from './AiChatWindow.module.css'
 
 export function AiChatWindow() {
   const [state, dispatch] = useReducer(aiChatStateReducer, initialAiChatState)
@@ -48,42 +48,34 @@ export function AiChatWindow() {
   function send(text: string) {
     const t = text.trim()
     if (!t) return
+    const message = t
     dispatch({ type: 'SEND', message: t })
     setInput('')
-    socketRef.current?.send(JSON.stringify({ type: 'message', message: t }))
+    socketRef.current?.send(JSON.stringify({ type: 'message', message }))
+  }
+
+  function handleEdit(editedText: string) {
+    const text = `I updated the text\n~~~input\n${editedText}\n~~~`
+    send(text)
   }
 
   return (
     <div className={styles.window}>
       <div ref={listRef} className={styles.messageList}>
-        {state.messages.map(msg => msg.role === 'assistant'
-          ? (
-              <div key={'message_' + msg.id.toString()} className={styles.aiMessage}>
-                <div className={styles.aiBubble}>
-                  <Markdown>{msg.content}</Markdown>
-                </div>
-              </div>
-            )
-          : (
-              <div key={'message_' + msg.id.toString()} className={styles.userMessage}>
-                <div className={styles.userBubble}>{msg.content}</div>
-              </div>
-            ),
-        )}
-
+        {state.messages.map((msg, index) => (
+          <AiMessageBubble
+            key={'message_' + msg.id.toString()}
+            role={msg.role}
+            content={msg.content}
+            editable={state.current !== 'working' && msg.role === 'assistant' && index === state.messages.length - 1}
+            onEdit={handleEdit}
+          />
+        ))}
         {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (
-          <div className={styles.typingIndicator}>
-            <span className={styles.dot} />
-            <span className={styles.dot} style={{ animationDelay: '0.18s' }} />
-            <span className={styles.dot} style={{ animationDelay: '0.36s' }} />
-          </div>
+          <AiMessageBubble role="assistant" content="" typing={true} editable={false} />
         )}
         {(state.currentMessage.trim().length > 0) && (
-          <div className={styles.aiMessage}>
-            <div className={styles.aiBubble}>
-              <Markdown>{state.currentMessage}</Markdown>
-            </div>
-          </div>
+          <AiMessageBubble role="assistant" content={state.currentMessage} editable={false} />
         )}
       </div>
 
