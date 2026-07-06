@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import styles from './EditableBlock.module.css'
 
@@ -12,10 +12,6 @@ export function EditableBlock({ content, onEdit, editable, response }: { content
   const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
   const viewRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    console.log('EditableBlock content changed, updating editValue')
-  }, [])
 
   function handleEdit() {
     if (viewRef.current) {
