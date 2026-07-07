@@ -7,7 +7,7 @@ import type Stream from 'stream'
 import type { CookieStore } from './app/shared/auth/auth'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
-main().catch((e: unknown) => { console.error('> Error starting server', e) })
+main().catch((e: unknown) => { console.error('Error starting server', e) })
 
 async function main() {
   const options = await loadConfig()
@@ -122,6 +122,7 @@ async function registerWebSockets(server: Server, logger: Logger) {
   })
   logger.debug(`Registered WebSocket(s) ${webSocketHandlers.map(h => h.name).join(', ')}`)
 }
+
 function withAuthentication(req: IncomingMessage, socket: Stream.Duplex, logger: Logger, fn: () => Promise<void> | void): void {
   parseCookie(req)
     .then(async (c) => {
