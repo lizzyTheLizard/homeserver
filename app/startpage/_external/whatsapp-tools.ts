@@ -2,6 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod/v4'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { getWAFasade } from './whatsapp'
+import { Chat } from '@lizzythelizard/whatsapp-mcp'
 
 const chatSchema = z.object({
   jid: z.string().describe('The chat ID'),
@@ -97,3 +98,11 @@ export const setWhatsappChatReadStatusTool = tool({
     return read ? 'Chat marked as read' : 'Chat marked as unread'
   },
 })
+
+export async function getUnarchivedWhatsAppChats(): Promise<Chat[]> {
+  const user = await getAuthenticatedUserSession('startpage')
+  const wa = await getWAFasade(user)
+  return wa.getChats()
+    .filter(c => !c.archived)
+    .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp)
+}

@@ -2,7 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { getAuthenticatedUserSession, type UserSession } from '@/app/shared/auth/auth'
 import { getWAFasade } from './whatsapp'
 import { createStore, type DataStore, type WhatsAppStore } from '@lizzythelizard/whatsapp-mcp'
-import { listWhatsappChatsTool, listAllWhatsappChatsTool, getWhatsappMessagesTool, sendWhatsappMessageTool, archiveWhatsappChatTool, setWhatsappChatReadStatusTool } from './whatsapp-tools'
+import { listWhatsappChatsTool, listAllWhatsappChatsTool, getWhatsappMessagesTool, sendWhatsappMessageTool, archiveWhatsappChatTool, setWhatsappChatReadStatusTool, getUnarchivedWhatsAppChats } from './whatsapp-tools'
 
 vi.mock('@/app/shared/auth/auth', async () => {
   const actual = await vi.importActual('@/app/shared/auth/auth')
@@ -174,6 +174,70 @@ describe('setWhatsappChatReadStatusTool', () => {
     expect(result).toBe('Chat marked as unread')
     expect(setReadMock).toHaveBeenCalledWith('123456789@s.whatsapp.net', false)
     expect(setReadMock).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('getUnarchivedWhatsAppChats', () => {
+  test('returns only unarchived chats', async () => {
+    const result = await getUnarchivedWhatsAppChats()
+
+    expect(result).toHaveLength(2)
+    expect(result.every(c => !c.archived)).toBe(true)
+  })
+
+  test('excludes archived chats', async () => {
+    const result = await getUnarchivedWhatsAppChats()
+
+    const jids = result.map(c => c.jid)
+    expect(jids).not.toContain('987654321@s.whatsapp.net')
+  })
+
+  test('sorts chats by lastMessageTimestamp descending', async () => {
+    const result = await getUnarchivedWhatsAppChats()
+
+    for (let i = 0; i < result.length - 1; i++) {
+      expect(result[i].lastMessageTimestamp).toBeGreaterThanOrEqual(result[i + 1].lastMessageTimestamp)
+    }
+  })
+
+  test('returns empty array when no unarchived chats exist', async () => {
+    const emptyStore = createStore({
+      chats: {},
+      contacts: {},
+      messages: {},
+      auth: '',
+    })
+    vi.mocked(getWAFasade).mockResolvedValue({
+      ...emptyStore,
+      getStatus: () => ({ type: 'ready' as const }),
+      sendMessage: sendMessageMock,
+      setRead: setReadMock,
+      setArchived: setArchivedMock,
+    })
+
+    const result = await getUnarchivedWhatsAppChats()
+    expect(result).toEqual([])
+  })
+
+  test('calls getAuthenticatedUserSession with startpage', async () => {
+    await getUnarchivedWhatsAppChats()
+
+    expect(getAuthenticatedUserSession).toHaveBeenCalledWith('startpage')
+  })
+
+  test('returns chats with correct properties', async () => {
+    const result = await getUnarchivedWhatsAppChats()
+
+    expect(result).toHaveLength(2)
+    const groupChat = result.find(c => c.isGroup)
+    expect(groupChat).toBeDefined()
+    expect(groupChat?.name).toBe('Family Group')
+    expect(groupChat?.unreadCount).toBe(5)
+
+    const johnChat = result.find(c => !c.isGroup)
+    expect(johnChat).toBeDefined()
+    expect(johnChat?.name).toBe('John Doe')
+    expect(johnChat?.unreadCount).toBe(3)
   })
 })
 

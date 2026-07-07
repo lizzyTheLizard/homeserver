@@ -3,7 +3,7 @@ import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from '.
 import { config } from '@/app/shared/config'
 import { getLocationDescription, locationByNameTool } from './geolocation'
 import { getSkillTools } from './skills'
-import { listWhatsappChatsTool, listAllWhatsappChatsTool, getWhatsappMessagesTool, sendWhatsappMessageTool, archiveWhatsappChatTool, setWhatsappChatReadStatusTool } from './whatsapp-tools'
+import { listWhatsappChatsTool, listAllWhatsappChatsTool, getWhatsappMessagesTool, sendWhatsappMessageTool, archiveWhatsappChatTool, setWhatsappChatReadStatusTool, getUnarchivedWhatsAppChats } from './whatsapp-tools'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from './llmLogger'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
@@ -72,6 +72,7 @@ async function getSystemMessage(initialContext: InitialContext): Promise<string>
     location: initialContext.location,
     locationDescription: await getLocationDescription(initialContext.location),
     weather: await shortWeatherOverview(initialContext.location.lat, initialContext.location.lon),
+    unarchivedWhatsAppChats: await getUnarchivedWhatsAppChats(),
   }
   const instructions = `${systemMessage}\n\nThe current context is ${JSON.stringify(context)}  `
   return instructions
