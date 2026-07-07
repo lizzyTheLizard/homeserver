@@ -59,7 +59,7 @@ Present a draft of the updated issue to the user before updating it. Format it u
 
 ### Step 5: Draft the issue for review
 
-Present a draft of the updated issue to the user before updating it. Format it using `issue-template.md` (in this skill folder) and ask the user to confirm or request changes. Do not update the issue until the user approves the draft.
+Present a draft to the user before updating the issue. Format it using `issue-template.md` (in this skill folder) and ask the user to confirm or request changes. If the user request changes, update the draft, show the full draft to the user and ask for confirmation again. Repeat until the user approves the draft without changes. Do not continue until the user explicitely approves the draft.
 
 
 ### Step 6: Update the issue body
