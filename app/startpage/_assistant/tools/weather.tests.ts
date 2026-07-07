@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, expect, test } from 'vitest'
-import { detailedWeatherTool, weatherForcastTool } from './weather'
+import { getWeatherTools } from './weather'
 import { Temporal } from '@js-temporal/polyfill'
 
 const executionOptions = { toolCallId: 'test', messages: [], context: {} }
+const weatherTools = getWeatherTools()
 
 describe('weatherForcastTool', () => {
   test('should return a valid weather forecast', async () => {
     const today = Temporal.Now.plainDateISO()
     const tomorrow = today.add({ days: 1 })
-    const execute = weatherForcastTool.execute
+    const execute = weatherTools.get_weather_forecast.execute
     const result = await execute({ startDay: today.toString(), latitude: 52.52, longitude: 13.404 }, executionOptions)
     const parsedResult = JSON.parse(result as string) as Record<string, Record<string, unknown>>
     expect(parsedResult).toBeDefined()
@@ -43,7 +44,7 @@ describe('weatherForcastTool', () => {
 describe('detailedWeatherTool', () => {
   test('should return a valid daily weather detail', async () => {
     const today = Temporal.Now.plainDateISO()
-    const execute = detailedWeatherTool.execute
+    const execute = weatherTools.get_detailed_weather.execute
     const result = await execute({ date: today.toString(), latitude: 52.52, longitude: 13.405 }, executionOptions)
     const parsedResult = JSON.parse(result as string) as Record<string, Record<string, unknown>>
     expect(parsedResult).toBeDefined()

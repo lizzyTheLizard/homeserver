@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { getLocationDescription, getLocationByName, locationByNameTool } from './geolocation'
+import { getGeolocationTools, getLocationDescription, getLocationByName } from './geolocation'
 
 describe('getLocationDescription', () => {
   test('should return a location description for Berlin', async () => {
@@ -22,7 +22,7 @@ describe('getLocationByName', () => {
 
 describe('locationByNameTool', () => {
   test('should return coordinates for Tokyo within 1 degree', async () => {
-    const execute = locationByNameTool.execute
+    const execute = getGeolocationTools().get_location_by_name.execute
     const result = await execute({ name: 'Tokyo' }, { toolCallId: 'test', messages: [], context: {} }) as { lat: number, lon: number }
     expect(result.lat).toBeGreaterThan(35)
     expect(result.lat).toBeLessThan(36)
