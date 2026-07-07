@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { getGeolocationTools, getLocationDescription, getLocationByName } from './geolocation'
+import { getGeolocationTools, getLocationDescription } from './geolocation'
 
 describe('getLocationDescription', () => {
   test('should return a location description for Berlin', async () => {
@@ -9,21 +9,15 @@ describe('getLocationDescription', () => {
   })
 })
 
-describe('getLocationByName', () => {
-  test('should return coordinates for Paris', async () => {
-    const result = await getLocationByName('Paris')
-    expect(result).toBeDefined()
-    expect(result.lat).toBeGreaterThan(48)
-    expect(result.lat).toBeLessThan(49)
-    expect(result.lon).toBeGreaterThan(2)
-    expect(result.lon).toBeLessThan(3)
-  })
-})
-
 describe('locationByNameTool', () => {
   test('should return coordinates for Tokyo within 1 degree', async () => {
-    const tool: any = getGeolocationTools().get_location_by_name!
-    const result = await tool.execute({ name: 'Tokyo' }, { toolCallId: 'test', messages: [], context: {} }) as { lat: number, lon: number }
+    const tools = getGeolocationTools()
+    const { execute } = tools.get_location_by_name
+    if (!execute) throw new Error('get_location_by_name tool not found')
+    const result = await execute(
+      { name: 'Tokyo' },
+      { toolCallId: 'test', messages: [], context: {} },
+    ) as { lat: number, lon: number }
     expect(result.lat).toBeGreaterThan(35)
     expect(result.lat).toBeLessThan(36)
     expect(result.lon).toBeGreaterThan(139)
