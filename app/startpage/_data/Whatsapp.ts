@@ -27,7 +27,6 @@ export async function getWhatsappState(client: Queryable, ownerEmail: string): P
 
 export async function setWhatsappState(client: Queryable, ownerEmail: string, data: WhatsAppStore): Promise<void> {
   const totalStart = Date.now()
-  logger.debug(`Storing whatsApp state for owner ${ownerEmail}`)
 
   // First update the auth data. This is a single row, so we can just update it.
   const resultAuth = await client.query('SELECT * FROM wa_auth WHERE owner_email = $1', [ownerEmail])
@@ -35,7 +34,6 @@ export async function setWhatsappState(client: Queryable, ownerEmail: string, da
     await client.query('UPDATE wa_auth SET auth = $1 WHERE owner_email = $2', [data.auth, ownerEmail])
   else
     await client.query('INSERT INTO wa_auth (owner_email, auth) VALUES ($1, $2)', [ownerEmail, data.auth])
-  logger.debug(`Updated wa_auth for owner ${ownerEmail}`)
 
   // Collect all data to be inserted/updated/deleted
   const rows: { type: string, id: string, obj: string, hash: string }[] = []
@@ -63,7 +61,6 @@ async function deleteStaledData(client: Queryable, ownerEmail: string, existingD
   // Delete all rows that are not in the new data any more
   const toDelete = existingData.filter(row => !rows.some(r => r.type === row.type && r.id === row.id)).map(row => row.id)
   await client.query('DELETE FROM wa_data WHERE owner_email = $1 AND id IN ($2)', [ownerEmail, toDelete])
-  logger.debug(`Deleted ${toDelete.length.toString()} rows from wa_data for owner ${ownerEmail}`)
 }
 
 const batchSize = 100
@@ -72,13 +69,11 @@ const maxBatches = 100
 async function updateChangedData(client: Queryable, ownerEmail: string, existingData: ExistingWhatsAppDataRow[], rows: WhatsAppDataRow[]): Promise<void> {
   // With the update we have to trick a bit... There can be A LOT of rows, so we have to do it in batches
   const toUpdate = rows.filter(row => existingData.some(r => r.type === row.type && r.id === row.id && r.hash !== row.hash))
-  logger.debug(`Updating ${toUpdate.length.toString()} rows in wa_data for owner ${ownerEmail}`)
   let alredyInserted = 0
   for (let i = 0; i < maxBatches; i += 1) {
     const batch = toUpdate.slice(alredyInserted, alredyInserted + batchSize)
     // Check if we are done
     if (batch.length === 0) {
-      logger.debug(`Updated ${alredyInserted.toString()} rows in wa_data for owner ${ownerEmail}`)
       return
     }
     // Pg does not directely support updating multiple rows. So we have to create the query manually. Use placeholders for the values to avoid SQL injection.
@@ -94,7 +89,6 @@ async function updateChangedData(client: Queryable, ownerEmail: string, existing
 async function insertNewData(client: Queryable, ownerEmail: string, existingData: ExistingWhatsAppDataRow[], rows: WhatsAppDataRow[]): Promise<void> {
   // With the insert we have to trick a bit... There can be A LOT of rows, so we have to do it in batches
   const toInsert = rows.filter(row => !existingData.some(r => r.type === row.type && r.id === row.id))
-  logger.debug(`Inserting ${toInsert.length.toString()} rows into wa_data for owner ${ownerEmail}`)
   const batchSize = 100
   const maxBatches = 100
   let alredyInserted = 0
@@ -102,7 +96,6 @@ async function insertNewData(client: Queryable, ownerEmail: string, existingData
     const batch = toInsert.slice(alredyInserted, alredyInserted + batchSize)
     // Check if we are done
     if (batch.length === 0) {
-      logger.debug(`Inserted ${alredyInserted.toString()} rows into wa_data for owner ${ownerEmail}`)
       return
     }
     // Pg does not directely support inserting multiple rows. So we have to create the query manually. Use placeholders for the values to avoid SQL injection.

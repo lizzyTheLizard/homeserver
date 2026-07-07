@@ -37,19 +37,27 @@ async function log(res: Response, requestStartTime: number) {
   logResponse(responseSize, requestStartTime)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function logRequest(init: RequestInit | undefined) {
+  // uncomment for full log
+  /*
   const bodyString = init?.body ? String(init.body) : ''// eslint-disable-line @typescript-eslint/no-base-to-string
   const requestSize = bodyString.length
   logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
-  // console.log(bodyString)
+  console.log(bodyString)
+  */
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function logResponseChunk(chunkText: string, first: boolean, requestStartTime: number) {
+  // uncomment for full log
+  /*
   if (first) {
     const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
     logger.debug(`LLM first response of size ${chunkText.length.toString()} bytes received in ${timeToFirstTokenInS}s`)
   }
-  // console.log(chunkText)
+  console.log(chunkText)
+  */
 }
 
 function logResponse(responseSize: number, requestStartTime: number) {

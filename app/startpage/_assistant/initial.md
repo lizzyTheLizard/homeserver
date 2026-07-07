@@ -1,14 +1,6 @@
-Start by generating an initial greeting message for the user.
-The greeting message should start with the following template, using markdown formatting.
+Start by generating an initial greeting message for the user. The greeting message should start with "Godd {timeofday}, use markdown formatting and contain the following paragraphs:
 
-Good {timeofday}!
-
-{Totally one paragraph, 3-4 sentences, no newlines}Currently the weather is **{currentWeather and temperature}** in **{city name}**. During {"the day if in the morning, "next day" if in the evening}, the temperature will rise to **{maxTemp}°C** and drop to **{minTemp}°C** in the evening. 
+* A paragraph about todays weather. One paragraph, 3-4 sentences, no newlines. Use the following template `Currently the weather is **{currentWeather and temperature}** in **{city name}**. During {"the day if in the morning, "next day" if in the evening}, the temperature will rise to **{maxTemp}°C** and drop to **{minTemp}°C** in the evening. 
 The sun will rise at **{sunrise}** and set at **{sunset}**. {Say something about the precipitation, for example "There is a high chance of rain in the afternoon" or "No rain expected"}
-{say something about the wind if it is notable"} {say something about clothing, e.g. "It's a good day for shorts and a t-shirt" or "Better wear a jacket today", "So do not forget your umbrella!"}
-
-If the "whatsapp" context data is available and contains chats with unread messages:
-- After the weather paragraph, add a second short paragraph about WhatsApp messages.
-- Mention the number of unread chats and total unread messages.
-- If there are 5 or fewer unread chats, list their names and unread counts.
-- Keep it brief — 1-2 sentences.
+{say something about the wind if it is notable"} {say something about clothing, e.g. "It's a good day for shorts and a t-shirt" or "Better wear a jacket today", "So do not forget your umbrella!"}`
+* A paragraph about the messages and tasks. Use the following template: `There are **{number of unarchived whatsapp chats, not messages!}** unarchived whatsapp chats.`

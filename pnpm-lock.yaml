@@ -18,8 +18,8 @@ importers:
         specifier: ^0.5.1
         version: 0.5.1
       '@lizzythelizard/whatsapp-mcp':
-        specifier: ^1.0.0
-        version: 1.0.0(jimp@1.6.1)(sharp@0.34.5)
+        specifier: ^1.1.0
+        version: 1.1.0(jimp@1.6.1)(sharp@0.34.5)
       ai:
         specifier: ^7.0.11
         version: 7.0.11(zod@4.4.3)
@@ -960,8 +960,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@lizzythelizard/whatsapp-mcp@1.0.0':
-    resolution: {integrity: sha512-wLqMmSl9r7SItFytFKxx1DN6KbHBZ6Zme6FR2yeiqazFeNvCcY8Rj+5Dhn8DPHL7cTCMcgim9fA0VJYQO1X5tw==}
+  '@lizzythelizard/whatsapp-mcp@1.1.0':
+    resolution: {integrity: sha512-d474coKfA41DeOhZPL3LHMtbdEOX9xibdm2Th33HPxa/2r3tR6xlmllV3oTzg0SfuUjMT8fKGg9FfnGuTHXudA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -4949,7 +4949,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@lizzythelizard/whatsapp-mcp@1.0.0(jimp@1.6.1)(sharp@0.34.5)':
+  '@lizzythelizard/whatsapp-mcp@1.1.0(jimp@1.6.1)(sharp@0.34.5)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
       '@whiskeysockets/baileys': 7.0.0-rc13(jimp@1.6.1)(sharp@0.34.5)

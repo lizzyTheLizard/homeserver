@@ -88,7 +88,7 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
         data={chats.map(chat => format(chat))}
         columns={columns}
         onRowClick={showMessages}
-        initialSortingOrder={[{ key: 'unread_count', direction: 'DESC' }]}
+        initialSortingOrder={[{ key: 'archived', direction: 'ASC' }, { key: 'lastMessage', direction: 'DESC' }]}
         renderMobile={renderMobile}
         searchLabel="Search chats…"
       />

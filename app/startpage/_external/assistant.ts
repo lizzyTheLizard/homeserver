@@ -3,7 +3,7 @@ import { getWeatherTools, shortWeatherOverview } from '../_assistant/tools/weath
 import { config } from '@/app/shared/config'
 import { getGeolocationTools, getLocationDescription } from '../_assistant/tools/geolocation'
 import { getSkillTools } from '../_assistant/tools/skills'
-import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from '../_assistant/tools/whatsapp-tools'
+import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from '../_assistant/tools/whatsapp'
 import { UserSession } from '@/app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from '../_assistant/llmLogger'
@@ -15,10 +15,10 @@ const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const actionPrompt = fs.readFileSync(join(ASSISTANT_DIR, 'action.md'), 'utf-8')
 const initialMessage = fs.readFileSync(join(ASSISTANT_DIR, 'initial.md'), 'utf-8')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
-const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather', 'Return an editable field']
+const initialActions = ['Get WhatsApp Overview', 'Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast']
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: createLoggingFetch(globalThis.fetch) })
 const model = opencode('deepseek-v4-flash')
-const agentSettings = { model, reasoning: 'none' as const, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
+const agentSettings = { model, reasoning: 'none' as const, temperature: 0.2, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
@@ -92,7 +92,7 @@ async function send(handler: AssistantHandler, prompt: string, fixedActions?: st
     const toolCalls = await result.toolCalls
     if (toolCalls.length == 0) break
     if (i == 4) throw new Error('Assistant made too many tool calls, stopping after 5 iterations')
-    logger.debug(`Assistant made ${toolCalls.length.toString()} tool calls, continuing to next iteration`)
+    logger.debug(`Assistant called tools ${toolCalls.map(t => t.toolName).join(', ')}`)
     handler.emit({ type: 'tool_call' })
   }
   handler.emit({ type: 'finished_response' })
