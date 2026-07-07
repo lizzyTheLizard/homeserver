@@ -22,8 +22,8 @@ describe('getLocationByName', () => {
 
 describe('locationByNameTool', () => {
   test('should return coordinates for Tokyo within 1 degree', async () => {
-    const execute = getGeolocationTools().get_location_by_name.execute
-    const result = await execute({ name: 'Tokyo' }, { toolCallId: 'test', messages: [], context: {} }) as { lat: number, lon: number }
+    const tool: any = getGeolocationTools().get_location_by_name!
+    const result = await tool.execute({ name: 'Tokyo' }, { toolCallId: 'test', messages: [], context: {} }) as { lat: number, lon: number }
     expect(result.lat).toBeGreaterThan(35)
     expect(result.lat).toBeLessThan(36)
     expect(result.lon).toBeGreaterThan(139)

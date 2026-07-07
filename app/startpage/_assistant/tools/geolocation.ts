@@ -36,7 +36,7 @@ export function getGeolocationTools(): ToolSet {
   }
 }
 
-async function getLocationByName(placeName: string): Promise<{ lat: number, lon: number }> {
+export async function getLocationByName(placeName: string): Promise<{ lat: number, lon: number }> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${placeName}&format=jsonv2`
     const response = await fetch(url, { headers: { 'User-Agent': 'gutschi.site' } })

@@ -4,7 +4,7 @@ import { createAssistantInstance, type AssistantEvent } from './assistant'
 describe('createAssistantInstance', () => {
   test('should initialize and return a greeting with actions', async () => {
     const events: AssistantEvent[] = []
-    const assistant = createAssistantInstance()
+    const assistant = createAssistantInstance({ name: 'Test User', email: 'test@test.com', applications: ['startpage'] })
     assistant.on((event) => { events.push(event) })
 
     await new Promise<void>((resolve) => {

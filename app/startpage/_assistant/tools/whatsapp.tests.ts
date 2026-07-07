@@ -2,10 +2,10 @@ import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { type UserSession } from '@/app/shared/auth/auth'
 import { getWAFasade } from '../../_external/whatsapp'
 import { createStore, type WhatsAppStore, type DataStore } from '@lizzythelizard/whatsapp-mcp'
-import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from '../../_external/whatsapp-tools'
+import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from './whatsapp'
 
-vi.mock('./whatsapp', async () => {
-  const actual = await vi.importActual('./whatsapp')
+vi.mock('../../_external/whatsapp', async () => {
+  const actual = await vi.importActual('../../_external/whatsapp')
   return {
     ...actual,
     getWAFasade: vi.fn(),
