@@ -5,7 +5,10 @@ description: This skill must be used when the user asks for a weather forecast, 
 
 # Workflow
 
-Check if you have the needed data from previous conversation. If not, use the tools get_detailed_weather and get_weather_forecast to get the required information. If the user has not provided a location, use the current location. If the user has provided a location without coordinates, use the get_location_by_name tool to fetch the coordinates.
+Check if you have the needed data from the previous conversation. If not:
+- Use `get_detailed_weather` and `get_weather_forecast` to get the required information.
+- If the user has not provided a location, use the current location.
+- If the user has provided a location without coordinates, use `get_location_by_name` to fetch the coordinates.
 
-If you have the needed data, use the template from DAILY.md or WEEKLY.md to provide the weather forecast to the user. If needed you can also create a combination of both.
+If you have the needed data, use the template from DAILY.md or WEEKLY.md to provide the weather forecast to the user. If needed, you can also create a combination of both.
 

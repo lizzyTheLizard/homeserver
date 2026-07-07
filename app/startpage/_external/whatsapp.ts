@@ -2,9 +2,9 @@
 import { UserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'
-import { createStore, createHandler, DataStore, WhatsAppStore, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import type { DataStore, WhatsAppStore, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import { getWhatsappState, setWhatsappState } from '../_data/Whatsapp'
-import { ILogger } from '@lizzythelizard/whatsapp-mcp/dist/logger'
+import type { ILogger } from '@lizzythelizard/whatsapp-mcp/dist/logger'
 import { logger } from '@/app/shared/logger'
 import { Mutex } from '@electric-sql/pglite'
 
@@ -18,6 +18,9 @@ const inactivityTimeoutMs = 10 * 1000
 
 export interface WaFasade extends Omit<WhatsAppStore, 'bind' | 'reset'> {
   getStatus(): SyncStatus
+  sendMessage(jid: string, text: string): Promise<void>
+  setRead(jid: string, read: boolean): Promise<void>
+  setArchived(jid: string, archived: boolean): Promise<void>
 }
 
 export async function getWAFasade(user: UserSession): Promise<WaFasade> {
@@ -36,12 +39,14 @@ export async function getWAFasade(user: UserSession): Promise<WaFasade> {
 }
 
 async function createNewRunningSync(user: UserSession): Promise<RunningSync> {
+  // Loading the library dynamically to avoid issues with ESM modules and reduces startup work
+  const { createStore, createHandler } = await import('@lizzythelizard/whatsapp-mcp')
   const inputData = await readDataFromDb(user)
   const store = createStore(inputData, { writeData: data => updateData(user, data), logger: walogger })
   const handler = createHandler(store, { logger: walogger, name: 'Gutschi.site' })
   await handler.start()
   return {
-    facade: { ...store, getStatus: () => handler.getStatus() },
+    facade: { ...store, ...handler },
     timeout: createTimeout(() => { handler.close() }, user),
     close: () => { handler.close() },
   }

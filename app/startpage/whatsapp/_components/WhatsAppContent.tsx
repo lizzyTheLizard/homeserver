@@ -9,7 +9,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { getStatus, loadMessages } from '../server'
 import { MessageBubble } from './MessageBubble'
 import styles from './WhatsAppContent.module.css'
-import { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import QRCode from 'react-qr-code'
 
 const columns = [
@@ -88,7 +88,7 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
         data={chats.map(chat => format(chat))}
         columns={columns}
         onRowClick={showMessages}
-        initialSortingOrder={[{ key: 'unread_count', direction: 'DESC' }]}
+        initialSortingOrder={[{ key: 'archived', direction: 'ASC' }, { key: 'lastMessage', direction: 'DESC' }]}
         renderMobile={renderMobile}
         searchLabel="Search chats…"
       />

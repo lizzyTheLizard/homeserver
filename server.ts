@@ -4,10 +4,10 @@ import type { Server, IncomingMessage, ServerResponse } from 'http'
 import type { Logger } from 'winston'
 import type { WebSocketServer } from 'ws'
 import type Stream from 'stream'
-import type { CookieStore } from './app/shared/auth/auth'
+import type { CookieStore, UserSession } from './app/shared/auth/auth'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
-main().catch((e: unknown) => { console.error('> Error starting server', e) })
+main().catch((e: unknown) => { console.error('Error starting server', e) })
 
 async function main() {
   const options = await loadConfig()
@@ -100,19 +100,24 @@ async function isAllowed(req: IncomingMessage, res: ServerResponse): Promise<boo
   return false
 }
 
+interface WebSocketHandler {
+  name: string
+  canHandle: (request: IncomingMessage) => boolean
+  createServer: (user: UserSession) => WebSocketServer
+}
+
 async function registerWebSockets(server: Server, logger: Logger) {
   const { createAssistantWebSocketServer } = await import('./app/server')
-  const webSocketHandlers: { name: string, server: WebSocketServer, canHandle: (request: IncomingMessage) => boolean }[] = [
-    createAssistantWebSocketServer(),
-  ]
+  const webSocketHandlers: WebSocketHandler[] = [createAssistantWebSocketServer()]
   server.on('upgrade', (request, socket, head) => {
     try {
       const url = request.url
       if (!url) throw new Error('WebSocket upgrade request received without URL')
       const handler = webSocketHandlers.find(h => h.canHandle(request))
       if (!handler) return
-      withAuthentication(request, socket, logger, () => {
-        handler.server.handleUpgrade(request, socket, head, (ws) => { handler.server.emit('connection', ws, request) })
+      withAuthentication(request, socket, logger, (user) => {
+        const server = handler.createServer(user)
+        server.handleUpgrade(request, socket, head, (ws) => { server.emit('connection', ws, request) })
         logger.info(`WS ${url} connected`)
       })
     }
@@ -122,12 +127,13 @@ async function registerWebSockets(server: Server, logger: Logger) {
   })
   logger.debug(`Registered WebSocket(s) ${webSocketHandlers.map(h => h.name).join(', ')}`)
 }
-function withAuthentication(req: IncomingMessage, socket: Stream.Duplex, logger: Logger, fn: () => Promise<void> | void): void {
+
+function withAuthentication(req: IncomingMessage, socket: Stream.Duplex, logger: Logger, fn: (user: UserSession) => Promise<void> | void): void {
   parseCookie(req)
     .then(async (c) => {
       const { getAuthenticatedUserSession } = await import('./app/shared/auth/auth')
-      await getAuthenticatedUserSession('startpage', c)
-      await fn()
+      const user = await getAuthenticatedUserSession('startpage', c)
+      await fn(user)
     })
     .catch((e: unknown) => { handleWsConnectionError(e, socket, logger) })
 }

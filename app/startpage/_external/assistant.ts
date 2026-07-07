@@ -1,10 +1,12 @@
 import { generateText, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
-import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from './weather'
+import { getWeatherTools, shortWeatherOverview } from '../_assistant/tools/weather'
 import { config } from '@/app/shared/config'
-import { getLocationDescription, locationByNameTool } from './geolocation'
-import { getSkillTools } from './skills'
+import { getGeolocationTools, getLocationDescription } from '../_assistant/tools/geolocation'
+import { getSkillTools } from '../_assistant/tools/skills'
+import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from '../_assistant/tools/whatsapp'
+import { UserSession } from '@/app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
-import { createLoggingFetch } from './llmLogger'
+import { createLoggingFetch } from '../_assistant/llmLogger'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import fs from 'fs'
 import { join } from 'path'
@@ -13,11 +15,10 @@ const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const actionPrompt = fs.readFileSync(join(ASSISTANT_DIR, 'action.md'), 'utf-8')
 const initialMessage = fs.readFileSync(join(ASSISTANT_DIR, 'initial.md'), 'utf-8')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
-const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather', 'Return an editable field']
-const tools = { ...getSkillTools(join(ASSISTANT_DIR, 'skills')), get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool, get_location_by_name: locationByNameTool } satisfies ToolSet
+const initialActions = ['Get WhatsApp Overview', 'Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast']
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: createLoggingFetch(globalThis.fetch) })
 const model = opencode('deepseek-v4-flash')
-const agentSettings = { model, reasoning: 'none' as const, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
+const agentSettings = { model, reasoning: 'none' as const, temperature: 0.2, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
@@ -32,14 +33,14 @@ export interface Assistant {
   send(message: string): Promise<void>
 }
 
-export function createAssistantInstance(): Assistant {
+export function createAssistantInstance(user: UserSession): Assistant {
   const listeners: ((event: AssistantEvent) => void)[] = []
-  const handler: AssistantHandler = { messages: [], instructions: '', emit: (e) => {
+  const handler: AssistantHandler = { messages: [], instructions: '', tools: {}, emit: (e) => {
     listeners.forEach((l) => { l(e) })
   } }
   return {
     on: listener => listeners.push(listener),
-    init: initialContext => initialize(handler, initialContext),
+    init: initialContext => initialize(user, handler, initialContext),
     send: (message) => { return send(handler, message, undefined, true) },
   }
 }
@@ -47,20 +48,28 @@ export function createAssistantInstance(): Assistant {
 interface AssistantHandler {
   messages: ModelMessage[]
   instructions: string
+  tools: ToolSet
   emit: (event: AssistantEvent) => void
 }
 
-async function initialize(handler: AssistantHandler, initialContext: InitialContext): Promise<void> {
-  handler.instructions = await getSystemMessage(initialContext)
+async function initialize(user: UserSession, handler: AssistantHandler, initialContext: InitialContext): Promise<void> {
+  handler.tools = {
+    ...getSkillTools(join(ASSISTANT_DIR, 'skills')),
+    ...getWeatherTools(),
+    ...getGeolocationTools(),
+    ...getWhatsappAppTools(user),
+  }
+  handler.instructions = await getSystemMessage(initialContext, user)
   await send(handler, initialMessage, initialActions, false)
 }
 
-async function getSystemMessage(initialContext: InitialContext): Promise<string> {
+async function getSystemMessage(initialContext: InitialContext, user: UserSession): Promise<string> {
   const context = {
     time: new Date().toLocaleString(),
     location: initialContext.location,
     locationDescription: await getLocationDescription(initialContext.location),
     weather: await shortWeatherOverview(initialContext.location.lat, initialContext.location.lon),
+    unarchivedWhatsAppChats: await getUnarchivedWhatsAppChats(user),
   }
   const instructions = `${systemMessage}\n\nThe current context is ${JSON.stringify(context)}  `
   return instructions
@@ -69,7 +78,7 @@ async function getSystemMessage(initialContext: InitialContext): Promise<string>
 async function send(handler: AssistantHandler, prompt: string, fixedActions?: string[], useTools?: boolean): Promise<void> {
   handler.messages.push({ role: 'user', content: prompt })
   const options = { ...agentSettings,
-    tools: (useTools ? tools : undefined) as ToolSet,
+    tools: (useTools ? handler.tools : undefined),
     toolChoice: (useTools ? 'auto' : 'none') as ToolChoice<Record<string, unknown>>,
     instructions: handler.instructions,
     messages: handler.messages,
@@ -83,7 +92,7 @@ async function send(handler: AssistantHandler, prompt: string, fixedActions?: st
     const toolCalls = await result.toolCalls
     if (toolCalls.length == 0) break
     if (i == 4) throw new Error('Assistant made too many tool calls, stopping after 5 iterations')
-    logger.debug(`Assistant made ${toolCalls.length.toString()} tool calls, continuing to next iteration`)
+    logger.debug(`Assistant called tools ${toolCalls.map(t => t.toolName).join(', ')}`)
     handler.emit({ type: 'tool_call' })
   }
   handler.emit({ type: 'finished_response' })

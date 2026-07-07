@@ -47,6 +47,9 @@ Custom PG type parsers in `TYPE_MAPPINGS` (dates stay as strings, numerics becom
 - Server side actions for each page are defined in a `server.ts` located right beside the `page.ts`
 - All CSS is written in CSS modules names `*.module.css` localted right beside the module. Do not add inlie CSS in HTML files
 - To guard a component or block that must only render on the client, use the `useIsClient()` hook from `app/shared/_helper/useIsClient.ts`:
+- Keep "import" statements on one line, do not add newlines within an import statement
+- Write each react component into its dedicated file, do not have multiple components in one file
+- Put external or test functions first in file, and move internal helper functions to the end of the file
 
 ## Test Setup
 

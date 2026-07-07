@@ -26,7 +26,6 @@ function loadSkillTool(skillDirPath: string): ParsedSkill | undefined {
   const metadata = parseMetadata(skillDirPath)
   if (!metadata) return undefined
 
-  logger.debug(`Loading skill from ${skillDirPath}`)
   return {
     name: metadata.name,
     description: metadata.description,
@@ -71,7 +70,6 @@ function parseMetadata(skillDirPath: string): { name: string, description: strin
 }
 
 async function loadSkill(name: string, skillDirPath: string): Promise<string> {
-  logger.debug(`Loading skill ${name} from ${skillDirPath}`)
   const files = await fs.promises.readdir(skillDirPath)
   const fileContents: Record<string, string> = {}
   for (const file of files) {

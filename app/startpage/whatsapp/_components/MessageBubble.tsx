@@ -2,7 +2,7 @@
 
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MessageBubble.module.css'
-import { Message } from '@lizzythelizard/whatsapp-mcp'
+import type { Message } from '@lizzythelizard/whatsapp-mcp'
 
 export function MessageBubble({ message }: { message: Message }) {
   return (

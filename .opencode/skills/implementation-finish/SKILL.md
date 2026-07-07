@@ -27,6 +27,14 @@ git rev-parse --abbrev-ref HEAD
 
 If not on a matching branch, stop and explain.
 
+### Step 2: Check for uncommitted changes
+
+```bash
+git status --porcelain
+```
+
+If there are uncommitted changes, stop and ask the user how to handle them (stash, commit, or discard) before proceeding.
+
 ### Step 2: Fetch the issue details
 
 ```bash
@@ -43,7 +51,7 @@ Only proceed once all tasks are resolved.
 
 ### Step 4: Run full checks
 
-Run all checks in order. Fix any issues before proceeding:
+Run all checks in order. Fix any issues before proceeding. Do not do any commits or pushes yet.
 
 **4a. Lint:**
 ```bash

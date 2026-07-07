@@ -43,8 +43,7 @@ Check the issue's project status. If not in "In Progress":
 - If in "Done" → nothing to do
 
 ### Step 4: Auto-generate change list from the issue
-
-Parse the issue body to extract:
+If the user defined what to implement, go directely to step 6. Otherwise parse the issue body to extract:
 - **Acceptance Criteria** — each `- [ ]` item is a potential task
 - **Technical Notes** — files to modify or create
 - **UI / Design Requirements** — reference to `design/` files
