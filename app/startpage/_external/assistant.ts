@@ -3,6 +3,7 @@ import { detailedWeatherTool, shortWeatherOverview, weatherForcastTool } from '.
 import { config } from '@/app/shared/config'
 import { getLocationDescription, locationByNameTool } from './geolocation'
 import { getSkillTools } from './skills'
+import { listWhatsappChatsTool, listAllWhatsappChatsTool, getWhatsappMessagesTool, sendWhatsappMessageTool, archiveWhatsappChatTool, setWhatsappChatReadStatusTool } from './whatsapp-tools'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from './llmLogger'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
@@ -14,7 +15,17 @@ const actionPrompt = fs.readFileSync(join(ASSISTANT_DIR, 'action.md'), 'utf-8')
 const initialMessage = fs.readFileSync(join(ASSISTANT_DIR, 'initial.md'), 'utf-8')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 const initialActions = ['Get Todays Weather', 'Get Weekly Forecast', 'Get Tomorrow\'s Weather', 'Return an editable field']
-const tools = { ...getSkillTools(join(ASSISTANT_DIR, 'skills')), get_detailed_weather: detailedWeatherTool, get_weather_forecast: weatherForcastTool, get_location_by_name: locationByNameTool } satisfies ToolSet
+const tools = {
+  ...getSkillTools(join(ASSISTANT_DIR, 'skills')),
+  get_detailed_weather: detailedWeatherTool,
+  get_weather_forecast: weatherForcastTool,
+  get_location_by_name: locationByNameTool,
+  list_whatsapp_chats: listWhatsappChatsTool,
+  list_all_whatsapp_chats: listAllWhatsappChatsTool,
+  get_whatsapp_messages: getWhatsappMessagesTool,
+  send_whatsapp_message: sendWhatsappMessageTool,
+  archive_whatsapp_chat: archiveWhatsappChatTool,
+  set_whatsapp_chat_read_status: setWhatsappChatReadStatusTool } satisfies ToolSet
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: createLoggingFetch(globalThis.fetch) })
 const model = opencode('deepseek-v4-flash')
 const agentSettings = { model, reasoning: 'none' as const, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }

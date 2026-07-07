@@ -18,6 +18,9 @@ const inactivityTimeoutMs = 10 * 1000
 
 export interface WaFasade extends Omit<WhatsAppStore, 'bind' | 'reset'> {
   getStatus(): SyncStatus
+  sendMessage(jid: string, text: string): Promise<void>
+  setRead(jid: string, read: boolean): Promise<void>
+  setArchived(jid: string, archived: boolean): Promise<void>
 }
 
 export async function getWAFasade(user: UserSession): Promise<WaFasade> {
@@ -41,7 +44,7 @@ async function createNewRunningSync(user: UserSession): Promise<RunningSync> {
   const handler = createHandler(store, { logger: walogger, name: 'Gutschi.site' })
   await handler.start()
   return {
-    facade: { ...store, getStatus: () => handler.getStatus() },
+    facade: { ...store, ...handler },
     timeout: createTimeout(() => { handler.close() }, user),
     close: () => { handler.close() },
   }
