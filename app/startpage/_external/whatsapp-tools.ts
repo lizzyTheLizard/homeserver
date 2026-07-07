@@ -2,7 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod/v4'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { getWAFasade } from './whatsapp'
-import { Chat } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat } from '@lizzythelizard/whatsapp-mcp'
 
 const chatSchema = z.object({
   jid: z.string().describe('The chat ID'),

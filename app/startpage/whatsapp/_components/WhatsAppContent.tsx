@@ -9,7 +9,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { getStatus, loadMessages } from '../server'
 import { MessageBubble } from './MessageBubble'
 import styles from './WhatsAppContent.module.css'
-import { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import QRCode from 'react-qr-code'
 
 const columns = [

@@ -3,7 +3,7 @@ import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { getWAFasade } from '../_external/whatsapp'
-import { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import { logger } from '@/app/shared/logger'
 
 export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus }> {
