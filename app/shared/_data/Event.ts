@@ -1,4 +1,4 @@
-import { Queryable, removeNull } from '@/app/shared/_external/db/access'
+import { Queryable, removeNull, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 
 export const EventLevels = ['INFO', 'WARN', 'ERROR']
@@ -11,7 +11,11 @@ export interface Event {
   message: string
 }
 
-export async function logEvent(client: Queryable, level: EventLevel, message: string): Promise<void> {
+export async function logEvent(client: Queryable | undefined, level: EventLevel, message: string): Promise<void> {
+  if (!client) {
+    await transactional(async tx => logEvent(tx, level, message))
+    return
+  }
   const id = randomUUID()
   await client.query('INSERT INTO events (id, level, message) VALUES ($1, $2, $3)', [id, level, message])
 }
