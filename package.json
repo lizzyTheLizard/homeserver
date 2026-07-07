@@ -10,7 +10,7 @@
     "lint:ci": "eslint",
     "test": "vitest --run",
     "test:watch": "vitest --watch",
-    "clean": "rimraf .next storybook-static",
+    "clean": "rimraf .next storybook-static dist .eslintcache next-env.d.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "npx chromatic --build-script-name build-storybook",
