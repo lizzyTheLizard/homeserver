@@ -70,6 +70,9 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                 <div className={style.spacer} />
                 {hasSession && (
                   <>
+                    <button className={style.newChatButton} onClick={() => { document.dispatchEvent(new Event('new-chat')) }} title="New chat" aria-label="New chat">
+                      <Icon name="plus" style={{ width: '1.5rem', height: '1.5rem' }} />
+                    </button>
                     <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', false)}>Logout</a>
                     <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></a>
                   </>

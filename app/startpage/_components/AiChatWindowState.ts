@@ -23,6 +23,7 @@ export type AiChatStateAction = { type: 'RECEIVED', chunk: string | undefined }
   | { type: 'TOOL_CALL' }
   | { type: 'SEND', message: string }
   | { type: 'ERROR', error: unknown }
+  | { type: 'RESET' }
 
 export function aiChatStateReducer(state: AiChatState, action: AiChatStateAction): AiChatState {
   switch (action.type) {
@@ -38,6 +39,8 @@ export function aiChatStateReducer(state: AiChatState, action: AiChatStateAction
       return { ...state, currentMessage: '' }
     case 'ERROR':
       return { current: 'failed', actions: [], messages: addErrorMessage(state, action.error), currentMessage: '' }
+    case 'RESET':
+      return { ...initialAiChatState }
   }
 }
 

@@ -12,8 +12,7 @@ export function AiChatWindow() {
   const listRef = useRef<HTMLDivElement>(null)
   const socketRef = useRef<WebSocket | undefined>(undefined)
 
-  useEffect(() => {
-    console.log('Opening WebSocket connection to /ws/assistant')
+  function startWebSocket() {
     const websocket = new WebSocket('/ws/assistant')
     websocket.onopen = async () => {
       console.log('WebSocket connection opened')
@@ -31,7 +30,21 @@ export function AiChatWindow() {
     websocket.onerror = (error) => { console.warn('WebSocket error:', error) }
     websocket.onclose = (event) => { console.log('WebSocket closed:', event.code, event.reason) }
     socketRef.current = websocket
-    return () => { websocket.close() }
+  }
+
+  useEffect(() => {
+    startWebSocket()
+    return () => { socketRef.current?.close() }
+  }, [])
+
+  useEffect(() => {
+    function handleNewChat() {
+      socketRef.current?.close()
+      dispatch({ type: 'RESET' })
+      startWebSocket()
+    }
+    document.addEventListener('new-chat', handleNewChat)
+    return () => { document.removeEventListener('new-chat', handleNewChat) }
   }, [])
 
   // Always scroll to the bottom to show latest messages
