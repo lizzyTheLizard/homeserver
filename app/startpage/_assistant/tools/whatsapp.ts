@@ -3,6 +3,9 @@ import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
 import { getWAFasade } from '../../_external/whatsapp'
 import type { Chat } from '@lizzythelizard/whatsapp-mcp'
+import { transactional } from '@/app/shared/_external/db/access'
+import { logEvent } from '@/app/shared/_data/Event'
+import { logger } from '@/app/shared/logger'
 
 const chatSchema = z.object({
   jid: z.string().describe('The chat ID'),
@@ -38,6 +41,7 @@ export function getWhatsappAppTools(user: UserSession) {
       outputSchema: z.array(chatSchema),
       execute: async () => {
         const wa = await getWAFasade(user)
+        if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
         const chats = wa.getChats()
         return chats.map(c => ({ jid: c.jid, name: c.name, unreadCount: c.unreadCount, lastMessageTimestamp: c.lastMessageTimestamp, isGroup: c.isGroup, archived: c.archived }))
       },
@@ -50,6 +54,7 @@ export function getWhatsappAppTools(user: UserSession) {
       outputSchema: z.array(messageSchema),
       execute: async ({ chatId }) => {
         const wa = await getWAFasade(user)
+        if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
         const messages = wa.getMessagesForChat(chatId)
         return messages.map(m => ({ id: m.id, from: m.from, message: m.message, messageTimestamp: m.messageTimestamp }))
       },
@@ -60,22 +65,38 @@ export function getWhatsappAppTools(user: UserSession) {
         chatId: z.string().describe('The chat ID (jid) to send the message to'),
         message: z.string().describe('The text message to send'),
       }),
-      execute: async ({ chatId, message }) => {
-        const wa = await getWAFasade(user)
-        await wa.sendMessage(chatId, message)
-        return 'Message sent successfully'
-      },
+      execute: async ({ chatId, message }) => transactional(async (tx) => {
+        try {
+          const wa = await getWAFasade(user)
+          await wa.sendMessage(chatId, message)
+          await logEvent(tx, 'INFO', `Sent WhatsApp message to chat ${chatId}`)
+          return 'Message sent successfully'
+        }
+        catch (error) {
+          logger.warn(`Failed to send WhatsApp message to chat ${chatId}`, error)
+          await logEvent(tx, 'ERROR', `Failed to send WhatsApp message to chat ${chatId}: ${message}`)
+          throw error
+        }
+      }),
     }),
     archive_whatsapp_chat: tool({
       description: 'Archive a WhatsApp chat',
       inputSchema: z.object({
         chatId: z.string().describe('The chat ID (jid) to archive'),
       }),
-      execute: async ({ chatId }) => {
-        const wa = await getWAFasade(user)
-        await wa.setArchived(chatId, true)
-        return 'Chat archived successfully'
-      },
+      execute: async ({ chatId }) => transactional(async (tx) => {
+        try {
+          const wa = await getWAFasade(user)
+          await wa.setArchived(chatId, true)
+          await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId}`)
+          return 'Chat archived successfully'
+        }
+        catch (error) {
+          logger.warn(`Failed to archive WhatsApp chat ${chatId}`, error)
+          await logEvent(tx, 'ERROR', `Failed to archive WhatsApp chat ${chatId}`)
+          throw error
+        }
+      }),
     }),
     set_whatsapp_chat_read_status: tool({
       description: 'Mark a WhatsApp chat as read or unread',
@@ -83,11 +104,19 @@ export function getWhatsappAppTools(user: UserSession) {
         chatId: z.string().describe('The chat ID (jid) to update'),
         read: z.boolean().describe('True to mark as read, false to mark as unread'),
       }),
-      execute: async ({ chatId, read }) => {
-        const wa = await getWAFasade(user)
-        await wa.setRead(chatId, read)
-        return read ? 'Chat marked as read' : 'Chat marked as unread'
-      },
+      execute: async ({ chatId, read }) => transactional(async (tx) => {
+        try {
+          const wa = await getWAFasade(user)
+          await wa.setRead(chatId, read)
+          await logEvent(tx, 'INFO', `Set WhatsApp chat ${chatId} read status to ${read.toString()}`)
+          return read ? 'Chat marked as read' : 'Chat marked as unread'
+        }
+        catch (error) {
+          logger.warn(`Failed to set WhatsApp chat ${chatId} read status to ${read.toString()}`, error)
+          await logEvent(tx, 'ERROR', `Failed to set WhatsApp chat ${chatId} read status to ${read.toString()}`)
+          throw error
+        }
+      }),
     }),
   }
 }

@@ -33,7 +33,7 @@ Six skills manage the full issue lifecycle in the Homeserver project. Each handl
 
 **Next.js App Router** — pages are React Server Components by default. Use `"use client"` only when browser interactivity is required. Data mutations go through Next.js Server Actions, not a separate API layer.
 
-**Authentication** — `proxy.ts` middleware runs before every route. It validates the session and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login. AJAX requests get a 401 instead.
+**Authentication** — `server.ts` is the custom HTTP server that runs before every route. It validates the iron-session cookie and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login via the `startLogin()` function in `app/shared/auth/auth.ts`. AJAX requests get a 401 instead. All `/shared/auth/*` paths bypass authentication (e.g. the login callback).
 
 **Database** — PostgreSQL with `pg` driver. Connection pool initialized once at startup in `app/shared/_external/db/setup.ts`. All DB access goes through two wrappers in `app/shared/_external/db/access.ts`:
 - `transactional(fn)` — wraps `fn` in a BEGIN/COMMIT/ROLLBACK

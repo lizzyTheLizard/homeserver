@@ -8,6 +8,7 @@ import { IronSession, getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import * as client from 'openid-client'
 import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
+import { getActualUrl } from '../_helper/UrlHelper'
 
 export interface UserSession {
   name: string
@@ -82,16 +83,6 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   logger.info(`User ${email} logged in successfully`)
   await nontransactional(c => logEvent(c, 'INFO', `User ${email} logged in`))
   return result
-}
-
-function getActualUrl(urlOrRequest: URL | Request): URL {
-  // We need to replace host, port etc. as the request will have the local docker address
-  const url = urlOrRequest instanceof URL ? urlOrRequest : new URL(urlOrRequest.url)
-  const appUrl = new URL(config.APP_URL)
-  url.protocol = appUrl.protocol
-  url.hostname = appUrl.hostname
-  url.port = appUrl.port
-  return url
 }
 
 export async function logout(): Promise<void> {

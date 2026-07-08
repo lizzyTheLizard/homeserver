@@ -1,3 +1,4 @@
+import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
@@ -46,6 +47,7 @@ async function getLocationByName(placeName: string): Promise<{ lat: number, lon:
   }
   catch (error) {
     logger.warn('Could not get location by name', error)
-    return { lat: 0, lon: 0 }
+    await logEvent(undefined, 'WARN', `Could not get location for place name: ${placeName}`)
+    throw error
   }
 }

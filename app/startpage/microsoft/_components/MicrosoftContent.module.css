@@ -1,0 +1,117 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.status {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.description {
+  text-align: center;
+  max-width: 400px;
+  color: var(--text-secondary);
+}
+
+.button {
+  margin-top: 0.5rem;
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--card-bg);
+  border-radius: 0.75rem;
+  width: 100%;
+}
+
+.userAvatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.userMail {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.messagesSection {
+  width: 100%;
+}
+
+.messagesTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.messageItem {
+  padding: 0.75rem 1rem;
+  background: var(--card-bg);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.messageSubject {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.messageMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.messageFrom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+.messageDate {
+  flex-shrink: 0;
+}

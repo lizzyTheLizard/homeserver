@@ -1,7 +1,6 @@
 'use server'
 import { UserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
 import type { DataStore, WhatsAppStore, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import { getWhatsappState, setWhatsappState } from '../_data/Whatsapp'
 import type { ILogger } from '@lizzythelizard/whatsapp-mcp/dist/logger'
@@ -58,7 +57,6 @@ function readDataFromDb(user: UserSession): Promise<DataStore | undefined> {
 
 async function updateData(user: UserSession, data: DataStore): Promise<void> {
   await transactional(async (c) => {
-    await logEvent(c, 'INFO', `Writing WhatsApp data to database for user ${user.email}`)
     await setWhatsappState(c, user.email, data)
   })
 }

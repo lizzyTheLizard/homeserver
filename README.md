@@ -32,9 +32,11 @@ See [.env.example](.env.example) for the full list. The most important ones:
 | `APP_URL`                | Public URL of the app (used for OIDC redirect)   |
 | `DB_CONNECTION_STRING`   | `postgres://user:pass@host:port/dbname`          |
 | `ADMIN_EMAIL`            | Email allowed into the Admin app                 |
-| `CLIENT_ID`/`CLIENT_SECRET`/`ISSUER` | OIDC application credentials         |
+| `CLIENT_ID`/`CLIENT_SECRET`/`LOGIN_ISSUER` | OIDC application credentials         |
 | `COOKIE_NAME`/`SESSION_PASSWORD` | iron-session cookie name + secret        |
-| `DEEPINFRA_API_KEY` | Deepinfra LLM endpoint           |
+| `AI_API_KEY`/`AI_BASE_URL` | AI model endpoint credentials        |
+| `MICROSOFT_GRAPH_APPLICATION_ID`/`MICROSOFT_GRAPH_CLIENT_SECRET`/`MICROSOFT_GRAPH_ISSUER` | Microsoft Graph (Outlook) OIDC credentials |
+| `GRAFANA_URL` | URL to Grafana log dashboard         |
 
 In production every required var must be set; the app fails fast on startup otherwise.
 
@@ -58,7 +60,7 @@ In production every required var must be set; the app fails fast on startup othe
 
 Next.js App Router with React Server Components by default. Mutations are exposed as Server Actions (`'use server'` files); there is no separate API layer.
 
-`proxy.ts` is the Next.js middleware that runs before every route. It validates the iron-session cookie and redirects unauthenticated users to the OIDC provider; AJAX requests get a `401` instead.
+`server.ts` is a custom HTTP server that wraps Next.js and handles authentication before every route. It validates the iron-session cookie and redirects unauthenticated users to the OIDC provider; AJAX requests get a `401` instead. All `/shared/auth/*` paths are allowed without authentication.
 
 Postgres is accessed through one connection pool created lazily on first use. Two helpers in `app/shared/_external/db/access.ts` wrap every query:
 
@@ -86,7 +88,7 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 ├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → deploy)
 ├── .storybook/         Storybook configuration
 ├── Dockerfile          Production image (Node 20 Alpine)
-├── proxy.ts            Next.js middleware (runs before every route)
+├── server.ts            Custom HTTP server (auth, WS)
 ```
 
 Inside `app/`, folders that are not Next.js routes are prefixed with `_` (e.g. `shared/_components/`, `cash/_data/`, `coeditor/_external/`) to opt out of the router. Server-side action files use the `server.ts` suffix; integration tests use `server.tests.ts`; unit tests use `*.tests.ts`.
