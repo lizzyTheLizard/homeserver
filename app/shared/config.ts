@@ -62,7 +62,7 @@ export const config: Config = {
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),
-    ISSUER: required('ISSUER'),
+    ISSUER: required('LOGIN_ISSUER'),
     CLIENT_SECRET: required('CLIENT_SECRET', 'dev-only-client-secret'),
   },
   SESSION: {

@@ -4,6 +4,7 @@ import { loadBuildInfo, loadConfigInfo, loadEvents, loadMetricsInfo, loadRunInfo
 import { EventsCard } from './_components/EventsCard'
 import styles from './Dashboard.module.css'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { config } from '@/app/shared/config'
 
 export const metadata = {
   title: 'Admin - Dashboard',
@@ -30,7 +31,7 @@ export default async function Page() {
           <DashboardCard header="Config" url="/admin/config" items={configInfo} />
           <DashboardCard header="Metrics" url="/admin/metrics" items={metricsInfo} />
         </div>
-        <EventsCard events={events} />
+        <EventsCard events={events} logUrl={config.GRAFANA_URL} />
       </main>
     )
   })

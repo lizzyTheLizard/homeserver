@@ -57,7 +57,7 @@ resource "scaleway_container" "www_gutschi_site" {
   environment_variables = {
     APP_URL="https://www.gutschi.site",
     CLIENT_ID=var.client_id,
-    ISSUER=var.issuer,
+    LOGIN_ISSUER=var.issuer,
     COOKIE_NAME="session",
     LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
@@ -106,7 +106,7 @@ resource "scaleway_container" "test_gutschi_site" {
   environment_variables = {
     APP_URL="https://test.gutschi.site",
     CLIENT_ID=var.client_id,
-    ISSUER=var.issuer,
+    LOGIN_ISSUER=var.issuer,
     COOKIE_NAME="session",
     LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,

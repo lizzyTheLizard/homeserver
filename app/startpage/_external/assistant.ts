@@ -4,6 +4,7 @@ import { config } from '@/app/shared/config'
 import { getGeolocationTools, getLocationDescription } from '../_assistant/tools/geolocation'
 import { getSkillTools } from '../_assistant/tools/skills'
 import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from '../_assistant/tools/whatsapp'
+import { getOutlookTools, getOutlookContext } from '../_assistant/tools/outlook'
 import { UserSession } from '@/app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
 import { createLoggingFetch } from '../_assistant/llmLogger'
@@ -15,7 +16,6 @@ const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const actionPrompt = fs.readFileSync(join(ASSISTANT_DIR, 'action.md'), 'utf-8')
 const initialMessage = fs.readFileSync(join(ASSISTANT_DIR, 'initial.md'), 'utf-8')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
-const initialActions = ['Get WhatsApp Overview', 'Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast']
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: createLoggingFetch(globalThis.fetch) })
 const model = opencode('deepseek-v4-flash')
 const agentSettings = { model, reasoning: 'none' as const, temperature: 0.2, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
@@ -58,21 +58,22 @@ async function initialize(user: UserSession, handler: AssistantHandler, initialC
     ...getWeatherTools(),
     ...getGeolocationTools(),
     ...getWhatsappAppTools(user),
+    ...getOutlookTools(user),
   }
-  handler.instructions = await getSystemMessage(initialContext, user)
-  await send(handler, initialMessage, initialActions, false)
-}
-
-async function getSystemMessage(initialContext: InitialContext, user: UserSession): Promise<string> {
   const context = {
     time: new Date().toLocaleString(),
     location: initialContext.location,
     locationDescription: await getLocationDescription(initialContext.location),
     weather: await shortWeatherOverview(initialContext.location.lat, initialContext.location.lon),
     unarchivedWhatsAppChats: await getUnarchivedWhatsAppChats(user),
+    outlook: await getOutlookContext(user),
   }
-  const instructions = `${systemMessage}\n\nThe current context is ${JSON.stringify(context)}  `
-  return instructions
+  handler.instructions = `${systemMessage}\n\nThe current context is ${JSON.stringify(context)}`
+  const initialActions = []
+  if (context.unarchivedWhatsAppChats.length > 0) initialActions.push('Get WhatsApp Overview')
+  if (context.outlook.unreadCount > 0) initialActions.push('Get Outlook Overview')
+  initialActions.push('Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast')
+  await send(handler, initialMessage, initialActions, false)
 }
 
 async function send(handler: AssistantHandler, prompt: string, fixedActions?: string[], useTools?: boolean): Promise<void> {

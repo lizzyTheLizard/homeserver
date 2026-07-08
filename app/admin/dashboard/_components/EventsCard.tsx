@@ -1,5 +1,4 @@
 'use client'
-import { config } from '@/app/shared/config'
 import { Event } from '@/app/shared/_data/Event'
 import styles from './EventsCard.module.css'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
@@ -9,6 +8,7 @@ import { DateTime } from '@/app/shared/_components/DateTime'
 
 interface Props {
   events: Event[]
+  logUrl: string
 }
 
 const columns = [
@@ -33,14 +33,12 @@ function renderMobile(e: Event): ReactNode {
   )
 }
 
-export function EventsCard({ events }: Props) {
+export function EventsCard({ events, logUrl }: Props) {
   return (
     <div className={styles.eventsCard}>
       <div className={styles.eventsHeader}>
         <span className={styles.sectionLabel}>Events</span>
-        {config.GRAFANA_URL && (
-          <a href={config.GRAFANA_URL} className={styles.viewLogsLink} target="_blank" rel="noopener">View logs &rarr;</a>
-        )}
+        <a href={logUrl} className={styles.viewLogsLink} target="_blank" rel="noopener">View logs &rarr;</a>
       </div>
       <DataTable
         columns={columns}

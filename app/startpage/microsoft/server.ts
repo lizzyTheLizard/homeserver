@@ -1,6 +1,6 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { getUserInfo, getLoginRedirectUrl, getMessages, MicrosoftUserInfo, MicrosoftMessage } from '../_external/microsoft'
+import { getUserInfo, getLoginRedirectUrl, MicrosoftUserInfo, MicrosoftMessage, getInboxMessages } from '../_external/microsoft'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { deleteMicrosoftToken } from '../_data/Microsoft'
@@ -11,7 +11,7 @@ export async function loadMicrosoftStatus(): Promise<{ connected: boolean, userI
   const user = await getAuthenticatedUserSession('startpage')
   const userInfo = await getUserInfo(user)
   if (!userInfo) return { connected: false }
-  const messages = await getMessages(user)
+  const messages = await getInboxMessages(user)
   return { connected: true, userInfo, messages }
 }
 
