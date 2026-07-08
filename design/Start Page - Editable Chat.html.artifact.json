@@ -1,8 +1,8 @@
 {
   "version": 1,
   "kind": "html",
-  "title": "Start Page — Editable Chat",
-  "entry": "start-page-editable-chat.html",
+  "title": "Start Page - Editable Chat.html",
+  "entry": "Start Page - Editable Chat.html",
   "renderer": "html",
   "status": "complete",
   "exports": [
@@ -10,13 +10,10 @@
     "pdf",
     "zip"
   ],
-  "primary": true,
-  "createdAt": "2026-07-05T20:13:27.407Z",
-  "updatedAt": "2026-07-05T20:13:27.418Z",
-  "sourceSkillId": "agent-browser",
+  "createdAt": "2026-07-08T19:09:59.546Z",
+  "updatedAt": "2026-07-08T19:09:59.546Z",
   "metadata": {
-    "identifier": "start-page-editable-chat",
-    "artifactType": "text/html",
-    "inferred": false
+    "inferred": true,
+    "reconciled": true
   }
 }
