@@ -67,6 +67,7 @@ resource "scaleway_container" "www_gutschi_site" {
     GRAFANA_URL                    = var.grafana_url
   }
   secret_environment_variables = {
+    CLIENT_SECRET    = var.client_secret,
     SESSION_PASSWORD = var.session_password,
     DB_CONNECTION_STRING = format("postgres://%s:%s@%s?%s",
       scaleway_iam_application.gutschi_site.id,
