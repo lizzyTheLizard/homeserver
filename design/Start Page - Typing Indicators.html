@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start Page — Typing Indicators</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="Icon.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: white; }
+  #root { min-height: 100%; display: flex; flex-direction: column; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
+  @keyframes cursor-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  @keyframes dot-stream {
+    0% { transform: translateX(-8px); opacity: 0; }
+    30% { opacity: 1; }
+    100% { transform: translateX(0); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "siteName": "Homeserver",
+  "weatherCity": "Zürich",
+  "weatherTemp": 17,
+  "weatherCondition": "Partly cloudy"
+}/*EDITMODE-END*/;
+
+const APPS = [
+  { key: 'cash',      name: 'Cash',      icon: 'cash',      description: 'Bookkeeping' },
+  { key: 'coeditor',  name: 'CoEditor',  icon: 'coeditor',  description: 'Document editor' },
+  { key: 'admin',     name: 'Admin',     icon: 'admin',     description: 'Server admin' },
+  { key: 'startpage', name: 'StartPage', icon: 'startpage', description: 'Browser start page' },
+];
+
+// ── Clock ──────────────────────────────────────────────────────────
+function useClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ── Typing indicator variants ──────────────────────────────────────
+
+function TypingDotsActive() {
+  return (
+    <div style={{ display: 'inline-flex' }}>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.65rem 0.85rem',
+        display: 'flex', gap: '5px', alignItems: 'center',
+      }}>
+        {[0, 0.18, 0.36].map((delay, i) => (
+          <div key={i} style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: 'rgba(0,0,180,0.4)',
+            animation: `bounce 1.1s ${delay}s infinite`,
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TypingDotsStalled() {
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.3rem' }}>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.65rem 0.85rem',
+        display: 'flex', gap: '5px', alignItems: 'center',
+        border: '1px solid rgba(180,120,0,0.2)',
+      }}>
+        {[0, 0.18, 0.36].map((delay, i) => (
+          <div key={i} style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: 'rgba(180,120,0,0.35)',
+            animation: `bounce 1.4s ${delay}s infinite`,
+          }} />
+        ))}
+      </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.3rem',
+        paddingLeft: '0.4rem',
+        fontSize: '0.72rem', color: 'rgba(180,100,0,0.8)',
+      }}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="rgba(180,100,0,0.6)" strokeWidth="1.2"/>
+          <path d="M6 3.5v3" stroke="rgba(180,100,0,0.7)" strokeWidth="1.2" strokeLinecap="round"/>
+          <circle cx="6" cy="8.2" r="0.6" fill="rgba(180,100,0,0.6)"/>
+        </svg>
+        Connection slow — waiting for response
+      </div>
+    </div>
+  );
+}
+
+function PartialMessageActive({ text }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 4px 18px',
+        padding: '0.9rem 1.1rem',
+        fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
+      }}>
+        <span style={{ whiteSpace: 'pre-line' }}>{text}</span>
+        <span style={{
+          display: 'inline-block', width: '2px', height: '1.05em',
+          background: 'rgba(0,0,180,0.7)', marginLeft: '2px',
+          verticalAlign: 'text-bottom',
+          animation: 'cursor-blink 1s step-end infinite',
+        }} />
+      </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '4px',
+        paddingLeft: '0.4rem',
+      }}>
+        {[0, 0.25, 0.5].map((delay, i) => (
+          <div key={i} style={{
+            width: '4px', height: '4px', borderRadius: '50%',
+            background: 'rgba(0,0,180,0.45)',
+            animation: `dot-stream 1.2s ${delay}s infinite`,
+          }} />
+        ))}
+        <span style={{ fontSize: '0.7rem', color: 'rgba(0,0,140,0.5)', marginLeft: '0.2rem' }}>generating</span>
+      </div>
+    </div>
+  );
+}
+
+function PartialMessageStalled({ text }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 4px 18px',
+        padding: '0.9rem 1.1rem',
+        fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
+        border: '1px solid rgba(180,120,0,0.2)',
+      }}>
+        <span style={{ whiteSpace: 'pre-line' }}>{text}</span>
+        <span style={{
+          display: 'inline-block', width: '2px', height: '1.05em',
+          background: 'rgba(180,120,0,0.5)', marginLeft: '2px',
+          animation: 'cursor-blink 1s step-end infinite',
+          verticalAlign: 'text-bottom',
+        }} />
+      </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.3rem',
+        paddingLeft: '0.4rem',
+        fontSize: '0.72rem', color: 'rgba(180,100,0,0.8)',
+      }}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="rgba(180,100,0,0.6)" strokeWidth="1.2"/>
+          <path d="M6 3.5v3" stroke="rgba(180,100,0,0.7)" strokeWidth="1.2" strokeLinecap="round"/>
+          <circle cx="6" cy="8.2" r="0.6" fill="rgba(180,100,0,0.6)"/>
+        </svg>
+        Connection slow — waiting for response
+      </div>
+    </div>
+  );
+}
+
+function FinishedMessage({ text }) {
+  return (
+    <div>
+      <div style={{
+        background: 'rgb(236,237,245)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.9rem 1.1rem',
+        fontSize: '0.9rem', lineHeight: 1.65, color: '#1a1a2e',
+      }}>
+        <span style={{ whiteSpace: 'pre-line' }}>{text}</span>
+      </div>
+    </div>
+  );
+}
+
+function UserMessage({ text }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{
+        background: 'rgba(0,0,210,1)', color: 'white',
+        padding: '0.6rem 1.05rem', borderRadius: '18px 18px 4px 18px',
+        maxWidth: '80%', fontSize: '0.9rem', lineHeight: 1.5,
+      }}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+// ── Section label ──────────────────────────────────────────────────
+function SectionLabel({ children }) {
+  return (
+    <div style={{
+      fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
+      letterSpacing: '0.08em', color: '#999',
+      padding: '0.2rem 0',
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Chat window (static demo) ──────────────────────────────────────
+function AIChatWindow() {
+  return (
+    <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{
+        flex: 1, minHeight: 0, overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: '0.75rem',
+        paddingTop: '0.5rem', paddingBottom: '0.75rem',
+      }}>
+        <SectionLabel>1. Generating — empty response</SectionLabel>
+        <UserMessage text="What's the weather forecast for today?" />
+        <TypingDotsActive />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>2. Generating — partial response</SectionLabel>
+        <UserMessage text="Summarize my emails" />
+        <PartialMessageActive text={"Here's your email summary:\n\n• Stefan Meier — Project meeting next Thursday at 14:00\n• Oliver Braun — Question about Q2 numbers, needs reply"} />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>3. Stalled — empty response</SectionLabel>
+        <UserMessage text="Check my tasks" />
+        <TypingDotsStalled />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>4. Stalled — partial response</SectionLabel>
+        <UserMessage text="Draft a reply to Thomas" />
+        <PartialMessageStalled text={"Sure! Here's a draft for Thomas:\n\n\"Hey Thomas! Yes, I'll be there Saturday —"} />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>5. Finished — complete response</SectionLabel>
+        <UserMessage text="What's on my plate today?" />
+        <FinishedMessage text={"Here's your overview for today:\n\n• 3 tasks pending — Q2 budget report is due today\n• 3 WhatsApp chats need replies (Thomas, Sarah, Familie)\n• 5 emails in focus, 3 unread\n\nWant me to draft any replies?"} />
+      </div>
+    </div>
+  );
+}
+
+// ── Tweaks panel ───────────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweaks, visible }) {
+  if (!visible) return null;
+  function update(key, val) {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  }
+  return (
+    <div style={{
+      position: 'fixed', bottom: '1rem', right: '1rem', zIndex: 1000,
+      background: 'white', border: '1px solid rgba(200,200,200,1)', borderRadius: '8px',
+      padding: '1rem', width: '260px', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+    }}>
+      <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tweaks</div>
+      {[['siteName', 'Site name'], ['weatherCity', 'Weather city'], ['weatherCondition', 'Condition']].map(([k, label]) => (
+        <div key={k}>
+          <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+          <input value={tweaks[k]} onChange={e => update(k, e.target.value)} style={{
+            width: '100%', height: '2rem', fontSize: '0.85rem',
+            border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+            fontFamily: 'inherit',
+          }} />
+        </div>
+      ))}
+      <div>
+        <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temperature (°C)</div>
+        <input type="number" value={tweaks.weatherTemp} onChange={e => update('weatherTemp', Number(e.target.value))} style={{
+          width: '100%', height: '2rem', fontSize: '0.85rem',
+          border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+          fontFamily: 'inherit',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────
+function App() {
+  const now = useClock();
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'white' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '4rem', padding: '0 1.5rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1.5rem', fontWeight: 600, marginRight: '0.5rem' }}>{tweaks.siteName}</span>
+        <nav style={{ display: 'flex' }}>
+          {APPS.map(app => (
+            <a key={app.key} href="#"
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              style={{
+                color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+                padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
+              }}>
+              <Icon name={app.icon} style={{ width: '1rem', height: '1rem' }} />
+              {app.name}
+            </a>
+          ))}
+        </nav>
+        <div style={{ flexGrow: 1 }} />
+        <a href="#"
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          style={{
+            color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+            padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center',
+          }}>
+          Logout
+        </a>
+      </div>
+
+      <div style={{
+        flexGrow: 1, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+        alignItems: 'center', padding: '1.5rem 2rem 1rem', gap: '1rem',
+      }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: '3.5rem', fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1, color: 'rgba(0,0,210,1)' }}>{fmtTime(now)}</div>
+          <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.4rem', letterSpacing: '0.01em' }}>{fmtDate(now)}</div>
+        </div>
+
+        <AIChatWindow />
+      </div>
+
+      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
