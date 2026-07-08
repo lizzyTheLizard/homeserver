@@ -53,7 +53,7 @@ export function AiChatWindow() {
       listRef.current.scrollTop = listRef.current.scrollHeight
     }
     else {
-      // TODO, Scroll to bottom on mobile
+      window.scrollTo(0, document.body.scrollHeight)
     }
   }, [state])
 
