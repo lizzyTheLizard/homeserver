@@ -62,7 +62,7 @@ export const config: Config = {
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),
-    ISSUER: required('LOGIN_ISSUER'),
+    ISSUER: required('LOGIN_ISSUER', 'http://localhost:8080/realms/coeditor'),
     CLIENT_SECRET: required('CLIENT_SECRET', 'dev-only-client-secret'),
   },
   SESSION: {
@@ -70,9 +70,9 @@ export const config: Config = {
     SESSION_PASSWORD: required('SESSION_PASSWORD', 'dev-only-session-password-must-be-32-chars-long'),
   },
   MICROSOFT_GRAPH: {
-    APPLICATION_ID: required('MICROSOFT_GRAPH_APPLICATION_ID'),
-    CLIENT_SECRET: required('MICROSOFT_GRAPH_CLIENT_SECRET'),
-    ISSUER: required('MICROSOFT_GRAPH_ISSUER'),
+    APPLICATION_ID: required('MICROSOFT_GRAPH_APPLICATION_ID', 'dev-only-application-id'),
+    CLIENT_SECRET: required('MICROSOFT_GRAPH_CLIENT_SECRET', 'dev-only-client-secret'),
+    ISSUER: required('MICROSOFT_GRAPH_ISSUER', 'https://login.microsoftonline.com/dev-only-tenant-id/v2.0'),
   },
   NODE_PUBLIC_LOCALE: optional('NODE_PUBLIC_LOCALE', 'de-CH'),
   NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),
