@@ -397,6 +397,7 @@ function WeatherIcon({ size = 20 }) {
 // ── Page ───────────────────────────────────────────────────────────
 function StartPageMobile() {
   const [tab, setTab] = useState(null);
+  const [chatKey, setChatKey] = useState(0);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'white', overflow: 'hidden' }}>
 
@@ -408,6 +409,15 @@ function StartPageMobile() {
       }}>
         <span style={{ fontSize: '1rem', fontWeight: 600 }}>Homeserver</span>
         <div style={{ flexGrow: 1 }} />
+        <a href="#" onClick={() => setChatKey(k => k + 1)} title="New chat" style={{
+          color: 'white', 
+          width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          padding: 0, fontFamily: 'inherit',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+        </a>
         <a href="#" onClick={e => e.preventDefault()} title="Logout" style={{
           color: 'white', textDecoration: 'none',
           width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -437,7 +447,7 @@ function StartPageMobile() {
 
       {/* Content — full chat area */}
       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '0.4rem 0.6rem 0.2rem', minHeight: 0, overflow: 'hidden' }}>
-        <AIChatWindow />
+        <AIChatWindow key={chatKey} />
       </div>
     </div>
   );
