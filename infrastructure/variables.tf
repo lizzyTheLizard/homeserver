@@ -23,6 +23,18 @@ variable "issuer" {
   type = string
   sensitive = false
 }
+variable "graph_application_id" {
+  type = string
+  sensitive = false
+}
+variable "graph_issuer" {
+  type = string
+  sensitive = false
+}
+variable "grafana_url" {
+  type = string
+  sensitive = false
+}
 variable "access_key" {
   type = string
   sensitive = true
@@ -40,6 +52,10 @@ variable "session_password" {
   sensitive = true
 }
 variable "ai_api_key" {
+  type = string
+  sensitive = true
+}
+variable "graph_client_secret" {
   type = string
   sensitive = true
 }

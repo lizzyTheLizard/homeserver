@@ -59,7 +59,7 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
 
 async function reactRequestHandler(handler: RequestHandler, options: Options, req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { startLogin } = await import('./app/shared/auth/auth')
-  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map.js', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js']
+  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js']
   const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
   const method = req.method?.toUpperCase() ?? 'GET'
   const start = Date.now()

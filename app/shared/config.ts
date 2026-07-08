@@ -18,6 +18,11 @@ export interface Config {
     API_KEY: string
     BASE_URL: string
   }
+  MICROSOFT_GRAPH: {
+    APPLICATION_ID: string
+    CLIENT_SECRET: string
+    ISSUER: string
+  }
   NODE_PUBLIC_LOCALE: string
   NODE_PUBLIC_CURRENCY: string
   GIT_COMMIT_HASH: string
@@ -50,19 +55,24 @@ export const config: Config = {
   APP_URL: required('APP_URL', 'http://localhost:3000'),
   DB_CONNECTION_STRING: required('DB_CONNECTION_STRING', 'postgres://user:password@localhost:5432/homeserver?sslmode=disable'),
   ADMIN_EMAIL: required('ADMIN_EMAIL', 'admin@example.com'),
-  GRAFANA_URL: optional('GRAFANA_URL', 'https://0e73b082-b389-4c17-9bc1-62b013f1f0d1.dashboard.cockpit.scaleway.com/d/3c11436f-6c62-4303-b951-9337fa444515/cockpit-home-copy?orgId=1&from=now-24h&to=now&timezone=browser&var-metrics=cf48grbvnjqioc&var-Filters=message%7C%3D%7C%5B2026-01-09T21:00:26.687Z%5D%20info:%20Unauthenticated%20access%20from%20user%20agent%20%27Mozilla%2F5.0%20%28Windows%20NT%206.1;%20WOW64%29%20AppleWebKit%2F537.36%20%28KHTML__gfc__%20like%20Gecko%29%20Chrome%2F45.0.2454.85%20Safari%2F537.36%27&var-container_name=gutschisitewsdlddur-test-gutschi-site&var-log_filter=&viewPanel=panel-1'),
+  GRAFANA_URL: required('GRAFANA_URL', 'http://localhost:3000'),
   AI: {
     API_KEY: required('AI_API_KEY', 'dev-only-key'),
     BASE_URL: required('AI_BASE_URL', 'https://opencode.ai/zen/go/v1'),
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),
-    ISSUER: required('ISSUER', 'https://login.microsoftonline.com/7bd72b43-52f6-4dc6-a856-5704e0f925bd/v2.0'),
+    ISSUER: required('ISSUER'),
     CLIENT_SECRET: required('CLIENT_SECRET', 'dev-only-client-secret'),
   },
   SESSION: {
     COOKIE_NAME: required('COOKIE_NAME', 'homeserver-session'),
     SESSION_PASSWORD: required('SESSION_PASSWORD', 'dev-only-session-password-must-be-32-chars-long'),
+  },
+  MICROSOFT_GRAPH: {
+    APPLICATION_ID: required('MICROSOFT_GRAPH_APPLICATION_ID'),
+    CLIENT_SECRET: required('MICROSOFT_GRAPH_CLIENT_SECRET'),
+    ISSUER: required('MICROSOFT_GRAPH_ISSUER'),
   },
   NODE_PUBLIC_LOCALE: optional('NODE_PUBLIC_LOCALE', 'de-CH'),
   NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),

@@ -14,6 +14,7 @@ export const applications: Application[] = [
     getLinks: () => [
       { text: 'Favorites', href: '/startpage/favorites' },
       { text: 'WhatsApp', href: '/startpage/whatsapp' },
+      { text: 'Microsoft', href: '/startpage/microsoft' },
     ],
   },
   {

@@ -61,10 +61,12 @@ resource "scaleway_container" "www_gutschi_site" {
     COOKIE_NAME="session",
     LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
-    AI_BASE_URL="https://opencode.ai/zen/go/v1"
+    AI_BASE_URL="https://opencode.ai/zen/go/v1",
+    MICROSOFT_GRAPH_APPLICATION_ID: var.graph_application_id,
+    MICROSOFT_GRAPH_ISSUER: var.graph_issuer,
+    GRAFANA_URL: var.grafana_url
   }
   secret_environment_variables = {
-    CLIENT_SECRET=var.client_secret,
     SESSION_PASSWORD=var.session_password,
     DB_CONNECTION_STRING = format("postgres://%s:%s@%s?%s",
       scaleway_iam_application.gutschi_site.id,
@@ -72,7 +74,8 @@ resource "scaleway_container" "www_gutschi_site" {
       split("?" , trimprefix(scaleway_sdb_sql_database.www_gutschi_site.endpoint, "postgres://"))[0],
       "sslmode=verify-full",
     ),
-    AI_API_KEY = var.ai_api_key
+    AI_API_KEY = var.ai_api_key,
+    MICROSOFT_GRAPH_CLIENT_SECRET=var.graph_client_secret
   }
 }
 
@@ -107,7 +110,10 @@ resource "scaleway_container" "test_gutschi_site" {
     COOKIE_NAME="session",
     LOG_LEVEL=var.log_level,
     ADMIN_EMAIL=var.admin_email,
-    AI_BASE_URL="https://opencode.ai/zen/go/v1"
+    AI_BASE_URL="https://opencode.ai/zen/go/v1",
+    MICROSOFT_GRAPH_APPLICATION_ID: var.graph_application_id,
+    MICROSOFT_GRAPH_ISSUER: var.graph_issuer,
+    GRAFANA_URL: var.grafana_url
   }
   secret_environment_variables = {
     CLIENT_SECRET=var.client_secret,
@@ -118,7 +124,9 @@ resource "scaleway_container" "test_gutschi_site" {
       split("?" , trimprefix(scaleway_sdb_sql_database.test_gutschi_site.endpoint, "postgres://"))[0],
       "sslmode=verify-full",
     ),
-    AI_API_KEY = var.ai_api_key
+    AI_API_KEY = var.ai_api_key,
+    MICROSOFT_GRAPH_CLIENT_SECRET=var.graph_client_secret
+
   }
 }
 
