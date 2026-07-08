@@ -110,6 +110,29 @@
     flex-grow: 1;
 }
 
+.newChatButton {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+
+    :hover {
+        background-color: var(--primary-hover-color);
+    }
+    
+    @media (max-width: 600px) {
+        display: flex;
+    }
+
+}
+
 .logoutLink {
     display: flex;
     align-items: center;
@@ -120,15 +143,13 @@
     height: 4rem;
     opacity: 0.85;
     transition: background 0.12s, opacity 0.12s;
-}
 
-.logoutLink:hover {
-    background-color: var(--primary-hover-color);
-    opacity: 1;
-}
+    :hover {
+        background-color: var(--primary-hover-color);
+        opacity: 1;
+    }
 
-@media (max-width: 600px) {
-    .logoutLink {
+    @media (max-width: 600px) {
         font-size: 0.8rem;
         padding: 0 0.5rem;
         height: 2.75rem;

@@ -1,4 +1,5 @@
 import { Header } from './shared/_components/Header'
+import { PwaManager } from './shared/_components/PwaManager'
 import { getUserSession } from './shared/auth/auth'
 import { SidebarContainer } from './shared/_components/sidebar/SidebarContainer'
 
@@ -18,6 +19,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
     <html lang="en">
       <body>
         <link rel="stylesheet" href="/global.css" />
+        <PwaManager />
         <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
         <SidebarContainer>
           {children}
