@@ -49,7 +49,12 @@ export function AiChatWindow() {
 
   // Always scroll to the bottom to show latest messages
   useEffect(() => {
-    if (listRef.current) { listRef.current.scrollTop = listRef.current.scrollHeight }
+    if (listRef.current && listRef.current.clientWidth > 600) {
+      listRef.current.scrollTop = listRef.current.scrollHeight
+    }
+    else {
+      // TODO, Scroll to bottom on mobile
+    }
   }, [state])
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {

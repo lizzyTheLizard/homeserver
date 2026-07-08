@@ -47,7 +47,7 @@ export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLA
   return (
     <SidebarContext.Provider value={contextValue}>
       <div className={className} {...props}>
-        <div className={style.sidebarContent} onClick={onClick}>
+        <div className={style.sidebarContent} onClick={onClick} id="sidebar-content">
           {children}
         </div>
       </div>

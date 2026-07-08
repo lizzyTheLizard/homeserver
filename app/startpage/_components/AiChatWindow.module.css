@@ -84,3 +84,41 @@
   background: rgba(0,0,210,1);
   cursor: pointer;
 }
+
+@media (max-width: 600px) {
+  .window {
+    overflow: visible;
+  }
+
+  .messageList {
+    overflow-y: visible;
+    flex-grow: 0;
+    padding-bottom: 7.5rem;
+  }
+
+  .inputRow {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    background: var(--default-background-color);
+  }
+
+  .chips {
+    position: fixed;
+    bottom: 3.3rem;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    background: var(--default-background-color);
+    padding: 0.4rem 1rem;
+    margin: 0;
+  }
+}
