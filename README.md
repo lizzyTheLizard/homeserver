@@ -32,9 +32,11 @@ See [.env.example](.env.example) for the full list. The most important ones:
 | `APP_URL`                | Public URL of the app (used for OIDC redirect)   |
 | `DB_CONNECTION_STRING`   | `postgres://user:pass@host:port/dbname`          |
 | `ADMIN_EMAIL`            | Email allowed into the Admin app                 |
-| `CLIENT_ID`/`CLIENT_SECRET`/`ISSUER` | OIDC application credentials         |
+| `CLIENT_ID`/`CLIENT_SECRET`/`LOGIN_ISSUER` | OIDC application credentials         |
 | `COOKIE_NAME`/`SESSION_PASSWORD` | iron-session cookie name + secret        |
-| `DEEPINFRA_API_KEY` | Deepinfra LLM endpoint           |
+| `AI_API_KEY`/`AI_BASE_URL` | AI model endpoint credentials        |
+| `MICROSOFT_GRAPH_APPLICATION_ID`/`MICROSOFT_GRAPH_CLIENT_SECRET`/`MICROSOFT_GRAPH_ISSUER` | Microsoft Graph (Outlook) OIDC credentials |
+| `GRAFANA_URL` | URL to Grafana log dashboard         |
 
 In production every required var must be set; the app fails fast on startup otherwise.
 

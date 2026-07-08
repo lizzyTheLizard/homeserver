@@ -3,6 +3,7 @@ import { DashboardCard } from '../_components/DashboardCard'
 import { EventsCard } from './_components/EventsCard'
 import styles from './Dashboard.module.css'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { config } from '@/app/shared/config'
 
 export default function Loading() {
   return (
@@ -17,7 +18,7 @@ export default function Loading() {
         <DashboardCard header="Config" url="/admin/config" items={[]}></DashboardCard>
         <DashboardCard header="Metrics" url="/admin/metrics" items={[]}></DashboardCard>
       </div>
-      <EventsCard events={[]} />
+      <EventsCard events={[]} logUrl={config.GRAFANA_URL} />
     </main>
   )
 }

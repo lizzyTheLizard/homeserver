@@ -4,7 +4,7 @@ export interface Config {
   APP_URL: string
   DB_CONNECTION_STRING: string
   ADMIN_EMAIL: string
-  GRAFANA_URL?: string
+  GRAFANA_URL: string
   OIDC: {
     ISSUER: string
     CLIENT_ID: string
