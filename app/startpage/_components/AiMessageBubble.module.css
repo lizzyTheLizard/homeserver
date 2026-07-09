@@ -8,7 +8,6 @@
   color: white;
   padding: 0.6rem 1.05rem;
   border-radius: 18px 18px 4px 18px;
-  max-width: 80%;
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -25,16 +24,49 @@
   font-size: 0.9rem;
   line-height: 1.65;
   color: #1a1a2e;
-  max-width: 80%;
 }
 
-.typingIndicator {
+.typingBubble {
   display: inline-flex;
-  background: rgb(236,237,245);
-  border-radius: 4px 18px 18px 18px;
-  padding: 0.75rem 1rem;
   gap: 5px;
   align-items: center;
+}
+
+
+.labelWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stalledBubble {
+    border: 1px solid rgba(180,120,0,0.2);
+}
+
+.partialText {
+  white-space: pre-line;
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursorBlink 1s step-end infinite;
+}
+
+.cursorActive {
+  background: rgba(0,0,180,0.7);
+}
+
+.cursorStalled {
+  background: rgba(180,120,0,0.5);
+}
+
+@keyframes cursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 .dot {
@@ -45,8 +77,56 @@
   animation: bounce 1.1s infinite;
 }
 
+.dotStalled {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(180,120,0,0.35);
+  animation: bounceStalled 1.4s infinite;
+}
+
+
 @keyframes bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
+@keyframes bounceStalled {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/** Stalled label */
+
+.stalledLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-left: 0.4rem;
+  font-size: 0.72rem;
+  color: rgba(180,100,0,0.8);
+}
+
+/** Generating label */
+.generatingLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(0,0,140,0.5);
+}
+
+.dotStream {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0,0,180,0.45);
+  animation: dotStream 1.2s infinite;
+}
+
+@keyframes dotStream {
+  0% { transform: translateX(-8px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateX(0); opacity: 0; }
+}

@@ -8,6 +8,7 @@ export interface AiChatState {
   actions: string[]
   messages: Message[]
   currentMessage: string
+  stalled: boolean
 }
 
 export const initialAiChatState: AiChatState = {
@@ -15,6 +16,7 @@ export const initialAiChatState: AiChatState = {
   actions: [],
   messages: [],
   currentMessage: '',
+  stalled: false,
 }
 
 export type AiChatStateAction = { type: 'RECEIVED', chunk: string | undefined }
@@ -24,23 +26,26 @@ export type AiChatStateAction = { type: 'RECEIVED', chunk: string | undefined }
   | { type: 'SEND', message: string }
   | { type: 'ERROR', error: unknown }
   | { type: 'RESET' }
+  | { type: 'STALLED' }
 
 export function aiChatStateReducer(state: AiChatState, action: AiChatStateAction): AiChatState {
   switch (action.type) {
     case 'ACTIONS':
       return { ...state, actions: action.actions ?? [] }
     case 'SEND':
-      return { current: 'working', actions: [], messages: addSendMessage(state, action.message), currentMessage: '' }
+      return { current: 'working', actions: [], messages: addSendMessage(state, action.message), currentMessage: '', stalled: false }
     case 'FINISH':
-      return { ...state, current: 'ready', messages: addFinishMessage(state), currentMessage: '' }
+      return { ...state, current: 'ready', messages: addFinishMessage(state), currentMessage: '', stalled: false }
     case 'RECEIVED':
-      return { ...state, currentMessage: state.currentMessage + (action.chunk ?? '') }
+      return { ...state, currentMessage: state.currentMessage + (action.chunk ?? ''), stalled: false }
     case 'TOOL_CALL':
       return { ...state, currentMessage: '' }
     case 'ERROR':
-      return { current: 'failed', actions: [], messages: addErrorMessage(state, action.error), currentMessage: '' }
+      return { current: 'failed', actions: [], messages: addErrorMessage(state, action.error), currentMessage: '', stalled: false }
     case 'RESET':
       return { ...initialAiChatState }
+    case 'STALLED':
+      return { ...state, stalled: true }
   }
 }
 

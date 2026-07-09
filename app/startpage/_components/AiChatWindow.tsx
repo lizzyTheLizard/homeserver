@@ -5,12 +5,25 @@ import { aiChatStateReducer, initialAiChatState } from './AiChatWindowState'
 import { AiMessageBubble } from './AiMessageBubble'
 import styles from './AiChatWindow.module.css'
 
+const STALL_TIMEOUT_MS = 15000
+
 export function AiChatWindow() {
   const [state, dispatch] = useReducer(aiChatStateReducer, initialAiChatState)
   const [input, setInput] = useState('')
   const canSend = input.trim().length > 0
   const listRef = useRef<HTMLDivElement>(null)
   const socketRef = useRef<WebSocket | undefined>(undefined)
+  const stallTimerRef = useRef<NodeJS.Timeout | undefined>(undefined)
+
+  function startStallTimer() {
+    clearStallTimer()
+    stallTimerRef.current = setTimeout(() => { dispatch({ type: 'STALLED' }) }, STALL_TIMEOUT_MS)
+  }
+
+  function clearStallTimer() {
+    if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
+    stallTimerRef.current = undefined
+  }
 
   function startWebSocket() {
     const websocket = new WebSocket('/ws/assistant')
@@ -21,20 +34,35 @@ export function AiChatWindow() {
     }
     websocket.onmessage = (event) => {
       const data = JSON.parse(event.data as string) as { type: string, chunk?: string, actions?: string[], error?: string }
-      if (data.type === 'stream_response') dispatch({ type: 'RECEIVED', chunk: data.chunk })
+      if (data.type === 'stream_response') {
+        dispatch({ type: 'RECEIVED', chunk: data.chunk })
+        startStallTimer()
+      }
       if (data.type === 'tool_call') dispatch({ type: 'TOOL_CALL' })
       if (data.type === 'got_actions') dispatch({ type: 'ACTIONS', actions: data.actions })
-      if (data.type === 'error') dispatch({ type: 'ERROR', error: data.error ?? 'Unknown error' })
-      if (data.type === 'finished_response') dispatch({ type: 'FINISH' })
+      if (data.type === 'error') {
+        dispatch({ type: 'ERROR', error: data.error ?? 'Unknown error' })
+        clearStallTimer()
+      }
+      if (data.type === 'finished_response') {
+        dispatch({ type: 'FINISH' })
+        clearStallTimer()
+      }
     }
     websocket.onerror = (error) => { console.warn('WebSocket error:', error) }
-    websocket.onclose = (event) => { console.log('WebSocket closed:', event.code, event.reason) }
+    websocket.onclose = (event) => {
+      console.log('WebSocket closed:', event.code, event.reason)
+      clearStallTimer()
+    }
     socketRef.current = websocket
   }
 
   useEffect(() => {
     startWebSocket()
-    return () => { socketRef.current?.close() }
+    return () => {
+      socketRef.current?.close()
+      clearStallTimer()
+    }
   }, [])
 
   useEffect(() => {
@@ -68,6 +96,7 @@ export function AiChatWindow() {
     const message = t
     dispatch({ type: 'SEND', message: t })
     setInput('')
+    startStallTimer()
     socketRef.current?.send(JSON.stringify({ type: 'message', message }))
   }
 
@@ -89,10 +118,13 @@ export function AiChatWindow() {
           />
         ))}
         {(state.current === 'working' || state.current === 'initializing') && state.currentMessage.trim().length === 0 && (
-          <AiMessageBubble role="assistant" content="" typing={true} editable={false} />
+          <AiMessageBubble role="assistant" content="" generating={true} stalled={state.stalled} />
         )}
-        {(state.currentMessage.trim().length > 0) && (
-          <AiMessageBubble role="assistant" content={state.currentMessage} editable={false} />
+        {state.current === 'working' && state.currentMessage.trim().length > 0 && (
+          <AiMessageBubble role="assistant" content={state.currentMessage} generating={true} stalled={state.stalled} />
+        )}
+        {state.current !== 'working' && state.currentMessage.trim().length > 0 && (
+          <AiMessageBubble role="assistant" content={state.currentMessage} />
         )}
       </div>
 

@@ -8,7 +8,8 @@ const meta = {
   argTypes: {
     role: { control: 'select', options: ['user', 'assistant'] },
     content: { control: 'text' },
-    typing: { control: 'boolean' },
+    generating: { control: 'boolean' },
+    stalled: { control: 'boolean' },
     editable: { control: 'boolean' },
   },
 } satisfies Meta<typeof AiMessageBubble>
@@ -18,7 +19,6 @@ export const UserMessage: StoryObj<typeof meta> = {
   args: {
     role: 'user',
     content: 'What is the weather like today?',
-    typing: false,
   },
 }
 
@@ -26,7 +26,6 @@ export const AiMessage: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
     content: 'The weather is currently sunny with a temperature of 22°C. Perfect for a walk!',
-    typing: false,
   },
 }
 
@@ -34,15 +33,42 @@ export const AiMessageWithMarkdown: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
     content: 'Here is some **bold text** and a [link](https://example.com).\n\n- Item 1\n- Item 2\n- Item 3',
-    typing: false,
   },
 }
 
-export const TypingIndicator: StoryObj<typeof meta> = {
+export const GeneratingEmpty: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
     content: '',
-    typing: true,
+    generating: true,
+    stalled: false,
+  },
+}
+
+export const GeneratingEmptyStalled: StoryObj<typeof meta> = {
+  args: {
+    role: 'assistant',
+    content: '',
+    generating: true,
+    stalled: true,
+  },
+}
+
+export const GeneratingPartial: StoryObj<typeof meta> = {
+  args: {
+    role: 'assistant',
+    content: 'Here\'s your email summary:\n\n- Stefan Meier — Project meeting next Thursday at 14:00\n- Oliver Braun — Question about Q2 numbers, needs reply',
+    generating: true,
+    stalled: false,
+  },
+}
+
+export const GeneratingPartialStalled: StoryObj<typeof meta> = {
+  args: {
+    role: 'assistant',
+    content: 'Sure! Here\'s a draft for Thomas:\n\n"Hey Thomas! Yes, I\'ll be there Saturday —',
+    generating: true,
+    stalled: true,
   },
 }
 
@@ -52,17 +78,7 @@ export const EditableBeforeEdit: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
     content: EDITABLE_CONTENT,
-    typing: false,
     editable: true,
-  },
-}
-
-export const InputBlockNotEditable: StoryObj<typeof meta> = {
-  args: {
-    role: 'assistant',
-    content: EDITABLE_CONTENT,
-    typing: false,
-    editable: false,
   },
 }
 
@@ -70,7 +86,6 @@ export const EditableDuringEdit: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
     content: EDITABLE_CONTENT,
-    typing: false,
     editable: true,
   },
   play: async ({ canvasElement }) => {
@@ -86,7 +101,6 @@ export const EditableAfterEdit: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
     content: EDITABLE_CONTENT,
-    typing: false,
     editable: true,
   },
   play: async ({ canvasElement }) => {
@@ -115,7 +129,6 @@ export const EditableResponse: StoryObj<typeof meta> = {
   args: {
     role: 'user',
     content: 'I updated the text\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where? Should I bring anything?\n~~~',
-    typing: false,
   },
 }
 
@@ -125,7 +138,10 @@ export const AllVariants: StoryObj = {
       <AiMessageBubble role="user" content="What is the weather like today?" />
       <AiMessageBubble role="assistant" content="The weather is currently sunny with a temperature of 22°C." />
       <AiMessageBubble role="assistant" content="Here is some **bold text** and a [link](https://example.com)." />
-      <AiMessageBubble role="assistant" content="" typing />
+      <AiMessageBubble role="assistant" content="" generating />
+      <AiMessageBubble role="assistant" content="" generating stalled />
+      <AiMessageBubble role="assistant" content="Here's your email summary:..." generating />
+      <AiMessageBubble role="assistant" content="Sure! Here's a draft for Thomas:..." generating stalled />
     </div>
   ),
 }
