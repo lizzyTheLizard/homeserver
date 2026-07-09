@@ -8,15 +8,6 @@ const meta = {
 } satisfies Meta<typeof ConnectionStatusIndicator>
 export default meta
 
-export const CannotStart: StoryObj<typeof meta> = {
-  args: {
-    state: 'cannot-start',
-    maxAttempts: 10,
-    onRetry: () => { console.log('retry') },
-    onRestart: () => { console.log('restart') },
-  },
-}
-
 export const Reconnecting: StoryObj<typeof meta> = {
   args: {
     state: 'reconnecting',
@@ -37,9 +28,9 @@ export const RetriesExhausted: StoryObj<typeof meta> = {
   },
 }
 
-export const NoRetry: StoryObj<typeof meta> = {
+export const RetryImpossible: StoryObj<typeof meta> = {
   args: {
-    state: 'no-retry',
+    state: 'retry-impossible',
     maxAttempts: 10,
     onRetry: () => { console.log('retry') },
     onRestart: () => { console.log('restart') },

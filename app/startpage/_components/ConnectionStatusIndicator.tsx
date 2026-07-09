@@ -2,9 +2,10 @@
 
 import { Icon } from '@/app/shared/_components/Icon'
 import styles from './ConnectionStatusIndicator.module.css'
+import { ChatState } from './AiChatWebSocket'
 
 export interface ConnectionStatusIndicatorProps {
-  state: 'cannot-start' | 'reconnecting' | 'retries-exhausted' | 'no-retry'
+  state: ChatState
   attempt?: number
   maxAttempts: number
   countdown?: number
@@ -21,10 +22,6 @@ export function ConnectionStatusIndicator(props: ConnectionStatusIndicatorProps)
   let retryLabel: string | undefined
 
   switch (props.state) {
-    case 'cannot-start':
-      iconName = 'error'
-      textContent = 'Unable to establish a connection to the server. Please check your network and try again.'
-      break
     case 'reconnecting':
       iconName = 'reconnect'
       textContent = `Connection lost. Reconnecting in ${String(props.countdown)}s — attempt ${String(props.attempt)} of ${String(props.maxAttempts)}.`
@@ -35,10 +32,12 @@ export function ConnectionStatusIndicator(props: ConnectionStatusIndicatorProps)
       textContent = `Connection failed after ${String(props.maxAttempts)} attempts. The server could not be reached.`
       retryLabel = 'Retry again'
       break
-    case 'no-retry':
+    case 'retry-impossible':
       iconName = 'fatal'
       textContent = 'Connection failed, reconnection is not possible. Please restart the session.'
       break
+    default:
+      return null
   }
 
   return (
