@@ -43,11 +43,13 @@ export function ConnectionStatusIndicator(props: ConnectionStatusIndicatorProps)
 
   return (
     <div className={styles.container}>
-      <div className={styles.bubble + ' ' + bubbleColorClass}>
-        <div className={styles.iconWrapper}>
-          <Icon name={iconName} className={iconClass} />
+      <div className={styles.message}>
+        <div className={styles.bubble + ' ' + bubbleColorClass}>
+          <div className={styles.iconWrapper}>
+            <Icon name={iconName} className={iconClass} />
+          </div>
+          <span className={textClass}>{textContent}</span>
         </div>
-        <span className={textClass}>{textContent}</span>
       </div>
       <div className={styles.buttons}>
         {retryLabel && <button className={styles.actionButton} onClick={props.onRetry}>{retryLabel}</button>}

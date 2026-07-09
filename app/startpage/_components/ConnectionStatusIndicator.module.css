@@ -5,6 +5,12 @@
   max-width: 480px;
 }
 
+.message {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
 .bubble {
   display: flex;
   align-items: flex-start;
