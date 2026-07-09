@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AiChatMessageList, Message } from './AiChatMessageList'
 import { AiActionsList } from './AiActionsList'
-import { ConnectionStatusIndicator } from './ConnectionStatusIndicator'
+import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
 import { MAX_RECONNECT_ATTEMPTS, useAiChatWebSocket } from './AiChatWebSocket'
 import styles from './AiChatWindow.module.css'
 import { getLocation } from '../_helper/location'
@@ -62,7 +62,7 @@ export function AiChatWindow() {
         incomingMessage={ws.incomingMessage}
         onEdit={handleEdit}
       />
-      <ConnectionStatusIndicator
+      <AiConnectionStatusIndicator
         state={ws.state}
         attempt={ws.reconnectAttempt}
         maxAttempts={MAX_RECONNECT_ATTEMPTS}

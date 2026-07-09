@@ -21,7 +21,7 @@ export interface AiChatMessageListProps {
 export function AiChatMessageList({ messages, state, incomingMessage, onEdit }: AiChatMessageListProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const ready = state === 'ready'
-  const incomming = state === 'waiting' || state === 'stalled'
+  const incomming = state === 'waiting' || state === 'stalled' || state === 'connecting'
   const stalled = state === 'stalled'
 
   useEffect(() => {

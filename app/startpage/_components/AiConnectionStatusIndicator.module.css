@@ -2,7 +2,6 @@
   display: inline-flex;
   flex-direction: column;
   gap: 0.6rem;
-  max-width: 480px;
 }
 
 .message {

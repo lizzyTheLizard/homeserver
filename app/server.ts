@@ -57,7 +57,6 @@ function handleInitialize(ws: WebSocket, msg: { type: 'initialize', initialConte
 function handleReconnect(ws: WebSocket, msg: { type: 'reconnect', uuid: string }): string | undefined {
   const stored = activeAssistants.get(msg.uuid)
   if (!stored) {
-    ws.send(JSON.stringify({ type: 'error', message: 'Session expired. Please start a new chat.' }))
     ws.close(4001, 'Session has expired, cannot reconnect')
     return undefined
   }

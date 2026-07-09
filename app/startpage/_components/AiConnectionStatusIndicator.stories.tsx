@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ConnectionStatusIndicator } from './ConnectionStatusIndicator'
+import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
 
 const meta = {
-  title: 'Startpage/ConnectionStatusIndicator',
-  component: ConnectionStatusIndicator,
+  title: 'Startpage/AiConnectionStatusIndicator',
+  component: AiConnectionStatusIndicator,
   tags: ['autodocs'],
-} satisfies Meta<typeof ConnectionStatusIndicator>
+} satisfies Meta<typeof AiConnectionStatusIndicator>
 export default meta
 
 export const Reconnecting: StoryObj<typeof meta> = {
