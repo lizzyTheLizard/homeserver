@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@ai-sdk/deepinfra':
-        specifier: ^3.0.3
-        version: 3.0.3(zod@4.4.3)
+        specifier: ^3.0.6
+        version: 3.0.6(zod@4.4.3)
       '@ai-sdk/openai-compatible':
         specifier: ^3.0.4
         version: 3.0.4(zod@4.4.3)
@@ -198,8 +198,8 @@ packages:
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
 
-  '@ai-sdk/deepinfra@3.0.3':
-    resolution: {integrity: sha512-UhyH7qxFMOR3FgvTxbEe/Fg1YtayzMrT+ud94cxm7HjmOk0MN5P/c6+6RLrqzWyThofVsLswHDKWQ3PWM/p9tQ==}
+  '@ai-sdk/deepinfra@3.0.6':
+    resolution: {integrity: sha512-TPsJjIaYX2IqCsoiMdgqZ6AVcH3RBozn1aSyx1HQD4rxRBiudK2FMnsxHOEa5/ZRggNprkzyKfkSJJn7b6wmBw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -210,14 +210,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai-compatible@3.0.3':
-    resolution: {integrity: sha512-+mDaUS0q460pVs3oW2/Ps/vj4M2EZnYr1v6ng8TmzxnZPrYBuK7PGQIfckqFdWIdUI/gG8BXcaf8vukLKyGU6Q==}
+  '@ai-sdk/openai-compatible@3.0.4':
+    resolution: {integrity: sha512-jnW9Wfkn75M7lN5O9HUlgs4il6jbJKGwoRtsuRWDovr4Fz81qwB9Kx/kxoEL7cZn0cBg5/CZVOuMXJsmkxi9zw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai-compatible@3.0.4':
-    resolution: {integrity: sha512-jnW9Wfkn75M7lN5O9HUlgs4il6jbJKGwoRtsuRWDovr4Fz81qwB9Kx/kxoEL7cZn0cBg5/CZVOuMXJsmkxi9zw==}
+  '@ai-sdk/openai-compatible@3.0.6':
+    resolution: {integrity: sha512-1YB8Wt2l3X1gCLuF5bYoaQn04XXw+GKqxSvnHAnGEpK+xflJfnJ1l93KHbijLBObM6KAC7amKT9KjM9iu1B6zA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -234,8 +234,18 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/provider-utils@5.0.6':
+    resolution: {integrity: sha512-i4mVayGtC+HrRmtfPFOxvKKQgFU+1dwTTsh4MY0jY1MaGuppOwDFrNYrJ3dDXWMkO3o6FDVAKY8ZDsy7hLsO9Q==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/provider@4.0.1':
     resolution: {integrity: sha512-6p3C/vGqVIjcptBu1DnVd/BZJ2wWmV9TUv9192vT6ZvT9KNED8EwRTqyqFpoQZKgSbMDSvBSq3dqR524Nt/Crw==}
+    engines: {node: '>=22'}
+
+  '@ai-sdk/provider@4.0.2':
+    resolution: {integrity: sha512-pfPoy9J1B1xV7cqJ8MYHOsDYrMv5tR3+EMNfI249OhkD2uRakvav3Fo7XpD2luuN/YNCBY7KfEQc7vEV7KEtyw==}
     engines: {node: '>=22'}
 
   '@asamuzakjp/css-color@5.1.11':
@@ -4215,11 +4225,11 @@ snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
-  '@ai-sdk/deepinfra@3.0.3(zod@4.4.3)':
+  '@ai-sdk/deepinfra@3.0.6(zod@4.4.3)':
     dependencies:
-      '@ai-sdk/openai-compatible': 3.0.3(zod@4.4.3)
-      '@ai-sdk/provider': 4.0.1
-      '@ai-sdk/provider-utils': 5.0.3(zod@4.4.3)
+      '@ai-sdk/openai-compatible': 3.0.6(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.2
+      '@ai-sdk/provider-utils': 5.0.6(zod@4.4.3)
       zod: 4.4.3
 
   '@ai-sdk/gateway@4.0.8(zod@4.4.3)':
@@ -4229,16 +4239,16 @@ snapshots:
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
-  '@ai-sdk/openai-compatible@3.0.3(zod@4.4.3)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.1
-      '@ai-sdk/provider-utils': 5.0.3(zod@4.4.3)
-      zod: 4.4.3
-
   '@ai-sdk/openai-compatible@3.0.4(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.1
       '@ai-sdk/provider-utils': 5.0.4(zod@4.4.3)
+      zod: 4.4.3
+
+  '@ai-sdk/openai-compatible@3.0.6(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.2
+      '@ai-sdk/provider-utils': 5.0.6(zod@4.4.3)
       zod: 4.4.3
 
   '@ai-sdk/provider-utils@5.0.3(zod@4.4.3)':
@@ -4257,7 +4267,19 @@ snapshots:
       eventsource-parser: 3.1.0
       zod: 4.4.3
 
+  '@ai-sdk/provider-utils@5.0.6(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.2
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.0
+      zod: 4.4.3
+
   '@ai-sdk/provider@4.0.1':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@4.0.2':
     dependencies:
       json-schema: 0.4.0
 
