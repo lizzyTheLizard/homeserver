@@ -1,8 +1,8 @@
 {
   "version": 1,
   "kind": "html",
-  "title": "Start Page - Editable Chat.html",
-  "entry": "Start Page - Editable Chat.html",
+  "title": "Start Page - Reconnect Indicator.html",
+  "entry": "Start Page - Reconnect Indicator.html",
   "renderer": "html",
   "status": "complete",
   "exports": [
@@ -10,8 +10,8 @@
     "pdf",
     "zip"
   ],
-  "createdAt": "2026-07-08T19:09:59.546Z",
-  "updatedAt": "2026-07-08T19:09:59.546Z",
+  "createdAt": "2026-07-08T19:28:41.045Z",
+  "updatedAt": "2026-07-08T19:28:41.045Z",
   "metadata": {
     "inferred": true,
     "reconciled": true

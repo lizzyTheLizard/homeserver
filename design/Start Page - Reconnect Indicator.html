@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start Page — Reconnect Indicator</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="Icon.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: white; }
+  #root { min-height: 100%; display: flex; flex-direction: column; }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    50% { transform: scale(1.1); opacity: 0.2; }
+    100% { transform: scale(0.9); opacity: 0.6; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "siteName": "Homeserver",
+  "weatherCity": "Zürich",
+  "weatherTemp": 17,
+  "weatherCondition": "Partly cloudy"
+}/*EDITMODE-END*/;
+
+const APPS = [
+  { key: 'cash',      name: 'Cash',      icon: 'cash',      description: 'Bookkeeping' },
+  { key: 'coeditor',  name: 'CoEditor',  icon: 'coeditor',  description: 'Document editor' },
+  { key: 'admin',     name: 'Admin',     icon: 'admin',     description: 'Server admin' },
+  { key: 'startpage', name: 'StartPage', icon: 'startpage', description: 'Browser start page' },
+];
+
+// ── Clock ──────────────────────────────────────────────────────────
+function useClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ── Icons ──────────────────────────────────────────────────────────
+function ErrorIcon({ size = 16, color = 'rgba(185,30,30,0.8)' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.3"/>
+      <path d="M8 5v3.5" stroke={color} strokeWidth="1.3" strokeLinecap="round"/>
+      <circle cx="8" cy="10.5" r="0.7" fill={color}/>
+    </svg>
+  );
+}
+
+function FatalIcon({ size = 16, color = 'rgba(185,30,30,0.8)' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.3"/>
+      <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke={color} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function ReconnectIcon({ size = 16, color = 'rgba(185,120,0,0.8)' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <path d="M13 8A5 5 0 1 1 8 3" stroke={color} strokeWidth="1.3" strokeLinecap="round"/>
+      <path d="M8 1l2 2-2 2" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+// ── Reconnect indicator variants ───────────────────────────────────
+
+function ConnectionCannotStart() {
+  return (
+    <div style={{ display: 'inline-flex' }}>
+      <div style={{
+        background: 'rgba(185,30,30,0.06)',
+        border: '1px solid rgba(185,30,30,0.18)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.9rem 1.1rem',
+        display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+        maxWidth: '480px',
+      }}>
+        <div style={{ flexShrink: 0, paddingTop: '0.1rem' }}>
+          <ErrorIcon />
+        </div>
+        <div style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'rgba(140,20,20,0.95)' }}>
+          Unable to establish a connection to the server. Please check your network and try again.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConnectionFailedReconnecting({ attempt, maxAttempts, countdown }) {
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.6rem', maxWidth: '480px' }}>
+      <div style={{
+        background: 'rgba(185,120,0,0.06)',
+        border: '1px solid rgba(185,120,0,0.2)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.9rem 1.1rem',
+        display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+      }}>
+        <div style={{ flexShrink: 0, paddingTop: '0.1rem' }}>
+          <div style={{ position: 'relative', width: '16px', height: '16px' }}>
+            <div style={{
+              position: 'absolute', inset: '-3px',
+              border: '1.5px solid rgba(185,120,0,0.25)',
+              borderRadius: '50%',
+              animation: 'pulse-ring 2s ease-in-out infinite',
+            }}/>
+            <ReconnectIcon />
+          </div>
+        </div>
+        <div style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'rgba(140,90,0,0.95)' }}>
+          Connection lost. Reconnecting in <strong>{countdown}s</strong> — attempt {attempt} of {maxAttempts}.
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', paddingLeft: '0.2rem' }}>
+        <button style={{
+          padding: '0.33rem 0.85rem',
+          background: 'rgba(0,0,210,0.07)',
+          border: '1px solid rgba(0,0,210,0.22)',
+          borderRadius: '20px', cursor: 'pointer',
+          fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+          fontFamily: 'inherit', fontWeight: 500,
+          transition: 'background 0.12s, border-color 0.12s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+        >Retry now</button>
+        <button style={{
+          padding: '0.33rem 0.85rem',
+          background: 'rgba(0,0,210,0.07)',
+          border: '1px solid rgba(0,0,210,0.22)',
+          borderRadius: '20px', cursor: 'pointer',
+          fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+          fontFamily: 'inherit', fontWeight: 500,
+          transition: 'background 0.12s, border-color 0.12s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+        >Restart the session</button>
+      </div>
+    </div>
+  );
+}
+
+function ConnectionFailedAllRetriesExhausted({ maxAttempts }) {
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.6rem', maxWidth: '480px' }}>
+      <div style={{
+        background: 'rgba(185,30,30,0.06)',
+        border: '1px solid rgba(185,30,30,0.18)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.9rem 1.1rem',
+        display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+      }}>
+        <div style={{ flexShrink: 0, paddingTop: '0.1rem' }}>
+          <FatalIcon />
+        </div>
+        <div style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'rgba(140,20,20,0.95)' }}>
+          Connection failed after {maxAttempts} attempts. The server could not be reached.
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', paddingLeft: '0.2rem' }}>
+        <button style={{
+          padding: '0.33rem 0.85rem',
+          background: 'rgba(0,0,210,0.07)',
+          border: '1px solid rgba(0,0,210,0.22)',
+          borderRadius: '20px', cursor: 'pointer',
+          fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+          fontFamily: 'inherit', fontWeight: 500,
+          transition: 'background 0.12s, border-color 0.12s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+        >Retry again</button>
+        <button style={{
+          padding: '0.33rem 0.85rem',
+          background: 'rgba(0,0,210,0.07)',
+          border: '1px solid rgba(0,0,210,0.22)',
+          borderRadius: '20px', cursor: 'pointer',
+          fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+          fontFamily: 'inherit', fontWeight: 500,
+          transition: 'background 0.12s, border-color 0.12s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+        >Restart the session</button>
+      </div>
+    </div>
+  );
+}
+
+function ConnectionFailedNoRetry() {
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.6rem', maxWidth: '480px' }}>
+      <div style={{
+        background: 'rgba(185,30,30,0.08)',
+        border: '1px solid rgba(185,30,30,0.22)',
+        borderRadius: '18px 18px 18px 4px',
+        padding: '0.9rem 1.1rem',
+        display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+      }}>
+        <div style={{ flexShrink: 0, paddingTop: '0.1rem' }}>
+          <FatalIcon />
+        </div>
+        <div style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'rgba(140,20,20,0.95)' }}>
+          Connection failed. Automatic reconnection is not available. Please restart the session.
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', paddingLeft: '0.2rem' }}>
+        <button style={{
+          padding: '0.33rem 0.85rem',
+          background: 'rgba(0,0,210,0.07)',
+          border: '1px solid rgba(0,0,210,0.22)',
+          borderRadius: '20px', cursor: 'pointer',
+          fontSize: '0.8rem', color: 'rgba(0,0,180,1)',
+          fontFamily: 'inherit', fontWeight: 500,
+          transition: 'background 0.12s, border-color 0.12s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.13)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.45)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,210,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,0,210,0.22)'; }}
+        >Restart the session</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Section label ──────────────────────────────────────────────────
+function SectionLabel({ children }) {
+  return (
+    <div style={{
+      fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
+      letterSpacing: '0.08em', color: '#999',
+      padding: '0.2rem 0',
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Chat window (static demo) ──────────────────────────────────────
+function AIChatWindow() {
+  return (
+    <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{
+        flex: 1, minHeight: 0, overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: '0.75rem',
+        paddingTop: '0.5rem', paddingBottom: '0.75rem',
+      }}>
+        <SectionLabel>1. Connection cannot be started</SectionLabel>
+        <ConnectionCannotStart />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>2. Connection failed — reconnecting</SectionLabel>
+        <ConnectionFailedReconnecting attempt={3} maxAttempts={10} countdown={10} />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>3. All reconnect attempts exhausted</SectionLabel>
+        <ConnectionFailedAllRetriesExhausted maxAttempts={10} />
+
+        <div style={{ height: '0.5rem' }} />
+        <SectionLabel>4. Connection failed — retry not possible</SectionLabel>
+        <ConnectionFailedNoRetry />
+      </div>
+    </div>
+  );
+}
+
+// ── Tweaks panel ───────────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweaks, visible }) {
+  if (!visible) return null;
+  function update(key, val) {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  }
+  return (
+    <div style={{
+      position: 'fixed', bottom: '1rem', right: '1rem', zIndex: 1000,
+      background: 'white', border: '1px solid rgba(200,200,200,1)', borderRadius: '8px',
+      padding: '1rem', width: '260px', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+    }}>
+      <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tweaks</div>
+      {[['siteName', 'Site name'], ['weatherCity', 'Weather city'], ['weatherCondition', 'Condition']].map(([k, label]) => (
+        <div key={k}>
+          <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+          <input value={tweaks[k]} onChange={e => update(k, e.target.value)} style={{
+            width: '100%', height: '2rem', fontSize: '0.85rem',
+            border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+            fontFamily: 'inherit',
+          }} />
+        </div>
+      ))}
+      <div>
+        <div style={{ fontSize: '0.7rem', color: '#777', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temperature (°C)</div>
+        <input type="number" value={tweaks.weatherTemp} onChange={e => update('weatherTemp', Number(e.target.value))} style={{
+          width: '100%', height: '2rem', fontSize: '0.85rem',
+          border: '1px solid rgba(200,200,200,1)', borderRadius: '6px', padding: '0 0.5rem',
+          fontFamily: 'inherit',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────
+function App() {
+  const now = useClock();
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'white' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'rgba(0,0,220,1)', color: 'white',
+        height: '4rem', padding: '0 1.5rem', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '1.5rem', fontWeight: 600, marginRight: '0.5rem' }}>{tweaks.siteName}</span>
+        <nav style={{ display: 'flex' }}>
+          {APPS.map(app => (
+            <a key={app.key} href="#"
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              style={{
+                color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+                padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
+              }}>
+              <Icon name={app.icon} style={{ width: '1rem', height: '1rem' }} />
+              {app.name}
+            </a>
+          ))}
+        </nav>
+        <div style={{ flexGrow: 1 }} />
+        <a href="#"
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,255,1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          style={{
+            color: 'white', textDecoration: 'none', fontSize: '0.9rem',
+            padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center',
+          }}>
+          Logout
+        </a>
+      </div>
+
+      <div style={{
+        flexGrow: 1, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+        alignItems: 'center', padding: '1.5rem 2rem 1rem', gap: '1rem',
+      }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: '3.5rem', fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1, color: 'rgba(0,0,210,1)' }}>{fmtTime(now)}</div>
+          <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.4rem', letterSpacing: '0.01em' }}>{fmtDate(now)}</div>
+        </div>
+
+        <AIChatWindow />
+      </div>
+
+      <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} visible={tweaksVisible} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

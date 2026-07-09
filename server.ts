@@ -2,7 +2,7 @@
 import type { RequestHandler } from 'next/dist/server/next'
 import type { Server, IncomingMessage, ServerResponse } from 'http'
 import type { Logger } from 'winston'
-import type { WebSocketServer } from 'ws'
+import type { WebSocketHandler } from '@/app/shared/_helper/websocket'
 import type Stream from 'stream'
 import type { CookieStore, UserSession } from './app/shared/auth/auth'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
@@ -10,7 +10,7 @@ import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 main().catch((e: unknown) => { console.error('Error starting server', e) })
 
 async function main() {
-  const options = await loadConfig()
+  const options = await loadOptions()
   const server = await createReactApp(options, options.logger)
   await registerWebSockets(server, options.logger)
   server.listen(options.port, () => {
@@ -25,7 +25,7 @@ interface Options {
   logger: Logger
 }
 
-async function loadConfig(): Promise<Options> {
+async function loadOptions(): Promise<Options> {
   const fs = await import('fs')
   if (fs.existsSync('.env')) {
     const dotenv = await import('dotenv')
@@ -98,12 +98,6 @@ async function isAllowed(req: IncomingMessage, res: ServerResponse): Promise<boo
   if (session) return true
   if (req.url?.startsWith('/shared/auth/')) return true
   return false
-}
-
-interface WebSocketHandler {
-  name: string
-  canHandle: (request: IncomingMessage) => boolean
-  createServer: (user: UserSession) => WebSocketServer
 }
 
 async function registerWebSockets(server: Server, logger: Logger) {
