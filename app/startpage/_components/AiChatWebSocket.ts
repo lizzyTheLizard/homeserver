@@ -73,10 +73,13 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
 
   /** Handler for the different message types expected */
 
-  function onError(error: unknown) {
+  const onError = useCallback((error: unknown) => {
     console.warn('WebSocket error', error)
-    setState('ready')
-  }
+    closeConnection(ERROR_CLOSE)
+    if (!sessionIdRef.current) setState('retry-impossible')
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    onMessage(`Error: ${error}`)
+  }, [closeConnection, onMessage])
 
   function onToolCall() {
     setIncomingMessage('')
@@ -91,6 +94,7 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
 
   function onServerInitialized(uuid: string) {
     sessionIdRef.current = uuid
+    setState('ready')
     setReconnectAttempt(0)
   }
 
@@ -110,17 +114,18 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
     messageBufferRef.current = ''
     setIncomingMessage('')
     clearStallTimer()
-    onMessage(fullText)
+    if (fullText.trim()) onMessage(fullText)
     setState('ready')
   }, [onMessage])
 
   /** handlers for the different ws events */
 
-  const handleError = useCallback((error: unknown) => {
+  const handleError = useCallback((error: Event) => {
     console.warn('WebSocket error', error)
     closeConnection(ERROR_CLOSE)
     if (!sessionIdRef.current) setState('retry-impossible')
-  }, [closeConnection])
+    onMessage(`WebService error: ${JSON.stringify(error)}`)
+  }, [closeConnection, onMessage])
 
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
@@ -132,13 +137,12 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
       else if (data.type === 'tool_call') onToolCall()
       else if (data.type === 'got_actions') onGotActions(data.actions ?? [])
       else if (data.type === 'finished_response') onFinishedResponse()
-      else onError(`Unknown message type: ${data.type}`)
+      else onError(`Got an invalid message  ${event.data as string} from server`)
     }
     catch {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      onError(`Failed to parse server message ${event.data}`)
+      onError(`Failed to parse server message ${event.data as string}`)
     }
-  }, [onFinishedResponse, onGotActions, onStreamResponse])
+  }, [onFinishedResponse, onGotActions, onStreamResponse, onError])
 
   const handleOpen = useCallback((ws: WebSocket) => {
     if (sessionIdRef.current) {
@@ -152,8 +156,11 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
         // We are waiting for the server to respond with an initialized message, so we don't set the state to ready yet
         setState('waiting')
       })
-      .catch((err: unknown) => { handleError(err) })
-  }, [getInitialContext, handleError])
+      .catch((err: unknown) => {
+        console.warn('Initialization error', err)
+        onMessage(`Initialization error: ${JSON.stringify(err)}`)
+      })
+  }, [getInitialContext, onMessage])
 
   const handleClose = useCallback((attemptIndex: number, event: CloseEvent) => {
     console.log('WebSocket closed', event.code, event.reason)
