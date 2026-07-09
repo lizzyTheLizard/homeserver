@@ -29,6 +29,7 @@ export type AssistantEvent = { type: 'stream_response', chunk: string }
 
 export interface Assistant {
   on(listener: (event: AssistantEvent) => void): void
+  off(listener: (event: AssistantEvent) => void): void
   init(initialContext: InitialContext): Promise<void>
   send(message: string): Promise<void>
 }
@@ -40,6 +41,10 @@ export function createAssistantInstance(user: UserSession): Assistant {
   } }
   return {
     on: listener => listeners.push(listener),
+    off: (listener) => {
+      const index = listeners.indexOf(listener)
+      if (index >= 0) listeners.splice(index, 1)
+    },
     init: initialContext => initialize(user, handler, initialContext),
     send: (message) => { return send(handler, message, undefined, true) },
   }
