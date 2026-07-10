@@ -8,7 +8,7 @@ import { AiChatWebSocket, ChatState } from './AiChatWebSocket'
 import styles from './AiChatWindow.module.css'
 import { getLocation } from '../_helper/location'
 
-export function AiChatWindow() {
+export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [actions, setActions] = useState<string[]>([])
   const [input, setInput] = useState('')
@@ -76,11 +76,13 @@ export function AiChatWindow() {
         incomingMessage={incomingMessage}
         onEdit={handleEdit}
       />
-      <AiConnectionStatusIndicator
-        state={state}
-        onRetry={connectWebSocket}
-        onRestart={handleRestart}
-      />
+      {!loading && (
+        <AiConnectionStatusIndicator
+          state={state}
+          onRetry={connectWebSocket}
+          onRestart={handleRestart}
+        />
+      )}
       <AiActionsList state={state} actions={actions} onSend={send} />
       <form onSubmit={handleSubmit} className={styles.inputRow}>
         <input

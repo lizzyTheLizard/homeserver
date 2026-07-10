@@ -1,50 +1,23 @@
 import type { MetadataRoute } from 'next'
+import { config } from './shared/config'
+import { applications } from './shared/Application'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Gutschi.site',
-    short_name: 'Gutschi',
     description: 'Homeserver dashboard and applications',
-    id: 'https://www.gutschi.site',
-    start_url: '/',
+    id: config.APP_URL,
+    start_url: config.APP_URL + '/',
     display: 'standalone',
     orientation: 'portrait',
-    launch_handler: {
-      client_mode: 'navigate-existing',
-    },
+    launch_handler: { client_mode: 'navigate-existing' },
     theme_color: '#0000dc',
     background_color: '#ffffff',
     icons: [
-      {
-        src: '/icon-192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: '/icon-512.png',
-        sizes: '512x512',
-        type: 'image/png',
-      },
+      { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
-    shortcuts: [
-      {
-        name: 'Cash',
-        short_name: 'Cash',
-        description: 'Double bookkeeping',
-        url: '/cash/',
-      },
-      {
-        name: 'CoEditor',
-        short_name: 'CoEditor',
-        description: 'AI-driven Editor',
-        url: '/coeditor/',
-      },
-      {
-        name: 'Admin',
-        short_name: 'Admin',
-        description: 'Server admin',
-        url: '/admin/',
-      },
-    ],
+    shortcuts: applications.map(a => ({ name: a.name, description: a.description, url: config.APP_URL + a.link })),
   }
 }

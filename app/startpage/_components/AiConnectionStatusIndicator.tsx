@@ -28,7 +28,7 @@ export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorPr
       textContent = `Reconnecting...`
       warn = true
       break
-    case 'automatic-reconnecting-exhaused':
+    case 'automatic-reconnecting-exhausted':
       iconName = 'fatal'
       textContent = `Connection lost, could not reconnect after ${String(props.state.maxAttempts)} attempts. The server could not be reached.`
       retryLabel = 'Retry again'
