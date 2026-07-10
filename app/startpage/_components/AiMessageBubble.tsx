@@ -34,7 +34,7 @@ export function AiMessageBubble({ role, content, generating, stalled, editable, 
 
   let mainContent = <Markdown components={{ code: codeComponent }}>{content}</Markdown>
   if (!hasMessage) mainContent = <TypingIndicator stalled={stalled} />
-  if (showGenerating) mainContent = <TemporaryContent content={content} stalled={stalled} />
+  if (showGenerating) mainContent = <Markdown components={{ code: codeComponent }}>{content}</Markdown>
 
   return (
     <div className={messageClass}>
@@ -45,16 +45,6 @@ export function AiMessageBubble({ role, content, generating, stalled, editable, 
         {label}
       </div>
     </div>
-  )
-}
-
-function TemporaryContent({ content, stalled }: { content: string, stalled?: boolean }) {
-  const cursorClass = styles.cursor + ' ' + (stalled ? styles.cursorStalled : styles.cursorActive)
-  return (
-    <>
-      <span className={styles.partialText}>{content}</span>
-      <span className={cursorClass} />
-    </>
   )
 }
 

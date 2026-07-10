@@ -6,24 +6,20 @@ import { ChatState } from './AiChatWebSocket'
 
 export interface AiConnectionStatusIndicatorProps {
   state: ChatState
-  attempt?: number
-  maxAttempts: number
-  countdown?: number
   onRetry: () => void
   onRestart: () => void
 }
 
 export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorProps) {
-  const bubbleColorClass = props.state === 'reconnecting' ? styles.bubbleAmber : styles.bubbleRed
   let iconName: 'error' | 'fatal' | 'reconnect'
   let textContent: string
   let retryLabel: string | undefined
   let warn = false
 
-  switch (props.state) {
+  switch (props.state.type) {
     case 'wait-for-reconnecting':
       iconName = 'reconnect'
-      textContent = `Connection lost. Reconnecting in ${String(props.countdown)}s — attempt ${String(props.attempt)} of ${String(props.maxAttempts)}.`
+      textContent = `Connection lost. Reconnecting in ${String(props.state.inSeconds)}s — attempt ${String(props.state.nextAttempt)} of ${String(props.state.maxAttempts)}.`
       retryLabel = 'Retry now'
       warn = true
       break
@@ -32,12 +28,12 @@ export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorPr
       textContent = `Reconnecting...`
       warn = true
       break
-    case 'retries-exhausted':
+    case 'automatic-reconnecting-exhaused':
       iconName = 'fatal'
-      textContent = `Connection lost, could not reconnect after ${String(props.maxAttempts)} attempts. The server could not be reached.`
+      textContent = `Connection lost, could not reconnect after ${String(props.state.maxAttempts)} attempts. The server could not be reached.`
       retryLabel = 'Retry again'
       break
-    case 'retry-impossible':
+    case 'reconnect-impossible':
       iconName = 'fatal'
       textContent = 'Connection failed, reconnection is not possible. Please restart the session.'
       break
@@ -47,6 +43,7 @@ export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorPr
 
   const textClass = warn ? styles.textAmber : styles.textRed
   const iconClass = warn ? styles.iconAmber : styles.iconRed
+  const bubbleColorClass = warn ? styles.bubbleAmber : styles.bubbleRed
 
   return (
     <div className={styles.container}>

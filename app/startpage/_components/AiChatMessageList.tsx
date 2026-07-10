@@ -20,9 +20,9 @@ export interface AiChatMessageListProps {
 
 export function AiChatMessageList({ messages, state, incomingMessage, onEdit }: AiChatMessageListProps) {
   const listRef = useRef<HTMLDivElement>(null)
-  const ready = state === 'ready'
-  const incomming = state === 'waiting' || state === 'stalled' || state === 'connecting'
-  const stalled = state === 'stalled'
+  const ready = state.type === 'ready'
+  const incomming = state.type === 'waiting-for-response' || state.type === 'connecting'
+  const stalled = state.type === 'waiting-for-response' && state.stalled
 
   useEffect(() => {
     if (listRef.current && listRef.current.clientWidth > 600)

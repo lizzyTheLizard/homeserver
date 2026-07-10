@@ -58,29 +58,34 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
 }
 
 async function reactRequestHandler(handler: RequestHandler, options: Options, req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const { startLogin } = await import('./app/shared/auth/auth')
-  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/robots.txt', '/icon-192.png', '/icon-512.png']
+  const { getUserSession } = await import('./app/shared/auth/auth')
+  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png']
+  const publicLogPaths = ['/shared/auth/']
   const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
   const method = req.method?.toUpperCase() ?? 'GET'
   const start = Date.now()
 
-  if (publicDoNotLogPaths.some(i => url.pathname.startsWith(i)))
-    return handler(req, res)
+  if (publicDoNotLogPaths.some(i => url.pathname.startsWith(i))) return handler(req, res)
   options.logger.debug(`${method} ${url.toString()}`)
-  if (await isAllowed(req, res))
-    await handler(req, res)
-  else if (isXHttpRequest(req)) {
-    res.writeHead(401, { 'Content-Type': 'text/plain' })
-    res.end('Unauthorized')
-  }
-  else {
-    const cookies = await parseCookie(req, res)
-    const redirectTo = await startLogin(url, cookies)
-    res.writeHead(302, { Location: redirectTo.href })
-    res.end()
-  }
+  const cookies = await parseCookie(req, res)
+  const session = await getUserSession(cookies)
+  if (session) await handler(req, res)
+  else if (publicLogPaths.some(i => url.pathname.startsWith(i))) await handler(req, res)
+  else await unauthorizedResponse(req, res, url, cookies)
   const duration = (Date.now() - start).toString()
   options.logger.info(`${method} ${url.pathname} answered with ${res.statusCode.toString()} in (${duration}ms)`)
+}
+
+async function unauthorizedResponse(req: IncomingMessage, res: ServerResponse, url: URL, cookies: CookieStore) {
+  const { startLogin } = await import('./app/shared/auth/auth')
+  if (isXHttpRequest(req)) {
+    res.writeHead(401, { 'Content-Type': 'text/plain' })
+    res.end('Unauthorized')
+    return
+  }
+  const redirectTo = await startLogin(url, cookies)
+  res.writeHead(302, { Location: redirectTo.href })
+  res.end()
 }
 
 function isXHttpRequest(req: IncomingMessage): boolean {
@@ -89,15 +94,6 @@ function isXHttpRequest(req: IncomingMessage): boolean {
     return requestWithHeaders.toLowerCase() === 'xmlhttprequest'
   }
   return requestWithHeaders?.includes('XMLHttpRequest') ?? false
-}
-
-async function isAllowed(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
-  const { getUserSession } = await import('./app/shared/auth/auth')
-  const cookies = await parseCookie(req, res)
-  const session = await getUserSession(cookies)
-  if (session) return true
-  if (req.url?.startsWith('/shared/auth/')) return true
-  return false
 }
 
 async function registerWebSockets(server: Server, logger: Logger) {

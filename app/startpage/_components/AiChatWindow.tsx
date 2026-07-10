@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AiChatMessageList, Message } from './AiChatMessageList'
 import { AiActionsList } from './AiActionsList'
 import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
-import { MAX_RECONNECT_ATTEMPTS, useAiChatWebSocket } from './AiChatWebSocket'
+import { AiChatWebSocket, ChatState } from './AiChatWebSocket'
 import styles from './AiChatWindow.module.css'
 import { getLocation } from '../_helper/location'
 
@@ -12,22 +12,31 @@ export function AiChatWindow() {
   const [messages, setMessages] = useState<Message[]>([])
   const [actions, setActions] = useState<string[]>([])
   const [input, setInput] = useState('')
+  const [state, setState] = useState<ChatState>({ type: 'initial' })
+  const [incomingMessage, setIncomingMessage] = useState('')
+  const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
 
-  const onMessage = useCallback((message: string) => { setMessages(prev => [...prev, { role: 'assistant', content: message, id: prev.length }]) }, [])
-  const onActions = useCallback((actions: string[]) => { setActions(actions) }, [])
-  const getInitialContext = useCallback(async () => ({ location: await getLocation() }), [])
-
-  const { terminateWebSocket, connectWebSocket, sendMessage, ...ws } = useAiChatWebSocket({ onMessage, onActions, getInitialContext })
-  const canInput = ws.state === 'ready'
+  const canInput = state.type === 'ready'
   const canSend = canInput && input.trim().length > 0
 
   useEffect(() => {
-    connectWebSocket()
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMessages(() => [])
-    setActions(() => [])
-    return () => { terminateWebSocket() }
-  }, [connectWebSocket, terminateWebSocket])
+    const websocket = connectWebSocket()
+    webSocketRef.current = websocket
+    return () => {
+      webSocketRef.current?.terminate()
+      webSocketRef.current = undefined
+    }
+  }, [])
+
+  function connectWebSocket(): AiChatWebSocket {
+    const websocket = new AiChatWebSocket(() => getLocation().then(location => ({ location })))
+    websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }]) }
+    websocket.onNewActions = (actions) => { setActions(actions) }
+    websocket.onStateChange = (state) => { setState(state) }
+    websocket.onIncomingMessageChange = (message) => { setIncomingMessage(message) }
+    websocket.connect()
+    return websocket
+  }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -44,33 +53,35 @@ export function AiChatWindow() {
     setInput('')
     setMessages(prev => [...prev, { role: 'user', content: text, id: prev.length }])
     setActions([])
-    sendMessage(t)
+    webSocketRef.current?.sendMessage(t)
   }
 
   function handleRestart() {
+    console.log('Restarting websocket connection')
+    webSocketRef.current?.terminate()
+    webSocketRef.current = undefined
     setMessages(() => [])
     setActions([])
-    terminateWebSocket()
-    connectWebSocket()
+    setState({ type: 'initial' })
+    setIncomingMessage('')
+    const websocket = connectWebSocket()
+    webSocketRef.current = websocket
   }
 
   return (
     <div className={styles.window}>
       <AiChatMessageList
         messages={messages}
-        state={ws.state}
-        incomingMessage={ws.incomingMessage}
+        state={state}
+        incomingMessage={incomingMessage}
         onEdit={handleEdit}
       />
       <AiConnectionStatusIndicator
-        state={ws.state}
-        attempt={ws.reconnectAttempt}
-        maxAttempts={MAX_RECONNECT_ATTEMPTS}
-        countdown={ws.reconnectCountdown}
+        state={state}
         onRetry={connectWebSocket}
         onRestart={handleRestart}
       />
-      <AiActionsList state={ws.state} actions={actions} onSend={send} />
+      <AiActionsList state={state} actions={actions} onSend={send} />
       <form onSubmit={handleSubmit} className={styles.inputRow}>
         <input
           disabled={!canInput}

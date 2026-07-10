@@ -10,7 +10,7 @@ interface AiActionsListProps {
 }
 
 export function AiActionsList({ state, actions, onSend }: AiActionsListProps) {
-  if (state !== 'ready') return null
+  if (state.type !== 'ready') return null
 
   return (
     <div className={styles.chips}>
