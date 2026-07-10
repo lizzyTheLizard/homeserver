@@ -59,7 +59,7 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
 
 async function reactRequestHandler(handler: RequestHandler, options: Options, req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { getUserSession } = await import('./app/shared/auth/auth')
-  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png']
+  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png', '/icon-192-maskable.png', '/icon-512-maskable.png']
   const publicLogPaths = ['/shared/auth/']
   const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
   const method = req.method?.toUpperCase() ?? 'GET'
