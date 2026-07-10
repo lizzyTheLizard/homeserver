@@ -1,10 +1,10 @@
 'use client'
 
 import { Icon } from '@/app/shared/_components/Icon'
-import styles from './ConnectionStatusIndicator.module.css'
+import styles from './AiConnectionStatusIndicator.module.css'
 import { ChatState } from './AiChatWebSocket'
 
-export interface ConnectionStatusIndicatorProps {
+export interface AiConnectionStatusIndicatorProps {
   state: ChatState
   attempt?: number
   maxAttempts: number
@@ -13,23 +13,28 @@ export interface ConnectionStatusIndicatorProps {
   onRestart: () => void
 }
 
-export function ConnectionStatusIndicator(props: ConnectionStatusIndicatorProps) {
+export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorProps) {
   const bubbleColorClass = props.state === 'reconnecting' ? styles.bubbleAmber : styles.bubbleRed
-  const textClass = props.state === 'reconnecting' ? styles.textAmber : styles.textRed
-  const iconClass = props.state === 'reconnecting' ? styles.iconAmber : styles.iconRed
   let iconName: 'error' | 'fatal' | 'reconnect'
   let textContent: string
   let retryLabel: string | undefined
+  let warn = false
 
   switch (props.state) {
-    case 'reconnecting':
+    case 'wait-for-reconnecting':
       iconName = 'reconnect'
       textContent = `Connection lost. Reconnecting in ${String(props.countdown)}s — attempt ${String(props.attempt)} of ${String(props.maxAttempts)}.`
       retryLabel = 'Retry now'
+      warn = true
+      break
+    case 'reconnecting':
+      iconName = 'reconnect'
+      textContent = `Reconnecting...`
+      warn = true
       break
     case 'retries-exhausted':
       iconName = 'fatal'
-      textContent = `Connection failed after ${String(props.maxAttempts)} attempts. The server could not be reached.`
+      textContent = `Connection lost, could not reconnect after ${String(props.maxAttempts)} attempts. The server could not be reached.`
       retryLabel = 'Retry again'
       break
     case 'retry-impossible':
@@ -39,6 +44,9 @@ export function ConnectionStatusIndicator(props: ConnectionStatusIndicatorProps)
     default:
       return null
   }
+
+  const textClass = warn ? styles.textAmber : styles.textRed
+  const iconClass = warn ? styles.iconAmber : styles.iconRed
 
   return (
     <div className={styles.container}>
