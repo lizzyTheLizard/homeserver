@@ -4,11 +4,10 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { InitialContext } from '../_external/assistant'
 
 export const MAX_RECONNECT_ATTEMPTS = 10
-export type ChatState = 'connecting' | 'ready' | 'waiting' | 'stalled' | 'reconnecting' | 'retries-exhausted' | 'retry-impossible' | 'terminated'
+export type ChatState = 'connecting' | 'ready' | 'waiting' | 'stalled' | 'wait-for-reconnecting' | 'reconnecting' | 'retries-exhausted' | 'retry-impossible' | 'terminated'
 const STALL_TIMEOUT_MS = 15000
-const ERROR_CLOSE = 4100
-const RESTART_CLOSE = 4101
-const CONNECT_CLOSE = 4102
+const INTENTIONAL_CLOSE = 4100
+const ERROR_CLOSE = 4101
 
 export interface ChatWebSocketInput {
   onMessage: (message: string) => void
@@ -35,14 +34,11 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
   const socketRef = useRef<WebSocket | undefined>(undefined)
   const sessionIdRef = useRef<string | undefined>(undefined)
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const createConnectionRef = useRef<(attemptIndex: number) => void>(undefined)
   const messageBufferRef = useRef<string>('')
 
   function clearReconnectTimer() {
-    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
-    reconnectTimeoutRef.current = undefined
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
     countdownIntervalRef.current = undefined
   }
@@ -57,14 +53,44 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
     stallTimerRef.current = setTimeout(() => { setState('stalled') }, STALL_TIMEOUT_MS)
   }
 
+  /** Retry functionality */
+
+  const startRetry = useCallback((nextAttempt: number) => {
+    if (!sessionIdRef.current) {
+      console.warn('Session expired, cannot reconnect')
+      setState('retry-impossible')
+      return
+    }
+    if (nextAttempt > MAX_RECONNECT_ATTEMPTS) {
+      console.warn(`Retries exhausted after ${MAX_RECONNECT_ATTEMPTS.toString()} attempts`)
+      setState('retries-exhausted')
+      return
+    }
+    setState('wait-for-reconnecting')
+    const delayMs = Math.pow(2, nextAttempt) * 1000
+    setReconnectAttempt(nextAttempt)
+    let countdown = Math.ceil(delayMs / 1000)
+    console.log(`Retrying connection, attempt ${nextAttempt.toString()} of ${MAX_RECONNECT_ATTEMPTS.toString()} in ${countdown.toString()} s`)
+    setReconnectCountdown(countdown)
+    clearReconnectTimer()
+    countdownIntervalRef.current = setInterval(() => {
+      countdown--
+      setReconnectCountdown(countdown)
+      if (countdown <= 0) {
+        clearReconnectTimer()
+        console.log(`Retrying connection, attempt ${nextAttempt.toString()} of ${MAX_RECONNECT_ATTEMPTS.toString()}`)
+        createConnectionRef.current?.(nextAttempt)
+      }
+    }, 1000)
+  }, [])
+
   /** Close the connection intentionally */
 
   const closeConnection = useCallback((code: number) => {
     clearStallTimer()
     clearReconnectTimer()
-    socketRef.current?.close(code, 'intentional')
+    socketRef.current?.close(code)
     socketRef.current = undefined
-    if (code === RESTART_CLOSE) sessionIdRef.current = undefined
     setIncomingMessage('')
     messageBufferRef.current = ''
     setReconnectAttempt(0)
@@ -74,12 +100,12 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
   /** Handler for the different message types expected */
 
   const onError = useCallback((error: unknown) => {
-    console.warn('WebSocket error', error)
     closeConnection(ERROR_CLOSE)
-    if (!sessionIdRef.current) setState('retry-impossible')
+    console.warn('WebSocket error', error)
+    startRetry(1)
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     onMessage(`Error: ${error}`)
-  }, [closeConnection, onMessage])
+  }, [closeConnection, onMessage, startRetry])
 
   function onToolCall() {
     setIncomingMessage('')
@@ -107,6 +133,7 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
 
   const onGotActions = useCallback((actions: string[]) => {
     onActions(actions)
+    setState('ready')
   }, [onActions])
 
   const onFinishedResponse = useCallback(() => {
@@ -121,18 +148,18 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
   /** handlers for the different ws events */
 
   const handleError = useCallback((error: Event) => {
-    console.warn('WebSocket error', error)
     closeConnection(ERROR_CLOSE)
-    if (!sessionIdRef.current) setState('retry-impossible')
+    console.warn('WebSocket error', error)
+    startRetry(1)
     onMessage(`WebService error: ${JSON.stringify(error)}`)
-  }, [closeConnection, onMessage])
+  }, [closeConnection, onMessage, startRetry])
 
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data as string) as IncommingMessage
       if (data.type === 'initialized' && data.uuid) onServerInitialized(data.uuid)
       else if (data.type === 'reconnected') onReconnected()
-      else if (data.type === 'error') onError(`Got error message from server: ${data.error ?? 'Unknown error'}`)
+      else if (data.type === 'error') onError(`Got error message from server: ${event.data as string}`)
       else if (data.type === 'stream_response') onStreamResponse(data.chunk ?? '')
       else if (data.type === 'tool_call') onToolCall()
       else if (data.type === 'got_actions') onGotActions(data.actions ?? [])
@@ -154,7 +181,6 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
       .then((initialContext) => {
         ws.send(JSON.stringify({ type: 'initialize', initialContext }))
         // We are waiting for the server to respond with an initialized message, so we don't set the state to ready yet
-        setState('waiting')
       })
       .catch((err: unknown) => {
         console.warn('Initialization error', err)
@@ -163,61 +189,34 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
   }, [getInitialContext, onMessage])
 
   const handleClose = useCallback((attemptIndex: number, event: CloseEvent) => {
-    console.log('WebSocket closed', event.code, event.reason)
     clearStallTimer()
     if (event.code === 4001) {
-      setState('retry-impossible')
+      // This is the server telling us that the session has expired, so we can't reconnect
+      sessionIdRef.current = undefined
+    }
+    if (event.code === INTENTIONAL_CLOSE) {
+      // This is an intentional close, so we don't want to retry
       return
     }
-    if (event.code === RESTART_CLOSE) {
-      setState('terminated')
+    if (event.code == ERROR_CLOSE) {
+      // This is an error close. We are already handling the retry in the error handler, so we don't want to retry again
       return
     }
-    if (event.code === CONNECT_CLOSE) {
-      setState('terminated')
-      return
-    }
-    if (!sessionIdRef.current) {
-      setState('retry-impossible')
-      return
-    }
-    const nextAttempt = attemptIndex + 1
-    if (nextAttempt > MAX_RECONNECT_ATTEMPTS) {
-      setState('retries-exhausted')
-      return
-    }
-    setState('reconnecting')
-    const delayMs = Math.pow(2, attemptIndex) * 1000
-    setReconnectAttempt(nextAttempt)
-    setReconnectCountdown(Math.ceil(delayMs / 1000))
+    console.warn('WebSocket closed unexpectedly', event.code, event.reason)
+    startRetry(attemptIndex + 1)
+  }, [startRetry])
 
-    countdownIntervalRef.current = setInterval(() => {
-      setReconnectCountdown((prev) => {
-        if (prev <= 1) {
-          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
-          countdownIntervalRef.current = undefined
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      clearReconnectTimer()
-      createConnectionRef.current?.(nextAttempt)
-    }, delayMs)
-  }, [])
-
-  /** Create and close connection, needs to be set as ref as it's used circular */
+  /** Create connection, needs to be set as ref as it's used circular */
 
   const createConnection = useCallback((attemptIndex: number) => {
+    setState(sessionIdRef.current ? 'reconnecting' : 'connecting')
     const ws = new WebSocket('/ws/assistant')
     ws.onopen = () => { handleOpen(ws) }
-    ws.onmessage = (event) => { handleMessage(event) }
+    // eslint-disable-next-line @stylistic/max-statements-per-line
+    ws.onmessage = (event) => { handleMessage(event); attemptIndex = 0 }
     ws.onerror = (error) => { handleError(error) }
     ws.onclose = (event) => { handleClose(attemptIndex, event) }
     socketRef.current = ws
-    setState(sessionIdRef.current ? 'reconnecting' : 'connecting')
   }, [handleClose, handleOpen, handleMessage, handleError])
 
   useEffect(() => { createConnectionRef.current = createConnection }, [createConnection])
@@ -231,13 +230,14 @@ export function useAiChatWebSocket({ onMessage, onActions, getInitialContext }: 
   }, [])
 
   const terminateWebSocket = useCallback(() => {
-    closeConnection(RESTART_CLOSE)
+    sessionIdRef.current = undefined
+    closeConnection(INTENTIONAL_CLOSE)
     setState('terminated')
   }, [closeConnection])
 
   const connectWebSocket = useCallback(() => {
-    closeConnection(CONNECT_CLOSE)
-    setState('terminated')
+    closeConnection(INTENTIONAL_CLOSE)
+    setState('connecting')
     createConnection(0)
   }, [createConnection, closeConnection])
 
