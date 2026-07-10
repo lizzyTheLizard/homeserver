@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "dist",
+    "rootDir": ".",
     "lib": ["es2021"],
     "target": "es2021",
     "isolatedModules": false,
