@@ -12,6 +12,7 @@ main().catch((e: unknown) => { console.error('Error starting server', e) })
 async function main() {
   const options = await loadOptions()
   const server = await createReactApp(options, options.logger)
+  registerMonitoringHandler(server, options)
   await registerWebSockets(server, options.logger)
   server.listen(options.port, () => {
     options.logger.info(`Application ready on http://${options.hostname}:${options.port.toString()}`)
@@ -57,9 +58,18 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
   return server
 }
 
+function registerMonitoringHandler(server: Server, options: Options): void {
+  server.on('request', (req, res) => {
+    const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
+    if (url.pathname === '/ping') {
+      res.writeHead(200).end()
+    }
+  })
+}
+
 async function reactRequestHandler(handler: RequestHandler, options: Options, req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { getUserSession } = await import('./app/shared/auth/auth')
-  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png', '/icon-192-maskable.png', '/icon-512-maskable.png']
+  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png', '/icon-192-maskable.png', '/icon-512-maskable.png', '/ping', '/offline.html']
   const publicLogPaths = ['/shared/auth/']
   const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
   const method = req.method?.toUpperCase() ?? 'GET'
