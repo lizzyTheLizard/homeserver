@@ -11,6 +11,6 @@
   .messageList {
     overflow-y: visible;
     flex-grow: 0;
-    padding-bottom: 7.5rem;
+    padding-bottom: 6rem;
   }
 }

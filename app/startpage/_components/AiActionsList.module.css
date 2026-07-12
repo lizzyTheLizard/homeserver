@@ -1,8 +1,10 @@
 .chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.45rem;
   padding: 0.8rem 0.2rem 0.4rem;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .chip {
@@ -16,6 +18,7 @@
   font-family: inherit;
   font-weight: 500;
   transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
 }
 
 .chip:hover {

@@ -7,6 +7,10 @@
   max-width: 90rem;
   width: 100%;
   align-self: center;
+
+  @media (max-width: 600px) {
+    overflow: visible;
+  }
 }
 
 .inputRow {
@@ -18,6 +22,22 @@
   padding: 0.3rem 0.3rem 0.3rem 1.25rem;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   gap: 0.5rem;
+
+
+  @media (max-width: 600px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    background: var(--default-background-color);
+  }
 }
 
 .input {
@@ -57,25 +77,4 @@
 
 .sendButton:disabled .sendIcon {
   color: #aaa;
-}
-
-@media (max-width: 600px) {
-  .window {
-    overflow: visible;
-  }
-
-  .inputRow {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    padding: 0.5rem 1rem;
-    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-    background: var(--default-background-color);
-  }
 }
