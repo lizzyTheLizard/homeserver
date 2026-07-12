@@ -30,6 +30,7 @@ export interface MicrosoftMessageListItem {
   receivedDateTime: string
   isRead: boolean
   bodyPreview: string
+  inferenceClassification?: string
 }
 
 export interface MicrosoftMessageFull extends MicrosoftMessageListItem {
@@ -71,7 +72,7 @@ export async function getInboxMessages(user: UserSession, top = 10, skip = 0): P
   if (!client) return []
   const response = await client.api('/me/mailFolders/inbox/messages')
     .top(top).skip(skip)
-    .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview')
+    .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,inferenceClassification')
     .orderby('receivedDateTime desc')
     .get() as { value: MicrosoftMessageListItem[] }
   return response.value

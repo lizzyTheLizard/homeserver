@@ -1,18 +1,23 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { getUserInfo, getLoginRedirectUrl, MicrosoftUserInfo, MicrosoftMessage, getInboxMessages } from '../_external/microsoft'
+import { getUserInfo, getLoginRedirectUrl, MicrosoftUserInfo, MicrosoftMessageListItem, MicrosoftMessageFull, getInboxMessages, getMessage } from '../_external/microsoft'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { deleteMicrosoftToken } from '../_data/Microsoft'
 import { config } from '@/app/shared/config'
 import { logEvent } from '@/app/shared/_data/Event'
 
-export async function loadMicrosoftStatus(): Promise<{ connected: boolean, userInfo?: MicrosoftUserInfo, messages?: MicrosoftMessage[] }> {
+export async function loadMicrosoftStatus(): Promise<{ connected: boolean, userInfo?: MicrosoftUserInfo, messages: MicrosoftMessageListItem[] }> {
   const user = await getAuthenticatedUserSession('startpage')
   const userInfo = await getUserInfo(user)
-  if (!userInfo) return { connected: false }
-  const messages = await getInboxMessages(user)
+  if (!userInfo) return { connected: false, messages: [] }
+  const messages = await getInboxMessages(user, 999)
   return { connected: true, userInfo, messages }
+}
+
+export async function loadMessage(messageId: string): Promise<MicrosoftMessageFull | undefined> {
+  const user = await getAuthenticatedUserSession('startpage')
+  return getMessage(user, messageId)
 }
 
 const MICROSOFT_CALLBACK_PATH = '/startpage/microsoft/callback'
