@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gutschi.site - Offline</title>
+  <link rel="stylesheet" href="/global.css"/>
+  <style>
+    .headerGroup {
+        position: sticky;
+        top: 0;
+        z-index: 200;
+    }
+
+    .headerContainer {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 4rem;
+        padding: 0 1.5rem;
+        background-color: var(--primary-background-color);
+        color: var(--primary-text-color);
+        box-sizing: border-box;
+
+        @media (max-width: 600px) {
+            height: 2.75rem;
+            padding: 0 1rem;
+        }
+    }
+
+    .siteName {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+
+        @media (max-width: 600px) {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+    }
+
+    .spacer {
+        flex-grow: 1;
+    }
+    
+    .container {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: initial;
+      text-align: center;
+      gap: 1rem;
+      padding: 2rem;
+    }
+
+    .active {
+      display: flex;
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 300;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner div {
+      border: 4px solid currentColor;
+      opacity: 1;
+      border-radius: 50%;
+      animation: spinner 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    .text {
+      animation: blinker 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    @keyframes spinner {
+      0% {
+        opacity: 0;
+      }
+      9% {
+        opacity: 0;
+      }
+      10% {
+        top: 36px;
+        left: 36px;
+        width: 8px;
+        height: 8px;
+        opacity: 1;
+      }
+      100% {
+        top: 0;
+        left: 0;
+        width: 80px;
+        height: 80px;
+        opacity: 0;
+      }
+    }
+
+    @keyframes blinker {
+      0% {
+        opacity: 0;
+      }
+      15% {
+        opacity: 0;
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .title { 
+      font-size: 2rem; 
+      font-weight: 600; 
+    }
+
+    .message { 
+      font-size: 1.125rem; 
+      color: #666; 
+      max-width: 30rem; 
+    }
+  </style>
+</head>
+<body>
+  <div class="headerGroup">
+    <div class="headerContainer">
+      <span class="siteName">Homeserver</span>
+      <div class="spacer"></div >
+    </div>
+  </div>
+
+  <main class="container" id="starting">
+    <div class="backdrop"></div>
+    <div class="overlay">
+      <div class="spinner">
+        <div></div>
+      </div>
+      <div class="text">The server is currently starting. Please wait a moment...</div>
+    </div>
+  </main>
+
+  <main class="container" id="offline">
+    <h1 class="title">You are offline</h1>
+    <p class="message">Please check your internet connection and try again.</p>
+  </main>
+
+  <main class="container" id="broken">
+    <h1 class="title">Server Error</h1>
+    <p class="message">The server is currently unavailable. Please try again later.</p>
+  </main>
+
+  <main class="container" id="reload">
+    <div class="backdrop"></div>
+    <div class="overlay">
+      <div class="spinner">
+        <div></div>
+      </div>
+      <div class="text">Connected. Redirecting...</div>
+    </div>
+  </main>
+
+  <script>  
+    var PING_TIMEOUT_MS = 3000;
+    var POLL_INTERVAL_MS = 1000;
+
+    var containers = {
+      starting: document.getElementById('starting'),
+      offline: document.getElementById('offline'),
+      broken: document.getElementById('broken'),
+      reload: document.getElementById('reload')
+    };
+
+    function show(state) {
+      Object.keys(containers).forEach(function (k) { containers[k].classList.remove('active'); });
+      containers[state].classList.add('active');
+    }
+
+    function scheduleNext() {
+      setTimeout(ping, POLL_INTERVAL_MS);
+    }
+
+    function ping() {
+      if (!navigator.onLine) {
+        show('offline');
+        scheduleNext();
+        return;
+      }
+      var controller = new AbortController();
+      var timeout = setTimeout(function () { controller.abort(); }, PING_TIMEOUT_MS);
+      fetch('/ping', { signal: controller.signal })
+        .then(function (response) {
+          clearTimeout(timeout);
+          if (response.ok) {
+            show('reload');
+            if(window.location.pathname === '/pwa.html') window.location.href = '/';
+            else window.location.reload();
+          }
+          else {
+            show('broken');
+            scheduleNext();
+          }
+        })
+        .catch(function (error) {
+          clearTimeout(timeout);
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            show('starting');
+          }
+          else {
+            show('broken');
+          }
+          scheduleNext();
+        });
+    }
+
+    show('starting');
+    ping();
+  </script>
+</body>
+</html>
+

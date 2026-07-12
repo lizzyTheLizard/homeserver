@@ -1,6 +1,6 @@
 /* global self, caches */
 const CACHE_NAME = 'pwa-cache-v1'
-const OFFLINE_URLS = ['/offline.html', '/global.css']
+const OFFLINE_URLS = ['/pwa.html', '/global.css']
 const HTML_TIMEOUT = 3000 // Time in milliseconds to wait for an HTML page to load before falling back to cache
 
 // A helper function that rejects after a set number of milliseconds
@@ -19,7 +19,7 @@ async function requestFailed(event, error) {
     return cachedResponse
   }
   console.log(`No cached response found for ${event.request.url}, returning offline fallback page`)
-  return caches.match('/offline.html')
+  return caches.match('/pwa.html')
 }
 
 /**
