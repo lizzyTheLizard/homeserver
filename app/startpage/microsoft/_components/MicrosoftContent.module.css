@@ -28,90 +28,49 @@
   font-size: 0.9rem;
 }
 
-.userCard {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: var(--card-bg);
-  border-radius: 0.75rem;
-  width: 100%;
+.mobileItem {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--default-border-color);
+  cursor: pointer;
+  background: white;
 }
 
-.userAvatar {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--accent);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
+.mobileItem:hover {
+  background: var(--default-hover-color);
+}
+
+.mobileItemName {
   font-weight: 600;
-  flex-shrink: 0;
-}
-
-.userInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.userName {
-  font-weight: 600;
-  font-size: 1.05rem;
-}
-
-.userMail {
-  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
-.messagesSection {
-  width: 100%;
+.mobileDesc {
+  font-size: 0.78rem;
+  color: #555;
+  margin-top: 0.2rem;
 }
 
-.messagesTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0.5rem 0;
-}
-
-.messageList {
+.emailContent {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.messageItem {
-  padding: 0.75rem 1rem;
-  background: var(--card-bg);
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.emailField {
+  font-size: 0.9rem;
 }
 
-.messageSubject {
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.messageMeta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
+.emailBodyPreview {
+  font-size: 0.85rem;
   color: var(--text-secondary);
+  white-space: pre-wrap;
+  border-top: 1px solid var(--default-border-color);
+  padding-top: 0.75rem;
 }
 
-.messageFrom {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 60%;
-}
-
-.messageDate {
-  flex-shrink: 0;
+.emailBody {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--default-border-color);
+  padding-top: 0.75rem;
 }
