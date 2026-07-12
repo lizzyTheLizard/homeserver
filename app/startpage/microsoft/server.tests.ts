@@ -56,7 +56,7 @@ describe('loadMicrosoftStatus', () => {
 
     const result = await loadMicrosoftStatus()
 
-    expect(result).toEqual({ connected: false })
+    expect(result).toEqual({ connected: false, messages: [] })
   })
 
   test('returns connected with user info and messages', async ({ task }) => {
