@@ -17,6 +17,7 @@ export interface Config {
   AI: {
     API_KEY: string
     BASE_URL: string
+    LOG_REQUEST_RESPONSE: boolean
   }
   MICROSOFT_GRAPH: {
     APPLICATION_ID: string
@@ -59,6 +60,7 @@ export const config: Config = {
   AI: {
     API_KEY: required('AI_API_KEY', 'dev-only-key'),
     BASE_URL: required('AI_BASE_URL', 'https://opencode.ai/zen/go/v1'),
+    LOG_REQUEST_RESPONSE: optional('AI_LOG_REQUEST_RESPONSE', 'false').toLowerCase() === 'true',
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),

@@ -61,7 +61,7 @@ async function createReactApp(options: Options, logger: Logger): Promise<Server>
 function registerMonitoringHandler(server: Server, options: Options): void {
   server.on('request', (req, res) => {
     const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
-    if (url.pathname === '/ping') {
+    if (url.pathname === '/api/ping') {
       res.writeHead(200).end()
     }
   })

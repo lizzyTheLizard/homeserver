@@ -1,4 +1,5 @@
 import { Client } from '@microsoft/microsoft-graph-client'
+import { Temporal } from '@js-temporal/polyfill'
 import { getMicrosoftToken, MicrosoftToken, setMicrosoftToken } from '../_data/Microsoft'
 import * as oidc from 'openid-client'
 import { UserSession } from '@/app/shared/auth/auth'
@@ -15,32 +16,10 @@ export interface MicrosoftUserInfo {
   mail: string
 }
 
-export interface MicrosoftMessage {
-  id: string
-  subject: string
-  from: { emailAddress: { address: string } }
-  receivedDateTime: string
-}
-
-export interface MicrosoftMessageListItem {
-  id: string
-  subject: string
-  from: { emailAddress: { address: string, name?: string } }
-  toRecipients: { emailAddress: { address: string, name?: string } }[]
-  receivedDateTime: string
-  isRead: boolean
-  bodyPreview: string
-  inferenceClassification?: string
-}
-
-export interface MicrosoftMessageFull extends MicrosoftMessageListItem {
-  body: { contentType: string, content: string }
-}
-
 export async function getLoginRedirectUrl(callbackUrl: string): Promise<URL> {
   const parameters: Record<string, string> = {
     redirect_uri: callbackUrl,
-    scope: 'offline_access Mail.Read Mail.ReadWrite Mail.Send User.Read',
+    scope: 'offline_access Mail.ReadWrite Mail.Send Tasks.ReadWrite User.Read Calendars.ReadWrite',
     prompt: 'consent',
   }
   const clientConfig = await getClientConfig()
@@ -67,74 +46,7 @@ export async function getUserInfo(user: UserSession): Promise<MicrosoftUserInfo 
   return await client.api('/me').get() as MicrosoftUserInfo
 }
 
-export async function getInboxMessages(user: UserSession, top = 10, skip = 0): Promise<MicrosoftMessageListItem[]> {
-  const client = await createGraphApiClient(user)
-  if (!client) return []
-  const response = await client.api('/me/mailFolders/inbox/messages')
-    .top(top).skip(skip)
-    .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,inferenceClassification')
-    .orderby('receivedDateTime desc')
-    .get() as { value: MicrosoftMessageListItem[] }
-  return response.value
-}
-
-export async function getMessage(user: UserSession, messageId: string): Promise<MicrosoftMessageFull | undefined> {
-  const client = await createGraphApiClient(user)
-  if (!client) return undefined
-  return await client.api(`/me/messages/${messageId}`)
-    .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,body')
-    .get() as MicrosoftMessageFull
-}
-
-export async function searchArchiveMessages(user: UserSession, query: string, top = 20): Promise<MicrosoftMessageListItem[]> {
-  const client = await createGraphApiClient(user)
-  if (!client) return []
-  const archiveFolder = await getArchiveFolder(client)
-  if (!archiveFolder) return []
-  const response = await client.api(`/me/mailFolders/${archiveFolder}/messages`)
-    .search(query)
-    .top(top)
-    .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview')
-    .get() as { value: MicrosoftMessageListItem[] }
-  return response.value
-}
-
-export async function sendMail(user: UserSession, to: string[], subject: string, body: string): Promise<void> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available. Please connect your Microsoft account.')
-  const toRecipients = to.map(address => ({ emailAddress: { address } }))
-  await client.api('/me/sendMail').post({
-    message: { subject, body: { contentType: 'Text', content: body }, toRecipients },
-    saveToSentItems: 'true',
-  })
-}
-
-export async function archiveMessage(user: UserSession, messageId: string): Promise<void> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available. Please connect your Microsoft account.')
-  const archiveFolder = await getArchiveFolder(client)
-  if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
-  await client.api(`/me/messages/${messageId}/move`).post({ destinationId: archiveFolder })
-}
-
-export async function getUnreadInboxCount(user: UserSession): Promise<number> {
-  const client = await createGraphApiClient(user)
-  if (!client) return 0
-  const result = await client.api('/me/mailFolders/inbox')
-    .select('unreadItemCount')
-    .get() as { unreadItemCount: number }
-  return result.unreadItemCount
-}
-
-async function getArchiveFolder(client: Client): Promise<string | undefined> {
-  const response = await client.api('/me/mailFolders')
-    .filter('displayName eq \'Archive\'')
-    .select('id')
-    .get() as { value: { id: string }[] }
-  return response.value[0]?.id
-}
-
-async function createGraphApiClient(user: UserSession): Promise<Client | undefined> {
+export async function createGraphApiClient(user: UserSession): Promise<Client | undefined> {
   const token = await getCurrentToken(user)
   if (!token) return undefined
   return Client.init({ authProvider: (done) => { done(null, token.access_token) },
@@ -165,3 +77,19 @@ async function getClientConfig(): Promise<client.Configuration> {
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
+
+export function toInstant(dateTime: string, timeZone: string): Temporal.Instant {
+  if (timeZone === 'UTC' || !timeZone) {
+    const normalized = dateTime.endsWith('Z') || dateTime.includes('+') || dateTime.includes('[') ? dateTime : dateTime + 'Z'
+    return Temporal.Instant.from(normalized)
+  }
+  return Temporal.ZonedDateTime.from(dateTime + '[' + timeZone + ']').toInstant()
+}
+
+export function toPlainDate(dateTime: string): Temporal.PlainDate {
+  return Temporal.PlainDate.from(dateTime)
+}
+
+export function toGraphDateTime(instant: Temporal.Instant): { dateTime: string, timeZone: string } {
+  return { dateTime: instant.toString(), timeZone: 'UTC' }
+}

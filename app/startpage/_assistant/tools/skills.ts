@@ -4,6 +4,12 @@ import fs from 'fs'
 import { join } from 'path'
 import z from 'zod'
 
+const SKILLS_DIR = join(process.cwd(), 'app', 'startpage', '_assistant', 'skills')
+
+export default function getTools(): ToolSet {
+  return getSkillTools(SKILLS_DIR)
+}
+
 export function getSkillTools(skillDir: string): ToolSet {
   const skillTools: ToolSet = {}
   const filesInSkillDir = fs.readdirSync(skillDir, { withFileTypes: true })

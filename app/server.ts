@@ -4,7 +4,7 @@ import { validateObject } from './shared/_helper/validation'
 import { UserSession } from './shared/auth/auth'
 import { WebSocketHandler } from './shared/_helper/websocket'
 import z from 'zod'
-import { Assistant, AssistantEvent, createAssistantInstance, InitialContext } from './startpage/_external/assistant'
+import { Assistant, AssistantEvent, createAssistantInstance, InitialContext } from './startpage/_assistant/assistant'
 import { logger } from './shared/logger'
 
 interface ActiveAssistant {

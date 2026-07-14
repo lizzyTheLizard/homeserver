@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.status {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.description {
+  text-align: center;
+  max-width: 400px;
+  color: var(--text-secondary);
+}
+
+.button {
+  margin-top: 0.5rem;
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.9rem;
+}

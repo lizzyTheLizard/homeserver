@@ -1,4 +1,5 @@
 import { describe, expect, test, vi, afterEach } from 'vitest'
+import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '@/app/shared/_external/db/access'
 import { loadMicrosoftStatus, connectMicrosoft, disconnectMicrosoft } from './server'
 import type { UserSession } from '@/app/shared/auth/auth'
@@ -19,11 +20,19 @@ vi.mock('../_external/microsoft', async () => {
     ...actual,
     getUserInfo: vi.fn(),
     getLoginRedirectUrl: vi.fn(),
+  }
+})
+
+vi.mock('../_external/microsoft-mail', async () => {
+  const actual = await vi.importActual('../_external/microsoft-mail')
+  return {
+    ...actual,
     getInboxMessages: vi.fn(),
   }
 })
 
-const { getUserInfo, getLoginRedirectUrl, getInboxMessages } = await import('../_external/microsoft')
+const { getUserInfo, getLoginRedirectUrl } = await import('../_external/microsoft')
+const { getInboxMessages } = await import('../_external/microsoft-mail')
 
 const mockUserInfo = {
   id: 'user-123',
@@ -38,11 +47,16 @@ const mockMessages = [
     subject: 'Hello',
     from: { emailAddress: { address: 'sender@example.com', name: 'Sender' } },
     toRecipients: [{ emailAddress: { address: 'user@example.com', name: 'Test User' } }],
-    receivedDateTime: '2025-07-08T10:00:00Z',
+    receivedDateTime: Temporal.Instant.from('2025-07-08T10:00:00Z'),
     isRead: false,
     bodyPreview: 'Hello there',
   },
 ]
+
+const serializedMockMessages = mockMessages.map(msg => ({
+  ...msg,
+  receivedDateTime: msg.receivedDateTime.toString(),
+}))
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -56,7 +70,7 @@ describe('loadMicrosoftStatus', () => {
 
     const result = await loadMicrosoftStatus()
 
-    expect(result).toEqual({ connected: false, messages: [] })
+    expect(result).toEqual({ connected: false, messages: [], todos: [], events: [] })
   })
 
   test('returns connected with user info and messages', async ({ task }) => {
@@ -67,7 +81,7 @@ describe('loadMicrosoftStatus', () => {
 
     const result = await loadMicrosoftStatus()
 
-    expect(result).toEqual({ connected: true, userInfo: mockUserInfo, messages: mockMessages })
+    expect(result).toEqual({ connected: true, userInfo: mockUserInfo, messages: serializedMockMessages, todos: [], events: [] })
   })
 })
 

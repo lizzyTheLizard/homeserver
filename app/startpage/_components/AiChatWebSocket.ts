@@ -1,6 +1,6 @@
 'use client'
 
-import { InitialContext } from '../_external/assistant'
+import { InitialContext } from '../_assistant/assistant'
 
 export type ChatState = { type: 'initial' }
   | { type: 'connecting' }
