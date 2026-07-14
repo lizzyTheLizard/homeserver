@@ -2,7 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { type UserSession } from '@/app/shared/auth/auth'
 import { getWAFasade } from '../../_external/whatsapp'
 import { createStore, type WhatsAppStore, type DataStore } from '@lizzythelizard/whatsapp-mcp'
-import { getWhatsappAppTools, getUnarchivedWhatsAppChats } from './whatsapp'
+import getTools from './whatsapp'
 
 vi.mock('../../_external/whatsapp', async () => {
   const actual = await vi.importActual('../../_external/whatsapp')
@@ -30,8 +30,8 @@ beforeEach(() => {
   })
 })
 
-describe('getWhatsappAppTools', () => {
-  const tools = getWhatsappAppTools(testUser)
+describe('getTools', () => {
+  const tools = getTools(testUser)
 
   describe('list_whatsapp_chats', () => {
     test('returns only unarchived chats', async () => {
@@ -169,64 +169,6 @@ describe('getWhatsappAppTools', () => {
       expect(setReadMock).toHaveBeenCalledWith('123456789@s.whatsapp.net', false)
       expect(setReadMock).toHaveBeenCalledTimes(1)
     })
-  })
-})
-
-describe('getUnarchivedWhatsAppChats', () => {
-  test('returns only unarchived chats', async () => {
-    const result = await getUnarchivedWhatsAppChats(testUser)
-
-    expect(result).toHaveLength(2)
-    expect(result.every(c => !c.archived)).toBe(true)
-  })
-
-  test('excludes archived chats', async () => {
-    const result = await getUnarchivedWhatsAppChats(testUser)
-
-    const jids = result.map(c => c.jid)
-    expect(jids).not.toContain('987654321@s.whatsapp.net')
-  })
-
-  test('sorts chats by lastMessageTimestamp descending', async () => {
-    const result = await getUnarchivedWhatsAppChats(testUser)
-
-    for (let i = 0; i < result.length - 1; i++) {
-      expect(result[i].lastMessageTimestamp).toBeGreaterThanOrEqual(result[i + 1].lastMessageTimestamp)
-    }
-  })
-
-  test('returns empty array when no unarchived chats exist', async () => {
-    const emptyStore = createStore({
-      chats: {},
-      contacts: {},
-      messages: {},
-      auth: '',
-    })
-    vi.mocked(getWAFasade).mockResolvedValue({
-      ...emptyStore,
-      getStatus: () => ({ type: 'ready' as const }),
-      sendMessage: sendMessageMock,
-      setRead: setReadMock,
-      setArchived: setArchivedMock,
-    })
-
-    const result = await getUnarchivedWhatsAppChats(testUser)
-    expect(result).toEqual([])
-  })
-
-  test('returns chats with correct properties', async () => {
-    const result = await getUnarchivedWhatsAppChats(testUser)
-
-    expect(result).toHaveLength(2)
-    const groupChat = result.find(c => c.isGroup)
-    expect(groupChat).toBeDefined()
-    expect(groupChat?.name).toBe('Family Group')
-    expect(groupChat?.unreadCount).toBe(5)
-
-    const johnChat = result.find(c => !c.isGroup)
-    expect(johnChat).toBeDefined()
-    expect(johnChat?.name).toBe('John Doe')
-    expect(johnChat?.unreadCount).toBe(3)
   })
 })
 

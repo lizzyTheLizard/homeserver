@@ -1,5 +1,8 @@
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { MicrosoftContent } from './_components/MicrosoftContent'
+import { MicrosoftUserInfo } from './_components/MicrosoftUserInfo'
+import { MicrosoftMail } from './_components/MicrosoftMail'
+import { MicrosoftTodo } from './_components/MicrosoftTodo'
+import { MicrosoftCalendar } from './_components/MicrosoftCalendar'
 import { loadMicrosoftStatus } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
@@ -15,7 +18,14 @@ export default function Page() {
         <ActionTitle>
           <h1>Microsoft</h1>
         </ActionTitle>
-        <MicrosoftContent status={status} />
+        {status.connected && (
+          <>
+            <MicrosoftMail messages={status.messages} />
+            <MicrosoftTodo todos={status.todos} />
+            <MicrosoftCalendar events={status.events} />
+          </>
+        )}
+        <MicrosoftUserInfo connected={status.connected} userInfo={status.userInfo} />
       </main>
     )
   })
