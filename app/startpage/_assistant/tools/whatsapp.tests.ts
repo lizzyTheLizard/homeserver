@@ -35,6 +35,7 @@ describe('getTools', () => {
 
   describe('list_whatsapp_chats', () => {
     test('returns only unarchived chats', async () => {
+      if (!tools.list_whatsapp_chats.execute) throw new Error('list_whatsapp_chats tool is not defined')
       const result = await tools.list_whatsapp_chats.execute({}, executionOptions) as { jid: string }[]
 
       expect(result).toHaveLength(2)
@@ -44,6 +45,7 @@ describe('getTools', () => {
     })
 
     test('does not return the archived field', async () => {
+      if (!tools.list_whatsapp_chats.execute) throw new Error('list_whatsapp_chats tool is not defined')
       const result = await tools.list_whatsapp_chats.execute({}, executionOptions) as Record<string, unknown>[]
 
       expect(result).toHaveLength(2)
@@ -53,6 +55,7 @@ describe('getTools', () => {
     })
 
     test('includes chat metadata fields', async () => {
+      if (!tools.list_whatsapp_chats.execute) throw new Error('list_whatsapp_chats tool is not defined')
       const result = await tools.list_whatsapp_chats.execute(
         {},
         executionOptions,
@@ -76,6 +79,7 @@ describe('getTools', () => {
 
   describe('list_all_whatsapp_chats', () => {
     test('returns all chats including archived', async () => {
+      if (!tools.list_all_whatsapp_chats.execute) throw new Error('list_all_whatsapp_chats tool is not defined')
       const result = await tools.list_all_whatsapp_chats.execute({}, executionOptions) as { jid: string, archived: boolean }[]
 
       expect(result).toHaveLength(3)
@@ -90,6 +94,7 @@ describe('getTools', () => {
 
   describe('get_whatsapp_messages', () => {
     test('returns messages for a specific chat', async () => {
+      if (!tools.get_whatsapp_messages.execute) throw new Error('get_whatsapp_messages tool is not defined')
       const result = await tools.get_whatsapp_messages.execute(
         { chatId: '123456789@s.whatsapp.net' },
         executionOptions,
@@ -100,6 +105,7 @@ describe('getTools', () => {
     })
 
     test('returns message content and metadata', async () => {
+      if (!tools.get_whatsapp_messages.execute) throw new Error('get_whatsapp_messages tool is not defined')
       const result = await tools.get_whatsapp_messages.execute(
         { chatId: '123456789@s.whatsapp.net' },
         executionOptions,
@@ -112,10 +118,11 @@ describe('getTools', () => {
     })
 
     test('returns empty array for chat with no messages', async () => {
+      if (!tools.get_whatsapp_messages.execute) throw new Error('get_whatsapp_messages tool is not defined')
       const result = await tools.get_whatsapp_messages.execute(
         { chatId: '123456789-123456@g.us' },
         executionOptions,
-      )
+      ) as unknown[]
 
       expect(result).toEqual([])
     })
@@ -123,10 +130,11 @@ describe('getTools', () => {
 
   describe('send_whatsapp_message', () => {
     test('calls sendMessage with correct arguments', async () => {
+      if (!tools.send_whatsapp_message.execute) throw new Error('send_whatsapp_message tool is not defined')
       const result = await tools.send_whatsapp_message.execute(
         { chatId: '123456789@s.whatsapp.net', message: 'Test message' },
         executionOptions,
-      )
+      ) as string
 
       expect(result).toBe('Message sent successfully')
       expect(sendMessageMock).toHaveBeenCalledWith('123456789@s.whatsapp.net', 'Test message')
@@ -136,10 +144,11 @@ describe('getTools', () => {
 
   describe('archive_whatsapp_chat', () => {
     test('calls setArchived with (jid, true)', async () => {
+      if (!tools.archive_whatsapp_chat.execute) throw new Error('archive_whatsapp_chat tool is not defined')
       const result = await tools.archive_whatsapp_chat.execute(
         { chatId: '123456789@s.whatsapp.net' },
         executionOptions,
-      )
+      ) as string
 
       expect(result).toBe('Chat archived successfully')
       expect(setArchivedMock).toHaveBeenCalledWith('123456789@s.whatsapp.net', true)
@@ -149,10 +158,11 @@ describe('getTools', () => {
 
   describe('set_whatsapp_chat_read_status', () => {
     test('marks chat as read', async () => {
+      if (!tools.set_whatsapp_chat_read_status.execute) throw new Error('set_whatsapp_chat_read_status tool is not defined')
       const result = await tools.set_whatsapp_chat_read_status.execute(
         { chatId: '123456789@s.whatsapp.net', read: true },
         executionOptions,
-      )
+      ) as string
 
       expect(result).toBe('Chat marked as read')
       expect(setReadMock).toHaveBeenCalledWith('123456789@s.whatsapp.net', true)
@@ -160,10 +170,11 @@ describe('getTools', () => {
     })
 
     test('marks chat as unread', async () => {
+      if (!tools.set_whatsapp_chat_read_status.execute) throw new Error('set_whatsapp_chat_read_status tool is not defined')
       const result = await tools.set_whatsapp_chat_read_status.execute(
         { chatId: '123456789@s.whatsapp.net', read: false },
         executionOptions,
-      )
+      ) as string
 
       expect(result).toBe('Chat marked as unread')
       expect(setReadMock).toHaveBeenCalledWith('123456789@s.whatsapp.net', false)

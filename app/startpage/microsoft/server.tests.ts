@@ -53,6 +53,11 @@ const mockMessages = [
   },
 ]
 
+const serializedMockMessages = mockMessages.map(msg => ({
+  ...msg,
+  receivedDateTime: msg.receivedDateTime.toString(),
+}))
+
 afterEach(() => {
   vi.clearAllMocks()
 })
@@ -76,7 +81,7 @@ describe('loadMicrosoftStatus', () => {
 
     const result = await loadMicrosoftStatus()
 
-    expect(result).toEqual({ connected: true, userInfo: mockUserInfo, messages: mockMessages, todos: [], events: [] })
+    expect(result).toEqual({ connected: true, userInfo: mockUserInfo, messages: serializedMockMessages, todos: [], events: [] })
   })
 })
 
