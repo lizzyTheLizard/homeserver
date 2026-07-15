@@ -1,15 +1,14 @@
 'use client'
-import { ReactNode, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { textColumn, boolColumn, numberColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { getStatus, loadMessages } from '../server'
-import { MessageBubble } from './MessageBubble'
+import { getStatus } from '../server'
+import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
-import type { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import QRCode from 'react-qr-code'
 
 const columns = [
@@ -21,44 +20,19 @@ const columns = [
 ]
 
 export function WhatsAppContent({ chats, status }: { chats: Chat[], status: SyncStatus }) {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null)
-  const [messages, setMessages] = useState<Message[] | null>(null)
-  const [messagesLoading, setMessagesLoading] = useState(false)
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [sidebarId, openSidebar] = useSidebar()
   const [error, setError] = useState<string | undefined>(status.type === 'closed' ? (status.error?.message ?? 'Unknown error') : undefined)
   const router = useRouter()
 
   function showMessages(chat: Chat) {
-    setSelectedChat(chat.name)
-    setMessages(null)
-    setMessagesLoading(true)
-    loadMessages(chat.jid).then((msgs) => {
-      setMessages(msgs)
-      setMessagesLoading(false)
-      openSidebar()
-    }).catch(() => {
-      setMessagesLoading(false)
-      openSidebar()
-    })
-  }
-
-  function renderMobile(c: ChatPlus): ReactNode {
-    return (
-      <div key={c.id} className={styles.mobileItem} onClick={() => { showMessages(c) }}>
-        <div className={styles.mobileItemName}>
-          {c.name}
-        </div>
-        <div className={styles.mobileDesc}>
-          {c.archived ? 'Archived • ' : ''}
-          {c.unreadCount > 0 ? `${c.unreadCount.toString()} unread • ` : ''}
-          {c.lastMessage ? `Last: ${new Date(c.lastMessage).toLocaleString()}` : ''}
-        </div>
-      </div>
-    )
+    setSelectedChat(chat)
+    openSidebar()
   }
 
   useEffect(() => {
     if (status.type === 'ready') return
+    if (status.type === 'notstarted') return
     const interval = setInterval(() => {
       getStatus().then((r) => {
         if (!r.success) setError(r.error)
@@ -89,16 +63,9 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
         columns={columns}
         onRowClick={showMessages}
         initialSortingOrder={[{ key: 'archived', direction: 'ASC' }, { key: 'lastMessage', direction: 'DESC' }]}
-        renderMobile={renderMobile}
         searchLabel="Search chats…"
       />
-      <Sidebar id={sidebarId} title={selectedChat ?? ''} type="Chat" noDelete>
-        {messagesLoading && <LoadingSpinner text="Loading messages..." />}
-        {!messagesLoading && messages?.length === 0 && <p>No messages yet.</p>}
-        {!messagesLoading && messages?.map(msg => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
-      </Sidebar>
+      <WhatsAppSidebar key={selectedChat?.jid} selectedChat={selectedChat} sidebarId={sidebarId} />
     </>
   )
 }

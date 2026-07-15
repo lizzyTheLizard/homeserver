@@ -12,7 +12,7 @@ export function MessageBubble({ message }: { message: Message }) {
         {message.message}
       </div>
       <div className={styles.timestamp}>
-        <DateTime date={{ epochMilliseconds: message.messageTimestamp }} oneLine />
+        <DateTime date={{ epochMilliseconds: message.messageTimestamp * 1000 }} oneLine />
       </div>
     </div>
   )

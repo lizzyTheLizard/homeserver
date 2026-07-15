@@ -1,7 +1,8 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { nontransactional } from '@/app/shared/_external/db/access'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import { logEvent } from '@/app/shared/_data/Event'
 import { getWAFasade } from '../_external/whatsapp'
 import type { Chat, Message, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
 import { logger } from '@/app/shared/logger'
@@ -27,5 +28,32 @@ export async function getStatus(): ActionResponse<SyncStatus> {
     const wa = await getWAFasade(user)
     const status = wa.getStatus()
     return status
+  }))
+}
+
+export async function archiveChat(chatJid: string, archived: boolean): ActionResponse<void> {
+  return toResponse(transactional(async (client) => {
+    const user = await getAuthenticatedUserSession('startpage')
+    const wa = await getWAFasade(user)
+    await wa.setArchived(chatJid, archived)
+    await logEvent(client, 'INFO', `${archived ? 'Archived' : 'Unarchived'} WhatsApp chat ${chatJid}`)
+  }))
+}
+
+export async function markRead(chatJid: string, read: boolean): ActionResponse<void> {
+  return toResponse(transactional(async (client) => {
+    const user = await getAuthenticatedUserSession('startpage')
+    const wa = await getWAFasade(user)
+    await wa.setRead(chatJid, read)
+    await logEvent(client, 'INFO', `Set WhatsApp chat ${chatJid} read status to ${read.toString()}`)
+  }))
+}
+
+export async function sendChatMessage(chatJid: string, text: string): ActionResponse<void> {
+  return toResponse(transactional(async (client) => {
+    const user = await getAuthenticatedUserSession('startpage')
+    const wa = await getWAFasade(user)
+    await wa.sendMessage(chatJid, text)
+    await logEvent(client, 'INFO', `Sent WhatsApp message to chat ${chatJid}`)
   }))
 }

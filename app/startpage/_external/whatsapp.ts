@@ -14,6 +14,7 @@ globalThis.runningSyncs ??= new Map<string, RunningSync>()
 
 const mutex = new Mutex()
 const inactivityTimeoutMs = 10 * 1000
+const name = process.env.NODE_ENV === 'production' ? 'Gutschi.site' : 'Gutschi.Site (Dev)'
 
 export interface WaFasade extends Omit<WhatsAppStore, 'bind' | 'reset'> {
   getStatus(): SyncStatus
@@ -42,7 +43,7 @@ async function createNewRunningSync(user: UserSession): Promise<RunningSync> {
   const { createStore, createHandler } = await import('@lizzythelizard/whatsapp-mcp')
   const inputData = await readDataFromDb(user)
   const store = createStore(inputData, { writeData: data => updateData(user, data), logger: walogger })
-  const handler = createHandler(store, { logger: walogger, name: 'Gutschi.site' })
+  const handler = createHandler(store, { logger: walogger, name })
   await handler.start()
   return {
     facade: { ...store, ...handler },

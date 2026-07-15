@@ -8,7 +8,7 @@ export default function Loading() {
       <ActionTitle>
         <h1>WhatsApp</h1>
       </ActionTitle>
-      <WhatsAppContent chats={[]} status={{ type: 'connecting' }} />
+      <WhatsAppContent chats={[]} status={{ type: 'notstarted' }} />
       <LoadingSpinner></LoadingSpinner>
     </main>
   )
