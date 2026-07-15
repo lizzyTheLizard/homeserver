@@ -1,5 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { createGraphApiClient, toInstant } from './microsoft'
+import { graphApiRequest, toInstant } from './microsoft'
 import { UserSession } from '@/app/shared/auth/auth'
 
 export interface MicrosoftCalendar {
@@ -15,10 +15,10 @@ export interface MicrosoftCalendar {
 }
 
 export async function getCalendars(user: UserSession): Promise<MicrosoftCalendar[]> {
-  const client = await createGraphApiClient(user)
-  if (!client) return []
-  const response = await client.api('/me/calendars').get() as { value: MicrosoftCalendar[] }
-  return response.value
+  return await graphApiRequest(user, '/me/calendars', async (request) => {
+    const response = await request.get() as { value: MicrosoftCalendar[] }
+    return response.value
+  })
 }
 
 export interface MicrosoftCalendarEvent {
@@ -44,15 +44,15 @@ export async function getAllEvents(user: UserSession, startDateTime?: Temporal.I
   const now = Temporal.Now.instant()
   const start = (startDateTime ?? now).toString().replace('Z', '')
   const end = (endDateTime ?? now.add({ hours: 7 * 24 })).toString().replace('Z', '')
-  const client = await createGraphApiClient(user)
-  if (!client) return []
-  const response = await client.api('/me/calendarView')
-    .query({ startDateTime: start, endDateTime: end })
-    .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')
-    .top(100)
-    .orderby('start/dateTime')
-    .get() as { value: RawCalendarEvent[] }
-  return response.value.map(convertCalendarEvent)
+  return await graphApiRequest(user, '/me/calendarView', async (request) => {
+    const response = await request
+      .query({ startDateTime: start, endDateTime: end })
+      .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')
+      .top(100)
+      .orderby('start/dateTime')
+      .get() as { value: RawCalendarEvent[] }
+    return response.value.map(convertCalendarEvent)
+  })
 }
 
 interface RawCalendarEvent {

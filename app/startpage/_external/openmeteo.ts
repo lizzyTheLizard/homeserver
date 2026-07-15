@@ -1,5 +1,7 @@
+import { logger } from '@/app/shared/logger'
+
 const CACHE_TTL_MS = 10 * 60 * 1000
-const cache = new Map<string, { data: { hourly?: unknown, daily?: unknown }, timestamp: number }>()
+const cache = new Map<string, { data: unknown, timestamp: number }>()
 
 export async function openmeteoRequest(lat: number, lon: number, params: Record<string, string>): Promise<{ hourly?: unknown, daily?: unknown }> {
   const urlParams = new URLSearchParams()
@@ -9,19 +11,25 @@ export async function openmeteoRequest(lat: number, lon: number, params: Record<
   for (const [key, value] of Object.entries(params)) {
     urlParams.append(key, value)
   }
-  if (cache.has(urlParams.toString())) {
-    const cached = cache.get(urlParams.toString())
+  const url = `https://api.open-meteo.com/v1/forecast?${urlParams}`
+  return await cachedFetch(url) as { hourly?: unknown, daily?: unknown }
+}
+
+async function cachedFetch(url: string): Promise<unknown> {
+  if (cache.has(url)) {
+    const cached = cache.get(url)
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      logger.debug(`Return cached openmeteo data for request ${url}`)
       return cached.data
     }
   }
-  const url = `https://api.open-meteo.com/v1/forecast?${urlParams}`
-  const res = await fetch(url, { cache: 'no-store' })
-  if (!res.ok) {
-    throw new Error(`Open-Meteo API error: ${res.status.toString()} ${res.statusText}`)
-  }
-  const data = await res.json() as { hourly?: unknown, daily?: unknown }
-  cache.set(urlParams.toString(), { data, timestamp: Date.now() })
+  logger.debug(`Fetch data from ${url}`)
+  const start = Date.now()
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Failed to fetch: ${response.status.toString()} ${response.statusText}`)
+  const data = await response.json() as unknown
+  logger.debug(`Fetched data in ${(Date.now() - start).toString()}ms`)
+  cache.set(url, { data, timestamp: Date.now() })
   return data
 }
 

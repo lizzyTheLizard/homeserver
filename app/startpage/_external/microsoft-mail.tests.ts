@@ -68,16 +68,14 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
     await sendMail(user, [TEST_TO_MAIL_ADDRESS!], uniqueSubject, 'This is an automated test email.')  // eslint-disable-line
 
     let sent = undefined
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 20; i++) {
       await new Promise((resolve) => { setTimeout(resolve, 2000) })
       const messages = await getInboxMessages(user)
       sent = messages.find(m => m.subject === uniqueSubject)
       if (sent) break
     }
-
-    if (sent) {
-      await archiveMessage(user, sent.id)
-    }
     expect(sent).toBeDefined()
+
+    if (sent) await archiveMessage(user, sent.id)
   }, 90000)
 })

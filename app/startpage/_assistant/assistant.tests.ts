@@ -42,18 +42,15 @@ describe('createAssistantInstance', () => {
       await assistant.init({ location: { lat: 52, lon: 13 } })
 
       expect(mockGetTools).toHaveBeenCalledWith(user)
-      expect(mockGenerateInitialMessages).toHaveBeenCalledWith(user, { location: { lat: 52, lon: 13 } }, expect.any(Function))
+      expect(mockGenerateInitialMessages).toHaveBeenCalledWith(user, { location: { lat: 52, lon: 13 } })
     })
 
     test('emits stream_response, finished_response and got_actions during init', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockImplementation(async (_user: unknown, _ctx: unknown, stream: (chunk: string) => void) => {
-        stream('Good morning!')
-        return {
-          messages: [{ role: 'system', content: 'instructions' }, { role: 'assistant', content: 'Good morning!' }],
-          greeting: 'Good morning!',
-          actions: ['Action 1', 'Action 2'],
-        }
+      mockGenerateInitialMessages.mockResolvedValue({
+        messages: [{ role: 'system', content: 'instructions' }, { role: 'assistant', content: 'Good morning!' }],
+        greeting: 'Good morning!',
+        actions: ['Action 1', 'Action 2'],
       })
 
       const events: AssistantEvent[] = []
@@ -76,6 +73,7 @@ describe('createAssistantInstance', () => {
         callCount++
         if (callCount === 2) {
           options.messages.push({ role: 'assistant', content: '[]' })
+          return '[]'
         }
       })
     })
@@ -104,7 +102,7 @@ describe('createAssistantInstance', () => {
         options.onChunk?.('Hello')
         options.onChunk?.(' World')
         options.onToolCall?.()
-        if (callCount === 2) options.messages.push({ role: 'assistant', content: '[]' })
+        if (callCount === 2) options.messages.push({ role: 'assistant', content: '[]' }); return '[]'
       })
 
       await assistant.send('test')
@@ -137,6 +135,7 @@ describe('createAssistantInstance', () => {
         callCount++
         if (callCount === 2) {
           messages.push({ role: 'assistant', content: '["Action A", "Action B"]' })
+          return '["Action A", "Action B"]'
         }
       })
 
@@ -157,6 +156,7 @@ describe('createAssistantInstance', () => {
         callCount++
         if (callCount === 2) {
           messages.push({ role: 'assistant', content: '[]' })
+          return '[]'
         }
       })
 

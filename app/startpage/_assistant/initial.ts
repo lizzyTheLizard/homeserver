@@ -9,9 +9,15 @@ import { ModelMessage } from 'ai'
 import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
 import { join } from 'path'
+import { logger } from '@/app/shared/logger'
 
 const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
+
+interface PartResult {
+  text: string
+  actions: string[]
+}
 
 export interface InitialMessages {
   messages: ModelMessage[]
@@ -19,16 +25,11 @@ export interface InitialMessages {
   actions: string[]
 }
 
-export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, stream: (chunk: string) => void): Promise<InitialMessages> {
-  const chunks: string[] = []
-  const collect = (chunk: string) => { chunks.push(chunk); stream(chunk) }
-  const actions: string[] = []
+export async function generateInitialMessages(user: UserSession, initialContext: InitialContext): Promise<InitialMessages> {
+  const partialResults = await Promise.all([getGreeting(), getWeather(initialContext), getTasks(user)])
+  const fullGreeting = partialResults.map(r => r.text).join('')
+  const actions = partialResults.flatMap(r => r.actions)
 
-  actions.push(...getGreeting(initialContext, collect))
-  actions.push(...(await getWeather(initialContext, collect)))
-  actions.push(...(await getTasks(user, initialContext, collect)))
-
-  const fullGreeting = chunks.join('')
   const messages = [
     { role: 'system', content: systemMessage },
     { role: 'assistant', content: fullGreeting },
@@ -36,19 +37,23 @@ export async function generateInitialMessages(user: UserSession, initialContext:
   return { messages, greeting: fullGreeting, actions }
 }
 
-function getGreeting(_initialContext: InitialContext, stream: (chunk: string) => void): string[] {
+async function getGreeting(): Promise<PartResult> {
+  logger.debug('Initialize greeting part')
   const hour = new Date().getHours()
   const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
-  stream(`Good ${timeOfDay}!\n\n`)
-  return []
+  return Promise.resolve({ text: `Good ${timeOfDay}!\n\n`, actions: [] })
 }
 
-async function getWeather(initialContext: InitialContext, stream: (chunk: string) => void): Promise<string[]> {
+async function getWeather(initialContext: InitialContext): Promise<PartResult> {
+  logger.debug('Initialize weather part')
   const location = initialContext.location
   const today = Temporal.Now.plainDateISO().toString()
   const tomorrow = Temporal.Now.plainDateISO().add({ days: 1 }).toString()
   const params = { hourly: 'temperature_2m,precipitation,weather_code', daily: 'sunrise,sunset', start_date: today, end_date: tomorrow }
-  const data = await openmeteoRequest(location.lat, location.lon, params)
+  const [city, data] = await Promise.all([
+    getLocationDescription(location),
+    openmeteoRequest(location.lat, location.lon, params),
+  ])
   const daily = parseOpenMeteoData(data.daily)
   const hourly = parseOpenMeteoData(data.hourly)
   const temperatures = Object.entries(hourly).filter(([timeKey]) => timeKey.startsWith(today)).map(([, point]) => point.temperature as number)
@@ -56,13 +61,13 @@ async function getWeather(initialContext: InitialContext, stream: (chunk: string
   const maxTemp = Math.max(...temperatures)
   const timeStr = Temporal.Now.plainDateTimeISO().toString().substring(0, 13) + ':00'
   const current = hourly[timeStr]
-  const city = (await getLocationDescription(location)).split(',')[0]
-  stream(`Currently the weather is **${current.weather_condition as string}** with **${current.temperature as string}°C,** in **${city}**.  `)
-  stream(`During the day, the temperature will rise to **${maxTemp.toString()}°C** and drop to **${minTemp.toString()}°C** in the evening.  `)
-  stream(`The sun will rise at **${formatTime(daily[today].sunrise as string)}** and set at **${formatTime(daily[today].sunset as string)}**. `)
-  stream(getPrecipitationString(hourly, Temporal.Now.plainDateTimeISO()))
-  stream('\n\n')
-  return ['Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast']
+  let text = ''
+  text += `Currently the weather is **${current.weather_condition as string}** with **${current.temperature as string}°C,** in **${city}**.  `
+  text += `During the day, the temperature will rise to **${maxTemp.toString()}°C** and drop to **${minTemp.toString()}°C** in the evening.  `
+  text += `The sun will rise at **${formatTime(daily[today].sunrise as string)}** and set at **${formatTime(daily[today].sunset as string)}**. `
+  text += getPrecipitationString(hourly, Temporal.Now.plainDateTimeISO())
+  text += '\n\n'
+  return { text, actions: ['Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast'] }
 }
 
 export function getPrecipitationString(hourly: Record<string, Record<string, unknown>>, now: Temporal.PlainDateTime): string {
@@ -76,7 +81,10 @@ export function getPrecipitationString(hourly: Record<string, Record<string, unk
   let i = 0
   while (i < entries.length) {
     const [, point] = entries[i]
-    if (!PRECIPITATION_CONDITIONS.has(point.weather_condition as string)) { i++; continue }
+    if (!PRECIPITATION_CONDITIONS.has(point.weather_condition as string)) {
+      i++
+      continue
+    }
 
     const condition = (point.weather_condition as string).toLowerCase()
     const start = entries[i][0].substring(11, 16)
@@ -128,17 +136,21 @@ function formatTime(input: string): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-async function getTasks(user: UserSession, _initialContext: InitialContext, stream: (chunk: string) => void): Promise<string[]> {
+async function getTasks(user: UserSession): Promise<PartResult> {
+  logger.debug('Initialize tasks part')
+  const [inboxCount, whatsAppChats, todoCount] = await Promise.all([
+    getInboxCount(user),
+    getWAFasade(user).then(wa => wa.getChats().filter(c => !c.archived)).then(chats => chats.length),
+    getTodoCount(user),
+  ])
+  const totalTaskCount = todoCount.tasksDueToday + todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate
+  let text = ''
+  text += `You have **${inboxCount.focused.toString()}** focused emails (${inboxCount.focusedUnread.toString()} unread) and ${inboxCount.other.toString()} others. `
+  text += `There are **${whatsAppChats.toString()}** unarchived WhatsApp chats. `
+  text += `You have **${todoCount.tasksDueToday.toString()}** tasks due today and **${(todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate).toString()}** tasks due this week.`
   const actions: string[] = []
-  const inboxCount = await getInboxCount(user)
-  stream(`You have **${inboxCount.focused.toString()}** focused emails (${inboxCount.focusedUnread.toString()} unread) and ${inboxCount.other.toString()} others. `)
+  if (totalTaskCount > 0) actions.push('Show task overview')
   if ((inboxCount.focusedUnread + inboxCount.otherUnread) > 0) actions.push('Get Outlook Overview')
-
-  const whatsAppChats = (await getWAFasade(user)).getChats().filter(c => !c.archived)
-  if (whatsAppChats.length > 0) actions.push('Get WhatsApp Overview')
-  stream(`There are **${whatsAppChats.length.toString()}** unarchived WhatsApp chats. `)
-
-  const todoCount = await getTodoCount(user)
-  stream(`You have **${todoCount.tasksDueToday.toString()}** tasks due today and ${(todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate).toString()} tasks due this week.`)
-  return actions
+  if (whatsAppChats > 0) actions.push('Get WhatsApp Overview')
+  return { text, actions }
 }

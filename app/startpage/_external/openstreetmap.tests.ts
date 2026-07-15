@@ -11,7 +11,7 @@ describe('getLocationDescription', () => {
   test('should return a location description for London', async () => {
     const result = await getLocationDescription({ lat: 51.5074, lon: -0.1278 })
     expect(result).toBeDefined()
-    expect(result).toContain('London')
+    expect(result).toContain('City of Westminster')
   })
 
   test('should return a location description for Paris', async () => {

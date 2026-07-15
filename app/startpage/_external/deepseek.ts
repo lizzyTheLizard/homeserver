@@ -2,6 +2,7 @@ import { generateText, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
+import { isArray } from 'util'
 
 const MAX_TOOL_ITERATIONS = 5
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: loggingFetch })
@@ -15,7 +16,7 @@ export interface SendOptions {
   onToolCall?: () => void
 }
 
-export async function send({ messages, tools, onChunk, onToolCall }: SendOptions): Promise<void> {
+export async function send({ messages, tools, onChunk, onToolCall }: SendOptions): Promise<string> {
   const toolChoice = (tools ? 'auto' : 'none') as ToolChoice<ToolSet>
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
     let responseMessages: ModelMessage[]
@@ -33,10 +34,17 @@ export async function send({ messages, tools, onChunk, onToolCall }: SendOptions
       hadToolCall = result.toolCalls.length > 0
     }
     responseMessages.forEach(m => messages.push(m))
-    if (!hadToolCall) break
-    if (i == MAX_TOOL_ITERATIONS - 1) throw new Error('Too many tool call iterations, stopping after 5')
+    if (!hadToolCall) {
+      const lastMessage = responseMessages[responseMessages.length - 1].content
+      if (!Array.isArray(lastMessage)) throw new Error('Last message content is not an array')
+      if (lastMessage.length === 0) return ''
+      const content = lastMessage[0]
+      if ('text' in content) return content.text
+      throw new Error('Last message content is not text')
+    }
     onToolCall?.()
   }
+  throw new Error('Too many tool call iterations, stopping after 5')
 }
 
 async function loggingFetch(resource: string | URL | Request, init: RequestInit | undefined): Promise<Response> {
