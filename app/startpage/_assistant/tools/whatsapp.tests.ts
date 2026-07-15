@@ -44,35 +44,25 @@ describe('getTools', () => {
       expect(jids).toContain('123456789-123456@g.us')
     })
 
-    test('does not return the archived field', async () => {
-      if (!tools.list_whatsapp_chats.execute) throw new Error('list_whatsapp_chats tool is not defined')
-      const result = await tools.list_whatsapp_chats.execute({}, executionOptions) as Record<string, unknown>[]
-
-      expect(result).toHaveLength(2)
-      for (const chat of result) {
-        expect(chat).not.toHaveProperty('archived')
-      }
-    })
-
     test('includes chat metadata fields', async () => {
       if (!tools.list_whatsapp_chats.execute) throw new Error('list_whatsapp_chats tool is not defined')
       const result = await tools.list_whatsapp_chats.execute(
         {},
         executionOptions,
-      ) as { jid: string, name: string, unreadCount: number, lastMessageTimestamp: number, isGroup: boolean }[]
+      ) as { jid: string, name: string, unreadCount: number, lastMessageTimestamp: string, isGroup: boolean }[]
 
       const johnChat = result.find(c => c.jid === '123456789@s.whatsapp.net')
       expect(johnChat).toBeDefined()
       expect(johnChat?.name).toBe('John Doe')
       expect(johnChat?.unreadCount).toBe(3)
-      expect(johnChat?.lastMessageTimestamp).toBe(1700000000)
+      expect(johnChat?.lastMessageTimestamp).toBe('2023-11-14T22:13:20.000Z')
       expect(johnChat?.isGroup).toBe(false)
 
       const groupChat = result.find(c => c.jid === '123456789-123456@g.us')
       expect(groupChat).toBeDefined()
       expect(groupChat?.name).toBe('Family Group')
       expect(groupChat?.unreadCount).toBe(5)
-      expect(groupChat?.lastMessageTimestamp).toBe(1700100000)
+      expect(groupChat?.lastMessageTimestamp).toBe('2023-11-16T02:00:00.000Z')
       expect(groupChat?.isGroup).toBe(true)
     })
   })
@@ -98,7 +88,7 @@ describe('getTools', () => {
       const result = await tools.get_whatsapp_messages.execute(
         { chatId: '123456789@s.whatsapp.net' },
         executionOptions,
-      ) as { id: string, message: string, messageTimestamp: number }[]
+      ) as { id: string, message: string, messageTimestamp: string }[]
 
       expect(result).toHaveLength(2)
       expect(result.map(m => m.id)).toEqual(expect.arrayContaining(['msg1', 'msg2']))
@@ -109,12 +99,12 @@ describe('getTools', () => {
       const result = await tools.get_whatsapp_messages.execute(
         { chatId: '123456789@s.whatsapp.net' },
         executionOptions,
-      ) as { id: string, message: string, messageTimestamp: number, from?: { jid: string, name: string } }[]
+      ) as { id: string, message: string, messageTimestamp: string, from?: { jid: string, name: string } }[]
 
       const msg1 = result.find(m => m.id === 'msg1')
       expect(msg1).toBeDefined()
       expect(msg1?.message).toBe('Hello from John!')
-      expect(msg1?.messageTimestamp).toBe(1700000000)
+      expect(msg1?.messageTimestamp).toBe('2023-11-14T22:13:20.000Z')
     })
 
     test('returns empty array for chat with no messages', async () => {

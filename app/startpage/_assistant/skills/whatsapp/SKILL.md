@@ -1,47 +1,92 @@
 ---
 name: whatsapp
-description: This skill must be used when the user asks about WhatsApp messages, chats, or wants to send a WhatsApp message. It handles the full flow from listing chats to reading messages, answering questions, and proposing replies.
+description: Use this skill for WhatsApp overview, reading chats, drafting replies, sending replies after approval, and archiving chats.
 ---
 
 # Chat Overview
 
-When the user asks you to give an overview of their WhatsApp chats or to read messages but does not define a specific chat, follow these steps:
-1. Use `list_whatsapp_chats` to get all unarchived chats if you do not have them already. If the user explicitly asks for archived chats, use `list_all_whatsapp_chats` instead.
-2. Show a list of the chats to the user, including the contact name or group name, the date and time of the last message and the unread message count for each chat. Do NOT use a table, instead use a simple list format.
-3. Ask the user which chat they want to explore.
+Trigger: user asks for "Get WhatsApp Overview" or asks for a WhatsApp overview without naming a chat.
 
-Use this template:
-```
-Here's your WhatsApp overview 📱
-* {chatName} – {unreadCount} unread – last message: {lastMessageDate} {lastMessageTime}
+1. Call `list_whatsapp_chats` to get all unarchived chats.
+2. For each returned chat, call `get_whatsapp_messages` with that chat jid.
+3. For each chat, summarize only messages from within the last 24h. If there are no messages from within the last 24h, summarize messages from the last 7 days instead. If there are no messages in the last 7 days, say there are no recent messages.
+4. Return a bullet list. Each bullet must be 1-2 sentences and include:
+   - chat name
+   - concise message summary based on the time rule above
+5. Do not propose actions in the overview unless the user explicitly asks for actions.
+6. If duplicate chat names ever exist, include jid in both the bullet and actions to disambiguate.
 
-Which chat would you like to dive into?
+Do not mark chats as read automatically.
+
+## Example Output
+```text
+Here is your WhatsApp overview:
+- Family: Yesterday they coordinated dinner time and asked whether you can bring dessert.
+- Alex: No messages within the last 24h; in the last week Alex asked for your feedback on the proposal draft.
+
 ```
+
+## Chat Overview Actions
+If the user asks for actions after the overview, return these actions for each unarchived chat:
+   - Send a response for chat {chatName}
+   - Archive Chat {chatName}
+If duplicate chat names exist, include jid in action labels.
+   
 
 # Message Exploration
+Trigger: user asks to inspect a specific chat or asks questions about it.
 
-When the user selects a chat or asks you to read messages from a specific chat, follow these steps:
-1. Use `get_whatsapp_messages` with the chat's jid to fetch messages. Do NOT mark the messages as read automatically. If you have only the name of the chat or contact, use `list_all_whatsapp_chats` to get the chat's jid first.
-2. Give a summary of the last messages. Consider only the messages from the last 7 days. Do not summarize the chat itself, do not tell the user what kind of chat this is. Just summarize the last messages. Do not use bullet points or tables, just a single paragraph with 2-5 sentences. If there are no messages in the last 7 days, inform the user that there are no recent messages.
-3. Try to figure out if there are some tasks for me. If there are any, make a list of those. If you do not find any tasks, say so.
-4. Ask the user if they want to archive the chat, reply to it, or go back to the chat overview.
+1. Resolve the chat jid:
+   - If jid is already known, use it.
+   - If only chat name is known, call `list_all_whatsapp_chats` and match by name.
+2. Call `get_whatsapp_messages` for that jid if you do not already have the messages.
+3. Summarize the messages and answer the user's direct questions about the chat.
+4. Identify concrete tasks, questions, or requested follow-ups directed at the user.
+5. Do not propose next actions unless the user explicitly asks for actions.
 
-# Proposing and Sending Replies
+Do not mark chats as read automatically.
 
-When the user wants to reply to a chat, follow these steps:
+## Message Exploration Actions
+If the user asks for actions after the exploration, return these actions:
+   - Send a response for chat {chatName}
+   - Archive Chat {chatName}
+If duplicate chat names exist, include jid in action labels.
 
-1. Draft a response based on the conversation context and the user's instructions.
-2. Present the draft using the editable input field syntax:
+
+# Drafting And Sending Responses
+Trigger: user asks to send or write a response:
+
+1. Load recent context with `get_whatsapp_messages` for that jid if you do not already have the messages.
+2. Create a draft that:
+   - answers open questions and pending points from the chat
+   - asks for missing information when needed
+   - mirrors the language and writing style used in the chat
+3. Present the draft in an editable input block:
    ~~~input
    Draft message text here
    ~~~
-3. Wait for the user to edit and confirm.
-4. Once confirmed, use `send_whatsapp_message` with the chat's jid and the confirmed message text.
-5. Never send a message without the user's explicit confirmation.
+4. Wait for user feedback.
+5. Treat clear confirmation phrases like "send now", "send", "OK", or equivalent as approval, as long as the user did not request any text changes in the same message.
+6. If the user requests any change (for example: "looks good but change X to Y"), do not send yet. Propose a new improved draft and repeat until accepted without further change requests.
+7. Only when the user explicitly confirms the final unchanged draft, call `send_whatsapp_message` with chat jid and final text.
 
-## Important Rules
+Never send a message without explicit confirmation.
 
-- Never modify or delete existing messages — WhatsApp doesn't support this.
-- Only send plain text messages — images, files, and voice messages are not supported.
-- Always confirm before sending any message.
-- If WhatsApp is not connected or no chats are available, inform the user.
+## Drafting And Sending Responses Actions
+If the user asks for actions after drafting a response, return these actions:
+   - Send Now
+   - Archive Chat {chatName}
+
+
+# Archiving
+Trigger: user asks to archive a chat.
+
+When user asks to archive a chat, archive directly using `archive_whatsapp_chat` once the target chat is identified.
+
+# Important Rules
+
+- Never modify or delete existing messages.
+- Only send plain text messages.
+- Do not auto-mark chats as read.
+- If WhatsApp is not ready or no chats are available, inform the user clearly.
+- All timestamps are in UTC ISO 8601 format (e.g. \"2023-11-14T22:13:20.000Z\").
