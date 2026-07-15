@@ -36,20 +36,24 @@ describe('createAssistantInstance', () => {
   describe('init', () => {
     test('calls getTools and generateInitialMessages', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue({ messages: [], actions: [] })
+      mockGenerateInitialMessages.mockResolvedValue({ messages: [{ role: 'system', content: 'sys' }], greeting: '', actions: [] })
 
       const assistant = createAssistantInstance(user)
       await assistant.init({ location: { lat: 52, lon: 13 } })
 
       expect(mockGetTools).toHaveBeenCalledWith(user)
-      expect(mockGenerateInitialMessages).toHaveBeenCalledWith(user, { location: { lat: 52, lon: 13 } })
+      expect(mockGenerateInitialMessages).toHaveBeenCalledWith(user, { location: { lat: 52, lon: 13 } }, expect.any(Function))
     })
 
-    test('emits finished_response and got_actions with initial actions', async () => {
+    test('emits stream_response, finished_response and got_actions during init', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue({
-        messages: [{ role: 'system', content: 'instructions' }],
-        actions: ['Action 1', 'Action 2'],
+      mockGenerateInitialMessages.mockImplementation(async (_user: unknown, _ctx: unknown, stream: (chunk: string) => void) => {
+        stream('Good morning!')
+        return {
+          messages: [{ role: 'system', content: 'instructions' }, { role: 'assistant', content: 'Good morning!' }],
+          greeting: 'Good morning!',
+          actions: ['Action 1', 'Action 2'],
+        }
       })
 
       const events: AssistantEvent[] = []
@@ -57,6 +61,7 @@ describe('createAssistantInstance', () => {
       assistant.on(e => events.push(e))
       await assistant.init({ location: { lat: 52, lon: 13 } })
 
+      expect(events).toContainEqual({ type: 'stream_response', chunk: 'Good morning!' })
       expect(events).toContainEqual({ type: 'finished_response' })
       expect(events).toContainEqual({ type: 'got_actions', actions: ['Action 1', 'Action 2'] })
     })
@@ -65,7 +70,7 @@ describe('createAssistantInstance', () => {
   describe('send', () => {
     beforeEach(() => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue({ messages: [], actions: [] })
+      mockGenerateInitialMessages.mockResolvedValue({ messages: [{ role: 'system', content: 'sys' }], greeting: '', actions: [] })
       let callCount = 0
       mockDeepseekSend.mockImplementation((options: { messages: { role: string, content: string }[] }) => {
         callCount++
@@ -85,7 +90,7 @@ describe('createAssistantInstance', () => {
 
     test('emits stream_response and tool_call via deepseekSend callbacks', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue({ messages: [], actions: [] })
+      mockGenerateInitialMessages.mockResolvedValue({ messages: [{ role: 'system', content: 'sys' }], greeting: '', actions: [] })
 
       const assistant = createAssistantInstance(user)
       await assistant.init({ location: { lat: 52, lon: 13 } })

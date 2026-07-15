@@ -44,7 +44,8 @@ export function createAssistantInstance(user: UserSession): Assistant {
 
   async function init(initialContext: InitialContext) {
     tools = await getTools(user)
-    const initial = await generateInitialMessages(user, initialContext)
+    const streamChunk = (chunk: string) => { emit({ type: 'stream_response', chunk }) }
+    const initial = await generateInitialMessages(user, initialContext, streamChunk)
     messages.push(...initial.messages)
     emit({ type: 'finished_response' })
     emit({ type: 'got_actions', actions: initial.actions })

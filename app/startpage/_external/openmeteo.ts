@@ -1,31 +1,5 @@
-import { Temporal } from '@js-temporal/polyfill'
-
 const CACHE_TTL_MS = 10 * 60 * 1000
 const cache = new Map<string, { data: { hourly?: unknown, daily?: unknown }, timestamp: number }>()
-
-export async function shortWeatherOverview(latitude: number, longitude: number): Promise<unknown> {
-  const today = Temporal.Now.plainDateISO().toString()
-  const tomorrow = Temporal.Now.plainDateISO().add({ days: 1 }).toString()
-  const params = { hourly: 'temperature_2m,precipitation,weather_code', daily: 'sunrise,sunset', start_date: today, end_date: tomorrow }
-  const data = await openmeteoRequest(latitude, longitude, params)
-  const daily = parseOpenMeteoData(data.daily)
-  const sunrise = daily[today].sunrise
-  const sunset = daily[today].sunset
-  const hourly = parseOpenMeteoData(data.hourly)
-  const current = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO())
-  const midday = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO().with({ hour: 12, minute: 0 }))
-  const evening = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO().with({ hour: 18, minute: 0 }))
-  const tomorrowMorning = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO().add({ days: 1 }).with({ hour: 6, minute: 0 }))
-  const tomorrowMidday = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO().add({ days: 1 }).with({ hour: 12, minute: 0 }))
-  const tomorrowEvening = getShortWeatherOverview(hourly, Temporal.Now.plainDateTimeISO().add({ days: 1 }).with({ hour: 18, minute: 0 }))
-  return { sunrise, sunset, current, midday, evening, tomorrowMorning, tomorrowMidday, tomorrowEvening }
-}
-
-function getShortWeatherOverview(hourly: Record<string, Record<string, unknown>>, time: Temporal.PlainDateTime): unknown {
-  const timeStr = time.toString().substring(0, 13) + ':00'
-  const weather = hourly[timeStr]
-  return { temperature: weather.temperature, condition: weather.weather_condition, precipitation: weather.precipitation }
-}
 
 export async function openmeteoRequest(lat: number, lon: number, params: Record<string, string>): Promise<{ hourly?: unknown, daily?: unknown }> {
   const urlParams = new URLSearchParams()

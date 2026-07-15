@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
-import { openmeteoRequest, parseOpenMeteoData, shortWeatherOverview } from './openmeteo'
+import { openmeteoRequest, parseOpenMeteoData } from './openmeteo'
 
 describe('parseOpenMeteoData', () => {
   test('parses daily data', () => {
@@ -48,21 +48,6 @@ describe('parseOpenMeteoData', () => {
     expect(() => parseOpenMeteoData(null)).toThrow('Invalid Open-Meteo data format')
     expect(() => parseOpenMeteoData('string')).toThrow('Invalid Open-Meteo data format')
     expect(() => parseOpenMeteoData({})).toThrow('Invalid Open-Meteo data format: missing time array')
-  })
-})
-
-describe('shortWeatherOverview', () => {
-  test('should return a weather overview for Berlin', async () => {
-    const result = await shortWeatherOverview(52.52, 13.405) as Record<string, unknown>
-    expect(result).toBeDefined()
-    expect(result.sunrise).toBeDefined()
-    expect(result.sunset).toBeDefined()
-    expect(result.current).toBeDefined()
-    expect(result.midday).toBeDefined()
-    expect(result.evening).toBeDefined()
-    expect(result.tomorrowMorning).toBeDefined()
-    expect(result.tomorrowMidday).toBeDefined()
-    expect(result.tomorrowEvening).toBeDefined()
   })
 })
 
