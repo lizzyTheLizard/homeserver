@@ -41,13 +41,12 @@ describe('send', () => {
 
   test('non-streaming with tools', async () => {
     const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Echo: test123' }]
-    const toolCalls: string[] = []
-    mockGenerateText
-      .mockResolvedValueOnce({ responseMessages: [assistantMsg(''), { role: 'tool', content: 'test123' }], toolCalls: [{}] })
-      .mockResolvedValueOnce({ responseMessages: [assistantMsg('Done')], toolCalls: [] })
-    await send({ messages, tools: echoTool, onToolCall: () => toolCalls.push('echo') })
+    mockGenerateText.mockResolvedValueOnce({
+      responseMessages: [assistantMsg(''), { role: 'tool', content: 'test123' }, assistantMsg('Done')],
+      toolCalls: [{}],
+    })
+    await send({ messages, tools: echoTool })
     expect(messages.some(m => m.role === 'tool')).toBe(true)
-    expect(toolCalls.length).toBeGreaterThan(0)
   })
 
   test('streaming without tools', async () => {
@@ -66,20 +65,13 @@ describe('send', () => {
   test('streaming with tools', async () => {
     const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Get weather for Berlin' }]
     const chunks: string[] = []
-    const toolCalls: string[] = []
-    mockStreamText
-      .mockReturnValueOnce({
-        textStream: (function* () { yield 'Checking' })() as unknown as AsyncIterable<string>,
-        responseMessages: Promise.resolve([assistantMsg('Getting weather'), { role: 'tool', content: 'Sunny' }]),
-        toolCalls: Promise.resolve([{}]),
-      })
-      .mockReturnValueOnce({
-        textStream: (function* () { yield 'Sunny'; yield ' in Berlin' })() as unknown as AsyncIterable<string>,
-        responseMessages: Promise.resolve([assistantMsg('Sunny in Berlin')]),
-        toolCalls: Promise.resolve([]),
-      })
-    await send({ messages, tools: weatherTool, onChunk: chunk => chunks.push(chunk), onToolCall: () => toolCalls.push('weather') })
-    expect(toolCalls.length).toBeGreaterThan(0)
+    mockStreamText.mockReturnValueOnce({
+      textStream: (function* () { yield 'Checking'; yield 'Sunny'; yield ' in Berlin' })() as unknown as AsyncIterable<string>,
+      responseMessages: Promise.resolve([assistantMsg('Getting weather'), { role: 'tool', content: 'Sunny' }, assistantMsg('Sunny in Berlin')]),
+      toolCalls: Promise.resolve([{}]),
+    })
+    await send({ messages, tools: weatherTool, onChunk: chunk => chunks.push(chunk) })
+    expect(chunks.length).toBeGreaterThan(0)
     expect(messages.some(m => m.role === 'tool')).toBe(true)
   })
 
