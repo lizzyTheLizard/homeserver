@@ -1,9 +1,9 @@
-import { generateText, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
+import { generateText, isStepCount, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 
-const MAX_TOOL_ITERATIONS = 5
+const MAX_TOOL_ITERATIONS = 10
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: loggingFetch })
 const model = opencode('deepseek-v4-flash')
 const agentSettings = { model, reasoning: 'none' as const, temperature: 0.2, allowSystemInMessages: true, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
@@ -15,35 +15,41 @@ export interface SendOptions {
   onToolCall?: () => void
 }
 
-export async function send({ messages, tools, onChunk, onToolCall }: SendOptions): Promise<string> {
-  const toolChoice = (tools ? 'auto' : 'none') as ToolChoice<ToolSet>
-  for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-    let responseMessages: ModelMessage[]
-    let hadToolCall: boolean
-    if (onChunk) {
-      const result = streamText({ ...agentSettings, messages, tools, toolChoice })
-      for await (const chunk of result.textStream)
-        onChunk(chunk)
-      responseMessages = await result.responseMessages
-      hadToolCall = (await result.toolCalls).length > 0
-    }
-    else {
-      const result = await generateText({ ...agentSettings, messages, tools, toolChoice })
-      responseMessages = result.responseMessages
-      hadToolCall = result.toolCalls.length > 0
-    }
-    responseMessages.forEach(m => messages.push(m))
-    if (!hadToolCall) {
-      const lastMessage = responseMessages[responseMessages.length - 1].content
-      if (!Array.isArray(lastMessage)) throw new Error('Last message content is not an array')
-      if (lastMessage.length === 0) return ''
-      const content = lastMessage[0]
-      if ('text' in content) return content.text
-      throw new Error('Last message content is not text')
-    }
-    onToolCall?.()
-  }
-  throw new Error('Too many tool call iterations, stopping after 5')
+export async function send(options: SendOptions): Promise<string> {
+  const responseMessages = options.onChunk ? await stream(options) : await generate(options)
+  responseMessages.forEach(m => options.messages.push(m))
+  const lastMessage = responseMessages[responseMessages.length - 1].content
+  if (!Array.isArray(lastMessage)) throw new Error('Last message content is not an array')
+  if (lastMessage.length === 0) return ''
+  const content = lastMessage[0]
+  if ('text' in content) return content.text
+  throw new Error('Last message content is not text')
+}
+
+async function stream(options: SendOptions): Promise<ModelMessage[]> {
+  const config = getConfig(options)
+  const result = streamText(config)
+  for await (const chunk of result.textStream) options.onChunk?.(chunk)
+  return await result.responseMessages
+}
+
+async function generate(options: SendOptions): Promise<ModelMessage[]> {
+  const config = getConfig(options)
+  const result = await generateText(config)
+  return result.responseMessages
+}
+
+function getConfig({ messages, tools, onToolCall }: SendOptions): Parameters<typeof generateText>[0] {
+  return {
+    ...agentSettings,
+    messages,
+    tools,
+    toolChoice: tools ? 'auto' : 'none',
+    stopWhen: isStepCount(MAX_TOOL_ITERATIONS),
+    onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) onToolCall?.() },
+    onToolExecutionStart: ({ toolCall }) => { logger.debug(`Tool execution started: ${toolCall.toolName}`) },
+    onToolExecutionEnd: ({ toolCall }) => { logger.debug(`Tool execution ended: ${toolCall.toolName}`) },
+  } satisfies Parameters<typeof generateText>[0]
 }
 
 async function loggingFetch(resource: string | URL | Request, init: RequestInit | undefined): Promise<Response> {
