@@ -7,7 +7,7 @@ function createLogger() {
   const format = isDev
     ? winston.format.combine(
         winston.format.errors({ stack: true }),
-        winston.format.timestamp({ format: 'MM-DD-YYYY HH:mm:ss' }),
+        winston.format.timestamp({ format: 'DD.MM.YYYY HH:mm:ss.SSS' }),
         winston.format.printf(info => toConsoleString(info)),
         winston.format.colorize({ all: true }),
       )
