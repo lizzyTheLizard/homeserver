@@ -1,6 +1,6 @@
 ---
-name: weather-forecast
-description: This skill must be used when the user asks for a weather forecast, including today's weather, tomorrow's weather, or the weekly forecast. It handles the full flow from gathering location information to providing detailed weather information.
+name: weather
+description: Use this skill for getting weather forecasts and details (e.g. Get Todays Weather Details, Get Weekly Forecast, What about tomorrow?).
 ---
 
 # Workflow

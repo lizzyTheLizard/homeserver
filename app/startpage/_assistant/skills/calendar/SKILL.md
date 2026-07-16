@@ -1,5 +1,5 @@
 ---
-name: microsoft-calendar
+name: calendar
 description: This skill must be used when the user asks about their calendar, schedule, events, appointments, meetings, or wants to know what they have planned. It handles showing the calendar overview and viewing event details.
 ---
 

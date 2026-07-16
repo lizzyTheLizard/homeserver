@@ -1,5 +1,5 @@
 ---
-name: outlook
+name: email
 description: This skill must be used when the user asks about Outlook email, inbox, or wants to read, search, send, or archive emails. It handles the full flow from showing the inbox to reading messages, composing replies, and sending.
 ---
 

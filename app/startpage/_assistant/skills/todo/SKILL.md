@@ -1,5 +1,5 @@
 ---
-name: microsoft-todo
+name: todo
 description: This skill must be used when the user asks about Microsoft Todo tasks, their to-do list, tasks, reminders, or wants to view, create, update, or complete tasks. It handles the full flow from showing the task overview to creating and managing tasks.
 ---
 

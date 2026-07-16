@@ -24,7 +24,7 @@ export function getSkillTools(skillDir: string): ToolSet {
       execute: skill.execute,
     })
   }
-  logger.debug(`Loaded ${Object.keys(skillTools).length.toString()} skill tools from ${skillDir}`)
+  logger.debug(`Loaded skills ${Object.keys(skillTools).join(', ')} from ${skillDir}`)
   return skillTools
 }
 
