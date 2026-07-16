@@ -1,8 +1,10 @@
-#Weekly Weather Forcast for {placeName} from {startDate, formatted DD.MM.YYYY} to  {endDate, formatted DD.MM.YYYY} 
+Here's the Weekly Forecast for **{placeName}** from **{startDate, formatted DD.MM.YYYY}** to **{endDate, formatted DD.MM.YYYY}**
 
-{Some general remarks, like the max or min temparature for the whole week, a specially rainy day or anthing else notably}
+{Add general remarks about the week, e.g. temperature range, notable rainy days, or other patterns}
 
-{A bullet point list for each day}
-* On {Weekday} {data formatted DD.MM.YYYY} is is {weather} and the temperature is **{minTemp}-{maxTemp}°C**
+{Daily breakdown}
+* On {Weekday}, {date formatted DD.MM.YYYY}: {weather} with temperatures **{minTemp}-{maxTemp}°C**
+* On {Weekday}, {date formatted DD.MM.YYYY}: {weather} with temperatures **{minTemp}-{maxTemp}°C**
+* (continue for all 7 days)
 
-{A short summay of the weekly weathers}
+{Provide a short summary of the week's weather pattern and practical recommendations for planning}

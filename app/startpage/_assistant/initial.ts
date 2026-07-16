@@ -45,7 +45,7 @@ function getSystemMessage(initialContext: InitialContext): string {
   const locationDescription = `Latitude: ${location.lat.toString()}, Longitude: ${location.lon.toString()}`
   return systemMessageTemplate
     .replace('{{LOCATION}}', locationDescription)
-    .replace('{{DATE}}', Temporal.Now.plainDateISO().toString())
+    .replace('{{DATE}}', Temporal.Now.plainDateTimeISO().toString())
 }
 
 interface PartResult {
