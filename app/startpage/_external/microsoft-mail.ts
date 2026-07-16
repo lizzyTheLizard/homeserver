@@ -1,6 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { UserSession } from '@/app/shared/auth/auth'
 import { graphApiRequest, toInstant } from './microsoft'
+import { transactional } from '@/app/shared/_external/db/access'
+import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
 
 export type InferenceClassification = 'focused' | 'other'
@@ -56,22 +58,57 @@ export async function getMessage(user: UserSession, messageId: string): Promise<
 }
 
 export async function sendMail(user: UserSession, to: string[], subject: string, body: string): Promise<void> {
-  const toRecipients = to.map(address => ({ emailAddress: { address } }))
-  logger.debug(`Send mail to ${to.join(', ')}`)
-  await graphApiRequest(user, `/me/sendMail`, async (request) => {
-    await request.post({
-      message: { subject, body: { contentType: 'Text', content: body }, toRecipients },
-      saveToSentItems: 'true',
+  await transactional(async (tx) => {
+    const toRecipients = to.map(address => ({ emailAddress: { address } }))
+    logger.debug(`Send mail to ${to.join(', ')}`)
+    await graphApiRequest(user, `/me/sendMail`, async (request) => {
+      await request.post({
+        message: { subject, body: { contentType: 'Text', content: body }, toRecipients },
+        saveToSentItems: 'true',
+      })
     })
+    await logEvent(tx, 'INFO', `Sent Outlook email to ${to.join(', ')}`)
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to send Outlook email to ${to.join(', ')}`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to send Outlook email to ${to.join(', ')}`) })
+    throw error
   })
 }
 
 export async function archiveMessage(user: UserSession, messageId: string): Promise<void> {
-  const archiveFolder = await getArchiveFolder(user)
-  if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
-  logger.debug(`Archive mail`)
-  await graphApiRequest(user, `/me/messages/${messageId}/move`, async (request) => {
-    await request.post({ destinationId: archiveFolder })
+  await transactional(async (tx) => {
+    const archiveFolder = await getArchiveFolder(user)
+    if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
+    logger.debug(`Archive mail`)
+    await graphApiRequest(user, `/me/messages/${messageId}/move`, async (request) => {
+      await request.post({ destinationId: archiveFolder })
+    })
+    await logEvent(tx, 'INFO', `Archived Outlook email ${messageId}`)
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to archive Outlook email ${messageId}`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to archive Outlook email ${messageId}`) })
+    throw error
+  })
+}
+
+export async function archiveMessagesFromSender(user: UserSession, senderEmail: string): Promise<number> {
+  return await transactional(async (tx) => {
+    const messages = await getInboxMessages(user)
+    const matching = messages.filter(m => m.from.emailAddress.address === senderEmail)
+    if (matching.length === 0) return 0
+    const archiveFolder = await getArchiveFolder(user)
+    if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
+    for (const msg of matching) {
+      await graphApiRequest(user, `/me/messages/${msg.id}/move`, async (request) => {
+        await request.post({ destinationId: archiveFolder })
+      })
+    }
+    await logEvent(tx, 'INFO', `Archived ${matching.length.toString()} Outlook emails from ${senderEmail}`)
+    return matching.length
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to archive Outlook emails from ${senderEmail}`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to archive Outlook emails from ${senderEmail}`) })
+    throw error
   })
 }
 

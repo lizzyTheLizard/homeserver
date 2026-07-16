@@ -1,6 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { graphApiRequest, toInstant } from './microsoft'
+import { graphApiRequest, toGraphDateTime, toInstant } from './microsoft'
 import { UserSession } from '@/app/shared/auth/auth'
+import { transactional } from '@/app/shared/_external/db/access'
+import { logEvent } from '@/app/shared/_data/Event'
+import { logger } from '@/app/shared/logger'
 
 export interface MicrosoftCalendar {
   id: string
@@ -52,6 +55,57 @@ export async function getAllEvents(user: UserSession, startDateTime?: Temporal.I
       .orderby('start/dateTime')
       .get() as { value: RawCalendarEvent[] }
     return response.value.map(convertCalendarEvent)
+  })
+}
+
+export interface EventCounts {
+  eventsToday: number
+  eventsThisWeek: number
+}
+
+export async function getEventCount(user: UserSession): Promise<EventCounts> {
+  const now = Temporal.Now.instant()
+  const todayStart = now.toZonedDateTimeISO('UTC').with({ hour: 0, minute: 0, second: 0, millisecond: 0 }).toInstant()
+  const todayEnd = todayStart.add({ hours: 24 })
+  const weekEnd = todayStart.add({ hours: 7 * 24 })
+  const events = await getAllEvents(user, now, weekEnd)
+  let eventsToday = 0
+  let eventsThisWeek = 0
+  for (const event of events) {
+    if (event.isCancelled) continue
+    if (Temporal.Instant.compare(event.start, todayStart) >= 0 && Temporal.Instant.compare(event.start, todayEnd) < 0) eventsToday++
+    else eventsThisWeek++
+  }
+  return { eventsToday, eventsThisWeek }
+}
+
+export async function createEvent(
+  user: UserSession,
+  calendarId: string,
+  subject: string,
+  start: Temporal.Instant,
+  end: Temporal.Instant,
+  body?: string,
+  location?: string,
+): Promise<MicrosoftCalendarEvent> {
+  return await transactional(async (tx) => {
+    const response = await graphApiRequest(user, `/me/calendars/${calendarId}/events`, async (request) => {
+      const eventBody: Record<string, unknown> = {
+        subject,
+        start: toGraphDateTime(start),
+        end: toGraphDateTime(end),
+      }
+      if (body) eventBody.body = { contentType: 'text', content: body }
+      if (location) eventBody.location = { displayName: location }
+      return await request.post(eventBody) as RawCalendarEvent
+    })
+    const event = convertCalendarEvent(response)
+    await logEvent(tx, 'INFO', `Created calendar event "${subject}"`)
+    return event
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to create calendar event "${subject}"`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to create calendar event "${subject}"`) })
+    throw error
   })
 }
 

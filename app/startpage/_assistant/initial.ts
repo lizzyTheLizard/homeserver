@@ -5,6 +5,7 @@ import { getLocationDescription } from '../_external/openstreetmap'
 import { getWAFasade } from '../_external/whatsapp'
 import { getInboxCount } from '../_external/microsoft-mail'
 import { getTodoCount } from '../_external/microsoft-todo'
+import { getEventCount } from '../_external/microsoft-calendar'
 import { ModelMessage } from 'ai'
 import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
@@ -154,19 +155,22 @@ function formatTime(input: string): string {
 
 async function getTasks(user: UserSession): Promise<PartResult> {
   logger.debug('Initialize tasks part')
-  const [inboxCount, whatsAppChats, todoCount] = await Promise.all([
+  const [inboxCount, whatsAppChats, todoCount, eventCount] = await Promise.all([
     getInboxCount(user),
     getWAFasade(user).then(wa => wa.getChats().filter(c => !c.archived)).then(chats => chats.length),
     getTodoCount(user),
+    getEventCount(user),
   ])
   const totalTaskCount = todoCount.tasksDueToday + todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate
   let text = ''
   text += `You have **${inboxCount.focused.toString()}** focused emails (${inboxCount.focusedUnread.toString()} unread) and ${inboxCount.other.toString()} others. `
   text += `There are **${whatsAppChats.toString()}** unarchived WhatsApp chats. `
-  text += `You have **${todoCount.tasksDueToday.toString()}** tasks due today and **${(todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate).toString()}** tasks due this week.`
+  text += `You have **${todoCount.tasksDueToday.toString()}** tasks due today and **${(todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate).toString()}** tasks due this week. `
+  text += `You have **${eventCount.eventsToday.toString()}** events today and **${eventCount.eventsThisWeek.toString()}** in this week.`
   const actions: string[] = []
   if (totalTaskCount > 0) actions.push('Show task overview')
   if ((inboxCount.focusedUnread + inboxCount.otherUnread) > 0) actions.push('Get Outlook Overview')
   if (whatsAppChats > 0) actions.push('Get WhatsApp Overview')
+  actions.push('Show Calendar Overview')
   return { text, actions }
 }
