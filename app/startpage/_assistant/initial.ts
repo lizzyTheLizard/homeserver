@@ -12,7 +12,7 @@ import { join } from 'path'
 import { logger } from '@/app/shared/logger'
 
 const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
-const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
+const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 
 export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {
   logger.debug('Generating initial message for assistant.')
@@ -20,6 +20,9 @@ export async function generateInitialMessages(user: UserSession, initialContext:
   const greetingP = getGreeting()
   const weatherP = getWeather(initialContext)
   const tasksP = getTasks(user)
+
+  // Generate system message based on the initial context
+  const systemMessage = getSystemMessage(initialContext)
 
   // Emit the messages in the right order
   const { text: greetingText, actions: greetingActions } = await greetingP
@@ -35,6 +38,14 @@ export async function generateInitialMessages(user: UserSession, initialContext:
   const fullGreeting = tasksText + greetingText + weatherText
   logger.debug(`Finished initial message generation.`)
   return [{ role: 'system', content: systemMessage }, { role: 'assistant', content: fullGreeting }]
+}
+
+function getSystemMessage(initialContext: InitialContext): string {
+  const location = initialContext.location
+  const locationDescription = `Latitude: ${location.lat.toString()}, Longitude: ${location.lon.toString()}`
+  return systemMessageTemplate
+    .replace('{{LOCATION}}', locationDescription)
+    .replace('{{DATE}}', Temporal.Now.plainDateISO().toString())
 }
 
 interface PartResult {
