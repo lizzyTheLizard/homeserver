@@ -1,8 +1,9 @@
 import { ModelMessage, ToolSet } from 'ai'
 import { send as deepseekSend } from '../_external/deepseek'
-import getTools from './tools'
 import { UserSession } from '@/app/shared/auth/auth'
 import { generateInitialMessages } from './initial'
+import { logger } from '@/app/shared/logger'
+import { getTools } from './tools'
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
@@ -43,32 +44,32 @@ export function createAssistantInstance(user: UserSession): Assistant {
   }
 
   async function init(initialContext: InitialContext) {
+    logger.debug('Initialize assistant')
     tools = await getTools(user)
-    const initial = await generateInitialMessages(user, initialContext)
-    messages.push(...initial.messages)
-    emit({ type: 'finished_response' })
-    emit({ type: 'got_actions', actions: initial.actions })
+    const initialMessages = await generateInitialMessages(user, initialContext, emit)
+    messages.push(...initialMessages)
+    logger.debug(`Assistant initialized`)
   }
 
   async function send(message: string) {
+    logger.debug(`Sending message to assistant: ${message}`)
     messages.push({ role: 'user', content: message })
     await deepseekSend({ messages, tools, onChunk, onToolCall })
     onFinishedResponse()
-    const messagesCpy = [...messages, { role: 'user', content: actionPrompt }] satisfies ModelMessage[]
-    await deepseekSend({ messages: messagesCpy })
-    const actions = JSON.parse(messagesCpy[messagesCpy.length - 1].content as string) as string[]
-    onGotActions(actions)
+    logger.debug(`Assistant response finished`)
+    const messagesCopy = [...messages, { role: 'user', content: actionPrompt }] satisfies ModelMessage[]
+    const actionString = await deepseekSend({ messages: messagesCopy })
+    try {
+      const actions = JSON.parse(actionString) as string[]
+      onGotActions(actions)
+    }
+    catch (error) {
+      logger.warn(`Failed to parse actions from assistant response: ${JSON.stringify(actionString)}`, error)
+      onGotActions([])
+    }
   }
 
   return { on, off, init, send }
 }
 
-const actionPrompt = `
-Based on the conversation so far, list the next actions the assistant should take to help the user. 
-Only list actions that are directly relevant to the users needs and can be executed with the available tools. 
-Do not list more than 5 actions.
-An action must be a short command, for example "Get Todays Weather", "Get Weekly Forecast", "What about tomorrow?". It should not include any explanations or additional text, only the action itself.
-Do not include actions already executed. Do not include actions that are not relevant to the users needs. Do not include actions that cannot be executed with the available tools.
-Return an array of strings in JSON format, for example ["Get Todays Weather", "Get Weekly Forecast"]. Do NOT fence the JSON in markdown. 
-Do not return any explanations, only the array of strings. Try to come up with at least one action. If there are no relevant actions, return an empty array.
-`
+const actionPrompt = 'Give me a JSON array of next actions only.'

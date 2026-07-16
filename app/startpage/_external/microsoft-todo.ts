@@ -1,6 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { createGraphApiClient, toInstant, toPlainDate, toGraphDateTime } from './microsoft'
+import { toInstant, toPlainDate, toGraphDateTime, graphApiRequest } from './microsoft'
 import { UserSession } from '@/app/shared/auth/auth'
+import { transactional } from '@/app/shared/_external/db/access'
+import { logEvent } from '@/app/shared/_data/Event'
+import { logger } from '@/app/shared/logger'
 
 export interface MicrosoftTodoList {
   id: string
@@ -10,16 +13,15 @@ export interface MicrosoftTodoList {
 }
 
 export async function getTodoLists(user: UserSession): Promise<MicrosoftTodoList[]> {
-  const client = await createGraphApiClient(user)
-  if (!client) return []
-  const response = await client.api('/me/todo/lists').get() as { value: MicrosoftTodoList[] }
-  return response.value
+  logger.debug('Fetch data from GraphAPI /me/todo/lists')
+  return await graphApiRequest(user, '/me/todo/lists', async (request) => {
+    const response = await request.get() as { value: MicrosoftTodoList[] }
+    return response.value
+  })
 }
 
 async function getTodoList(user: UserSession, listId: string): Promise<MicrosoftTodoList> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available')
-  return await client.api(`/me/todo/lists/${listId}`).get() as MicrosoftTodoList
+  return await graphApiRequest(user, `/me/todo/lists/${listId}`, async request => await request.get() as MicrosoftTodoList)
 }
 
 export interface MicrosoftTodoTask {
@@ -36,24 +38,17 @@ export interface MicrosoftTodoTask {
 }
 
 export async function getTasks(user: UserSession, listId: string): Promise<MicrosoftTodoTask[]> {
-  const client = await createGraphApiClient(user)
-  if (!client) return []
   const list = await getTodoList(user, listId)
-  const response = await client.api(`/me/todo/lists/${listId}/tasks`)
-    .top(100)
-    .get() as { value: RawTodoTask[] }
-  return response.value.map(raw => ({ ...convertTask(raw), listName: list.displayName }))
+  return await graphApiRequest(user, `/me/todo/lists/${listId}/tasks`, async (request) => {
+    const response = await request.top(100).get() as { value: RawTodoTask[] }
+    return response.value.map(raw => ({ ...convertTask(raw), listName: list.displayName }))
+  })
 }
 
 export async function getAllTasks(user: UserSession): Promise<MicrosoftTodoTask[]> {
   const lists = await getTodoLists(user)
   const tasks: MicrosoftTodoTask[] = []
-  for (const list of lists) {
-    const listTasks = await getTasks(user, list.id)
-    for (const task of listTasks) {
-      tasks.push({ ...task, listName: list.displayName })
-    }
-  }
+  await Promise.all(lists.map(l => getTasks(user, l.id).then((listTasks) => { listTasks.forEach(task => tasks.push({ ...task, listName: l.displayName })) })))
   return tasks
 }
 
@@ -89,39 +84,73 @@ export async function getTodoCount(user: UserSession): Promise<TodoTaskCounts> {
 }
 
 export async function createTask(user: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available. Please connect your Microsoft account.')
-  const list = await getTodoList(user, listId)
-  const taskBody: Record<string, unknown> = { title }
-  if (body) taskBody.body = { content: body, contentType: 'text' }
-  if (reminderDateTime) taskBody.reminderDateTime = toGraphDateTime(reminderDateTime)
-  const result = await client.api(`/me/todo/lists/${listId}/tasks`).post(taskBody) as RawTodoTask
-  return { ...convertTask(result), listName: list.displayName }
+  return await transactional(async (tx) => {
+    const taskBody: Record<string, unknown> = { title }
+    if (body) taskBody.body = { content: body, contentType: 'text' }
+    if (reminderDateTime) taskBody.reminderDateTime = toGraphDateTime(reminderDateTime)
+    const list = await getTodoList(user, listId)
+    logger.debug(`Create task in list ${listId} with body ${JSON.stringify(taskBody)}`)
+    const result = await graphApiRequest(user, `/me/todo/lists/${listId}/tasks`, async (request) => {
+      const response = await request.post(taskBody) as RawTodoTask
+      return { ...convertTask(response), listName: list.displayName }
+    })
+    await logEvent(tx, 'INFO', `Created Microsoft Todo task "${title}"`)
+    return result
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to create Microsoft Todo task "${title}"`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to create Microsoft Todo task "${title}"`) })
+    throw error
+  })
 }
 
 export async function updateTask(user: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available. Please connect your Microsoft account.')
-  const targetListId = updates.listId ?? listId
-  const list = await getTodoList(user, targetListId)
-  const patchBody: Record<string, unknown> = {}
-  if (updates.title !== undefined) patchBody.title = updates.title
-  if (updates.body !== undefined) patchBody.body = { content: updates.body, contentType: 'text' }
-  if (updates.reminderDateTime !== undefined) patchBody.reminderDateTime = toGraphDateTime(updates.reminderDateTime)
-  const result = await client.api(`/me/todo/lists/${targetListId}/tasks/${taskId}`).patch(patchBody) as RawTodoTask
-  return { ...convertTask(result), listName: list.displayName }
+  return await transactional(async (tx) => {
+    const targetListId = updates.listId ?? listId
+    const list = await getTodoList(user, targetListId)
+    const patchBody: Record<string, unknown> = {}
+    if (updates.title !== undefined) patchBody.title = updates.title
+    if (updates.body !== undefined) patchBody.body = { content: updates.body, contentType: 'text' }
+    if (updates.reminderDateTime !== undefined) patchBody.reminderDateTime = toGraphDateTime(updates.reminderDateTime)
+    logger.debug(`Update task ${taskId} with ${JSON.stringify(patchBody)}`)
+    const result = await graphApiRequest(user, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async (request) => {
+      const response = await request.patch(patchBody) as RawTodoTask
+      return { ...convertTask(response), listName: list.displayName }
+    })
+    await logEvent(tx, 'INFO', `Updated Microsoft Todo task "${taskId}"`)
+    return result
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to update Microsoft Todo task "${taskId}"`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to update Microsoft Todo task "${taskId}"`) })
+    throw error
+  })
 }
 
 export async function completeTask(user: UserSession, listId: string, taskId: string): Promise<void> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available. Please connect your Microsoft account.')
-  await client.api(`/me/todo/lists/${listId}/tasks/${taskId}`).patch({ status: 'completed' })
+  await transactional(async (tx) => {
+    logger.debug(`Complete task ${taskId}`)
+    await graphApiRequest(user, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
+      await request.patch({ status: 'completed' })
+    })
+    await logEvent(tx, 'INFO', `Completed Microsoft Todo task "${taskId}"`)
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to complete Microsoft Todo task "${taskId}"`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to complete Microsoft Todo task "${taskId}"`) })
+    throw error
+  })
 }
 
 export async function deleteTask(user: UserSession, listId: string, taskId: string): Promise<void> {
-  const client = await createGraphApiClient(user)
-  if (!client) throw new Error('No Microsoft Graph client available. Please connect your Microsoft account.')
-  await client.api(`/me/todo/lists/${listId}/tasks/${taskId}`).delete()
+  await transactional(async (tx) => {
+    logger.debug(`Delete task ${taskId}`)
+    await graphApiRequest(user, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
+      await request.delete()
+    })
+    await logEvent(tx, 'INFO', `Deleted Microsoft Todo task "${taskId}"`)
+  }).catch(async (error: unknown) => {
+    logger.warn(`Failed to delete Microsoft Todo task "${taskId}"`, error)
+    await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to delete Microsoft Todo task "${taskId}"`) })
+    throw error
+  })
 }
 
 interface RawTodoTask {

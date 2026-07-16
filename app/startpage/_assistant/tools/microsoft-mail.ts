@@ -1,10 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getInboxMessages, getMessage, searchArchiveMessages, sendMail, archiveMessage } from '../../_external/microsoft-mail'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
+import { getInboxMessages, getMessage, searchArchiveMessages, sendMail, archiveMessage, archiveMessagesFromSender } from '../../_external/microsoft-mail'
 
 export default function getTools(user: UserSession): ToolSet {
   const getOutlookInbox = tool({
@@ -58,18 +55,10 @@ export default function getTools(user: UserSession): ToolSet {
       subject: z.string().describe('The email subject'),
       body: z.string().describe('The plain text email body'),
     }),
-    execute: async ({ to, subject, body }) => transactional(async (tx) => {
-      try {
-        await sendMail(user, to, subject, body)
-        await logEvent(tx, 'INFO', `Sent Outlook email to ${to.join(', ')}`)
-        return `Email sent successfully to ${to.join(', ')}`
-      }
-      catch (error) {
-        logger.warn(`Failed to send Outlook email to ${to.join(', ')}`, error)
-        await logEvent(tx, 'ERROR', `Failed to send Outlook email to ${to.join(', ')}`)
-        throw error
-      }
-    }),
+    execute: async ({ to, subject, body }) => {
+      await sendMail(user, to, subject, body)
+      return `Email sent successfully to ${to.join(', ')}`
+    },
   })
 
   const archiveOutlookMail = tool({
@@ -77,18 +66,39 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({
       mailId: z.string().describe('The ID of the email to archive'),
     }),
-    execute: async ({ mailId }) => transactional(async (tx) => {
-      try {
-        await archiveMessage(user, mailId)
-        await logEvent(tx, 'INFO', `Archived Outlook email ${mailId}`)
-        return 'Email archived successfully'
-      }
-      catch (error) {
-        logger.warn(`Failed to archive Outlook email ${mailId}`, error)
-        await logEvent(tx, 'ERROR', `Failed to archive Outlook email ${mailId}`)
-        throw error
-      }
+    execute: async ({ mailId }) => {
+      await archiveMessage(user, mailId)
+      return 'Email archived successfully'
+    },
+  })
+
+  const getOutlookMailsFromSender = tool({
+    description: 'Get all inbox emails from a specific sender email address.',
+    inputSchema: z.object({
+      senderEmail: z.string().describe('The email address of the sender to filter by'),
     }),
+    outputSchema: z.array(emailListItemSchema),
+    execute: async ({ senderEmail }) => {
+      const messages = await getInboxMessages(user)
+      const filtered = messages.filter(m => m.from.emailAddress.address === senderEmail)
+      return filtered.map(m => ({
+        id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
+        receivedDateTime: m.receivedDateTime.toString(), isRead: m.isRead, bodyPreview: m.bodyPreview,
+      }))
+    },
+  })
+
+  const archiveOutlookMailsFromSender = tool({
+    description: 'Archive all inbox emails from a specific sender email address.',
+    inputSchema: z.object({
+      senderEmail: z.string().describe('The email address of the sender to archive all emails from'),
+    }),
+    execute: async ({ senderEmail }) => {
+      const count = await archiveMessagesFromSender(user, senderEmail)
+      return count === 0
+        ? `No emails from ${senderEmail} found in inbox`
+        : `Successfully archived ${count.toString()} email(s) from ${senderEmail}`
+    },
   })
 
   return {
@@ -97,6 +107,8 @@ export default function getTools(user: UserSession): ToolSet {
     search_outlook_archive: searchOutlookArchive,
     send_outlook_mail: sendOutlookMail,
     archive_outlook_mail: archiveOutlookMail,
+    get_outlook_mails_from_sender: getOutlookMailsFromSender,
+    archive_outlook_mails_from_sender: archiveOutlookMailsFromSender,
   }
 }
 

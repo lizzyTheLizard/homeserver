@@ -1,3 +1,0 @@
-#Weather Forcast for {placeName} on {data, formatted DD.MM.YYYY}
-
-In the morning it is **{currentWeather and temperature at arround 0800}** in **{city name}**. During the day, the temperature will rise to **{maxTemp}°C** and drop to **{minTemp}°C** in the evening. The sun will rise at **{sunrise}** and set at **{sunset}**. {Say something about the precipitation, for example "There is a high chance of rain in the afternoon" or "No rain expected"}{say something about the wind if it is notable"} {say something about clothing, e.g. "It's a good day for shorts and a t-shirt" or "Better wear a jacket today", "So do not forget your umbrella!"}

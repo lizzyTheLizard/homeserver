@@ -31,8 +31,26 @@ vi.mock('../_external/microsoft-mail', async () => {
   }
 })
 
+vi.mock('../_external/microsoft-calendar', async () => {
+  const actual = await vi.importActual('../_external/microsoft-calendar')
+  return {
+    ...actual,
+    getAllEvents: vi.fn(),
+  }
+})
+
+vi.mock('../_external/microsoft-todo', async () => {
+  const actual = await vi.importActual('../_external/microsoft-todo')
+  return {
+    ...actual,
+    getAllTasks: vi.fn(),
+  }
+})
+
 const { getUserInfo, getLoginRedirectUrl } = await import('../_external/microsoft')
 const { getInboxMessages } = await import('../_external/microsoft-mail')
+const { getAllEvents } = await import('../_external/microsoft-calendar')
+const { getAllTasks } = await import('../_external/microsoft-todo')
 
 const mockUserInfo = {
   id: 'user-123',
@@ -78,6 +96,8 @@ describe('loadMicrosoftStatus', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(getUserInfo).mockResolvedValue(mockUserInfo)
     vi.mocked(getInboxMessages).mockResolvedValue(mockMessages)
+    vi.mocked(getAllTasks).mockResolvedValue([])
+    vi.mocked(getAllEvents).mockResolvedValue([])
 
     const result = await loadMicrosoftStatus()
 

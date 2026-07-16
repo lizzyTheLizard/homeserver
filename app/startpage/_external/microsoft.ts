@@ -1,4 +1,4 @@
-import { Client } from '@microsoft/microsoft-graph-client'
+import { Client, GraphRequest } from '@microsoft/microsoft-graph-client'
 import { Temporal } from '@js-temporal/polyfill'
 import { getMicrosoftToken, MicrosoftToken, setMicrosoftToken } from '../_data/Microsoft'
 import * as oidc from 'openid-client'
@@ -41,16 +41,18 @@ export async function handleMicrosoftLoginCallback(user: UserSession, currentUrl
 }
 
 export async function getUserInfo(user: UserSession): Promise<MicrosoftUserInfo | undefined> {
-  const client = await createGraphApiClient(user)
-  if (!client) return undefined
-  return await client.api('/me').get() as MicrosoftUserInfo
+  return await graphApiRequest(user, '/me', request => request.get() as Promise<MicrosoftUserInfo>)
 }
 
-export async function createGraphApiClient(user: UserSession): Promise<Client | undefined> {
+export async function graphApiRequest<T>(user: UserSession, url: string, request: (c: GraphRequest) => Promise<T>): Promise<T> {
   const token = await getCurrentToken(user)
-  if (!token) return undefined
-  return Client.init({ authProvider: (done) => { done(null, token.access_token) },
-  })
+  if (!token) throw new Error('No Microsoft Graph token available')
+  const client = Client.init({ authProvider: (done) => { done(null, token.access_token) } })
+  logger.debug(`Fetch data from GraphAPI ${url}`)
+  const start = Date.now()
+  const result = await request(client.api(url))
+  logger.debug(`GraphAPI request ${url} completed in ${(Date.now() - start).toString()}ms`)
+  return result
 }
 
 async function getCurrentToken(user: UserSession): Promise<MicrosoftToken | undefined> {

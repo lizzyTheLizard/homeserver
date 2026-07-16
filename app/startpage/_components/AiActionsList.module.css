@@ -5,6 +5,7 @@
   padding: 0.8rem 0.2rem 0.4rem;
   overflow-x: auto;
   overflow-y: hidden;
+  flex-shrink: 0;
 }
 
 .chip {

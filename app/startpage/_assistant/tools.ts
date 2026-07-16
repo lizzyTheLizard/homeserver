@@ -3,10 +3,11 @@ import { UserSession } from '@/app/shared/auth/auth'
 import { readdir } from 'node:fs/promises'
 import { Dirent } from 'node:fs'
 import { join } from 'path'
+import { logger } from '@/app/shared/logger'
 
 const TOOLS_DIR = join(process.cwd(), 'app', 'startpage', '_assistant', 'tools')
 
-export default async function getTools(user: UserSession): Promise<ToolSet> {
+export async function getTools(user: UserSession): Promise<ToolSet> {
   const files = await readdir(TOOLS_DIR, { withFileTypes: true })
   const toolFiles = files.filter(isToolFile)
   const allTools: ToolSet = {}
@@ -14,6 +15,7 @@ export default async function getTools(user: UserSession): Promise<ToolSet> {
     const mod = await import(`./tools/${file.name}`) as { default: (user: UserSession) => ToolSet }
     Object.assign(allTools, mod.default(user))
   }
+  logger.debug(`Loaded ${Object.keys(allTools).length.toString()} tools from ${TOOLS_DIR}`)
   return allTools
 }
 

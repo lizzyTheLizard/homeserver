@@ -4,9 +4,6 @@ import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
 import { getAllTasks, createTask, updateTask, completeTask, getTodoLists, type MicrosoftTodoTask } from '../../_external/microsoft-todo'
 import { toInstant } from '../../_external/microsoft'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
 
 export default function getTools(user: UserSession): ToolSet {
   const listTodoLists = tool({
@@ -37,19 +34,11 @@ export default function getTools(user: UserSession): ToolSet {
       reminderDateTime: z.string().describe('The reminder date and time in ISO 8601 format (e.g. 2025-07-15T09:00:00Z)').optional(),
     }),
     outputSchema: todoTaskSchema,
-    execute: async ({ listId, title, body, reminderDateTime }) => transactional(async (tx) => {
-      try {
-        const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
-        const result = await createTask(user, listId, title, body, reminder)
-        await logEvent(tx, 'INFO', `Created Microsoft Todo task "${title}"`)
-        return convertTaskForOutput(result)
-      }
-      catch (error) {
-        logger.warn(`Failed to create Microsoft Todo task "${title}"`, error)
-        await logEvent(tx, 'ERROR', `Failed to create Microsoft Todo task "${title}"`)
-        throw error
-      }
-    }),
+    execute: async ({ listId, title, body, reminderDateTime }) => {
+      const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
+      const result = await createTask(user, listId, title, body, reminder)
+      return convertTaskForOutput(result)
+    },
   })
 
   const updateTodoTask = tool({
@@ -63,24 +52,16 @@ export default function getTools(user: UserSession): ToolSet {
       reminderDateTime: z.string().describe('The new reminder date and time in ISO 8601 format (e.g. 2025-07-15T09:00:00)').optional(),
     }),
     outputSchema: todoTaskSchema,
-    execute: async ({ listId, taskId, title, body, targetListId, reminderDateTime }) => transactional(async (tx) => {
-      try {
-        const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
-        const updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string } = {}
-        if (title !== undefined) updates.title = title
-        if (body !== undefined) updates.body = body
-        if (reminder !== undefined) updates.reminderDateTime = reminder
-        if (targetListId !== undefined) updates.listId = targetListId
-        const result = await updateTask(user, listId, taskId, updates)
-        await logEvent(tx, 'INFO', `Updated Microsoft Todo task "${taskId}"`)
-        return convertTaskForOutput(result)
-      }
-      catch (error) {
-        logger.warn(`Failed to update Microsoft Todo task "${taskId}"`, error)
-        await logEvent(tx, 'ERROR', `Failed to update Microsoft Todo task "${taskId}"`)
-        throw error
-      }
-    }),
+    execute: async ({ listId, taskId, title, body, targetListId, reminderDateTime }) => {
+      const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
+      const updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string } = {}
+      if (title !== undefined) updates.title = title
+      if (body !== undefined) updates.body = body
+      if (reminder !== undefined) updates.reminderDateTime = reminder
+      if (targetListId !== undefined) updates.listId = targetListId
+      const result = await updateTask(user, listId, taskId, updates)
+      return convertTaskForOutput(result)
+    },
   })
 
   const completeTodoTask = tool({
@@ -89,18 +70,10 @@ export default function getTools(user: UserSession): ToolSet {
       listId: z.string().describe('The ID of the task list the task belongs to'),
       taskId: z.string().describe('The ID of the task to mark as completed'),
     }),
-    execute: async ({ listId, taskId }) => transactional(async (tx) => {
-      try {
-        await completeTask(user, listId, taskId)
-        await logEvent(tx, 'INFO', `Completed Microsoft Todo task "${taskId}"`)
-        return 'Task marked as completed'
-      }
-      catch (error) {
-        logger.warn(`Failed to complete Microsoft Todo task "${taskId}"`, error)
-        await logEvent(tx, 'ERROR', `Failed to complete Microsoft Todo task "${taskId}"`)
-        throw error
-      }
-    }),
+    execute: async ({ listId, taskId }) => {
+      await completeTask(user, listId, taskId)
+      return 'Task marked as completed'
+    },
   })
 
   return {

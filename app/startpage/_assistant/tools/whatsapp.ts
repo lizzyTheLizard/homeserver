@@ -14,7 +14,7 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async () => {
       const wa = await getWAFasade(user)
       const chats = wa.getChats().filter(c => !c.archived)
-      return chats.map(c => ({ jid: c.jid, name: c.name, unreadCount: c.unreadCount, lastMessageTimestamp: c.lastMessageTimestamp, isGroup: c.isGroup }))
+      return chats.map(c => ({ jid: c.jid, name: c.name, unreadCount: c.unreadCount, lastMessageTimestamp: toUtcTimeString(c.lastMessageTimestamp), isGroup: c.isGroup, archived: c.archived }))
     },
   })
 
@@ -26,7 +26,7 @@ export default function getTools(user: UserSession): ToolSet {
       const wa = await getWAFasade(user)
       if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
       const chats = wa.getChats()
-      return chats.map(c => ({ jid: c.jid, name: c.name, unreadCount: c.unreadCount, lastMessageTimestamp: c.lastMessageTimestamp, isGroup: c.isGroup, archived: c.archived }))
+      return chats.map(c => ({ jid: c.jid, name: c.name, unreadCount: c.unreadCount, lastMessageTimestamp: toUtcTimeString(c.lastMessageTimestamp), isGroup: c.isGroup, archived: c.archived }))
     },
   })
 
@@ -40,7 +40,7 @@ export default function getTools(user: UserSession): ToolSet {
       const wa = await getWAFasade(user)
       if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
       const messages = wa.getMessagesForChat(chatId)
-      return messages.map(m => ({ id: m.id, from: m.from, message: m.message, messageTimestamp: m.messageTimestamp }))
+      return messages.map(m => ({ id: m.id, from: m.from, message: m.message, messageTimestamp: toUtcTimeString(m.messageTimestamp) }))
     },
   })
 
@@ -66,7 +66,7 @@ export default function getTools(user: UserSession): ToolSet {
   })
 
   const archiveWhatsappChat = tool({
-    description: 'Archive a WhatsApp chat',
+    description: 'Archive a WhatsApp chat and set it to read',
     inputSchema: z.object({
       chatId: z.string().describe('The chat ID (jid) to archive'),
     }),
@@ -74,7 +74,8 @@ export default function getTools(user: UserSession): ToolSet {
       try {
         const wa = await getWAFasade(user)
         await wa.setArchived(chatId, true)
-        await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId}`)
+        await wa.setRead(chatId, true)
+        await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId} and marked as read`)
         return 'Chat archived successfully'
       }
       catch (error) {
@@ -116,11 +117,16 @@ export default function getTools(user: UserSession): ToolSet {
   }
 }
 
+function toUtcTimeString(unixTimestampSeconds: number | null | undefined): string {
+  if (unixTimestampSeconds == null) return ''
+  return new Date(unixTimestampSeconds * 1000).toISOString()
+}
+
 const chatSchema = z.object({
   jid: z.string().describe('The chat ID'),
   name: z.string().describe('The chat display name'),
   unreadCount: z.number().describe('Number of unread messages'),
-  lastMessageTimestamp: z.number().describe('Unix timestamp of the last message'),
+  lastMessageTimestamp: z.string().describe('UTC time string of the last message (ISO 8601)'),
   isGroup: z.boolean().describe('Whether this is a group chat'),
   archived: z.boolean().describe('Whether the chat is archived'),
 })
@@ -129,5 +135,5 @@ const messageSchema = z.object({
   id: z.string().describe('The message ID'),
   from: z.object({ jid: z.string(), name: z.string(), phone: z.string().optional() }).optional().describe('The sender of the message'),
   message: z.string().describe('The message text content'),
-  messageTimestamp: z.number().describe('Unix timestamp of the message'),
+  messageTimestamp: z.string().describe('UTC time string of the message (ISO 8601)'),
 })

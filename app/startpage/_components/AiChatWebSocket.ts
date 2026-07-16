@@ -59,15 +59,15 @@ export class AiChatWebSocket {
       const data = JSON.parse(event.data as string) as IncommingMessage
       if (data.type === 'initialized' && data.uuid) this.onServerInitialized(data.uuid)
       else if (data.type === 'reconnected') this.onReconnected()
-      else if (data.type === 'error') this.onError(`Got error message from server: ${event.data as string}`)
+      else if (data.type === 'error') this.onError('Got error message from server', new Error(event.data as string))
       else if (data.type === 'stream_response') this.onStreamResponse(data.chunk ?? '')
       else if (data.type === 'tool_call') this.onToolCall()
       else if (data.type === 'got_actions') this.onGotActions(data.actions ?? [])
       else if (data.type === 'finished_response') this.onFinishedResponse()
-      else this.onError(`Got an invalid message  ${event.data as string} from server`)
+      else this.onError('Got an invalid message from server', new Error(event.data as string))
     }
-    catch {
-      this.onError(`Failed to parse server message ${event.data as string}`)
+    catch (error: unknown) {
+      this.onError(`Failed to parse server message`, error instanceof Error ? error : new Error(error as string))
     }
   }
 
@@ -101,10 +101,12 @@ export class AiChatWebSocket {
     this.onStateChange({ type: 'ready' })
   }
 
-  private onError(error: unknown) {
-    console.warn('WebSocket error', error)
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    this.onNewMessage(`Error: ${error}`)
+  private onError(message: string, error: Error) {
+    this.#messageBuffer = ''
+    this.onIncomingMessageChange(this.#messageBuffer)
+    this.onStateChange({ type: 'ready' })
+    console.warn('Web socket error ' + message, error)
+    this.onNewMessage(message)
   }
 
   private onFinishedResponse() {

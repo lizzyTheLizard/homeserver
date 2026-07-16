@@ -1,7 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getCalendars, getAllEvents, type MicrosoftCalendarEvent } from '../../_external/microsoft-calendar'
+import { getCalendars, getAllEvents, createEvent, type MicrosoftCalendarEvent } from '../../_external/microsoft-calendar'
 import { toInstant } from '../../_external/microsoft'
 
 export default function getTools(user: UserSession): ToolSet {
@@ -29,9 +29,29 @@ export default function getTools(user: UserSession): ToolSet {
     },
   })
 
+  const createCalendarEvent = tool({
+    description: 'Create a new calendar event on a specified calendar.',
+    inputSchema: z.object({
+      calendarId: z.string().describe('The ID of the calendar to add the event to'),
+      subject: z.string().describe('The event subject/title'),
+      startDateTime: z.string().describe('The event start date and time in ISO 8601 format (e.g. 2025-07-15T09:00:00Z)'),
+      endDateTime: z.string().describe('The event end date and time in ISO 8601 format (e.g. 2025-07-15T10:00:00Z)'),
+      body: z.string().describe('The event body/description (plain text)').optional(),
+      location: z.string().describe('The event location display name').optional(),
+    }),
+    outputSchema: calendarEventSchema,
+    execute: async ({ calendarId, subject, startDateTime, endDateTime, body, location }) => {
+      const start = toInstant(startDateTime, '')
+      const end = toInstant(endDateTime, '')
+      const result = await createEvent(user, calendarId, subject, start, end, body, location)
+      return convertEventForOutput(result)
+    },
+  })
+
   return {
     list_calendars: listCalendars,
     list_calendar_events: listCalendarEvents,
+    create_calendar_event: createCalendarEvent,
   }
 }
 
