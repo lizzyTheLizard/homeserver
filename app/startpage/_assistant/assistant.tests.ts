@@ -47,7 +47,7 @@ describe('createAssistantInstance', () => {
 
     test('emits stream_response, finished_response and got_actions during init', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockImplementation(async (_user, _ctx, emit) => {
+      mockGenerateInitialMessages.mockImplementation((_user: unknown, _ctx: unknown, emit: (e: AssistantEvent) => void) => {
         emit({ type: 'stream_response', chunk: 'Good morning!' })
         emit({ type: 'finished_response' })
         emit({ type: 'got_actions', actions: ['Action 1', 'Action 2'] })

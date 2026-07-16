@@ -66,7 +66,11 @@ describe('send', () => {
     const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Get weather for Berlin' }]
     const chunks: string[] = []
     mockStreamText.mockReturnValueOnce({
-      textStream: (function* () { yield 'Checking'; yield 'Sunny'; yield ' in Berlin' })() as unknown as AsyncIterable<string>,
+      textStream: (function* () {
+        yield 'Checking'
+        yield 'Sunny'
+        yield ' in Berlin'
+      })() as unknown as AsyncIterable<string>,
       responseMessages: Promise.resolve([assistantMsg('Getting weather'), { role: 'tool', content: 'Sunny' }, assistantMsg('Sunny in Berlin')]),
       toolCalls: Promise.resolve([{}]),
     })
