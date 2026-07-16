@@ -42,7 +42,7 @@ async function cachedFetch(url: string): Promise<unknown> {
   const response = await fetch(url, { headers: { 'User-Agent': 'gutschi.site' } })
   if (!response.ok) throw new Error(`Failed to fetch: ${response.status.toString()} ${response.statusText}`)
   const data = await response.json() as unknown
-  logger.debug(`Fetched data in ${(Date.now() - start).toString()}ms`)
+  logger.debug(`Fetched data from ${url} in ${(Date.now() - start).toString()}ms`)
   cache.set(url, { data, timestamp: Date.now() })
   return data
 }

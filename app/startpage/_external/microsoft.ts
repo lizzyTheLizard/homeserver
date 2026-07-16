@@ -51,7 +51,7 @@ export async function graphApiRequest<T>(user: UserSession, url: string, request
   logger.debug(`Fetch data from GraphAPI ${url}`)
   const start = Date.now()
   const result = await request(client.api(url))
-  logger.debug(`GraphAPI request completed in ${(Date.now() - start).toString()}ms`)
+  logger.debug(`GraphAPI request ${url} completed in ${(Date.now() - start).toString()}ms`)
   return result
 }
 

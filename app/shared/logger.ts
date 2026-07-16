@@ -7,8 +7,9 @@ function createLogger() {
   const format = isDev
     ? winston.format.combine(
         winston.format.errors({ stack: true }),
-        winston.format.colorize({ all: true }),
+        winston.format.timestamp({ format: 'MM-DD-YYYY HH:mm:ss' }),
         winston.format.printf(info => toConsoleString(info)),
+        winston.format.colorize({ all: true }),
       )
     : winston.format.combine(
         winston.format.errors({ stack: true }),
@@ -27,7 +28,7 @@ function createLogger() {
 }
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
-  let message = `${info.level}: ${info.message as string}`
+  let message = `${info.timestamp as string} ${info.level}: ${info.message as string}`
   if (info.stack) message = message + '\n' + (info.stack as string)
   return message
 }
