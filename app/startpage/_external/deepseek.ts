@@ -2,7 +2,6 @@ import { generateText, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
-import { isArray } from 'util'
 
 const MAX_TOOL_ITERATIONS = 5
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: loggingFetch })

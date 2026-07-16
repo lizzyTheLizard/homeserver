@@ -14,7 +14,7 @@ import { send } from './deepseek'
 import { type ModelMessage, tool, type ToolSet } from 'ai'
 import { z } from 'zod/v4'
 
-const assistantMsg = (content: string): ModelMessage => ({ role: 'assistant', content })
+const assistantMsg = (content: string): ModelMessage => ({ role: 'assistant', content: [{ type: 'text', text: content }] })
 
 describe('send', () => {
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('send', () => {
     const messages = [{ role: 'system' as const, content: 'Reply exactly: STREAMED' }, { role: 'user' as const, content: 'go' }]
     const chunks: string[] = []
     mockStreamText.mockReturnValue({
-      textStream: (function* () { yield 'STREAMED' })() as AsyncIterable<string>,
+      textStream: (function* () { yield 'STREAMED' })() as unknown as AsyncIterable<string>,
       responseMessages: Promise.resolve([assistantMsg('STREAMED')]),
       toolCalls: Promise.resolve([]),
     })
@@ -69,12 +69,12 @@ describe('send', () => {
     const toolCalls: string[] = []
     mockStreamText
       .mockReturnValueOnce({
-        textStream: (function* () { yield 'Checking' })() as AsyncIterable<string>,
+        textStream: (function* () { yield 'Checking' })() as unknown as AsyncIterable<string>,
         responseMessages: Promise.resolve([assistantMsg('Getting weather'), { role: 'tool', content: 'Sunny' }]),
         toolCalls: Promise.resolve([{}]),
       })
       .mockReturnValueOnce({
-        textStream: (function* () { yield 'Sunny'; yield ' in Berlin' })() as AsyncIterable<string>,
+        textStream: (function* () { yield 'Sunny'; yield ' in Berlin' })() as unknown as AsyncIterable<string>,
         responseMessages: Promise.resolve([assistantMsg('Sunny in Berlin')]),
         toolCalls: Promise.resolve([]),
       })
@@ -107,7 +107,7 @@ describe('send', () => {
         yield 'a'
         yield 'b'
         yield 'c'
-      })() as AsyncIterable<string>,
+      })() as unknown as AsyncIterable<string>,
       responseMessages: Promise.resolve([assistantMsg('abc')]),
       toolCalls: Promise.resolve([]),
     })
