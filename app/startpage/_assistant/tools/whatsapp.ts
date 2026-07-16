@@ -66,7 +66,7 @@ export default function getTools(user: UserSession): ToolSet {
   })
 
   const archiveWhatsappChat = tool({
-    description: 'Archive a WhatsApp chat',
+    description: 'Archive a WhatsApp chat and set it to read',
     inputSchema: z.object({
       chatId: z.string().describe('The chat ID (jid) to archive'),
     }),
@@ -74,7 +74,8 @@ export default function getTools(user: UserSession): ToolSet {
       try {
         const wa = await getWAFasade(user)
         await wa.setArchived(chatId, true)
-        await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId}`)
+        await wa.setRead(chatId, true)
+        await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId} and marked as read`)
         return 'Chat archived successfully'
       }
       catch (error) {
