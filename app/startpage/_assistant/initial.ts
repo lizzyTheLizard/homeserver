@@ -1,5 +1,5 @@
 import { UserSession } from '@/app/shared/auth/auth'
-import { InitialContext } from './assistant'
+import { AssistantEvent, InitialContext } from './assistant'
 import { openmeteoRequest, parseOpenMeteoData } from '../_external/openmeteo'
 import { getLocationDescription } from '../_external/openstreetmap'
 import { getWAFasade } from '../_external/whatsapp'
@@ -14,27 +14,32 @@ import { logger } from '@/app/shared/logger'
 const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const systemMessage = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 
+export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {
+  logger.debug('Generating initial message for assistant.')
+  // Start all data gatherin in parallel
+  const greetingP = getGreeting()
+  const weatherP = getWeather(initialContext)
+  const tasksP = getTasks(user)
+
+  // Emit the messages in the right order
+  const { text: greetingText, actions: greetingActions } = await greetingP
+  emit({ type: 'stream_response', chunk: greetingText })
+  const { text: weatherText, actions: weatherActions } = await weatherP
+  emit({ type: 'stream_response', chunk: weatherText })
+  const { text: tasksText, actions: tasksActions } = await tasksP
+  emit({ type: 'stream_response', chunk: tasksText })
+  emit({ type: 'finished_response' })
+
+  const actions = [...tasksActions, ...greetingActions, ...weatherActions]
+  emit({ type: 'got_actions', actions: actions })
+  const fullGreeting = tasksText + greetingText + weatherText
+  logger.debug(`Finished initial message generation.`)
+  return [{ role: 'system', content: systemMessage }, { role: 'assistant', content: fullGreeting }]
+}
+
 interface PartResult {
   text: string
   actions: string[]
-}
-
-export interface InitialMessages {
-  messages: ModelMessage[]
-  greeting: string
-  actions: string[]
-}
-
-export async function generateInitialMessages(user: UserSession, initialContext: InitialContext): Promise<InitialMessages> {
-  const partialResults = await Promise.all([getGreeting(), getWeather(initialContext), getTasks(user)])
-  const fullGreeting = partialResults.map(r => r.text).join('')
-  const actions = partialResults.flatMap(r => r.actions)
-
-  const messages = [
-    { role: 'system', content: systemMessage },
-    { role: 'assistant', content: fullGreeting },
-  ] satisfies ModelMessage[]
-  return { messages, greeting: fullGreeting, actions }
 }
 
 async function getGreeting(): Promise<PartResult> {

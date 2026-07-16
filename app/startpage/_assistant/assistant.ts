@@ -1,9 +1,9 @@
 import { ModelMessage, ToolSet } from 'ai'
 import { send as deepseekSend } from '../_external/deepseek'
-import getTools from './tools'
 import { UserSession } from '@/app/shared/auth/auth'
 import { generateInitialMessages } from './initial'
 import { logger } from '@/app/shared/logger'
+import { getTools } from './tools'
 
 export interface InitialContext { location: { lat: number, lon: number } }
 
@@ -46,12 +46,9 @@ export function createAssistantInstance(user: UserSession): Assistant {
   async function init(initialContext: InitialContext) {
     logger.debug('Initialize assistant')
     tools = await getTools(user)
-    const initial = await generateInitialMessages(user, initialContext)
-    emit({ type: 'stream_response', chunk: initial.greeting })
-    messages.push(...initial.messages)
-    emit({ type: 'finished_response' })
-    emit({ type: 'got_actions', actions: initial.actions })
-    logger.debug(`Assistant initialized with ${JSON.stringify(initial.messages)}`)
+    const initialMessages = await generateInitialMessages(user, initialContext, emit)
+    messages.push(...initialMessages)
+    logger.debug(`Assistant initialized`)
   }
 
   async function send(message: string) {
