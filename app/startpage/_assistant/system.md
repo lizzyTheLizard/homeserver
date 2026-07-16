@@ -39,3 +39,16 @@ If you create a draft message or similar, return it in an editable code block us
 ~~~input
 Text to be edited
 ~~~
+
+# Next Actions
+After generating a response, you may be asked for next actions. When asked, return only the next actions the user can take.
+* Propose actions based on the conversation so far.
+* Include action suggestions proposed by relevant skills.
+* Only include actions that are directly relevant to the user's needs and executable with available tools.
+* Do not include actions already executed.
+* Each action must be a short command, for example "Get Today's Weather", "Get Weekly Forecast", "What about tomorrow?".
+* Do not include explanations or any additional text.
+
+Return a JSON array of strings, for example ["Get Today's Weather", "Get Weekly Forecast"]. Do not wrap the JSON in Markdown fences. Return only the JSON array and nothing else. If there are no relevant actions, return [].
+
+

@@ -26,12 +26,12 @@ Here is your WhatsApp overview:
 
 ```
 
-## Chat Overview Actions
-If the user asks for actions after the overview, return these actions for each unarchived chat:
+## Next Actions
+If asked for the next actions after the overview, return these actions for each unarchived chat:
    - Send a response for chat {chatName}
    - Archive Chat {chatName}
 If duplicate chat names exist, include jid in action labels.
-   
+Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Message Exploration
 Trigger: user asks to inspect a specific chat or asks questions about it.
@@ -46,11 +46,12 @@ Trigger: user asks to inspect a specific chat or asks questions about it.
 
 Do not mark chats as read automatically.
 
-## Message Exploration Actions
-If the user asks for actions after the exploration, return these actions:
+## Next Actions
+If asked for the next actions after the exploration, return these actions:
    - Send a response for chat {chatName}
    - Archive Chat {chatName}
 If duplicate chat names exist, include jid in action labels.
+Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 
 # Drafting And Sending Responses
@@ -72,10 +73,11 @@ Trigger: user asks to send or write a response:
 
 Never send a message without explicit confirmation.
 
-## Drafting And Sending Responses Actions
-If the user asks for actions after drafting a response, return these actions:
+## Next Actions
+If asked for the next actions after drafting a response, return these actions:
    - Send Now
    - Archive Chat {chatName}
+Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 
 # Archiving
@@ -89,4 +91,4 @@ When user asks to archive a chat, archive directly using `archive_whatsapp_chat`
 - Only send plain text messages.
 - Do not auto-mark chats as read.
 - If WhatsApp is not ready or no chats are available, inform the user clearly.
-- All timestamps are in UTC ISO 8601 format (e.g. \"2023-11-14T22:13:20.000Z\").
+- All timestamps are UTC ISO 8601 strings (for example "2023-11-14T22:13:20.000Z").
