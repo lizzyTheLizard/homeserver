@@ -1,4 +1,4 @@
-import { generateText, isStepCount, ModelMessage, streamText, ToolChoice, ToolSet } from 'ai'
+import { generateText, isStepCount, ModelMessage, streamText, ToolSet } from 'ai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
