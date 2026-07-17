@@ -12,7 +12,7 @@ function timeout(ms) {
 
 // A helper function that handles failed requests by returning a cached response or an offline fallback page
 async function requestFailed(event, error) {
-  console.log(`Fetch failed or timed out: ${error.message}`)
+  console.log('Fetch failed or timed out', error)
   const cachedResponse = await caches.match(event.request)
   if (cachedResponse) {
     console.log(`Returning cached response for ${event.request.url}`)
