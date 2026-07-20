@@ -157,7 +157,7 @@ async function getTasks(user: UserSession): Promise<PartResult> {
   logger.debug('Initialize tasks part')
   const [inboxCount, whatsAppChats, todoCount, eventCount] = await Promise.all([
     getInboxCount(user),
-    getWAFasade(user).then(wa => wa.getChats().filter(c => !c.archived)).then(chats => chats.length),
+    getWAFasade(user).then(async wa => (await wa.getChats()).filter(c => !c.isArchived)).then(chats => chats.length),
     getTodoCount(user),
     getEventCount(user),
   ])

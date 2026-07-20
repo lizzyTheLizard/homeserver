@@ -2,21 +2,20 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { textColumn, boolColumn, numberColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { textColumn, boolColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { getStatus } from '../server'
 import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
-import type { Chat, SyncStatus } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat, SyncStatus } from '../../_external/whatsapp'
 import QRCode from 'react-qr-code'
 
 const columns = [
   textColumn('name', { header: 'Name', style: { } }),
   boolColumn('isGroup', { header: 'Group', style: { width: '15%' } }),
-  boolColumn('archived', { header: 'Archived', style: { width: '15%' } }),
-  numberColumn('unreadCount', { header: 'Unread', style: { width: '15%' } }),
-  dateColumn('lastMessage', { header: 'Last Message', style: { width: '15%' } }),
+  boolColumn('isArchived', { header: 'Archived', style: { width: '15%' } }),
+  dateColumn('lastMessageTimestamp', { header: 'Last Message', style: { width: '15%' } }),
 ]
 
 export function WhatsAppContent({ chats, status }: { chats: Chat[], status: SyncStatus }) {
@@ -59,22 +58,13 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   return (
     <>
       <DataTable
-        data={chats.map(chat => format(chat))}
+        data={chats}
         columns={columns}
         onRowClick={showMessages}
-        initialSortingOrder={[{ key: 'archived', direction: 'ASC' }, { key: 'lastMessage', direction: 'DESC' }]}
+        initialSortingOrder={[{ key: 'lastMessageTimestamp', direction: 'DESC' }, { key: 'isArchived', direction: 'DESC' }]}
         searchLabel="Search chats…"
       />
-      <WhatsAppSidebar key={selectedChat?.jid} selectedChat={selectedChat} sidebarId={sidebarId} />
+      <WhatsAppSidebar key={selectedChat?.id} selectedChat={selectedChat} sidebarId={sidebarId} />
     </>
   )
-}
-
-interface ChatPlus extends Chat {
-  lastMessage: string | undefined
-  id: string
-}
-
-function format(chat: Chat): ChatPlus {
-  return { ...chat, id: chat.jid, lastMessage: chat.lastMessageTimestamp ? new Date(chat.lastMessageTimestamp * 1000).toISOString() : undefined }
 }

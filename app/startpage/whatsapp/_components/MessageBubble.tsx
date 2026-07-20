@@ -2,17 +2,17 @@
 
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MessageBubble.module.css'
-import type { Message } from '@lizzythelizard/whatsapp-mcp'
+import { Message } from '../../_external/whatsapp'
 
 export function MessageBubble({ message }: { message: Message }) {
   return (
-    <div className={`${styles.bubble} ${message.from ? styles.received : styles.sent}`}>
-      {message.from && <div className={styles.senderName}>{message.from.name}</div>}
+    <div className={`${styles.bubble} ${message.fromMe ? styles.received : styles.sent}`}>
+      {!message.fromMe && <div className={styles.senderName}>{message.fromName}</div>}
       <div className={styles.content}>
-        {message.message}
+        {message.content}
       </div>
       <div className={styles.timestamp}>
-        <DateTime date={{ epochMilliseconds: message.messageTimestamp * 1000 }} oneLine />
+        <DateTime date={message.messageTimestamp} oneLine />
       </div>
     </div>
   )
