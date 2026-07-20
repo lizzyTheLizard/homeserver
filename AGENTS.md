@@ -62,3 +62,13 @@ Vitest runs three projects in parallel:
 
 All design files are in the `design/` folder — component designs, screen mockups, and exported artifacts. Edit them with OpenDesign.
 
+## Whatsapp Bridge
+
+`Whatsapp/` is a standalone Go module (not part of the pnpm/Next.js toolchain). It is a bridge process that connects a WhatsApp account via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store.
+
+- Usage: `whatsapp <user-id> <postgres-connection-string> <dev>` — the `dev` flag (`true`/`false`) selects the device name shown in WhatsApp's linked devices list (`Gutschi.Site (dev)` vs `Gutschi.Site`). The name is only sent at pairing time, so existing sessions keep their old name until re-paired.
+- Reads commands as JSON lines from stdin (`send_message`, `archive_chat`, `mark_chat_read`), publishes events as JSON lines on stdout (`connection_established`, `qr_code`, `error`). Nothing else may be written to stdout — keep whatsmeow logging disabled (`waLog.Noop`).
+- All received messages (live and history sync) are stored in the `whatsmeow_messages` table, created automatically at startup.
+- Build/test it with the standard Go toolchain (`go build ./...`, `go vet ./...`, `go test ./...`) inside `Whatsapp/`.
+- CI: the `whatsapp` job in `.github/workflows/homeserver.yml` runs build, vet and tests; the `whatsapp-builder` stage in the `Dockerfile` compiles the binary into the final image at `/app/whatsapp`.
+

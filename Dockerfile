@@ -25,6 +25,14 @@ COPY . .
 
 RUN corepack enable pnpm && pnpm run build;
 
+# Build the WhatsApp bridge (standalone Go module in Whatsapp/)
+FROM golang:1.26-alpine AS whatsapp-builder
+WORKDIR /build
+COPY Whatsapp/go.mod Whatsapp/go.sum ./
+RUN go mod download
+COPY Whatsapp/ ./
+RUN CGO_ENABLED=0 go build -o whatsapp .
+
 # Production image, copy all the files and run the custom server
 FROM base AS runner
 WORKDIR /app
@@ -41,6 +49,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
+COPY --from=whatsapp-builder /build/whatsapp ./whatsapp
 COPY ./app ./app
 COPY ./db ./db
 

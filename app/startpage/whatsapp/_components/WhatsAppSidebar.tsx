@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { Button } from '@/app/shared/_components/form/Button'
-import { loadMessages, archiveChat, markRead, sendChatMessage } from '../server'
+import { loadMessages, archiveChat, sendChatMessage } from '../server'
 import { MessageBubble } from './MessageBubble'
 import styles from './WhatsAppSidebar.module.css'
-import type { Chat, Message } from '@lizzythelizard/whatsapp-mcp'
+import type { Chat, Message } from '../../_external/whatsapp'
 
 interface WhatsAppSidebarProps {
   selectedChat: Chat | null
@@ -18,7 +18,6 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
   const [messages, setMessages] = useState<Message[] | null>(null)
   const [messagesLoading, setMessagesLoading] = useState(!!selectedChat)
   const [archiveLoading, setArchiveLoading] = useState(false)
-  const [readLoading, setReadLoading] = useState(false)
   const [sendLoading, setSendLoading] = useState(false)
   const [actionError, setActionError] = useState<string | undefined>(undefined)
   const [messageText, setMessageText] = useState('')
@@ -27,7 +26,7 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
 
   useEffect(() => {
     if (!selectedChat) return
-    void loadMessages(selectedChat.jid).then(setMessages).finally(() => { setMessagesLoading(false) })
+    void loadMessages(selectedChat.id).then(setMessages).finally(() => { setMessagesLoading(false) })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -41,27 +40,13 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
     if (!selectedChat) return
     setArchiveLoading(true)
     setActionError(undefined)
-    const result = await archiveChat(selectedChat.jid, !selectedChat.archived)
+    const result = await archiveChat(selectedChat.id, !selectedChat.isArchived)
     setArchiveLoading(false)
     if (!result.success) {
       setActionError(result.error)
       return
     }
-    void loadMessages(selectedChat.jid).then(setMessages)
-    router.refresh()
-  }
-
-  async function handleMarkRead() {
-    if (!selectedChat) return
-    setReadLoading(true)
-    setActionError(undefined)
-    const result = await markRead(selectedChat.jid, true)
-    setReadLoading(false)
-    if (!result.success) {
-      setActionError(result.error)
-      return
-    }
-    void loadMessages(selectedChat.jid).then(setMessages)
+    void loadMessages(selectedChat.id).then(setMessages)
     router.refresh()
   }
 
@@ -69,14 +54,14 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
     if (!selectedChat || !messageText.trim()) return
     setSendLoading(true)
     setActionError(undefined)
-    const result = await sendChatMessage(selectedChat.jid, messageText.trim())
+    const result = await sendChatMessage(selectedChat.id, messageText.trim())
     setSendLoading(false)
     if (!result.success) {
       setActionError(result.error)
       return
     }
     setMessageText('')
-    void loadMessages(selectedChat.jid).then(setMessages)
+    void loadMessages(selectedChat.id).then(setMessages)
   }
 
   return (
@@ -95,10 +80,7 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
                 {actionError && <div className="error">{actionError}</div>}
                 <div className={styles.sidebarActionRow}>
                   <Button variant="secondary" type="button" disabled={archiveLoading} onClick={() => { void handleArchive() }}>
-                    {archiveLoading ? (selectedChat.archived ? 'Unarchiving...' : 'Archiving...') : (selectedChat.archived ? 'Unarchive' : 'Archive')}
-                  </Button>
-                  <Button variant="secondary" type="button" disabled={readLoading || selectedChat.unreadCount === 0} onClick={() => { void handleMarkRead() }}>
-                    {readLoading ? 'Marking read...' : 'Mark Read'}
+                    {archiveLoading ? (selectedChat.isArchived ? 'Unarchiving...' : 'Archiving...') : (selectedChat.isArchived ? 'Unarchive' : 'Archive')}
                   </Button>
                 </div>
                 <div className={styles.sidebarMessageForm}>
