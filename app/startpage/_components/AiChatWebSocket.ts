@@ -118,6 +118,7 @@ export class AiChatWebSocket {
   }
 
   private handleClose(event: CloseEvent) {
+    this.#ws = undefined
     this.clearStalledTimer()
     if (event.code === 4001) {
       // This is the server telling us that the session has expired, so we can't reconnect
