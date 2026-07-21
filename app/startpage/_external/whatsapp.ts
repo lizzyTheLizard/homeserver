@@ -1,5 +1,6 @@
 'use server'
 
+import { Mutex } from 'async-mutex'
 import { UserSession } from '@/app/shared/auth/auth'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
@@ -12,6 +13,7 @@ declare global {
 }
 globalThis.waBridgeHandles ??= new Map<string, WAFacade>()
 
+const facadeMutex = new Mutex()
 const inactivityTimeoutMs = 5 * 60 * 1000
 
 export type SyncStatus = { type: 'notstarted' } | { type: 'connecting' } | { type: 'needAuth', qr: string } | { type: 'ready' } | { type: 'closed', error?: Error }
@@ -42,18 +44,21 @@ export interface WAFacade {
 }
 
 export async function getWAFasade(user: UserSession): Promise<WAFacade> {
-  const existing = globalThis.waBridgeHandles?.get(user.email)
-  if (existing && existing.getStatus().type !== 'closed') {
-    existing.touch()
-    return existing
-  }
-  const handle = await createWAHandle(user.email)
-  globalThis.waBridgeHandles?.set(user.email, handle)
-  return handle
+  return facadeMutex.runExclusive(async () => {
+    const existing = globalThis.waBridgeHandles?.get(user.email)
+    if (existing && existing.getStatus().type !== 'closed') {
+      existing.touch()
+      return existing
+    }
+    const handle = await createWAHandle(user.email)
+    globalThis.waBridgeHandles?.set(user.email, handle)
+    return handle
+  })
 }
 
 async function createWAHandle(userId: string): Promise<WAFacade> {
   return new Promise<WAFacade>((resolveStartup, rejectStartup) => {
+    const mutex = new Mutex()
     let status: SyncStatus = { type: 'connecting' }
     let timeout: NodeJS.Timeout | undefined = setTimeout(stop, inactivityTimeoutMs)
     let process: ChildProcess | undefined = startProcess(userId, close, handleEvent)
@@ -152,7 +157,7 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
     }
 
     function getChats(): Promise<Chat[]> {
-      return new Promise((resolve, reject) => {
+      return mutex.runExclusive(() => new Promise<Chat[]>((resolve, reject) => {
         if (!process?.stdin) {
           reject(new Error('Bridge process not available'))
           return
@@ -167,11 +172,11 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
             reject(error)
           }
         })
-      })
+      }))
     }
 
     function getMessagesForChat(chatId: string): Promise<Message[]> {
-      return new Promise((resolve, reject) => {
+      return mutex.runExclusive(() => new Promise<Message[]>((resolve, reject) => {
         if (!process?.stdin) {
           reject(new Error('Bridge process not available'))
           return
@@ -186,11 +191,11 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
             reject(error)
           }
         })
-      })
+      }))
     }
 
     function sendMessage(chatId: string, message: string): Promise<void> {
-      return new Promise<void>((resolve, reject) => {
+      return mutex.runExclusive(() => new Promise<void>((resolve, reject) => {
         if (!process?.stdin) {
           reject(new Error('Bridge process not available'))
           return
@@ -201,11 +206,11 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
           if (error) reject(error)
           else resolve()
         })
-      })
+      }))
     }
 
     function setArchived(chatId: string, archived: boolean): Promise<void> {
-      return new Promise<void>((resolve, reject) => {
+      return mutex.runExclusive(() => new Promise<void>((resolve, reject) => {
         if (!process?.stdin) {
           reject(new Error('Bridge process not available'))
           return
@@ -216,7 +221,7 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
           if (error) reject(error)
           else resolve()
         })
-      })
+      }))
     }
   })
 }
