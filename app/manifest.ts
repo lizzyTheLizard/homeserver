@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { applications } from './shared/Application'
 
-const APP_URL = process.env.NODE_ENV === 'production' ? 'http://www.gutschi.site' : 'http://localhost:3000'
+const APP_URL = process.env.NODE_ENV === 'production' ? 'https://www.gutschi.site' : 'http://localhost:3000'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
