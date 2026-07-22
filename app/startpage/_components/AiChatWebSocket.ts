@@ -29,7 +29,7 @@ export class AiChatWebSocket {
   onStateChange: (state: ChatState) => void = () => { /* empty */ }
   onIncomingMessageChange: (message: string) => void = () => { /* empty */ }
 
-  constructor(private readonly initialContextProvider: () => Promise<InitialContext>) {
+  constructor(private readonly initialContextProvider: Promise<InitialContext>) {
   }
 
   public connect() {
@@ -50,7 +50,7 @@ export class AiChatWebSocket {
       return
     }
     /// Otherwise start normal initialization
-    const initialContext = await this.initialContextProvider()
+    const initialContext = await this.initialContextProvider
     this.#ws?.send(JSON.stringify({ type: 'initialize', initialContext }))
   }
 

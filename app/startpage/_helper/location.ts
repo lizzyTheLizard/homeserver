@@ -4,12 +4,10 @@ const FALLBACK_LON = 7.4474
 export async function getLocation(): Promise<{ lon: number, lat: number }> {
   try {
     return await new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
-      (navigator as any).geolocation.getCurrentPosition(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-        (p: any) => { resolve({ lat: p.coords.latitude, lon: p.coords.longitude }) },
+      navigator.geolocation.getCurrentPosition(
+        (p) => { resolve({ lat: p.coords.latitude, lon: p.coords.longitude }) },
         reject,
-        { timeout: 5000, enableHighAccuracy: false },
+        { timeout: 5000, enableHighAccuracy: false, maximumAge: 3600000 },
       )
     })
   }
