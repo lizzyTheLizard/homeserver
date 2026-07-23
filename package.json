@@ -18,7 +18,7 @@
     "prodToDev": "node --import tsx --env-file .env ./app/shared/_external/db/prodToDev.ts"
   },
   "dependencies": {
-    "@ai-sdk/deepinfra": "^3.0.11",
+    "@ai-sdk/deepinfra": "^3.0.14",
     "@ai-sdk/openai-compatible": "^3.0.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@microsoft/microsoft-graph-client": "^3.0.7",
