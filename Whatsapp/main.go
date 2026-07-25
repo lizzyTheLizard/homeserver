@@ -6,7 +6,7 @@
 //	whatsapp <user-email> <postgres-connection-string> <dev>
 //
 // The user-email identifies the application user (e.g. user@example.com). The
-// whatsmeow_users table maps it to the WhatsApp device JID used for session
+// whatsapp_users table maps it to the WhatsApp device JID used for session
 // management. If no mapping exists, a new session is created and a QR code is
 // emitted on stdout for pairing. The dev flag (true/false) selects the device
 // name shown in WhatsApp's linked devices list: "Gutschi.Site (dev)" in dev,
@@ -17,7 +17,7 @@
 // safely parse the event stream. All logging is suppressed.
 //
 // All received messages (live and history sync) are stored in the
-// whatsmeow_messages table, which is created at startup.
+// whatsapp_messages table, which is created at startup.
 package main
 
 import (
@@ -29,6 +29,7 @@ import (
 	"strconv"
 
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
@@ -66,25 +67,13 @@ func run(ctx context.Context, userID, connString string, dev bool) error {
 		return fmt.Errorf("open database: %w", err)
 	}
 
-	if err := initializeMessagesDb(ctx, db); err != nil {
-		db.Close()
-		return fmt.Errorf("init messages tables: %w", err)
-	}
-	if err := initializeUsersDb(ctx, db); err != nil {
-		db.Close()
-		return fmt.Errorf("init users tables: %w", err)
-	}
-	if err := initializeGroupsDb(ctx, db); err != nil {
-		db.Close()
-		return fmt.Errorf("init groups tables: %w", err)
-	}
-
 	container := sqlstore.NewWithDB(db, "pgx", waLog.Noop)
 	if err := container.Upgrade(ctx); err != nil {
 		db.Close()
 		return fmt.Errorf("upgrade whatsmeow database: %w", err)
 	}
 	defer container.Close()
+	emitLog("debug", "whatsmeow database schema synced")
 
 	device, err := getDevice(ctx, container, db, userID)
 	if err != nil {
@@ -98,10 +87,13 @@ func run(ctx context.Context, userID, connString string, dev bool) error {
 	// The QR channel must be opened before Connect.
 	var qrChan <-chan whatsmeow.QRChannelItem
 	if client.Store.ID == nil {
+		emitLog("info", "new device, waiting for QR pairing")
 		qrChan, err = client.GetQRChannel(ctx)
 		if err != nil {
 			return fmt.Errorf("open QR channel: %w", err)
 		}
+	} else {
+		emitLog("debug", "existing device, reconnecting")
 	}
 
 	if err := client.Connect(); err != nil {
@@ -116,6 +108,7 @@ func run(ctx context.Context, userID, connString string, dev bool) error {
 	readCommands(ctx, client, db)
 
 	client.Disconnect()
+	emitLog("info", "disconnected")
 	return nil
 }
 
@@ -160,12 +153,21 @@ func handleEvent(ctx context.Context, client *whatsmeow.Client, db *sql.DB, user
 		connectedUser := client.Store.ID.String()
 		if err := saveDeviceID(ctx, db, userID, connectedUser); err != nil {
 			emitError(fmt.Errorf("save device mapping: %w", err))
+		} else {
+			emitLog("debug", fmt.Sprintf("device mapping saved for %s", connectedUser))
+		}
+		if err := client.FetchAppState(ctx, appstate.WAPatchRegularLow, false, false); err != nil {
+			emitError(fmt.Errorf("fetch app state: %w", err))
+		} else {
+			emitLog("debug", "initial app state fetched")
 		}
 		emitEvent(Event{Type: EventConnectionEstablished, UserID: connectedUser})
 	case *events.Message:
 		ourJID := client.Store.GetJID().String()
-		if err := save(ctx, db, ourJID, evt); err != nil {
-			emitError(fmt.Errorf("store message %s: %w", evt.Info.ID, err))
+		if err := handleMessage(ctx, db, client, ourJID, evt); err != nil {
+			emitError(err)
+		} else {
+			emitLog("debug", fmt.Sprintf("message %s stored", evt.Info.ID))
 		}
 	case *events.GroupInfo:
 		handleGroupInfo(ctx, db, client.Store.GetJID().String(), evt)
@@ -173,14 +175,16 @@ func handleEvent(ctx context.Context, client *whatsmeow.Client, db *sql.DB, user
 		handleJoinedGroup(ctx, db, client.Store.GetJID().String(), evt)
 	case *events.HistorySync:
 		ourJID := client.Store.GetJID().String()
-		if err := saveHistorySyncMessages(ctx, db, client, ourJID, evt.Data); err != nil {
+		if err := handleHistorySyncMessages(ctx, db, client, ourJID, evt.Data); err != nil {
 			emitError(fmt.Errorf("store history sync: %w", err))
 		}
-		saveHistorySyncGroups(ctx, db, ourJID, evt.Data)
+		handleHistorySyncGroups(ctx, db, ourJID, evt.Data)
 	case *events.PairError:
 		emitError(fmt.Errorf("pairing failed: %w", evt.Error))
 	case *events.LoggedOut:
-		emitError(fmt.Errorf("logged out (reason %d)", evt.Reason))
+		emitLog("warn", fmt.Sprintf("logged out (reason %d)", evt.Reason))
+		emitEvent(Event{Type: EventLoggedOut, Message: fmt.Sprintf("%d", evt.Reason)})
+		client.Disconnect()
 	}
 }
 
@@ -192,7 +196,7 @@ func handleQRChannel(qrChan <-chan whatsmeow.QRChannelItem) {
 		case whatsmeow.QRChannelEventError:
 			emitError(item.Error)
 		case whatsmeow.QRChannelSuccess.Event:
-			// Pairing succeeded; the connection_established event follows.
+			emitLog("info", "QR pairing succeeded")
 		case whatsmeow.QRChannelTimeout.Event:
 			emitError(fmt.Errorf("QR pairing timed out"))
 		default:

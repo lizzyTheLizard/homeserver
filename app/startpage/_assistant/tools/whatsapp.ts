@@ -1,7 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getWAFasade } from '../../_external/whatsapp'
+import { getWAWorker } from '../../_external/whatsapp'
 import { transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
@@ -12,7 +12,7 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(chatSchema),
     execute: async () => {
-      const wa = await getWAFasade(user)
+      const wa = await getWAWorker(user)
       const chats = (await wa.getChats()).filter(c => !c.isArchived)
       return chats
     },
@@ -23,7 +23,7 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(chatSchema),
     execute: async () => {
-      const wa = await getWAFasade(user)
+      const wa = await getWAWorker(user)
       if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
       const chats = await wa.getChats()
       return chats
@@ -37,7 +37,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     outputSchema: z.array(messageSchema),
     execute: async ({ chatId }) => {
-      const wa = await getWAFasade(user)
+      const wa = await getWAWorker(user)
       if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
       const messages = await wa.getMessagesForChat(chatId)
       return messages
@@ -52,7 +52,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ chatId, message }) => transactional(async (tx) => {
       try {
-        const wa = await getWAFasade(user)
+        const wa = await getWAWorker(user)
         await wa.sendMessage(chatId, message)
         await logEvent(tx, 'INFO', `Sent WhatsApp message to chat ${chatId}`)
         return 'Message sent successfully'
@@ -72,7 +72,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ chatId }) => transactional(async (tx) => {
       try {
-        const wa = await getWAFasade(user)
+        const wa = await getWAWorker(user)
         await wa.setArchived(chatId, true)
         await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId} and marked as read`)
         return 'Chat archived successfully'

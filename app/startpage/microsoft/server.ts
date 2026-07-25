@@ -1,9 +1,9 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { getUserInfo, getLoginRedirectUrl, MicrosoftUserInfo } from '../_external/microsoft'
-import { MicrosoftMessageListItem, MicrosoftMessageFull, getInboxMessages, getMessage } from '../_external/microsoft-mail'
-import { MicrosoftTodoTask, getAllTasks } from '../_external/microsoft-todo'
-import { MicrosoftCalendarEvent, getAllEvents } from '../_external/microsoft-calendar'
+import { MicrosoftMessageListItem, MicrosoftMessageFull, getMicrosoftMailWorker } from '../_external/microsoft-mail'
+import { MicrosoftTodoTask, getMicrosoftTodoWorker } from '../_external/microsoft-todo'
+import { MicrosoftCalendarEvent, getMicrosoftCalendarWorker } from '../_external/microsoft-calendar'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { deleteMicrosoftToken } from '../_data/Microsoft'
@@ -80,17 +80,19 @@ export async function loadMicrosoftStatus(): Promise<MicrosoftStatus> {
   const user = await getAuthenticatedUserSession('startpage')
   const userInfo = await getUserInfo(user)
   if (!userInfo) return { connected: false, messages: [], todos: [], events: [] }
-  const [messages, todos, events] = await Promise.all([
-    getInboxMessages(user).then(msgs => msgs.map(serializeMessageListItem)),
-    getAllTasks(user).then(tasks => tasks.map(serializeTodoTask)),
-    getAllEvents(user).then(evts => evts.map(serializeCalendarEvent)),
+  const [mailWorker, todos, events] = await Promise.all([
+    getMicrosoftMailWorker(user),
+    getMicrosoftTodoWorker(user).then(worker => worker.getAllTasks().map(serializeTodoTask)),
+    getMicrosoftCalendarWorker(user).then(worker => worker.getAllEvents().map(serializeCalendarEvent)),
   ])
+  const messages = mailWorker.getInboxMessages().map(serializeMessageListItem)
   return { connected: true, userInfo, messages, todos: todos.filter(t => t.status !== 'completed'), events }
 }
 
 export async function loadMessage(messageId: string): Promise<SerializedMessageFull | undefined> {
   const user = await getAuthenticatedUserSession('startpage')
-  const msg = await getMessage(user, messageId)
+  const mailWorker = await getMicrosoftMailWorker(user)
+  const msg = await mailWorker.getMessage(messageId)
   if (!msg) return undefined
   return serializeMessageFull(msg)
 }

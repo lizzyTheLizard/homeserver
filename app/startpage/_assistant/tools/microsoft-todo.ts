@@ -2,7 +2,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getAllTasks, createTask, updateTask, completeTask, getTodoLists, type MicrosoftTodoTask } from '../../_external/microsoft-todo'
+import { getMicrosoftTodoWorker, type MicrosoftTodoTask } from '../../_external/microsoft-todo'
 import { toInstant } from '../../_external/microsoft'
 
 export default function getTools(user: UserSession): ToolSet {
@@ -11,7 +11,8 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(todoListSchema),
     execute: async () => {
-      return await getTodoLists(user)
+      const worker = await getMicrosoftTodoWorker(user)
+      return worker.getTodoLists()
     },
   })
 
@@ -20,7 +21,8 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(todoTaskSchema),
     execute: async () => {
-      const tasks = await getAllTasks(user)
+      const worker = await getMicrosoftTodoWorker(user)
+      const tasks = worker.getAllTasks()
       return tasks.map(convertTaskForOutput)
     },
   })
@@ -36,7 +38,8 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: todoTaskSchema,
     execute: async ({ listId, title, body, reminderDateTime }) => {
       const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
-      const result = await createTask(user, listId, title, body, reminder)
+      const worker = await getMicrosoftTodoWorker(user)
+      const result = await worker.createTask(user, listId, title, body, reminder)
       return convertTaskForOutput(result)
     },
   })
@@ -59,7 +62,8 @@ export default function getTools(user: UserSession): ToolSet {
       if (body !== undefined) updates.body = body
       if (reminder !== undefined) updates.reminderDateTime = reminder
       if (targetListId !== undefined) updates.listId = targetListId
-      const result = await updateTask(user, listId, taskId, updates)
+      const worker = await getMicrosoftTodoWorker(user)
+      const result = await worker.updateTask(user, listId, taskId, updates)
       return convertTaskForOutput(result)
     },
   })
@@ -71,7 +75,8 @@ export default function getTools(user: UserSession): ToolSet {
       taskId: z.string().describe('The ID of the task to mark as completed'),
     }),
     execute: async ({ listId, taskId }) => {
-      await completeTask(user, listId, taskId)
+      const worker = await getMicrosoftTodoWorker(user)
+      await worker.completeTask(user, listId, taskId)
       return 'Task marked as completed'
     },
   })
