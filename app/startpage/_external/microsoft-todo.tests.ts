@@ -2,14 +2,22 @@ import { describe, expect, test, beforeAll } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '@/app/shared/_external/db/access'
 import { setMicrosoftToken } from '../_data/Microsoft'
-import { getTodoLists, getTasks, getAllTasks, getTodoCount, createTask, updateTask, completeTask, deleteTask } from './microsoft-todo'
+import { getMicrosoftTodoWorker, type MicrosoftTodoWorker } from './microsoft-todo'
 import type { UserSession } from '@/app/shared/auth/auth'
 
 const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
 
+async function waitForData(worker: MicrosoftTodoWorker): Promise<void> {
+  for (let i = 0; i < 20; i++) {
+    if (worker.getTodoLists().length > 0) return
+    await new Promise(resolve => setTimeout(resolve, 500))
+  }
+}
+
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
   const token = TEST_MICROSOFT_REFRESH_TOKEN!  // eslint-disable-line
   let user: UserSession
+  let worker: MicrosoftTodoWorker
 
   beforeAll(async () => {
     user = { name: 'Test', email: 'todo-test@test.com', applications: ['startpage'] }
@@ -18,10 +26,12 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
       refresh_token: token,
       expires_at: 0,
     }))
+    worker = await getMicrosoftTodoWorker(user)
+    await waitForData(worker)
   })
 
-  test('getTodoLists returns lists', async () => {
-    const lists = await getTodoLists(user)
+  test('getTodoLists returns lists', () => {
+    const lists = worker.getTodoLists()
 
     expect(lists.length).toBeGreaterThan(0)
     expect(lists[0]).toHaveProperty('id')
@@ -29,9 +39,9 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
     expect(typeof lists[0].displayName).toBe('string')
   })
 
-  test('getTasks returns tasks for a list', async () => {
-    const lists = await getTodoLists(user)
-    const tasks = await getTasks(user, lists[0].id)
+  test('getTasks returns tasks for a list', () => {
+    const lists = worker.getTodoLists()
+    const tasks = worker.getTasks(lists[0].id)
 
     expect(Array.isArray(tasks)).toBe(true)
     if (tasks.length > 0) {
@@ -41,8 +51,8 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
     }
   })
 
-  test('getAllTasks returns tasks across all lists', async () => {
-    const tasks = await getAllTasks(user)
+  test('getAllTasks returns tasks across all lists', () => {
+    const tasks = worker.getAllTasks()
 
     expect(Array.isArray(tasks)).toBe(true)
     if (tasks.length > 0) {
@@ -50,8 +60,8 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
     }
   })
 
-  test('getTodoCount returns counts', async () => {
-    const counts = await getTodoCount(user)
+  test('getTodoCount returns counts', () => {
+    const counts = worker.getTodoCount()
 
     expect(typeof counts.tasksDueToday).toBe('number')
     expect(typeof counts.tasksDueRestOfWeek).toBe('number')
@@ -60,43 +70,43 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
 
   describe('CRUD operations', () => {
     test('create, read, update, complete, delete a test todo', async () => {
-      const lists = await getTodoLists(user)
+      const lists = worker.getTodoLists()
       const listId = lists[0].id
       const uniqueTitle = `test TODO ${String(Date.now())}`
 
-      const created = await createTask(user, listId, uniqueTitle)
+      const created = await worker.createTask(user, listId, uniqueTitle)
       expect(created.title).toBe(uniqueTitle)
       expect(created.status).toBe('notStarted')
 
-      const tasksAfterCreate = await getTasks(user, listId)
+      const tasksAfterCreate = worker.getTasks(listId)
       const found = tasksAfterCreate.find(t => t.id === created.id)
       expect(found).toBeDefined()
       if (found) {
         expect(found.title).toBe(uniqueTitle)
       }
 
-      const updated = await updateTask(user, listId, created.id, { title: uniqueTitle + ' (updated)' })
+      const updated = await worker.updateTask(user, listId, created.id, { title: uniqueTitle + ' (updated)' })
       expect(updated.title).toBe(uniqueTitle + ' (updated)')
 
-      const tasksAfterUpdate = await getTasks(user, listId)
+      const tasksAfterUpdate = worker.getTasks(listId)
       const foundUpdated = tasksAfterUpdate.find(t => t.id === created.id)
       expect(foundUpdated).toBeDefined()
       if (foundUpdated) {
         expect(foundUpdated.title).toBe(uniqueTitle + ' (updated)')
       }
 
-      await completeTask(user, listId, created.id)
+      await worker.completeTask(user, listId, created.id)
 
-      const tasksAfterComplete = await getTasks(user, listId)
+      const tasksAfterComplete = worker.getTasks(listId)
       const foundComplete = tasksAfterComplete.find(t => t.id === created.id)
       expect(foundComplete).toBeDefined()
       if (foundComplete) {
         expect(foundComplete.status).toBe('completed')
       }
 
-      await deleteTask(user, listId, created.id)
+      await worker.deleteTask(user, listId, created.id)
 
-      const tasksAfterDelete = await getTasks(user, listId)
+      const tasksAfterDelete = worker.getTasks(listId)
       const foundDeleted = tasksAfterDelete.find(t => t.id === created.id)
       expect(foundDeleted).toBeUndefined()
     }, 30000)

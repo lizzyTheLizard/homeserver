@@ -5,7 +5,8 @@ import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { textColumn, boolColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { getStatus } from '../server'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { getStatus, fullSync } from '../server'
 import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
 import type { Chat, SyncStatus } from '../../_external/whatsapp'
@@ -22,11 +23,19 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [sidebarId, openSidebar] = useSidebar()
   const [error, setError] = useState<string | undefined>(status.type === 'closed' ? (status.error?.message ?? 'Unknown error') : undefined)
+  const [syncLoading, setSyncLoading] = useState(false)
   const router = useRouter()
 
   function showMessages(chat: Chat) {
     setSelectedChat(chat)
     openSidebar()
+  }
+
+  async function handleFullSync() {
+    setSyncLoading(true)
+    const result = await fullSync()
+    setSyncLoading(false)
+    if (!result.success) setError(result.error)
   }
 
   useEffect(() => {
@@ -57,6 +66,11 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   )
   return (
     <>
+      {status.type === 'ready' && (
+        <ActionButton onClick={() => { void handleFullSync() }}>
+          {syncLoading ? 'Syncing...' : 'Full Sync'}
+        </ActionButton>
+      )}
       <DataTable
         data={chats}
         columns={columns}

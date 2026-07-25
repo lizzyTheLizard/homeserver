@@ -46,7 +46,6 @@ func TestHandleCommandValidation(t *testing.T) {
 		{name: "send_message without text", cmd: Command{Command: CmdSendMessage, To: "49123456789"}, wantErr: "send_message: missing 'text'"},
 		{name: "archive_chat without id", cmd: Command{Command: CmdArchiveChat, Archived: boolPtr(true)}, wantErr: "archive_chat: missing 'id'"},
 		{name: "archive_chat without archived", cmd: Command{Command: CmdArchiveChat, ID: "49123456789"}, wantErr: "archive_chat: missing 'archived'"},
-		{name: "get_messages without chatJID", cmd: Command{Command: CmdGetMessages}, wantErr: "get_messages: missing 'chatJID'"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

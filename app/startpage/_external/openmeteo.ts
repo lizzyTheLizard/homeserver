@@ -23,12 +23,12 @@ async function cachedFetch(url: string): Promise<unknown> {
       return cached.data
     }
   }
-  logger.debug(`Fetch data from ${url}`)
+  logger.silly(`Fetch data from ${url}`)
   const start = Date.now()
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Failed to fetch: ${response.status.toString()} ${response.statusText}`)
   const data = await response.json() as unknown
-  logger.debug(`Fetched from ${url} data in ${(Date.now() - start).toString()}ms`)
+  logger.silly(`Fetched from ${url} data in ${(Date.now() - start).toString()}ms`)
   cache.set(url, { data, timestamp: Date.now() })
   return data
 }

@@ -8,6 +8,7 @@ import * as client from 'openid-client'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'
 import { config } from '@/app/shared/config'
+import { Mutex } from 'async-mutex'
 
 export interface MicrosoftUserInfo {
   id: string
@@ -48,29 +49,33 @@ export async function graphApiRequest<T>(user: UserSession, url: string, request
   const token = await getCurrentToken(user)
   if (!token) throw new Error('No Microsoft Graph token available')
   const client = Client.init({ authProvider: (done) => { done(null, token.access_token) } })
-  logger.debug(`Fetch data from GraphAPI ${url}`)
+  logger.silly(`Fetch data from GraphAPI ${url}`)
   const start = Date.now()
   const result = await request(client.api(url))
-  logger.debug(`GraphAPI request ${url} completed in ${(Date.now() - start).toString()}ms`)
+  logger.silly(`GraphAPI request ${url} completed in ${(Date.now() - start).toString()}ms`)
   return result
 }
 
+const tokenMutex = new Mutex()
+
 async function getCurrentToken(user: UserSession): Promise<MicrosoftToken | undefined> {
-  const now = Math.floor(Date.now() / 1000)
-  return transactional(async (db) => {
-    const token = await nontransactional(db => getMicrosoftToken(db, user.email))
-    if (!token) return undefined
-    if (token.expires_at > now + 60) return token
-    const clientConfig = await getClientConfig()
-    const tokenSet = await oidc.refreshTokenGrant(clientConfig, token.refresh_token)
-    const accessToken = tokenSet.access_token
-    const expiresAt = Number(tokenSet.expires_at) || now + 3000
-    const refreshToken = tokenSet.refresh_token ?? token.refresh_token
-    const newToken = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
-    await setMicrosoftToken(db, user.email, newToken)
-    logger.info(`Microsoft token for user ${user.email} refreshed`)
-    await logEvent(db, 'INFO', `Microsoft token refreshed for user ${user.email}`)
-    return newToken
+  return tokenMutex.runExclusive(() => {
+    const now = Math.floor(Date.now() / 1000)
+    return transactional(async (db) => {
+      const token = await nontransactional(db => getMicrosoftToken(db, user.email))
+      if (!token) return undefined
+      if (token.expires_at > now + 60) return token
+      const clientConfig = await getClientConfig()
+      const tokenSet = await oidc.refreshTokenGrant(clientConfig, token.refresh_token)
+      const accessToken = tokenSet.access_token
+      const expiresAt = Number(tokenSet.expires_at) || now + 3000
+      const refreshToken = tokenSet.refresh_token ?? token.refresh_token
+      const newToken = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
+      await setMicrosoftToken(db, user.email, newToken)
+      logger.info(`Microsoft token for user ${user.email} refreshed`)
+      await logEvent(db, 'INFO', `Microsoft token refreshed for user ${user.email}`)
+      return newToken
+    })
   })
 }
 
@@ -94,4 +99,10 @@ export function toPlainDate(dateTime: string): Temporal.PlainDate {
 
 export function toGraphDateTime(instant: Temporal.Instant): { dateTime: string, timeZone: string } {
   return { dateTime: instant.toString(), timeZone: 'UTC' }
+}
+
+export interface DeltaResponse<T> {
+  'value': T[]
+  '@odata.nextLink'?: string
+  '@odata.deltaLink'?: string
 }

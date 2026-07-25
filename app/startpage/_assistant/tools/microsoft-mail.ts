@@ -1,7 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getInboxMessages, getMessage, searchArchiveMessages, sendMail, archiveMessage, archiveMessagesFromSender } from '../../_external/microsoft-mail'
+import { getMicrosoftMailWorker } from '../../_external/microsoft-mail'
 
 export default function getTools(user: UserSession): ToolSet {
   const getOutlookInbox = tool({
@@ -9,7 +9,8 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(emailListItemSchema),
     execute: async () => {
-      const messages = await getInboxMessages(user)
+      const worker = await getMicrosoftMailWorker(user)
+      const messages = worker.getInboxMessages()
       return messages.map(m => ({
         id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
         receivedDateTime: m.receivedDateTime.toString(), isRead: m.isRead, bodyPreview: m.bodyPreview,
@@ -24,27 +25,13 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     outputSchema: emailFullSchema,
     execute: async ({ mailId }) => {
-      const message = await getMessage(user, mailId)
+      const worker = await getMicrosoftMailWorker(user)
+      const message = await worker.getMessage(mailId)
       if (!message) throw new Error(`Email with ID ${mailId} not found`)
       return {
         id: message.id, subject: message.subject, from: message.from, toRecipients: message.toRecipients,
         receivedDateTime: message.receivedDateTime.toString(), isRead: message.isRead, bodyPreview: message.bodyPreview, body: message.body,
       }
-    },
-  })
-
-  const searchOutlookArchive = tool({
-    description: 'Search archived emails by a query string. Searches sender, subject, and body content.',
-    inputSchema: z.object({
-      query: z.string().describe('The search query to find archived emails'),
-    }),
-    outputSchema: z.array(emailListItemSchema),
-    execute: async ({ query }) => {
-      const messages = await searchArchiveMessages(user, query)
-      return messages.map(m => ({
-        id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
-        receivedDateTime: m.receivedDateTime.toString(), isRead: m.isRead, bodyPreview: m.bodyPreview,
-      }))
     },
   })
 
@@ -56,7 +43,8 @@ export default function getTools(user: UserSession): ToolSet {
       body: z.string().describe('The plain text email body'),
     }),
     execute: async ({ to, subject, body }) => {
-      await sendMail(user, to, subject, body)
+      const worker = await getMicrosoftMailWorker(user)
+      await worker.sendMail(user, to, subject, body)
       return `Email sent successfully to ${to.join(', ')}`
     },
   })
@@ -67,7 +55,8 @@ export default function getTools(user: UserSession): ToolSet {
       mailId: z.string().describe('The ID of the email to archive'),
     }),
     execute: async ({ mailId }) => {
-      await archiveMessage(user, mailId)
+      const worker = await getMicrosoftMailWorker(user)
+      await worker.archiveMessage(user, mailId)
       return 'Email archived successfully'
     },
   })
@@ -79,7 +68,8 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     outputSchema: z.array(emailListItemSchema),
     execute: async ({ senderEmail }) => {
-      const messages = await getInboxMessages(user)
+      const worker = await getMicrosoftMailWorker(user)
+      const messages = worker.getInboxMessages()
       const filtered = messages.filter(m => m.from.emailAddress.address === senderEmail)
       return filtered.map(m => ({
         id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
@@ -94,7 +84,8 @@ export default function getTools(user: UserSession): ToolSet {
       senderEmail: z.string().describe('The email address of the sender to archive all emails from'),
     }),
     execute: async ({ senderEmail }) => {
-      const count = await archiveMessagesFromSender(user, senderEmail)
+      const worker = await getMicrosoftMailWorker(user)
+      const count = await worker.archiveMessagesFromSender(user, senderEmail)
       return count === 0
         ? `No emails from ${senderEmail} found in inbox`
         : `Successfully archived ${count.toString()} email(s) from ${senderEmail}`
@@ -104,7 +95,6 @@ export default function getTools(user: UserSession): ToolSet {
   return {
     get_outlook_inbox: getOutlookInbox,
     get_outlook_mail: getOutlookMail,
-    search_outlook_archive: searchOutlookArchive,
     send_outlook_mail: sendOutlookMail,
     archive_outlook_mail: archiveOutlookMail,
     get_outlook_mails_from_sender: getOutlookMailsFromSender,

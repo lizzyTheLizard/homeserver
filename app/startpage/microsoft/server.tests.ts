@@ -5,6 +5,7 @@ import { loadMicrosoftStatus, connectMicrosoft, disconnectMicrosoft } from './se
 import type { UserSession } from '@/app/shared/auth/auth'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { setMicrosoftToken, getMicrosoftToken } from '../_data/Microsoft'
+import type { MicrosoftTodoWorker } from '../_external/microsoft-todo'
 
 vi.mock('@/app/shared/auth/auth', async () => {
   const actual = await vi.importActual('@/app/shared/auth/auth')
@@ -27,7 +28,7 @@ vi.mock('../_external/microsoft-mail', async () => {
   const actual = await vi.importActual('../_external/microsoft-mail')
   return {
     ...actual,
-    getInboxMessages: vi.fn(),
+    getMicrosoftMailWorker: vi.fn(),
   }
 })
 
@@ -35,7 +36,7 @@ vi.mock('../_external/microsoft-calendar', async () => {
   const actual = await vi.importActual('../_external/microsoft-calendar')
   return {
     ...actual,
-    getAllEvents: vi.fn(),
+    getMicrosoftCalendarWorker: vi.fn(),
   }
 })
 
@@ -43,14 +44,14 @@ vi.mock('../_external/microsoft-todo', async () => {
   const actual = await vi.importActual('../_external/microsoft-todo')
   return {
     ...actual,
-    getAllTasks: vi.fn(),
+    getMicrosoftTodoWorker: vi.fn(),
   }
 })
 
 const { getUserInfo, getLoginRedirectUrl } = await import('../_external/microsoft')
-const { getInboxMessages } = await import('../_external/microsoft-mail')
-const { getAllEvents } = await import('../_external/microsoft-calendar')
-const { getAllTasks } = await import('../_external/microsoft-todo')
+const { getMicrosoftMailWorker } = await import('../_external/microsoft-mail')
+const { getMicrosoftCalendarWorker } = await import('../_external/microsoft-calendar')
+const { getMicrosoftTodoWorker } = await import('../_external/microsoft-todo')
 
 const mockUserInfo = {
   id: 'user-123',
@@ -95,9 +96,18 @@ describe('loadMicrosoftStatus', () => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(getUserInfo).mockResolvedValue(mockUserInfo)
-    vi.mocked(getInboxMessages).mockResolvedValue(mockMessages)
-    vi.mocked(getAllTasks).mockResolvedValue([])
-    vi.mocked(getAllEvents).mockResolvedValue([])
+    vi.mocked(getMicrosoftMailWorker).mockResolvedValue({
+      getInboxMessages: () => mockMessages,
+      getInboxCount: () => ({ focused: 0, focusedUnread: 0, other: 0, otherUnread: 0 }),
+      getMessage: () => Promise.resolve(undefined),
+      sendMail: () => Promise.resolve(),
+      archiveMessage: () => Promise.resolve(),
+      archiveMessagesFromSender: () => Promise.resolve(0),
+      touch: () => { /* mock */ },
+    })
+    const mockTodoWorker = { getAllTasks: () => [] as never[], touch: () => { /* mock */ } } as unknown as MicrosoftTodoWorker
+    vi.mocked(getMicrosoftTodoWorker).mockResolvedValue(mockTodoWorker)
+    vi.mocked(getMicrosoftCalendarWorker).mockResolvedValue({ getCalendars: () => [], getAllEvents: () => [], getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }), createEvent: () => Promise.reject(new Error('not implemented')), touch: () => { /* mock */ } })
 
     const result = await loadMicrosoftStatus()
 

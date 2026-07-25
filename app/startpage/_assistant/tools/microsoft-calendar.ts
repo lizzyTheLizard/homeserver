@@ -1,7 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getCalendars, getAllEvents, createEvent, type MicrosoftCalendarEvent } from '../../_external/microsoft-calendar'
+import { getMicrosoftCalendarWorker, type MicrosoftCalendarEvent } from '../../_external/microsoft-calendar'
 import { toInstant } from '../../_external/microsoft'
 
 export default function getTools(user: UserSession): ToolSet {
@@ -10,7 +10,8 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(calendarSchema),
     execute: async () => {
-      return await getCalendars(user)
+      const worker = await getMicrosoftCalendarWorker(user)
+      return worker.getCalendars()
     },
   })
 
@@ -24,7 +25,8 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async ({ startDateTime, endDateTime }) => {
       const start = startDateTime ? toInstant(startDateTime, '') : undefined
       const end = endDateTime ? toInstant(endDateTime, '') : undefined
-      const events = await getAllEvents(user, start, end)
+      const worker = await getMicrosoftCalendarWorker(user)
+      const events = worker.getAllEvents(start, end)
       return events.map(convertEventForOutput)
     },
   })
@@ -43,7 +45,8 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async ({ calendarId, subject, startDateTime, endDateTime, body, location }) => {
       const start = toInstant(startDateTime, '')
       const end = toInstant(endDateTime, '')
-      const result = await createEvent(user, calendarId, subject, start, end, body, location)
+      const worker = await getMicrosoftCalendarWorker(user)
+      const result = await worker.createEvent(user, calendarId, subject, start, end, body, location)
       return convertEventForOutput(result)
     },
   })

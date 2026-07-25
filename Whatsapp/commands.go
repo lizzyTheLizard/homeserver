@@ -22,8 +22,7 @@ import (
 const (
 	CmdSendMessage = "send_message"
 	CmdArchiveChat = "archive_chat"
-	CmdGetChats    = "get_chats"
-	CmdGetMessages = "get_messages"
+	CmdFullSync    = "full_sync"
 )
 
 // Command is a message read from stdin, one JSON object per line.
@@ -33,8 +32,6 @@ type Command struct {
 	Text     string `json:"text,omitempty"`
 	ID       string `json:"id,omitempty"`
 	Archived *bool  `json:"archived,omitempty"`
-	Read     *bool  `json:"read,omitempty"`
-	ChatJID  string `json:"chatJID,omitempty"`
 }
 
 func readCommands(ctx context.Context, client *whatsmeow.Client, db *sql.DB) {
@@ -73,10 +70,8 @@ func handleCommand(ctx context.Context, client *whatsmeow.Client, db *sql.DB, cm
 		return sendMessage(ctx, client, cmd)
 	case CmdArchiveChat:
 		return archiveChat(ctx, client, cmd)
-	case CmdGetChats:
-		return handleGetChats(ctx, client, db)
-	case CmdGetMessages:
-		return handleGetMessages(ctx, client, db, cmd)
+	case CmdFullSync:
+		return fullSync(ctx, client, db)
 	default:
 		return fmt.Errorf("unknown command %q", cmd.Command)
 	}
@@ -97,6 +92,7 @@ func sendMessage(ctx context.Context, client *whatsmeow.Client, cmd Command) err
 	if err != nil {
 		return fmt.Errorf("send_message: %w", err)
 	}
+	emitLog("debug", fmt.Sprintf("message sent to %s", cmd.To))
 	return nil
 }
 
@@ -114,31 +110,10 @@ func archiveChat(ctx context.Context, client *whatsmeow.Client, cmd Command) err
 	if err := client.SendAppState(ctx, appstate.BuildArchive(jid, *cmd.Archived, time.Now(), nil)); err != nil {
 		return fmt.Errorf("archive_chat: %w", err)
 	}
-	return nil
-}
-
-func handleGetChats(ctx context.Context, client *whatsmeow.Client, db *sql.DB) error {
-	entries, err := GetChats(ctx, db, client, client.Store.GetJID().String())
-	if err != nil {
-		return fmt.Errorf("get conversations: %w", err)
+	action := "archived"
+	if !*cmd.Archived {
+		action = "unarchived"
 	}
-	emitEvent(Event{Type: EventChats, Chats: entries})
-	return nil
-}
-
-func handleGetMessages(ctx context.Context, client *whatsmeow.Client, db *sql.DB, cmd Command) error {
-	if cmd.ChatJID == "" {
-		return errors.New("get_messages: missing 'chatJID'")
-	}
-	chat, err := types.ParseJID(cmd.ChatJID)
-	if err != nil {
-		return fmt.Errorf("get_messages: %w", err)
-	}
-	entries, err := GetMessages(ctx, db, client, client.Store.GetJID().String(), chat.String())
-	if err != nil {
-		return fmt.Errorf("get messages: %w", err)
-	}
-
-	emitEvent(Event{Type: EventMessages, Messages: entries})
+	emitLog("debug", fmt.Sprintf("chat %s %s", cmd.ID, action))
 	return nil
 }

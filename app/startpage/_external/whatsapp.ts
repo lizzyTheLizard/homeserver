@@ -3,15 +3,18 @@
 import { Mutex } from 'async-mutex'
 import { UserSession } from '@/app/shared/auth/auth'
 import { config } from '@/app/shared/config'
+import { nontransactional, Queryable } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
+import { getUserJID, getChats as getChatsFromDB, getMessagesForChat as getMessagesFromDB, getChatName, formatSenderName, deleteUserData } from '@/app/startpage/_data/Whatsapp'
 import { ChildProcess, spawn } from 'child_process'
 import path from 'path'
 import { createInterface } from 'readline'
+import { logEvent } from '@/app/shared/_data/Event'
 
 declare global {
-  var waBridgeHandles: Map<string, WAFacade> | undefined
+  var waBridgeHandles: Map<string, WAWorker> | undefined
 }
-globalThis.waBridgeHandles ??= new Map<string, WAFacade>()
+globalThis.waBridgeHandles ??= new Map<string, WAWorker>()
 
 const facadeMutex = new Mutex()
 const inactivityTimeoutMs = 5 * 60 * 1000
@@ -34,16 +37,17 @@ export interface Chat {
   lastMessageTimestamp: string
 }
 
-export interface WAFacade {
+export interface WAWorker {
   getChats(): Promise<Chat[]>
   getStatus(): SyncStatus
   getMessagesForChat(chatId: string): Promise<Message[]>
   sendMessage(chatId: string, message: string): Promise<void>
   setArchived(chatId: string, archived: boolean): Promise<void>
+  fullSync(): Promise<void>
   touch(): void
 }
 
-export async function getWAFasade(user: UserSession): Promise<WAFacade> {
+export async function getWAWorker(user: UserSession): Promise<WAWorker> {
   return facadeMutex.runExclusive(async () => {
     const existing = globalThis.waBridgeHandles?.get(user.email)
     if (existing && existing.getStatus().type !== 'closed') {
@@ -56,20 +60,15 @@ export async function getWAFasade(user: UserSession): Promise<WAFacade> {
   })
 }
 
-async function createWAHandle(userId: string): Promise<WAFacade> {
-  return new Promise<WAFacade>((resolveStartup, rejectStartup) => {
+async function createWAHandle(userId: string): Promise<WAWorker> {
+  return new Promise<WAWorker>((resolveStartup, rejectStartup) => {
     const mutex = new Mutex()
     let status: SyncStatus = { type: 'connecting' }
     let timeout: NodeJS.Timeout | undefined = setTimeout(stop, inactivityTimeoutMs)
     let process: ChildProcess | undefined = startProcess(userId, close, handleEvent)
     let startupResolved = false
-    // TODO: This is somewhat ugly with these resolver/rejector variables, but it works for now. We can refactor this later if needed.
-    let chatsResolver: ((value: Chat[]) => void) | null = null
-    let chatsRejector: ((error: Error) => void) | null = null
-    let messagesResolver: ((value: Message[]) => void) | null = null
-    let messagesRejector: ((error: Error) => void) | null = null
     const getStatus = () => status
-    const handler = { touch, getStatus, getChats, getMessagesForChat, sendMessage, setArchived }
+    const handler = { touch, getStatus, getChats, getMessagesForChat, sendMessage, setArchived, fullSync }
 
     function close(error?: Error): void {
       if (timeout) {
@@ -92,26 +91,6 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
 
     function handleEvent(event: BridgeEvent): void {
       switch (event.type) {
-        case 'chats':
-          if (chatsResolver) {
-            chatsResolver((event.chats ?? []).map(c => ({
-              id: c.id,
-              name: c.name,
-              isArchived: c.isArchived,
-              isGroup: c.isGroup,
-              lastMessageTimestamp: c.lastMessageTimestamp ?? '',
-            })))
-            chatsResolver = null
-            chatsRejector = null
-          }
-          break
-        case 'messages':
-          if (messagesResolver) {
-            messagesResolver(event.messages ?? [])
-            messagesResolver = null
-            messagesRejector = null
-          }
-          break
         case 'connection_established':
           status = { type: 'ready' }
           if (!startupResolved) {
@@ -129,17 +108,34 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
           logger.info(`[WhatsAppBridge] QR code challenge received for user ${userId}`)
           break
         case 'error':
-          if (chatsRejector) {
-            chatsRejector(new Error(event.message ?? 'Unknown error'))
-            chatsResolver = null
-            chatsRejector = null
-          }
-          if (messagesRejector) {
-            messagesRejector(new Error(event.message ?? 'Unknown error'))
-            messagesResolver = null
-            messagesRejector = null
-          }
           logger.warn(`[WhatsAppBridge] Error for user ${userId}: ${event.message ?? 'unknown'}`)
+          break
+        case 'logged_out':
+          logger.warn(`[WhatsAppBridge] User ${userId} logged out (reason ${event.message ?? 'unknown'}), resetting session`)
+          nontransactional(async (client) => {
+            await deleteUserData(client, userId)
+            await logEvent(client, 'info', `Deleted whatsapp user data for ${userId} after logout`)
+          }).catch((err: unknown) => { logger.error(`[WhatsAppBridge] Failed to delete user data for ${userId}: ${String(err)}`) })
+          process?.kill()
+          break
+        case 'log':
+          {
+            const msg = `[WhatsAppBridge] ${event.message ?? ''}`
+            switch (event.level) {
+              case 'error': logger.error(msg); break
+              case 'warn': logger.warn(msg); break
+              case 'info': logger.info(msg); break
+              case 'debug': logger.debug(msg); break
+              default: logger.info(msg)
+            }
+          }
+          break
+        case 'full_sync_finished':
+          logger.info(`[WhatsAppBridge] Full sync finished for user ${userId}`)
+          if (fullSyncResolver) {
+            fullSyncResolver()
+            fullSyncResolver = undefined
+          }
           break
         default:
           logger.warn(`[WhatsAppBridge] Unknown event type '${event.type}' for user ${userId}`)
@@ -156,42 +152,42 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
       timeout = setTimeout(stop, inactivityTimeoutMs)
     }
 
+    let ourJIDCache: string | undefined
+    let fullSyncResolver: (() => void) | undefined
+
+    async function resolveOurJID(client: Queryable): Promise<string | undefined> {
+      ourJIDCache ??= await getUserJID(client, userId)
+      return ourJIDCache
+    }
+
     function getChats(): Promise<Chat[]> {
-      return mutex.runExclusive(() => new Promise<Chat[]>((resolve, reject) => {
-        if (!process?.stdin) {
-          reject(new Error('Bridge process not available'))
-          return
-        }
-        touch()
-        chatsResolver = resolve
-        chatsRejector = reject
-        process.stdin.write(JSON.stringify({ command: 'get_chats' }) + '\n', 'utf8', (error) => {
-          if (error) {
-            chatsResolver = null
-            chatsRejector = null
-            reject(error)
-          }
-        })
-      }))
+      return nontransactional(async (client) => {
+        const ourJID = await resolveOurJID(client)
+        if (!ourJID) return []
+        const rows = await getChatsFromDB(client, ourJID)
+        return rows.map(r => ({
+          id: r.chat_jid,
+          name: getChatName(r),
+          isArchived: r.archived,
+          isGroup: r.chat_jid.endsWith('@g.us'),
+          lastMessageTimestamp: r.last_msg_ts,
+        }))
+      })
     }
 
     function getMessagesForChat(chatId: string): Promise<Message[]> {
-      return mutex.runExclusive(() => new Promise<Message[]>((resolve, reject) => {
-        if (!process?.stdin) {
-          reject(new Error('Bridge process not available'))
-          return
-        }
-        touch()
-        messagesResolver = resolve
-        messagesRejector = reject
-        process.stdin.write(JSON.stringify({ command: 'get_messages', chatJID: chatId }) + '\n', 'utf8', (error) => {
-          if (error) {
-            messagesResolver = null
-            messagesRejector = null
-            reject(error)
-          }
-        })
-      }))
+      return nontransactional(async (client) => {
+        const ourJID = await resolveOurJID(client)
+        if (!ourJID) return []
+        const rows = await getMessagesFromDB(client, ourJID, chatId)
+        return rows.map(r => ({
+          id: r.id,
+          fromMe: r.from_me,
+          fromName: formatSenderName(r.sender_jid, r.from_me, r.contact_name),
+          content: r.text ?? '',
+          messageTimestamp: r.message_timestamp,
+        }))
+      })
     }
 
     function sendMessage(chatId: string, message: string): Promise<void> {
@@ -223,6 +219,24 @@ async function createWAHandle(userId: string): Promise<WAFacade> {
         })
       }))
     }
+
+    function fullSync(): Promise<void> {
+      return mutex.runExclusive(() => new Promise<void>((resolve, reject) => {
+        if (!process?.stdin) {
+          reject(new Error('Bridge process not available'))
+          return
+        }
+        touch()
+        fullSyncResolver = resolve
+        const command = JSON.stringify({ command: 'full_sync' })
+        process.stdin.write(command + '\n', 'utf8', (error) => {
+          if (error) {
+            fullSyncResolver = undefined
+            reject(error)
+          }
+        })
+      }))
+    }
   })
 }
 
@@ -240,7 +254,8 @@ function startProcess(userId: string, onClose: (error?: Error) => void, onEvent:
   }
 
   function onExit(code: number | null, signal: NodeJS.Signals | null): void {
-    onClose(new Error(`Bridge process exited with code ${String(code)} and signal ${String(signal)}`))
+    if (!code || code === 0) onClose()
+    else onClose(new Error(`Bridge process exited with code ${String(code)} and signal ${String(signal)}`))
   }
 
   const dev = config.NODE_ENV === 'development' ? 'true' : 'false'
@@ -253,29 +268,12 @@ function startProcess(userId: string, onClose: (error?: Error) => void, onEvent:
   return proc
 }
 
-interface BridgeChat {
-  id: string
-  name: string
-  isArchived: boolean
-  isGroup: boolean
-  lastMessageTimestamp?: string
-}
-
-interface BridgeMessage {
-  id: string
-  fromMe: boolean
-  fromName: string
-  content: string
-  messageTimestamp: string
-}
-
 interface BridgeEvent {
   type: string
   user_id?: string
   qr?: string
   message?: string
-  chats?: BridgeChat[]
-  messages?: BridgeMessage[]
+  level?: string
 }
 
 function getBridgeBinaryPath(): string {
