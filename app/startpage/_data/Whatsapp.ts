@@ -184,34 +184,37 @@ export async function deleteUserData(client: Queryable, email: string): Promise<
 export async function getChats(client: Queryable, ourJID: string): Promise<ChatRow[]> {
   const result = await client.query<ChatRow>(`
     SELECT
-      m.chat_jid,
-      TO_CHAR(MAX(m.ts) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS last_msg_ts,
-      COALESCE(bool_or(COALESCE(cs.archived, cs_via_lid.archived, cs_via_pn.archived)), FALSE) AS archived,
-      COALESCE(MAX(lm.pn || '@s.whatsapp.net'), '') AS lid_pn,
-      COALESCE(MAX(lm2.lid || '@lid'), '') AS pn_lid,
-      COALESCE(MAX(g.group_name), '') AS group_name,
-      COALESCE(MAX(co_direct.first_name), '') AS direct_first_name,
-      COALESCE(MAX(co_direct.full_name), '') AS direct_full_name,
-      COALESCE(MAX(co_direct.business_name), '') AS direct_business_name,
-      COALESCE(MAX(co_via_lid.first_name), '') AS lid_first_name,
-      COALESCE(MAX(co_via_lid.full_name), '') AS lid_full_name,
-      COALESCE(MAX(co_via_lid.business_name), '') AS lid_business_name,
-      COALESCE(MAX(co_via_pn.first_name), '') AS pn_first_name,
-      COALESCE(MAX(co_via_pn.full_name), '') AS pn_full_name,
-      COALESCE(MAX(co_via_pn.business_name), '') AS pn_business_name
-    FROM whatsapp_messages m
-    LEFT JOIN whatsmeow_lid_map lm ON lm.lid = replace(m.chat_jid, '@lid', '')
-    LEFT JOIN whatsmeow_lid_map lm2 ON lm2.pn = replace(m.chat_jid, '@s.whatsapp.net', '')
-    LEFT JOIN whatsmeow_chat_settings cs ON cs.chat_jid = m.chat_jid AND cs.our_jid = $1
+      c.chat_jid,
+      TO_CHAR(c.ts AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS last_msg_ts,
+      COALESCE(cs.archived, cs_via_lid.archived, cs_via_pn.archived, FALSE) AS archived,
+      COALESCE(lm.pn || '@s.whatsapp.net', '') AS lid_pn,
+      COALESCE(lm2.lid || '@lid', '') AS pn_lid,
+      COALESCE(g.group_name, '') AS group_name,
+      COALESCE(co_direct.first_name, '') AS direct_first_name,
+      COALESCE(co_direct.full_name, '') AS direct_full_name,
+      COALESCE(co_direct.business_name, '') AS direct_business_name,
+      COALESCE(co_via_lid.first_name, '') AS lid_first_name,
+      COALESCE(co_via_lid.full_name, '') AS lid_full_name,
+      COALESCE(co_via_lid.business_name, '') AS lid_business_name,
+      COALESCE(co_via_pn.first_name, '') AS pn_first_name,
+      COALESCE(co_via_pn.full_name, '') AS pn_full_name,
+      COALESCE(co_via_pn.business_name, '') AS pn_business_name
+    FROM (
+      SELECT DISTINCT ON (chat_jid) chat_jid, ts
+      FROM whatsapp_messages
+      WHERE our_jid = $1 AND ts > NOW() - INTERVAL '1 year'
+      ORDER BY chat_jid, ts DESC
+    ) c
+    LEFT JOIN whatsmeow_lid_map lm ON lm.lid = replace(c.chat_jid, '@lid', '')
+    LEFT JOIN whatsmeow_lid_map lm2 ON lm2.pn = replace(c.chat_jid, '@s.whatsapp.net', '')
+    LEFT JOIN whatsmeow_chat_settings cs ON cs.chat_jid = c.chat_jid AND cs.our_jid = $1
     LEFT JOIN whatsmeow_chat_settings cs_via_lid ON cs_via_lid.chat_jid = lm.pn || '@s.whatsapp.net' AND cs_via_lid.our_jid = $1
     LEFT JOIN whatsmeow_chat_settings cs_via_pn ON cs_via_pn.chat_jid = lm2.lid || '@lid' AND cs_via_pn.our_jid = $1
-    LEFT JOIN whatsapp_groups g ON g.group_jid = m.chat_jid AND g.our_jid = $1
-    LEFT JOIN whatsmeow_contacts co_direct ON co_direct.their_jid = m.chat_jid AND co_direct.our_jid = $1
+    LEFT JOIN whatsapp_groups g ON g.group_jid = c.chat_jid AND g.our_jid = $1
+    LEFT JOIN whatsmeow_contacts co_direct ON co_direct.their_jid = c.chat_jid AND co_direct.our_jid = $1
     LEFT JOIN whatsmeow_contacts co_via_lid ON co_via_lid.their_jid = lm.pn || '@s.whatsapp.net' AND co_via_lid.our_jid = $1
     LEFT JOIN whatsmeow_contacts co_via_pn ON co_via_pn.their_jid = lm2.lid || '@lid' AND co_via_pn.our_jid = $1
-    WHERE m.our_jid = $1
-    GROUP BY m.chat_jid
-    ORDER BY MAX(m.ts) DESC`,
+    ORDER BY c.ts DESC`,
   [ourJID],
   )
   return result.rows.map(r => removeNull(r))
