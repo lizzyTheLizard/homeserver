@@ -89,7 +89,7 @@ describe('loadMicrosoftStatus', () => {
 
     const result = await loadMicrosoftStatus()
 
-    expect(result).toEqual({ connected: false, messages: [], todos: [], events: [] })
+    expect(result).toEqual({ connected: false, mailStatus: 'connecting', todoStatus: 'connecting', calendarStatus: 'connecting', messages: [], todos: [], events: [] })
   })
 
   test('returns connected with user info and messages', async ({ task }) => {
@@ -100,18 +100,19 @@ describe('loadMicrosoftStatus', () => {
       getInboxMessages: () => mockMessages,
       getInboxCount: () => ({ focused: 0, focusedUnread: 0, other: 0, otherUnread: 0 }),
       getMessage: () => Promise.resolve(undefined),
+      getStatus: () => 'connected',
       sendMail: () => Promise.resolve(),
       archiveMessage: () => Promise.resolve(),
       archiveMessagesFromSender: () => Promise.resolve(0),
       touch: () => { /* mock */ },
     })
-    const mockTodoWorker = { getAllTasks: () => [] as never[], touch: () => { /* mock */ } } as unknown as MicrosoftTodoWorker
+    const mockTodoWorker = { getAllTasks: () => [] as never[], getStatus: () => 'connected', touch: () => { /* mock */ } } as unknown as MicrosoftTodoWorker
     vi.mocked(getMicrosoftTodoWorker).mockResolvedValue(mockTodoWorker)
-    vi.mocked(getMicrosoftCalendarWorker).mockResolvedValue({ getCalendars: () => [], getAllEvents: () => [], getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }), createEvent: () => Promise.reject(new Error('not implemented')), touch: () => { /* mock */ } })
+    vi.mocked(getMicrosoftCalendarWorker).mockResolvedValue({ getCalendars: () => [], getAllEvents: () => [], getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }), getStatus: () => 'connected', createEvent: () => Promise.reject(new Error('not implemented')), touch: () => { /* mock */ } })
 
     const result = await loadMicrosoftStatus()
 
-    expect(result).toEqual({ connected: true, userInfo: mockUserInfo, messages: serializedMockMessages, todos: [], events: [] })
+    expect(result).toEqual({ connected: true, userInfo: mockUserInfo, mailStatus: 'connected', todoStatus: 'connected', calendarStatus: 'connected', messages: serializedMockMessages, todos: [], events: [] })
   })
 })
 

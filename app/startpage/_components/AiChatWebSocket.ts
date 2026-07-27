@@ -50,6 +50,8 @@ export class AiChatWebSocket {
       return
     }
     /// Otherwise start normal initialization
+    this.#messageBuffer = 'Initializing Context...\n\n'
+    this.onIncomingMessageChange(this.#messageBuffer)
     const initialContext = await this.initialContextProvider
     this.#ws?.send(JSON.stringify({ type: 'initialize', initialContext }))
   }

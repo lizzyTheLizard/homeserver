@@ -48,6 +48,7 @@ export interface MicrosoftCalendarWorker {
   getCalendars(): MicrosoftCalendar[]
   getAllEvents(startDateTime?: Temporal.Instant, endDateTime?: Temporal.Instant): MicrosoftCalendarEvent[]
   getEventCount(): EventCounts
+  getStatus(): string
   createEvent(user: UserSession, calendarId: string, subject: string, start: Temporal.Instant, end: Temporal.Instant, body?: string, location?: string): Promise<MicrosoftCalendarEvent>
   touch(): void
 }
@@ -82,6 +83,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   let deltaLink: string | undefined
   let interval: NodeJS.Timeout | undefined
   let timeout: NodeJS.Timeout | undefined
+  let status: 'connecting' | 'connected' | 'error' = 'connecting'
 
   function close(): void {
     if (interval) {
@@ -102,6 +104,8 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   }
 
   function getCalendars(): MicrosoftCalendar[] { return calendars }
+
+  function getStatus(): string { return status }
 
   function getAllEvents(startDateTime?: Temporal.Instant, endDateTime?: Temporal.Instant): MicrosoftCalendarEvent[] {
     const now = Temporal.Now.instant()
@@ -234,20 +238,29 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     }
   }
 
-  doInitialFetch().catch((error: unknown) => {
-    logger.warn(`[MicrosoftCalendarWorker] Initial fetch failed for user ${userId}`, error)
-  })
-  interval = setInterval(() => {
-    doDeltaPoll().catch((error: unknown) => {
-      logger.warn(`[MicrosoftCalendarWorker] Poll crash for user ${userId}`, error)
-      doInitialFetch().catch((error: unknown) => {
-        logger.warn(`[MicrosoftCalendarWorker] Re-fetch after poll crash failed for user ${userId}`, error)
-      })
+  status = 'connecting'
+  doInitialFetch()
+    .then(() => { status = 'connected' })
+    .catch((error: unknown) => {
+      status = 'error'
+      logger.warn(`[MicrosoftCalendarWorker] Initial fetch failed for user ${userId}`, error)
     })
+  interval = setInterval(() => {
+    doDeltaPoll()
+      .catch((error: unknown) => {
+        logger.warn(`[MicrosoftCalendarWorker] Poll crash for user ${userId}`, error)
+        status = 'connecting'
+        doInitialFetch()
+          .then(() => { status = 'connected' })
+          .catch((error: unknown) => {
+            status = 'error'
+            logger.warn(`[MicrosoftCalendarWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+          })
+      })
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { getCalendars, getAllEvents, getEventCount, createEvent, touch }
+  return { getCalendars, getAllEvents, getEventCount, getStatus, createEvent, touch }
 }
 
 interface RawCalendarEvent {

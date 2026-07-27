@@ -24,7 +24,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(chatSchema),
     execute: async () => {
       const wa = await getWAWorker(user)
-      if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
+      if (wa.getStatus().type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${wa.getStatus().type}`)
       const chats = await wa.getChats()
       return chats
     },
@@ -38,7 +38,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(messageSchema),
     execute: async ({ chatId }) => {
       const wa = await getWAWorker(user)
-      if (wa.getStatus().type !== 'ready') throw new Error(`WhatsApp is not ready. Current status: ${wa.getStatus().type}`)
+      if (wa.getStatus().type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${wa.getStatus().type}`)
       const messages = await wa.getMessagesForChat(chatId)
       return messages
     },

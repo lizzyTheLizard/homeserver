@@ -12,6 +12,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(todoListSchema),
     execute: async () => {
       const worker = await getMicrosoftTodoWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Todo is not connected yet. Please try again in a moment.')
       return worker.getTodoLists()
     },
   })
@@ -22,6 +23,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(todoTaskSchema),
     execute: async () => {
       const worker = await getMicrosoftTodoWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Todo is not connected yet. Please try again in a moment.')
       const tasks = worker.getAllTasks()
       return tasks.map(convertTaskForOutput)
     },
@@ -39,6 +41,7 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async ({ listId, title, body, reminderDateTime }) => {
       const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
       const worker = await getMicrosoftTodoWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Todo is not connected yet. Please try again in a moment.')
       const result = await worker.createTask(user, listId, title, body, reminder)
       return convertTaskForOutput(result)
     },
@@ -63,6 +66,7 @@ export default function getTools(user: UserSession): ToolSet {
       if (reminder !== undefined) updates.reminderDateTime = reminder
       if (targetListId !== undefined) updates.listId = targetListId
       const worker = await getMicrosoftTodoWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Todo is not connected yet. Please try again in a moment.')
       const result = await worker.updateTask(user, listId, taskId, updates)
       return convertTaskForOutput(result)
     },
@@ -76,6 +80,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ listId, taskId }) => {
       const worker = await getMicrosoftTodoWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Todo is not connected yet. Please try again in a moment.')
       await worker.completeTask(user, listId, taskId)
       return 'Task marked as completed'
     },

@@ -19,7 +19,7 @@ globalThis.waBridgeHandles ??= new Map<string, WAWorker>()
 const facadeMutex = new Mutex()
 const inactivityTimeoutMs = 5 * 60 * 1000
 
-export type SyncStatus = { type: 'notstarted' } | { type: 'connecting' } | { type: 'needAuth', qr: string } | { type: 'ready' } | { type: 'closed', error?: Error }
+export type SyncStatus = { type: 'connecting' } | { type: 'needAuth', qr: string } | { type: 'connected' } | { type: 'fullsync' } | { type: 'closed', error?: Error }
 
 export interface Message {
   id: string
@@ -43,7 +43,7 @@ export interface WAWorker {
   getMessagesForChat(chatId: string): Promise<Message[]>
   sendMessage(chatId: string, message: string): Promise<void>
   setArchived(chatId: string, archived: boolean): Promise<void>
-  fullSync(): Promise<void>
+  fullSync(): void
   touch(): void
 }
 
@@ -92,7 +92,7 @@ async function createWAHandle(userId: string): Promise<WAWorker> {
     function handleEvent(event: BridgeEvent): void {
       switch (event.type) {
         case 'connection_established':
-          status = { type: 'ready' }
+          status = { type: 'connected' }
           if (!startupResolved) {
             startupResolved = true
             resolveStartup(handler)
@@ -131,11 +131,9 @@ async function createWAHandle(userId: string): Promise<WAWorker> {
           }
           break
         case 'full_sync_finished':
-          logger.info(`[WhatsAppBridge] Full sync finished for user ${userId}`)
-          if (fullSyncResolver) {
-            fullSyncResolver()
-            fullSyncResolver = undefined
-          }
+          if (event.error) logger.warn(`[WhatsAppBridge] Full sync for user ${userId} completed with error: ${event.error}`)
+          else logger.info(`[WhatsAppBridge] Full sync finished for user ${userId}`)
+          status = { type: 'connected' }
           break
         default:
           logger.warn(`[WhatsAppBridge] Unknown event type '${event.type}' for user ${userId}`)
@@ -143,6 +141,10 @@ async function createWAHandle(userId: string): Promise<WAWorker> {
     }
 
     function stop(): void {
+      if (status.type === 'fullsync') {
+        touch()
+        return
+      }
       logger.info(`[WhatsAppBridge] Stopping bridge process for user ${userId} after ${(inactivityTimeoutMs / 60000).toString()} minutes of inactivity`)
       process?.kill()
     }
@@ -153,7 +155,6 @@ async function createWAHandle(userId: string): Promise<WAWorker> {
     }
 
     let ourJIDCache: string | undefined
-    let fullSyncResolver: (() => void) | undefined
 
     async function resolveOurJID(client: Queryable): Promise<string | undefined> {
       ourJIDCache ??= await getUserJID(client, userId)
@@ -220,22 +221,24 @@ async function createWAHandle(userId: string): Promise<WAWorker> {
       }))
     }
 
-    function fullSync(): Promise<void> {
-      return mutex.runExclusive(() => new Promise<void>((resolve, reject) => {
-        if (!process?.stdin) {
-          reject(new Error('Bridge process not available'))
-          return
-        }
+    function fullSync(): void {
+      if (!process?.stdin) {
+        throw new Error('Bridge process not available')
+      }
+      const stdin = process.stdin
+      mutex.runExclusive(() => {
         touch()
-        fullSyncResolver = resolve
+        status = { type: 'fullsync' }
         const command = JSON.stringify({ command: 'full_sync' })
-        process.stdin.write(command + '\n', 'utf8', (error) => {
+        stdin.write(command + '\n', 'utf8', (error) => {
           if (error) {
-            fullSyncResolver = undefined
-            reject(error)
+            status = { type: 'connected' }
+            logger.warn(`[WhatsAppBridge] Failed to write full_sync command for user ${userId}: ${error.message}`)
           }
         })
-      }))
+      }).catch((error: unknown) => {
+        logger.warn(`[WhatsAppBridge] Failed to run full_sync command for user ${userId}: ${String(error)}`)
+      })
     }
   })
 }
@@ -274,6 +277,7 @@ interface BridgeEvent {
   qr?: string
   message?: string
   level?: string
+  error?: string
 }
 
 function getBridgeBinaryPath(): string {

@@ -10,6 +10,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(emailListItemSchema),
     execute: async () => {
       const worker = await getMicrosoftMailWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       const messages = worker.getInboxMessages()
       return messages.map(m => ({
         id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
@@ -26,6 +27,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: emailFullSchema,
     execute: async ({ mailId }) => {
       const worker = await getMicrosoftMailWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       const message = await worker.getMessage(mailId)
       if (!message) throw new Error(`Email with ID ${mailId} not found`)
       return {
@@ -44,6 +46,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ to, subject, body }) => {
       const worker = await getMicrosoftMailWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       await worker.sendMail(user, to, subject, body)
       return `Email sent successfully to ${to.join(', ')}`
     },
@@ -56,6 +59,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ mailId }) => {
       const worker = await getMicrosoftMailWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       await worker.archiveMessage(user, mailId)
       return 'Email archived successfully'
     },
@@ -69,6 +73,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(emailListItemSchema),
     execute: async ({ senderEmail }) => {
       const worker = await getMicrosoftMailWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       const messages = worker.getInboxMessages()
       const filtered = messages.filter(m => m.from.emailAddress.address === senderEmail)
       return filtered.map(m => ({
@@ -85,6 +90,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ senderEmail }) => {
       const worker = await getMicrosoftMailWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       const count = await worker.archiveMessagesFromSender(user, senderEmail)
       return count === 0
         ? `No emails from ${senderEmail} found in inbox`

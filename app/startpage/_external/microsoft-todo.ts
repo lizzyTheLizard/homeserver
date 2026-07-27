@@ -39,6 +39,7 @@ export interface MicrosoftTodoWorker {
   getTodoLists(): MicrosoftTodoList[]
   getTasks(listId: string): MicrosoftTodoTask[]
   getAllTasks(): MicrosoftTodoTask[]
+  getStatus(): string
   createTask(user: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask>
   updateTask(user: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask>
   completeTask(user: UserSession, listId: string, taskId: string): Promise<void>
@@ -75,6 +76,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   const tasksDeltaLinks = new Map<string, string>()
   let interval: NodeJS.Timeout | undefined
   let timeout: NodeJS.Timeout | undefined
+  let status: 'connecting' | 'connected' | 'error' = 'connecting'
 
   function close(): void {
     if (interval) {
@@ -95,6 +97,8 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   }
 
   function getTodoLists(): MicrosoftTodoList[] { return lists }
+
+  function getStatus(): string { return status }
 
   function getTasks(listId: string): MicrosoftTodoTask[] { return tasks.get(listId) ?? [] }
 
@@ -267,20 +271,29 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     }
   }
 
-  doInitialFetch().catch((error: unknown) => {
-    logger.warn(`[MicrosoftTodoWorker] Initial fetch failed for user ${userId}`, error)
-  })
-  interval = setInterval(() => {
-    doDeltaPoll().catch((error: unknown) => {
-      logger.warn(`[MicrosoftTodoWorker] Poll crash for user ${userId}`, error)
-      doInitialFetch().catch((error: unknown) => {
-        logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, error)
-      })
+  status = 'connecting'
+  doInitialFetch()
+    .then(() => { status = 'connected' })
+    .catch((error: unknown) => {
+      status = 'error'
+      logger.warn(`[MicrosoftTodoWorker] Initial fetch failed for user ${userId}`, error)
     })
+  interval = setInterval(() => {
+    doDeltaPoll()
+      .catch((error: unknown) => {
+        logger.warn(`[MicrosoftTodoWorker] Poll crash for user ${userId}`, error)
+        status = 'connecting'
+        doInitialFetch()
+          .then(() => { status = 'connected' })
+          .catch((error: unknown) => {
+            status = 'error'
+            logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+          })
+      })
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { getTodoCount, getTodoLists, getTasks, getAllTasks, createTask, updateTask, completeTask, deleteTask, touch }
+  return { getTodoCount, getTodoLists, getTasks, getAllTasks, getStatus, createTask, updateTask, completeTask, deleteTask, touch }
 }
 
 interface RawTodoTask {

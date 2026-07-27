@@ -36,11 +36,11 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
     const result = await fullSync()
     setSyncLoading(false)
     if (!result.success) setError(result.error)
+    else router.refresh()
   }
 
   useEffect(() => {
-    if (status.type === 'ready') return
-    if (status.type === 'notstarted') return
+    if (status.type === 'connected') return
     const interval = setInterval(() => {
       getStatus().then((r) => {
         if (!r.success) setError(r.error)
@@ -55,6 +55,7 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
 
   if (error) return (<div className={styles.errorBox}>{error}</div>)
   if (status.type === 'connecting') return <LoadingSpinner text="Syncing chats..."></LoadingSpinner>
+  if (status.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
   if (status.type === 'needAuth') return (
     <div className={styles.qrContainer}>
       <h2>Scan QR Code with WhatsApp</h2>
@@ -66,7 +67,7 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   )
   return (
     <>
-      {status.type === 'ready' && (
+      {status.type === 'connected' && (
         <ActionButton onClick={() => { void handleFullSync() }}>
           {syncLoading ? 'Syncing...' : 'Full Sync'}
         </ActionButton>

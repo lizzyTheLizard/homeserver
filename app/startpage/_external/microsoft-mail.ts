@@ -36,6 +36,7 @@ export interface MicrosoftMailWorker {
   getInboxMessages(): MicrosoftMessageListItem[]
   getMessage(messageId: string): Promise<MicrosoftMessageFull | undefined>
   getInboxCount(): InboxCount
+  getStatus(): string
   sendMail(user: UserSession, to: string[], subject: string, body: string): Promise<void>
   archiveMessage(user: UserSession, messageId: string): Promise<void>
   archiveMessagesFromSender(user: UserSession, senderEmail: string): Promise<number>
@@ -71,6 +72,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   let deltaLink: string | undefined
   let interval: ReturnType<typeof setInterval> | undefined
   let timeout: ReturnType<typeof setTimeout> | undefined
+  let status: 'connecting' | 'connected' | 'error' = 'connecting'
 
   function close(): void {
     if (interval) {
@@ -93,6 +95,8 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     return Array.from(messages.values())
       .sort((a, b) => Temporal.Instant.compare(b.receivedDateTime, a.receivedDateTime))
   }
+
+  function getStatus(): string { return status }
 
   async function getMessage(messageId: string): Promise<MicrosoftMessageFull | undefined> {
     return await graphApiRequest(user, `/me/messages/${messageId}`, async (request) => {
@@ -210,20 +214,29 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     }
   }
 
-  doInitialFetch().catch((error: unknown) => {
-    logger.warn(`[MicrosoftMailWorker] Initial fetch failed for user ${userId}`, error)
-  })
-  interval = setInterval(() => {
-    doDeltaPoll().catch((error: unknown) => {
-      logger.warn(`[MicrosoftMailWorker] Poll crash for user ${userId}`, error)
-      doInitialFetch().catch((error: unknown) => {
-        logger.warn(`[MicrosoftMailWorker] Re-fetch after poll crash failed for user ${userId}`, error)
-      })
+  status = 'connecting'
+  doInitialFetch()
+    .then(() => { status = 'connected' })
+    .catch((error: unknown) => {
+      status = 'error'
+      logger.warn(`[MicrosoftMailWorker] Initial fetch failed for user ${userId}`, error)
     })
+  interval = setInterval(() => {
+    doDeltaPoll()
+      .catch((error: unknown) => {
+        logger.warn(`[MicrosoftMailWorker] Poll crash for user ${userId}`, error)
+        status = 'connecting'
+        doInitialFetch()
+          .then(() => { status = 'connected' })
+          .catch((error: unknown) => {
+            status = 'error'
+            logger.warn(`[MicrosoftMailWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+          })
+      })
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { getInboxMessages, getMessage, getInboxCount, sendMail, archiveMessage, archiveMessagesFromSender, touch }
+  return { getInboxMessages, getMessage, getInboxCount, getStatus, sendMail, archiveMessage, archiveMessagesFromSender, touch }
 }
 
 async function getArchiveFolder(user: UserSession): Promise<string | undefined> {

@@ -37,6 +37,9 @@ export type SerializedMessageFull = SerializedMessageListItem & {
 export interface MicrosoftStatus {
   connected: boolean
   userInfo?: MicrosoftUserInfo
+  mailStatus: string
+  todoStatus: string
+  calendarStatus: string
   messages: SerializedMessageListItem[]
   todos: SerializedTodoTask[]
   events: SerializedCalendarEvent[]
@@ -79,14 +82,35 @@ function serializeMessageFull(msg: MicrosoftMessageFull): SerializedMessageFull 
 export async function loadMicrosoftStatus(): Promise<MicrosoftStatus> {
   const user = await getAuthenticatedUserSession('startpage')
   const userInfo = await getUserInfo(user)
-  if (!userInfo) return { connected: false, messages: [], todos: [], events: [] }
-  const [mailWorker, todos, events] = await Promise.all([
+  if (!userInfo) return { connected: false, mailStatus: 'connecting', todoStatus: 'connecting', calendarStatus: 'connecting', messages: [], todos: [], events: [] }
+  const [mailWorker, todoWorker, calendarWorker] = await Promise.all([
     getMicrosoftMailWorker(user),
-    getMicrosoftTodoWorker(user).then(worker => worker.getAllTasks().map(serializeTodoTask)),
-    getMicrosoftCalendarWorker(user).then(worker => worker.getAllEvents().map(serializeCalendarEvent)),
+    getMicrosoftTodoWorker(user),
+    getMicrosoftCalendarWorker(user),
   ])
+  const mailStatus = mailWorker.getStatus()
+  const todoStatus = todoWorker.getStatus()
+  const calendarStatus = calendarWorker.getStatus()
+  const allConnected = mailStatus === 'connected' && todoStatus === 'connected' && calendarStatus === 'connected'
+  if (!allConnected) {
+    return { connected: true, userInfo, mailStatus, todoStatus, calendarStatus, messages: [], todos: [], events: [] }
+  }
   const messages = mailWorker.getInboxMessages().map(serializeMessageListItem)
-  return { connected: true, userInfo, messages, todos: todos.filter(t => t.status !== 'completed'), events }
+  const todos = todoWorker.getAllTasks().filter(t => t.status !== 'completed').map(serializeTodoTask)
+  const events = calendarWorker.getAllEvents().map(serializeCalendarEvent)
+  return { connected: true, userInfo, mailStatus, todoStatus, calendarStatus, messages, todos, events }
+}
+
+export async function checkMicrosoftStatus(): Promise<{ mailStatus: string, todoStatus: string, calendarStatus: string }> {
+  const user = await getAuthenticatedUserSession('startpage')
+  const userInfo = await getUserInfo(user)
+  if (!userInfo) return { mailStatus: 'connecting', todoStatus: 'connecting', calendarStatus: 'connecting' }
+  const [mailStatus, todoStatus, calendarStatus] = await Promise.all([
+    getMicrosoftMailWorker(user).then(w => w.getStatus()),
+    getMicrosoftTodoWorker(user).then(w => w.getStatus()),
+    getMicrosoftCalendarWorker(user).then(w => w.getStatus()),
+  ])
+  return { mailStatus, todoStatus, calendarStatus }
 }
 
 export async function loadMessage(messageId: string): Promise<SerializedMessageFull | undefined> {

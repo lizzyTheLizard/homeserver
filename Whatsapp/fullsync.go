@@ -12,7 +12,15 @@ import (
 	"go.mau.fi/whatsmeow/appstate"
 )
 
-func fullSync(ctx context.Context, client *whatsmeow.Client, db *sql.DB) error {
+func fullSync(ctx context.Context, client *whatsmeow.Client, db *sql.DB) (err error) {
+	defer func() {
+		evt := Event{Type: EventFullSyncFinished}
+		if err != nil {
+			evt.Error = err.Error()
+		}
+		emitEvent(evt)
+	}()
+
 	if client.Store.ID == nil {
 		return errors.New("full_sync: not connected")
 	}
@@ -41,7 +49,6 @@ func fullSync(ctx context.Context, client *whatsmeow.Client, db *sql.DB) error {
 	}
 
 	emitLog("info", fmt.Sprintf("full sync completed (total took %s)", time.Since(start).Round(time.Millisecond)))
-	emitEvent(Event{Type: EventFullSyncFinished})
 	return nil
 }
 

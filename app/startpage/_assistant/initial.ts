@@ -11,61 +11,43 @@ import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
 import { join } from 'path'
 import { logger } from '@/app/shared/logger'
+import { getMicrosoftToken } from '../_data/Microsoft'
+import { nontransactional } from '@/app/shared/_external/db/access'
+import { getUserJID } from '../_data/Whatsapp'
 
 const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 
 export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {
-  // Start all data gathering in parallel
-  const greetingP = getGreeting()
-  const weatherP = getWeather(initialContext)
-  const emailP = getEmails(user)
-  const whatsappP = getWhatsapp(user)
-  const todoP = getTodos(user)
-  const eventsP = getEvents(user)
+  // Initialize all the needed data. Do this in a particular order to avoid unnecessary waiting time.
+  emit({ type: 'stream_response', chunk: 'Initializing data...\n\n' })
+  logger.info(`Generating initial messages for user ${user.email} with context: ${JSON.stringify(initialContext)}`)
+  const greeting = getGreeting()
+  const weather = getWeather(initialContext)
+  const microsoft = getMicrosoft(user)
+  const whatsapp = getWhatsapp(user)
+  const parts = await Promise.all([greeting, weather, microsoft, whatsapp])
 
-  // Generate system message based on the initial context
+  // Now we can generate the actual messages
+  emit({ type: 'stream_response', chunk: 'Generating greeting...\n\n' })
   const systemMessage = getSystemMessage(initialContext)
+  const initialMessage = parts.map(part => part.text).join('')
+  const actions = parts.flatMap(part => part.actions)
 
-  // Emit the messages in the right order
-  const { text: greetingText, actions: greetingActions } = await greetingP
-  emit({ type: 'stream_response', chunk: greetingText })
-  const { text: weatherText, actions: weatherActions } = await weatherP
-  emit({ type: 'stream_response', chunk: weatherText })
-  const { text: emailText, actions: emailActions } = await emailP
-  emit({ type: 'stream_response', chunk: emailText })
-  const { text: whatsappText, actions: whatsappActions } = await whatsappP
-  emit({ type: 'stream_response', chunk: whatsappText })
-  const { text: todoText, actions: todoActions } = await todoP
-  emit({ type: 'stream_response', chunk: todoText })
-  const { text: eventsText, actions: eventsActions } = await eventsP
-  emit({ type: 'stream_response', chunk: eventsText })
+  // Now we emit the message to the client, start with a tool_call to clean existing messages
+  emit({ type: 'tool_call' })
+  emit({ type: 'stream_response', chunk: initialMessage })
   emit({ type: 'finished_response' })
-
-  const actions = [...emailActions, ...whatsappActions, ...todoActions, ...eventsActions, ...greetingActions, ...weatherActions]
   emit({ type: 'got_actions', actions: actions })
-  const fullGreeting = greetingText + weatherText + emailText + whatsappText + todoText + eventsText
   logger.debug(`Finished initial message generation.`)
-  return [{ role: 'system', content: systemMessage }, { role: 'assistant', content: fullGreeting }]
+  return [{ role: 'system', content: systemMessage }, { role: 'assistant', content: initialMessage }]
 }
 
-function getSystemMessage(initialContext: InitialContext): string {
-  const location = initialContext.location
-  const locationDescription = `Latitude: ${location.lat.toString()}, Longitude: ${location.lon.toString()}`
-  return systemMessageTemplate
-    .replace('{{LOCATION}}', locationDescription)
-    .replace('{{DATE}}', Temporal.Now.plainDateTimeISO().toString())
-}
-
-interface PartResult {
-  text: string
-  actions: string[]
-}
-
-async function getGreeting(): Promise<PartResult> {
+function getGreeting(): Promise<PartResult> {
   const hour = new Date().getHours()
   const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
-  return Promise.resolve({ text: `Good ${timeOfDay}!\n\n`, actions: [] })
+  const result = { text: `Good ${timeOfDay}!\n\n`, actions: [] }
+  return Promise.resolve(result)
 }
 
 async function getWeather(initialContext: InitialContext): Promise<PartResult> {
@@ -159,35 +141,65 @@ function formatTime(input: string): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-async function getEmails(user: UserSession): Promise<PartResult> {
-  const mailWorker = await getMicrosoftMailWorker(user)
+async function getMicrosoft(user: UserSession): Promise<PartResult> {
+  const microsoftToken = await nontransactional(db => getMicrosoftToken(db, user.email))
+  if (!microsoftToken) return { text: 'Microsoft is not connected. ', actions: [] }
+  const [mailWorker, todoWorker, calendarWorker] = await Promise.all([
+    getMicrosoftMailWorker(user),
+    getMicrosoftTodoWorker(user),
+    getMicrosoftCalendarWorker(user),
+  ])
+
+  for (let i = 0; i < 300; i++) {
+    const connected = [mailWorker, todoWorker, calendarWorker].reduce((p, s) => p && s.getStatus() === 'connected', true)
+    if (connected) break
+    if (i === 299) {
+      logger.error(`Microsoft services not connected for user ${user.email}. Mail: ${mailWorker.getStatus()}, Todo: ${todoWorker.getStatus()}, Calendar: ${calendarWorker.getStatus()}`)
+      return { text: 'Microsoft services not connected in time. ', actions: [] }
+    }
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+
+  const actions: string[] = []
+  let text = ''
+
   const inboxCount = mailWorker.getInboxCount()
-  const text = `You have **${inboxCount.focused.toString()}** focused emails (${inboxCount.focusedUnread.toString()} unread) and ${inboxCount.other.toString()} others. `
   const totalInboxCount = inboxCount.focused + inboxCount.other
-  const actions = (totalInboxCount > 0) ? ['Get Outlook Overview'] : []
+  text += `You have **${inboxCount.focused.toString()}** focused emails (${inboxCount.focusedUnread.toString()} unread) and ${inboxCount.other.toString()} others. `
+  if (totalInboxCount > 0) actions.push('Get Outlook Overview')
+
+  const todoCount = todoWorker.getTodoCount()
+  const totalTaskCount = todoCount.tasksDueToday + todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate
+  text += `You have **${todoCount.tasksDueToday.toString()}** tasks due today and **${(todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate).toString()}** tasks due this week. `
+  if (totalTaskCount > 0) actions.push('Show task overview')
+
+  const eventCount = calendarWorker.getEventCount()
+  text += `You have **${eventCount.eventsToday.toString()}** events today and **${eventCount.eventsThisWeek.toString()}** in this week.`
+  actions.push('Show Calendar Overview')
+
   return { text, actions }
 }
 
 async function getWhatsapp(user: UserSession): Promise<PartResult> {
-  const whatsAppChats = await getWAWorker(user).then(async wa => (await wa.getChats()).filter(c => !c.isArchived)).then(chats => chats.length)
-  const text = `There are **${whatsAppChats.toString()}** unarchived WhatsApp chats. `
-  const actions = (whatsAppChats > 0 ? ['Get WhatsApp Overview'] : [])
+  const whatsappUser = await nontransactional(db => getUserJID(db, user.email))
+  if (!whatsappUser) return { text: 'WhatsApp is not connected. ', actions: [] }
+  const waWorker = await getWAWorker(user)
+  const chats = await waWorker.getChats()
+  const unarchived = chats.filter(c => !c.isArchived).length
+  const text = `There are **${unarchived.toString()}** unarchived WhatsApp chats. `
+  const actions = (unarchived > 0 ? ['Get WhatsApp Overview'] : [])
   return { text, actions }
 }
 
-async function getTodos(user: UserSession): Promise<PartResult> {
-  const worker = await getMicrosoftTodoWorker(user)
-  const todoCount = worker.getTodoCount()
-  const totalTaskCount = todoCount.tasksDueToday + todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate
-  const text = `You have **${todoCount.tasksDueToday.toString()}** tasks due today and **${(todoCount.tasksDueRestOfWeek + todoCount.tasksWithoutDate).toString()}** tasks due this week. `
-  const actions = (totalTaskCount > 0 ? ['Show task overview'] : [])
-  return { text, actions }
+function getSystemMessage(initialContext: InitialContext): string {
+  const location = initialContext.location
+  const locationDescription = `Latitude: ${location.lat.toString()}, Longitude: ${location.lon.toString()}`
+  return systemMessageTemplate
+    .replace('{{LOCATION}}', locationDescription)
+    .replace('{{DATE}}', Temporal.Now.plainDateTimeISO().toString())
 }
 
-async function getEvents(user: UserSession): Promise<PartResult> {
-  const worker = await getMicrosoftCalendarWorker(user)
-  const eventCount = worker.getEventCount()
-  const text = `You have **${eventCount.eventsToday.toString()}** events today and **${eventCount.eventsThisWeek.toString()}** in this week.`
-  const actions = ['Show Calendar Overview']
-  return { text, actions }
+interface PartResult {
+  text: string
+  actions: string[]
 }

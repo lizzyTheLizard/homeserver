@@ -52,7 +52,7 @@ export async function fullSync(): ActionResponse<void> {
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('startpage')
     const wa = await getWAWorker(user)
-    await wa.fullSync()
+    wa.fullSync()
     await logEvent(client, 'INFO', 'Triggered WhatsApp full sync')
   }))
 }

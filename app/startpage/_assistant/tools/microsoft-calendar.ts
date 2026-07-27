@@ -11,6 +11,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(calendarSchema),
     execute: async () => {
       const worker = await getMicrosoftCalendarWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Calendar is not connected yet. Please try again in a moment.')
       return worker.getCalendars()
     },
   })
@@ -26,6 +27,7 @@ export default function getTools(user: UserSession): ToolSet {
       const start = startDateTime ? toInstant(startDateTime, '') : undefined
       const end = endDateTime ? toInstant(endDateTime, '') : undefined
       const worker = await getMicrosoftCalendarWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Calendar is not connected yet. Please try again in a moment.')
       const events = worker.getAllEvents(start, end)
       return events.map(convertEventForOutput)
     },
@@ -46,6 +48,7 @@ export default function getTools(user: UserSession): ToolSet {
       const start = toInstant(startDateTime, '')
       const end = toInstant(endDateTime, '')
       const worker = await getMicrosoftCalendarWorker(user)
+      if (worker.getStatus() !== 'connected') throw new Error('Microsoft Calendar is not connected yet. Please try again in a moment.')
       const result = await worker.createEvent(user, calendarId, subject, start, end, body, location)
       return convertEventForOutput(result)
     },

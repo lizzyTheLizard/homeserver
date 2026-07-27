@@ -1,0 +1,9 @@
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: var(--error);
+  font-size: 1.1rem;
+  text-align: center;
+}

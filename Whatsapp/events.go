@@ -23,6 +23,7 @@ type Event struct {
 	QR      string `json:"qr,omitempty"`
 	Message string `json:"message,omitempty"`
 	Level   string `json:"level,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
 var (
