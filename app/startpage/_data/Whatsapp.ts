@@ -202,7 +202,7 @@ export async function getChats(client: Queryable, ourJID: string): Promise<ChatR
     FROM (
       SELECT DISTINCT ON (chat_jid) chat_jid, ts
       FROM whatsapp_messages
-      WHERE our_jid = $1 AND ts > NOW() - INTERVAL '1 year'
+      WHERE our_jid = $1 AND ts > NOW() - INTERVAL '1 year' AND chat_jid != 'status@broadcast'
       ORDER BY chat_jid, ts DESC
     ) c
     LEFT JOIN whatsmeow_lid_map lm ON lm.lid = replace(c.chat_jid, '@lid', '')
