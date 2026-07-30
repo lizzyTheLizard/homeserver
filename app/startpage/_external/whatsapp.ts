@@ -131,8 +131,16 @@ async function createWAHandle(userId: string): Promise<WAWorker> {
           }
           break
         case 'full_sync_finished':
-          if (event.error) logger.warn(`[WhatsAppBridge] Full sync for user ${userId} completed with error: ${event.error}`)
-          else logger.info(`[WhatsAppBridge] Full sync finished for user ${userId}`)
+          if (event.error) {
+            logger.warn(`[WhatsAppBridge] Full sync for user ${userId} completed with error: ${event.error}`)
+            logEvent(undefined, 'ERROR', `Full sync for user ${userId} completed with error: ${event.error}`)
+              .catch((err: unknown) => { logger.error(`[WhatsAppBridge] Failed to log full sync error for user ${userId}: ${String(err)}`) })
+          }
+          else {
+            logger.info(`[WhatsAppBridge] Full sync finished for user ${userId}`)
+            logEvent(undefined, 'INFO', `Full sync for user ${userId} completed successfully`)
+              .catch((err: unknown) => { logger.error(`[WhatsAppBridge] Failed to log full sync completion for user ${userId}: ${String(err)}`) })
+          }
           status = { type: 'connected' }
           break
         default:

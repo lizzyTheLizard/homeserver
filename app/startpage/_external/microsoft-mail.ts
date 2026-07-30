@@ -141,6 +141,8 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   }
 
   async function archiveMessage(user: UserSession, messageId: string): Promise<void> {
+    const message = messages.get(messageId)
+    if (!message) throw new Error(`Message with ID ${messageId} not found in cache`)
     messages.delete(messageId)
     await transactional(async (tx) => {
       const archiveFolder = await getArchiveFolder(user)
@@ -149,10 +151,10 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
       await graphApiRequest(user, `/me/messages/${messageId}/move`, async (request) => {
         await request.post({ destinationId: archiveFolder })
       })
-      await logEvent(tx, 'INFO', `Archived Outlook email ${messageId}`)
+      await logEvent(tx, 'INFO', `Archived Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`)
     }).catch(async (error: unknown) => {
-      logger.warn(`Failed to archive Outlook email ${messageId}`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to archive Outlook email ${messageId}`) })
+      logger.warn(`Failed to archive Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`, error)
+      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to archive Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`) })
       throw error
     })
   }

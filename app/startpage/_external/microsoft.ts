@@ -73,7 +73,6 @@ async function getCurrentToken(user: UserSession): Promise<MicrosoftToken | unde
       const newToken = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
       await setMicrosoftToken(db, user.email, newToken)
       logger.info(`Microsoft token for user ${user.email} refreshed`)
-      await logEvent(db, 'INFO', `Microsoft token refreshed for user ${user.email}`)
       return newToken
     })
   })
