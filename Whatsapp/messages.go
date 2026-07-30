@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -99,7 +100,35 @@ func insertMessages(ctx context.Context, ex execer, ourJID string, evts []*event
 		return nil
 	}
 	_, err := ex.ExecContext(ctx, query, args...)
-	return err
+	if err != nil {
+		return err
+	}
+	return upsertChats(ctx, ex, ourJID, evts)
+}
+
+func upsertChats(ctx context.Context, ex execer, ourJID string, evts []*events.Message) error {
+	chatTimestamps := make(map[string]time.Time)
+	for _, evt := range evts {
+		if evt.Info.ID == "" || evt.Message == nil {
+			continue
+		}
+		chatJID := evt.Info.Chat.String()
+		if existing, ok := chatTimestamps[chatJID]; !ok || evt.Info.Timestamp.After(existing) {
+			chatTimestamps[chatJID] = evt.Info.Timestamp
+		}
+	}
+	for chatJID, ts := range chatTimestamps {
+		_, err := ex.ExecContext(ctx,
+			`INSERT INTO whatsapp_chats (our_jid, chat_jid, last_message_ts, archived)
+			 VALUES ($1, $2, $3, FALSE)
+			 ON CONFLICT (our_jid, chat_jid)
+			 DO UPDATE SET last_message_ts = GREATEST(whatsapp_chats.last_message_ts, EXCLUDED.last_message_ts)`,
+			ourJID, chatJID, ts)
+		if err != nil {
+			return fmt.Errorf("upsert chat %s: %w", chatJID, err)
+		}
+	}
+	return nil
 }
 
 // buildInsertQuery builds a multi-row INSERT ... ON CONFLICT DO NOTHING for

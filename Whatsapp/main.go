@@ -181,6 +181,12 @@ func handleEvent(ctx context.Context, client *whatsmeow.Client, db *sql.DB, user
 		handleHistorySyncGroups(ctx, db, ourJID, evt.Data)
 	case *events.PairError:
 		emitError(fmt.Errorf("pairing failed: %w", evt.Error))
+	case *events.Archive:
+		if err := handleArchive(ctx, db, client, evt); err != nil {
+			emitError(fmt.Errorf("handle archive: %w", err))
+		}
+	case *events.AppStateSyncComplete:
+		handleAppStateSyncComplete(ctx, db, client, evt)
 	case *events.LoggedOut:
 		emitLog("warn", fmt.Sprintf("logged out (reason %d)", evt.Reason))
 		emitEvent(Event{Type: EventLoggedOut, Message: fmt.Sprintf("%d", evt.Reason)})
