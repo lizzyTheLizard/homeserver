@@ -32,7 +32,7 @@ export async function generateInitialMessages(user: UserSession, initialContext:
   emit({ type: 'stream_response', chunk: 'Generating greeting...\n\n' })
   const systemMessage = getSystemMessage(initialContext)
   const initialMessage = parts.map(part => part.text).join('')
-  const actions = parts.flatMap(part => part.actions)
+  const actions = parts.reverse().flatMap(part => part.actions)
 
   // Now we emit the message to the client, start with a tool_call to clean existing messages
   emit({ type: 'tool_call' })
