@@ -33,7 +33,7 @@ const insertBatchSize = 500
 
 // save stores a single message event.
 func save(ctx context.Context, db *sql.DB, ourJID string, evt *events.Message) error {
-	return insertMessages(ctx, db, ourJID, []*events.Message{evt})
+	return insertMessages(ctx, db, ourJID, []*events.Message{evt}, true)
 }
 
 // handleHistorySyncMessages parses and stores all messages contained in a history sync
@@ -70,14 +70,14 @@ func handleHistorySyncMessages(ctx context.Context, db *sql.DB, client *whatsmeo
 			batch = append(batch, evt)
 			msgCount++
 			if len(batch) >= insertBatchSize {
-				if err := insertMessages(ctx, tx, ourJID, batch); err != nil {
+				if err := insertMessages(ctx, tx, ourJID, batch, false); err != nil {
 					return fmt.Errorf("insert history messages: %w", err)
 				}
 				batch = batch[:0]
 			}
 		}
 	}
-	if err := insertMessages(ctx, tx, ourJID, batch); err != nil {
+	if err := insertMessages(ctx, tx, ourJID, batch, false); err != nil {
 		return fmt.Errorf("insert history messages: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -94,7 +94,7 @@ func handleHistorySyncMessages(ctx context.Context, db *sql.DB, client *whatsmeo
 
 // insertMessages stores message events with one multi-row INSERT, so a
 // history sync does not need one database round-trip per message.
-func insertMessages(ctx context.Context, ex execer, ourJID string, evts []*events.Message) error {
+func insertMessages(ctx context.Context, ex execer, ourJID string, evts []*events.Message, unarchive bool) error {
 	query, args := buildInsertQuery(ourJID, evts)
 	if query == "" {
 		return nil
@@ -103,10 +103,10 @@ func insertMessages(ctx context.Context, ex execer, ourJID string, evts []*event
 	if err != nil {
 		return err
 	}
-	return upsertChats(ctx, ex, ourJID, evts)
+	return upsertChats(ctx, ex, ourJID, evts, unarchive)
 }
 
-func upsertChats(ctx context.Context, ex execer, ourJID string, evts []*events.Message) error {
+func upsertChats(ctx context.Context, ex execer, ourJID string, evts []*events.Message, unarchive bool) error {
 	chatTimestamps := make(map[string]time.Time)
 	for _, evt := range evts {
 		if evt.Info.ID == "" || evt.Message == nil {
@@ -117,12 +117,15 @@ func upsertChats(ctx context.Context, ex execer, ourJID string, evts []*events.M
 			chatTimestamps[chatJID] = evt.Info.Timestamp
 		}
 	}
+	updateSuffix := `DO UPDATE SET last_message_ts = GREATEST(whatsapp_chats.last_message_ts, EXCLUDED.last_message_ts)`
+	if unarchive {
+		updateSuffix += `, archived = FALSE`
+	}
 	for chatJID, ts := range chatTimestamps {
 		_, err := ex.ExecContext(ctx,
 			`INSERT INTO whatsapp_chats (our_jid, chat_jid, last_message_ts, archived)
 			 VALUES ($1, $2, $3, FALSE)
-			 ON CONFLICT (our_jid, chat_jid)
-			 DO UPDATE SET last_message_ts = GREATEST(whatsapp_chats.last_message_ts, EXCLUDED.last_message_ts)`,
+			 ON CONFLICT (our_jid, chat_jid) `+updateSuffix,
 			ourJID, chatJID, ts)
 		if err != nil {
 			return fmt.Errorf("upsert chat %s: %w", chatJID, err)
