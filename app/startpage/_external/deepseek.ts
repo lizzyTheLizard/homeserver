@@ -5,7 +5,7 @@ import { logger } from '@/app/shared/logger'
 
 const MAX_TOOL_ITERATIONS = 10
 const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: loggingFetch })
-const model = opencode('deepseek-v4-flash')
+const model = opencode('deepseek-v4-pro')
 const agentSettings = { model, reasoning: 'none' as const, temperature: 0.2, allowSystemInMessages: true, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
 
 export interface SendOptions {
