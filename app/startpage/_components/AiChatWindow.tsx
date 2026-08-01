@@ -29,7 +29,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   }, [])
 
   function connectWebSocket(): AiChatWebSocket {
-    const websocket = new AiChatWebSocket(getLocation().then(location => ({ location })))
+    const websocket = new AiChatWebSocket({ location: getLocation() })
     websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }]) }
     websocket.onNewActions = (actions) => { setActions(actions) }
     websocket.onStateChange = (state) => { setState(state) }

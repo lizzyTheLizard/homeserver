@@ -29,7 +29,7 @@ export class AiChatWebSocket {
   onStateChange: (state: ChatState) => void = () => { /* empty */ }
   onIncomingMessageChange: (message: string) => void = () => { /* empty */ }
 
-  constructor(private readonly initialContextProvider: Promise<InitialContext>) {
+  constructor(private readonly initialContext: InitialContext) {
   }
 
   public connect() {
@@ -37,22 +37,19 @@ export class AiChatWebSocket {
     if (this.#ws) throw new Error('WebSocket already connected')
     this.onStateChange({ type: 'connecting' })
     this.#ws = new WebSocket('/ws/assistant')
-    this.#ws.onopen = async () => { await this.handleWebSocketOpen() }
+    this.#ws.onopen = () => { this.handleWebSocketOpen() }
     this.#ws.onmessage = (event) => { this.handleMessage(event) }
     this.#ws.onclose = (event) => { this.handleClose(event) }
     console.log('WebSocket connected')
   }
 
-  private async handleWebSocketOpen() {
+  private handleWebSocketOpen() {
     if (this.#connectionId) {
       // this is a reconnection, so we need to tell the server that we are reconnecting
       this.#ws?.send(JSON.stringify({ type: 'reconnect', uuid: this.#connectionId }))
       return
     }
-    /// Otherwise start normal initialization
-    this.#messageBuffer = 'Initializing Context...\n\n'
-    this.onIncomingMessageChange(this.#messageBuffer)
-    const initialContext = await this.initialContextProvider
+    const initialContext = this.initialContext
     this.#ws?.send(JSON.stringify({ type: 'initialize', initialContext }))
   }
 
