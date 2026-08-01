@@ -1,7 +1,13 @@
 import { IncomingMessage } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
 import { validateObject } from './shared/_helper/validation'
-import { UserSession } from './shared/auth/auth'
+import { UserSession, getAuthenticatedUserSession } from './shared/auth/auth'
+import { getWAWorker } from '@/app/startpage/_external/whatsapp'
+import { getMicrosoftMailWorker } from '@/app/startpage/_external/microsoft-mail'
+import { getMicrosoftCalendarWorker } from '@/app/startpage/_external/microsoft-calendar'
+import { getMicrosoftTodoWorker } from '@/app/startpage/_external/microsoft-todo'
+import { getMicrosoftToken } from '@/app/startpage/_data/Microsoft'
+import { nontransactional } from '@/app/shared/_external/db/access'
 import { WebSocketHandler } from './shared/_helper/websocket'
 import z from 'zod'
 import { Assistant, AssistantEvent, createAssistantInstance, InitialContext } from './startpage/_assistant/assistant'
@@ -93,6 +99,21 @@ function handleConnectionClose(code: number, currentUuid: string | undefined): v
   stored.assistant.off(stored.listener)
   stored.ws = undefined
   setTimeout(() => { activeAssistants.delete(currentUuid) }, ASSISTANT_TTL_MS)
+}
+
+export function startSyncTriggers(): void {
+  getAuthenticatedUserSession()
+    .then((user) => {
+      getWAWorker(user).catch((e: unknown) => logger.warn('Failed to start WhatsApp worker on login', e))
+      nontransactional(async (db) => {
+        const token = await getMicrosoftToken(db, user.email)
+        if (!token) return
+        getMicrosoftMailWorker(user).catch((e: unknown) => logger.warn('Failed to start mail worker on login', e))
+        getMicrosoftCalendarWorker(user).catch((e: unknown) => logger.warn('Failed to start calendar worker on login', e))
+        getMicrosoftTodoWorker(user).catch((e: unknown) => logger.warn('Failed to start todo worker on login', e))
+      }).catch((e: unknown) => logger.warn('Failed to check Microsoft token on login', e))
+    })
+    .catch((e: unknown) => logger.warn('Failed to get user session for sync triggers', e))
 }
 
 const inputSchema = z.union([

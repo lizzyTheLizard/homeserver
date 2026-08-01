@@ -9,11 +9,6 @@ import { cookies } from 'next/headers'
 import * as client from 'openid-client'
 import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import { getActualUrl } from '../_helper/UrlHelper'
-import { getWAWorker } from '@/app/startpage/_external/whatsapp'
-import { getMicrosoftMailWorker } from '@/app/startpage/_external/microsoft-mail'
-import { getMicrosoftCalendarWorker } from '@/app/startpage/_external/microsoft-calendar'
-import { getMicrosoftTodoWorker } from '@/app/startpage/_external/microsoft-todo'
-import { getMicrosoftToken } from '@/app/startpage/_data/Microsoft'
 
 export interface UserSession {
   name: string
@@ -88,7 +83,6 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   await session.save()
   logger.info(`User ${email} logged in successfully`)
   await nontransactional(c => logEvent(c, 'INFO', `User ${email} logged in`))
-  startSyncTriggers(user)
   return result
 }
 
@@ -127,18 +121,6 @@ async function getClientConfig(): Promise<client.Configuration> {
   return clientConfigCache
 }
 let clientConfigCache: Promise<client.Configuration> | undefined = undefined
-
-// Trigger all background workers to start syncing data as soon as the user completes login
-function startSyncTriggers(user: UserSession): void {
-  getWAWorker(user).catch((e: unknown) => logger.warn('Failed to start WhatsApp worker on login', e))
-  nontransactional(async (db) => {
-    const token = await getMicrosoftToken(db, user.email)
-    if (!token) return
-    getMicrosoftMailWorker(user).catch((e: unknown) => logger.warn('Failed to start mail worker on login', e))
-    getMicrosoftCalendarWorker(user).catch((e: unknown) => logger.warn('Failed to start calendar worker on login', e))
-    getMicrosoftTodoWorker(user).catch((e: unknown) => logger.warn('Failed to start todo worker on login', e))
-  }).catch((e: unknown) => logger.warn('Failed to check Microsoft token on login', e))
-}
 
 async function getApplications(email: string): Promise<string[]> {
   // Everyone can access startpage and coeditor
