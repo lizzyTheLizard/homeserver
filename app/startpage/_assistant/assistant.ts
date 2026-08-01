@@ -1,5 +1,5 @@
 import { ModelMessage, ToolSet } from 'ai'
-import { send as deepseekSend } from '../_external/deepseek'
+import { send as groqSend } from '../_external/groq'
 import { UserSession } from '@/app/shared/auth/auth'
 import { generateInitialMessages } from './initial'
 import { logger } from '@/app/shared/logger'
@@ -54,11 +54,11 @@ export function createAssistantInstance(user: UserSession): Assistant {
   async function send(message: string) {
     logger.debug(`Sending message to assistant: ${message}`)
     messages.push({ role: 'user', content: message })
-    await deepseekSend({ messages, tools, onChunk, onToolCall })
+    await groqSend({ messages, tools, onChunk, onToolCall })
     onFinishedResponse()
     logger.debug(`Assistant response finished`)
     const messagesCopy = [...messages, { role: 'user', content: actionPrompt }] satisfies ModelMessage[]
-    const actionString = await deepseekSend({ messages: messagesCopy })
+    const actionString = await groqSend({ messages: messagesCopy })
     try {
       const actions = JSON.parse(actionString) as string[]
       onGotActions(actions)

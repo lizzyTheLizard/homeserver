@@ -10,7 +10,7 @@ vi.mock('ai', async (importOriginal) => {
   return { ...actual, generateText: mockGenerateText, streamText: mockStreamText }
 })
 
-import { send } from './deepseek'
+import { send } from './groq'
 import { type ModelMessage, tool, type ToolSet } from 'ai'
 import { z } from 'zod/v4'
 

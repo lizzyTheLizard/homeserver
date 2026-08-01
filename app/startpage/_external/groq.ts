@@ -1,12 +1,12 @@
 import { generateText, isStepCount, ModelMessage, streamText, ToolSet } from 'ai'
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
+import { createGroq } from '@ai-sdk/groq'
 
 const MAX_TOOL_ITERATIONS = 10
-const opencode = createOpenAICompatible({ name: 'opencode', apiKey: config.AI.API_KEY, baseURL: config.AI.BASE_URL, fetch: loggingFetch })
-const model = opencode('deepseek-v4-pro')
-const agentSettings = { model, reasoning: 'none' as const, temperature: 0.2, allowSystemInMessages: true, providerOptions: { opencode: { thinking: { type: 'disabled' } } } }
+const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
+const model = provider('openai/gpt-oss-20b')
+const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true }
 
 export interface SendOptions {
   messages: ModelMessage[]
