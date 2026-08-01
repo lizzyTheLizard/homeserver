@@ -7,6 +7,20 @@ import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
 
 export default function getTools(user: UserSession): ToolSet {
+  const getWhatsappOverview = tool({
+    description: 'Get an overview of all unarchived WhatsApp chats including their latest messages',
+    inputSchema: z.object({}),
+    outputSchema: z.array(chatOverviewSchema),
+    execute: async () => {
+      const wa = await getWAWorker(user)
+      const chats = (await wa.getChats()).filter(c => !c.isArchived)
+      return Promise.all(chats
+        .map(async chat => ({ chat, messages: await wa.getMessagesForChat(chat.id) }))
+        .map(c => c.then(({ chat, messages }) => ({ chat, messages: filterRecentMessages(messages) }))),
+      )
+    },
+  })
+
   const listWhatsappChats = tool({
     description: 'List all unarchived WhatsApp chats',
     inputSchema: z.object({}),
@@ -86,12 +100,26 @@ export default function getTools(user: UserSession): ToolSet {
   })
 
   return {
+    get_whatsapp_overview: getWhatsappOverview,
     list_whatsapp_chats: listWhatsappChats,
     list_all_whatsapp_chats: listAllWhatsappChats,
     get_whatsapp_messages: getWhatsappMessages,
     send_whatsapp_message: sendWhatsappMessage,
     archive_whatsapp_chat: archiveWhatsappChat,
   }
+}
+
+function filterRecentMessages(messages: { messageTimestamp: string }[]): { messageTimestamp: string }[] {
+  const messagesLastDay = messages.filter(m => isInLastDays(m, 1))
+  if (messagesLastDay.length > 0) return messagesLastDay
+  return messages.filter(m => isInLastDays(m, 7))
+}
+
+function isInLastDays(message: { messageTimestamp: string }, n: number): boolean {
+  const messageDate = new Date(message.messageTimestamp)
+  const now = new Date()
+  const nDaysAgo = new Date(now.getTime() - n * 24 * 60 * 60 * 1000)
+  return messageDate >= nDaysAgo
 }
 
 const chatSchema = z.object({
@@ -108,4 +136,9 @@ const messageSchema = z.object({
   fromName: z.string().describe('The sender display name'),
   content: z.string().describe('The message text content'),
   messageTimestamp: z.string().describe('UTC time string of the message (ISO 8601)'),
+})
+
+const chatOverviewSchema = z.object({
+  chat: chatSchema.describe('The chat details'),
+  messages: z.array(messageSchema).describe('Most recent messages in this chat. Only use them for an overview, load messages using get_whatsapp_messages otherwise'),
 })

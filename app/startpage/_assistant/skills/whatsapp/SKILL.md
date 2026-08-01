@@ -7,22 +7,21 @@ description: Use this skill for WhatsApp overview, reading chats, drafting repli
 
 Trigger: user asks for "Get WhatsApp Overview" or asks for a WhatsApp overview without naming a chat.
 
-1. Call `list_whatsapp_chats` to get all unarchived chats.
-2. For each returned chat, call `get_whatsapp_messages` with that chat jid.
-3. For each chat, summarize only messages from within the last 24h. If there are no messages from within the last 24h, summarize messages from the last 7 days instead. If there are no messages in the last 7 days, say there are no recent messages.
-4. Return a bullet list. Each bullet must be 1-2 sentences and include:
-   - chat name
-   - concise message summary based on the time rule above
-5. Do not propose actions in the overview unless the user explicitly asks for actions.
-6. If duplicate chat names ever exist, include jid in both the bullet and actions to disambiguate.
+1. Call `get_whatsapp_overview` to get all unarchived chats and the recent messages in those chats.
+2. Return the following template filled out. Do not add any extra text or explanations. Follow the template exactly, including the bullet point and bold formatting. 
 
-Do not mark chats as read automatically.
+```text
+Here is your WhatsApp overview:
+- **{chatName}**: {summary of the recent messages, 1.3 sentences, no sub-bullets. If there are no recent messages, say "No recent messages."}
+```
+
+3. Do not mark chats as read automatically.
 
 ## Example Output
 ```text
 Here is your WhatsApp overview:
-- Family: Yesterday they coordinated dinner time and asked whether you can bring dessert.
-- Alex: No messages within the last 24h; in the last week Alex asked for your feedback on the proposal draft.
+- **Family**: Yesterday they coordinated dinner time and asked whether you can bring dessert.
+- **Alex**: No messages within the last 24h; in the last week Alex asked for your feedback on the proposal draft.
 
 ```
 

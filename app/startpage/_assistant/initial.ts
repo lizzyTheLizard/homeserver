@@ -20,7 +20,6 @@ const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 
 
 export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {
   // Initialize all the needed data. Do this in a particular order to avoid unnecessary waiting time.
-  emit({ type: 'stream_response', chunk: 'Initializing data...\n\n' })
   logger.info(`Generating initial messages for user ${user.email} with context: ${JSON.stringify(initialContext)}`)
   const greeting = getGreeting()
   const weather = getWeather(initialContext)
@@ -29,13 +28,11 @@ export async function generateInitialMessages(user: UserSession, initialContext:
   const parts = await Promise.all([greeting, weather, microsoft, whatsapp])
 
   // Now we can generate the actual messages
-  emit({ type: 'stream_response', chunk: 'Generating greeting...\n\n' })
   const systemMessage = getSystemMessage(initialContext)
   const initialMessage = parts.map(part => part.text).join('')
   const actions = parts.reverse().flatMap(part => part.actions)
 
   // Now we emit the message to the client, start with a tool_call to clean existing messages
-  emit({ type: 'tool_call' })
   emit({ type: 'stream_response', chunk: initialMessage })
   emit({ type: 'finished_response' })
   emit({ type: 'got_actions', actions: actions })

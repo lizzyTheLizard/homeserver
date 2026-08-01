@@ -1,12 +1,13 @@
 import { generateText, isStepCount, ModelMessage, streamText, ToolSet } from 'ai'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
-import { createGroq } from '@ai-sdk/groq'
+import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
 
 const MAX_TOOL_ITERATIONS = 10
 const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
 const model = provider('openai/gpt-oss-20b')
-const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true }
+const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: true, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
+const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
 
 export interface SendOptions {
   messages: ModelMessage[]
@@ -18,11 +19,12 @@ export interface SendOptions {
 export async function send(options: SendOptions): Promise<string> {
   const responseMessages = options.onChunk ? await stream(options) : await generate(options)
   responseMessages.forEach(m => options.messages.push(m))
+  if (responseMessages.length === 0) throw new Error('No response messages received from assistant')
   const lastMessage = responseMessages[responseMessages.length - 1].content
   if (!Array.isArray(lastMessage)) throw new Error('Last message content is not an array')
   if (lastMessage.length === 0) return ''
-  const content = lastMessage[0]
-  if ('text' in content) return content.text
+  const content = lastMessage.find(c => c.type === 'text')
+  if (content && 'text' in content) return content.text
   throw new Error('Last message content is not text')
 }
 
@@ -45,6 +47,7 @@ function getConfig({ messages, tools, onToolCall }: SendOptions): Parameters<typ
     messages,
     tools,
     toolChoice: tools ? 'auto' : 'none',
+    maxOutputTokens: 2048,
     stopWhen: isStepCount(MAX_TOOL_ITERATIONS),
     onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) onToolCall?.() },
     onToolExecutionStart: ({ toolCall }) => { logger.debug(`Tool execution started: ${toolCall.toolName}`) },
