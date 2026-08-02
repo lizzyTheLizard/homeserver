@@ -1,0 +1,60 @@
+{
+  "name": "Homeserver",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.26.5"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {}
+  },
+  "forwardPorts": [3000, 3001, 6006],
+  "portsAttributes": {
+    "3000": {
+      "label": "Next.js Dev Server",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "OpenCode Web",
+      "onAutoForward": "openBrowser"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "ignore"
+    }
+  },
+  "containerEnv": {
+    "DB_CONNECTION_STRING": "${localEnv:DB_CONNECTION_STRING:}",
+    "ADMIN_EMAIL": "${localEnv:ADMIN_EMAIL:}",
+    "AI_API_KEY_OPENCODE": "${localEnv:AI_API_KEY_OPENCODE:}",
+    "AI_API_KEY": "${localEnv:AI_API_KEY:}",
+    "CLIENT_ID": "${localEnv:CLIENT_ID:}",
+    "CLIENT_SECRET": "${localEnv:CLIENT_SECRET:}",
+    "LOGIN_ISSUER": "${localEnv:LOGIN_ISSUER:}",
+    "MICROSOFT_GRAPH_APPLICATION_ID": "${localEnv:MICROSOFT_GRAPH_APPLICATION_ID:}",
+    "MICROSOFT_GRAPH_ISSUER": "${localEnv:MICROSOFT_GRAPH_ISSUER:}",
+    "MICROSOFT_GRAPH_CLIENT_SECRET": "${localEnv:MICROSOFT_GRAPH_CLIENT_SECRET:}",
+    "CHROMATIC_PROJECT_TOKEN": "${localEnv:CHROMATIC_PROJECT_TOKEN:}",
+    "TEST_MICROSOFT_REFRESH_TOKEN": "${localEnv:TEST_MICROSOFT_REFRESH_TOKEN:}",
+    "TEST_TO_MAIL_ADDRESS": "${localEnv:TEST_TO_MAIL_ADDRESS:}",
+    "OPENCODE_SERVER_PASSWORD": "${localEnv:OPENCODE_SERVER_PASSWORD:}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "github.vscode-github-actions",
+        "vitest.explorer",
+        "4ops.terraform",
+        "cweijan.vscode-postgresql-client2",
+        "cweijan.dbclient-jdbc",
+        "github.codespaces",
+        "golang.go",
+        "davidanson.vscode-markdownlint"
+      ]
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh"
+}

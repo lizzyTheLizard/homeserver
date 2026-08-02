@@ -6,7 +6,7 @@
       "disabled": true
     },
     "lint-formatter": {
-      "command": ["yarn", "eslint", "--fix", "$FILE"],
+      "command": ["pnpm", "eslint", "--fix", "$FILE"],
       "extensions": [".js", ".ts", ".jsx", ".tsx"]
     }
   },
