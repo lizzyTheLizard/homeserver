@@ -3,6 +3,8 @@
 echo "=== Starting Homeserver services ==="
 
 echo "Starting OpenCode Web on port 3001..."
+export OPENCODE_API_KEY="${AI_API_KEY_OPENCODE}"
+export OPENCODE_SERVER_PASSWORD="${OPENCODE_SERVER_PASSWORD}"
 setsid opencode web --port 3001 --hostname 0.0.0.0 > /tmp/opencode-web.log 2>&1 &
 OP_WEB_PID=$!
 echo "  PID: $OP_WEB_PID"

@@ -17,28 +17,29 @@
     },
     "3001": {
       "label": "OpenCode Web",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
     },
     "6006": {
       "label": "Storybook",
       "onAutoForward": "ignore"
     }
   },
-  "containerEnv": {
-    "DB_CONNECTION_STRING": "${localEnv:DB_CONNECTION_STRING:}",
-    "ADMIN_EMAIL": "${localEnv:ADMIN_EMAIL:}",
-    "AI_API_KEY_OPENCODE": "${localEnv:AI_API_KEY_OPENCODE:}",
-    "AI_API_KEY": "${localEnv:AI_API_KEY:}",
-    "CLIENT_ID": "${localEnv:CLIENT_ID:}",
-    "CLIENT_SECRET": "${localEnv:CLIENT_SECRET:}",
-    "LOGIN_ISSUER": "${localEnv:LOGIN_ISSUER:}",
-    "MICROSOFT_GRAPH_APPLICATION_ID": "${localEnv:MICROSOFT_GRAPH_APPLICATION_ID:}",
-    "MICROSOFT_GRAPH_ISSUER": "${localEnv:MICROSOFT_GRAPH_ISSUER:}",
-    "MICROSOFT_GRAPH_CLIENT_SECRET": "${localEnv:MICROSOFT_GRAPH_CLIENT_SECRET:}",
-    "CHROMATIC_PROJECT_TOKEN": "${localEnv:CHROMATIC_PROJECT_TOKEN:}",
-    "TEST_MICROSOFT_REFRESH_TOKEN": "${localEnv:TEST_MICROSOFT_REFRESH_TOKEN:}",
-    "TEST_TO_MAIL_ADDRESS": "${localEnv:TEST_TO_MAIL_ADDRESS:}",
-    "OPENCODE_SERVER_PASSWORD": "${localEnv:OPENCODE_SERVER_PASSWORD:}"
+  "secrets": {
+    "DB_CONNECTION_STRING": {},
+    "ADMIN_EMAIL": {},
+    "AI_API_KEY_OPENCODE": {},
+    "AI_API_KEY": {},
+    "CLIENT_ID": {},
+    "CLIENT_SECRET": {},
+    "LOGIN_ISSUER": {},
+    "MICROSOFT_GRAPH_APPLICATION_ID": {},
+    "MICROSOFT_GRAPH_ISSUER": {},
+    "MICROSOFT_GRAPH_CLIENT_SECRET": {},
+    "CHROMATIC_PROJECT_TOKEN": {},
+    "TEST_MICROSOFT_REFRESH_TOKEN": {},
+    "TEST_TO_MAIL_ADDRESS": {},
+    "OPENCODE_SERVER_PASSWORD": {}
   },
   "customizations": {
     "vscode": {
