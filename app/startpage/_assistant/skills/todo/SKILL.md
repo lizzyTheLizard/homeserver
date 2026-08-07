@@ -12,9 +12,8 @@ Trigger: user asks to "Show Todo Overview", "what are my tasks", "show my todos"
    - **Today**: Tasks with a reminder or due date within today.
    - **This Week**: Tasks with a reminder or due date in the rest of this week (after today).
    - **Later / No Date**: Tasks with a later date or no date set.
-3. Show each task only once, even if it appears to belong to multiple categories or lists. Deduplicate by task title and list name.
-4. For each task, show the status emoji (🔵 not started, 🟡 in progress), title, list name, and reminder or due date.
-5. Do not propose actions in the overview unless the user explicitly asks for actions.
+3. For each task, show the status emoji (🔵 not started, 🟡 in progress), title, list name, and reminder or due date.
+4. Do not propose actions in the overview unless the user explicitly asks for actions.
 
 ## Example Output
 ```text

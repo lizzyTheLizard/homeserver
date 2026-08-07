@@ -24,7 +24,10 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async () => {
       const worker = await getMicrosoftTodoWorker(user)
       if (worker.getStatus() !== 'connected') throw new Error('Microsoft Todo is not connected yet. Please try again in a moment.')
-      const tasks = worker.getAllTasks()
+      const tasks = worker.getAllTasks().filter(t => t.status !== 'completed')
+
+      console.log('Retrieved tasks:', tasks.map(t => ({ id: t.id, title: t.title, listName: t.listName, status: t.status })))
+
       return tasks.map(convertTaskForOutput)
     },
   })
