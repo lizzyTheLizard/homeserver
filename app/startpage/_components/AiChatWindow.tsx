@@ -136,11 +136,12 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
         state={state}
         incomingMessage={incomingMessage}
         onEdit={handleEdit}
+        hasActions={actions.length > 0}
       />
       {!loading && (
         <AiConnectionStatusIndicator
           state={state}
-          onRetry={connectWebSocket}
+          onRetry={() => { webSocketRef.current?.forceReconnect() }}
           onRestart={handleRestart}
         />
       )}
