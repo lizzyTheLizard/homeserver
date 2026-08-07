@@ -34,7 +34,7 @@ importers:
         version: 1.6.1
       next:
         specifier: 16.2.12
-        version: 16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)
+        version: 16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       openid-client:
         specifier: ^6.8.4
         version: 6.8.4
@@ -48,8 +48,8 @@ importers:
         specifier: 19.2.8
         version: 19.2.8
       react-dom:
-        specifier: 19.2.7
-        version: 19.2.7(react@19.2.8)
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.18)(react@19.2.8)
@@ -83,16 +83,16 @@ importers:
         version: 10.5.0(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
       '@storybook/addon-docs':
         specifier: ^10.5.3
-        version: 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
+        version: 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
       '@storybook/addon-vitest':
         specifier: ^10.5.3
         version: 10.5.3(@vitest/browser-playwright@4.1.10)(@vitest/browser@4.1.10)(@vitest/runner@4.1.10)(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vitest@4.1.10)
       '@storybook/nextjs-vite':
         specifier: ^10.5.3
-        version: 10.5.3(@babel/core@7.29.7)(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8))(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
+        version: 10.5.3(@babel/core@7.29.7)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
       '@storybook/react':
         specifier: ^10.5.3
-        version: 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
+        version: 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
       '@stylistic/eslint-plugin':
         specifier: ^5.10.0
         version: 5.10.0(eslint@10.8.0)
@@ -101,7 +101,7 @@ importers:
         version: 10.4.1
       '@testing-library/react':
         specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2
@@ -118,8 +118,8 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
       '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.18)
+        specifier: ^19.2.4
+        version: 19.2.4(@types/react@19.2.18)
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
@@ -1636,8 +1636,8 @@ packages:
   '@types/pg@8.20.0':
     resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
 
-  '@types/react-dom@19.2.3':
-    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
+  '@types/react-dom@19.2.4':
+    resolution: {integrity: sha512-Bsc+QHgp+P/F02XDzNCY9jnZNCUuLki36KT7VKrTXXLdHf+vHMNZnW1rVu5DNW/rCK+fya3DATySbLM4yhtKUw==}
     peerDependencies:
       '@types/react': ^19.2.0
 
@@ -3198,6 +3198,11 @@ packages:
     resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
     peerDependencies:
       react: ^19.2.7
+
+  react-dom@19.2.8:
+    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
+    peerDependencies:
+      react: ^19.2.8
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -4858,12 +4863,12 @@ snapshots:
       axe-core: 4.12.1
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
 
-  '@storybook/addon-docs@10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))':
+  '@storybook/addon-docs@10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.8)
       '@storybook/csf-plugin': 10.5.3(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
       '@storybook/icons': 2.1.0(react@19.2.8)
-      '@storybook/react-dom-shim': 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
+      '@storybook/react-dom-shim': 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
       react: 19.2.8
       react-dom: 19.2.7(react@19.2.8)
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
@@ -4915,21 +4920,21 @@ snapshots:
     dependencies:
       react: 19.2.8
 
-  '@storybook/nextjs-vite@10.5.3(@babel/core@7.29.7)(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8))(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))':
+  '@storybook/nextjs-vite@10.5.3(@babel/core@7.29.7)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))':
     dependencies:
       '@storybook/builder-vite': 10.5.3(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
-      '@storybook/react': 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
-      '@storybook/react-vite': 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
-      next: 16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)
+      '@storybook/react': 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
+      '@storybook/react-vite': 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
+      next: 16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
-      react-dom: 19.2.7(react@19.2.8)
+      react-dom: 19.2.8(react@19.2.8)
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
       styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.8)
       vite: 8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1)
-      vite-plugin-storybook-nextjs: 3.3.0(@typescript/typescript6@6.0.2)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8))(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
+      vite-plugin-storybook-nextjs: 3.3.0(@typescript/typescript6@6.0.2)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
     optionalDependencies:
       '@types/react': 19.2.18
-      '@types/react-dom': 19.2.3(@types/react@19.2.18)
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - '@babel/core'
@@ -4939,26 +4944,35 @@ snapshots:
       - supports-color
       - webpack
 
-  '@storybook/react-dom-shim@10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))':
+  '@storybook/react-dom-shim@10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))':
     dependencies:
       react: 19.2.8
       react-dom: 19.2.7(react@19.2.8)
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
     optionalDependencies:
       '@types/react': 19.2.18
-      '@types/react-dom': 19.2.3(@types/react@19.2.18)
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
 
-  '@storybook/react-vite@10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))':
+  '@storybook/react-dom-shim@10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))':
+    dependencies:
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
+    optionalDependencies:
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+
+  '@storybook/react-vite@10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))':
     dependencies:
       '@joshwooding/vite-plugin-react-docgen-typescript': 0.7.0(@typescript/typescript6@6.0.2)(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
       '@rollup/pluginutils': 5.4.0
       '@storybook/builder-vite': 10.5.3(esbuild@0.28.1)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1))
-      '@storybook/react': 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
+      '@storybook/react': 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
       empathic: 2.0.1
       magic-string: 0.30.21
       react: 19.2.8
       react-docgen: 8.0.3
-      react-dom: 19.2.7(react@19.2.8)
+      react-dom: 19.2.8(react@19.2.8)
       resolve: 1.22.12
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
       tsconfig-paths: 4.2.0
@@ -4973,18 +4987,18 @@ snapshots:
       - supports-color
       - webpack
 
-  '@storybook/react@10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))':
+  '@storybook/react@10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@typescript/typescript6@6.0.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))':
     dependencies:
       '@storybook/global': 5.0.0
-      '@storybook/react-dom-shim': 10.5.3(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
+      '@storybook/react-dom-shim': 10.5.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))
       react: 19.2.8
       react-docgen: 8.0.3
       react-docgen-typescript: 2.4.0(@typescript/typescript6@6.0.2)
-      react-dom: 19.2.7(react@19.2.8)
+      react-dom: 19.2.8(react@19.2.8)
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
     optionalDependencies:
       '@types/react': 19.2.18
-      '@types/react-dom': 19.2.3(@types/react@19.2.18)
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
@@ -5023,15 +5037,15 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@testing-library/dom': 10.4.1
       react: 19.2.8
-      react-dom: 19.2.7(react@19.2.8)
+      react-dom: 19.2.8(react@19.2.8)
     optionalDependencies:
       '@types/react': 19.2.18
-      '@types/react-dom': 19.2.3(@types/react@19.2.18)
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
 
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
@@ -5130,7 +5144,7 @@ snapshots:
       pg-protocol: 1.14.0
       pg-types: 2.2.0
 
-  '@types/react-dom@19.2.3(@types/react@19.2.18)':
+  '@types/react-dom@19.2.4(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
 
@@ -6518,7 +6532,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8):
+  next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@next/env': 16.2.12
       '@swc/helpers': 0.5.15
@@ -6526,7 +6540,7 @@ snapshots:
       caniuse-lite: 1.0.30001806
       postcss: 8.4.31
       react: 19.2.8
-      react-dom: 19.2.7(react@19.2.8)
+      react-dom: 19.2.8(react@19.2.8)
       styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.8)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.12
@@ -6815,6 +6829,11 @@ snapshots:
       - supports-color
 
   react-dom@19.2.7(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+      scheduler: 0.27.0
+
+  react-dom@19.2.8(react@19.2.8):
     dependencies:
       react: 19.2.8
       scheduler: 0.27.0
@@ -7299,13 +7318,13 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite-plugin-storybook-nextjs@3.3.0(@typescript/typescript6@6.0.2)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8))(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1)):
+  vite-plugin-storybook-nextjs@3.3.0(@typescript/typescript6@6.0.2)(next@16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(storybook@10.5.5(@types/react@19.2.18)(react@19.2.8))(vite@8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1)):
     dependencies:
       '@next/env': 16.0.0
       image-size: 2.0.2
       magic-string: 0.30.21
       module-alias: 2.3.4
-      next: 16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)
+      next: 16.2.12(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       storybook: 10.5.5(@types/react@19.2.18)(react@19.2.8)
       ts-dedent: 2.3.0
       vite: 8.1.3(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.1)
