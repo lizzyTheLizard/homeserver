@@ -23,6 +23,7 @@ export class AiChatWebSocket {
   #reconnectionInterval: NodeJS.Timeout | undefined
   #stallTimer: NodeJS.Timeout | undefined
   #retryAttempt = 0
+  #lastSentMessage: string | undefined
 
   onNewMessage: (message: string) => void = () => { /* empty */ }
   onNewActions: (actions: string[]) => void = () => { /* empty */ }
@@ -77,8 +78,14 @@ export class AiChatWebSocket {
   }
 
   private onReconnected() {
-    this.onStateChange({ type: 'ready' })
     this.#retryAttempt = 0
+    if (this.#lastSentMessage) {
+      const msg = this.#lastSentMessage
+      this.#lastSentMessage = undefined
+      this.sendMessage(msg)
+      return
+    }
+    this.onStateChange({ type: 'ready' })
   }
 
   private onStreamResponse(chunk: string) {
@@ -109,6 +116,7 @@ export class AiChatWebSocket {
   }
 
   private onFinishedResponse() {
+    this.#lastSentMessage = undefined
     this.onNewMessage(this.#messageBuffer)
     this.#messageBuffer = ''
     this.onIncomingMessageChange(this.#messageBuffer)
@@ -163,6 +171,7 @@ export class AiChatWebSocket {
   }
 
   public sendMessage(message: string) {
+    this.#lastSentMessage = message
     this.onStateChange({ type: 'waiting-for-response', stalled: false })
     this.clearStalledTimer(true)
     this.#ws?.send(JSON.stringify({ type: 'message', message }))

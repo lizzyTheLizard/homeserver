@@ -103,9 +103,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   function getTasks(listId: string): MicrosoftTodoTask[] { return tasks.get(listId) ?? [] }
 
   function getAllTasks(): MicrosoftTodoTask[] {
-    const result: MicrosoftTodoTask[] = []
-    for (const listTasks of tasks.values()) result.push(...listTasks)
-    return result
+    return [...tasks.values()].flatMap(t => t)
   }
 
   function getTodoCount(): TodoTaskCounts {

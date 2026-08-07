@@ -15,6 +15,10 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const [state, setState] = useState<ChatState>({ type: 'initial' })
   const [incomingMessage, setIncomingMessage] = useState('')
   const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const sentMessageHistory = useRef<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  const editedHistory = useRef<string | null>(null)
 
   const canInput = state.type === 'ready'
   const canSend = canInput && input.trim().length > 0
@@ -27,6 +31,12 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       webSocketRef.current = undefined
     }
   }, [])
+
+  useEffect(() => {
+    if (state.type === 'ready') {
+      inputRef.current?.focus()
+    }
+  }, [state.type])
 
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
@@ -51,9 +61,40 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     const t = text.trim()
     if (!t) return
     setInput('')
+    sentMessageHistory.current = [...sentMessageHistory.current, t]
+    setHistoryIndex(-1)
+    editedHistory.current = null
     setMessages(prev => [...prev, { role: 'user', content: text, id: prev.length }])
     setActions([])
     webSocketRef.current?.sendMessage(t)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      const history = sentMessageHistory.current
+      if (history.length === 0) return
+      if (historyIndex === -1) {
+        editedHistory.current = input
+      }
+      const nextIndex = Math.min(historyIndex + 1, history.length - 1)
+      setHistoryIndex(nextIndex)
+      setInput(history[history.length - 1 - nextIndex])
+    }
+    else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (historyIndex === -1) return
+      if (historyIndex === 0) {
+        setHistoryIndex(-1)
+        setInput(editedHistory.current ?? '')
+        editedHistory.current = null
+      }
+      else {
+        const nextIndex = historyIndex - 1
+        setHistoryIndex(nextIndex)
+        setInput(sentMessageHistory.current[sentMessageHistory.current.length - 1 - nextIndex])
+      }
+    }
   }
 
   function handleRestart() {
@@ -64,31 +105,54 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     setActions([])
     setState({ type: 'initial' })
     setIncomingMessage('')
+    sentMessageHistory.current = []
+    setHistoryIndex(-1)
+    editedHistory.current = null
     const websocket = connectWebSocket()
     webSocketRef.current = websocket
   }
 
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInput(e.target.value)
+    if (historyIndex >= 0) {
+      setHistoryIndex(-1)
+      editedHistory.current = null
+    }
+  }
+
   return (
     <div className={styles.window}>
+      <div className={styles.header}>
+        <button className={styles.restartButton} onClick={handleRestart} title="Restart conversation">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+          </svg>
+          Restart
+        </button>
+      </div>
       <AiChatMessageList
         messages={messages}
         state={state}
         incomingMessage={incomingMessage}
         onEdit={handleEdit}
+        hasActions={actions.length > 0}
       />
       {!loading && (
         <AiConnectionStatusIndicator
           state={state}
-          onRetry={connectWebSocket}
+          onRetry={() => { webSocketRef.current?.forceReconnect() }}
           onRestart={handleRestart}
         />
       )}
       <AiActionsList state={state} actions={actions} onSend={send} />
       <form onSubmit={handleSubmit} className={styles.inputRow}>
         <input
+          ref={inputRef}
           disabled={!canInput}
           value={input}
-          onChange={(e) => { setInput(e.target.value) }}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           placeholder="Ask me anything…"
           className={styles.input}
         />

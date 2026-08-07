@@ -279,11 +279,11 @@ export function getChatName(row: ChatRow): string {
   const isPN = row.chat_jid.endsWith('@s.whatsapp.net')
 
   if (isLID) {
+    const lidName = pickName(row.lid_full_name, row.lid_first_name, row.lid_business_name)
+    if (lidName) return lidName
     if (row.lid_pn) {
       return formatPhoneNumber(row.lid_pn.replace('@s.whatsapp.net', ''))
     }
-    const lidName = pickName(row.lid_full_name, row.lid_first_name, row.lid_business_name)
-    if (lidName) return lidName
     return row.chat_jid
   }
 

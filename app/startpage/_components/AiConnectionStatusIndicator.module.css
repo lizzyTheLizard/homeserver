@@ -80,3 +80,9 @@
   background: rgba(0,0,210,0.13);
   border-color: rgba(0,0,210,0.45);
 }
+
+@media (max-width: 600px) {
+  .container {
+    margin-bottom: 5rem;
+  }
+}
