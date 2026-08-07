@@ -103,8 +103,15 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   function getTasks(listId: string): MicrosoftTodoTask[] { return tasks.get(listId) ?? [] }
 
   function getAllTasks(): MicrosoftTodoTask[] {
+    const seen = new Set<string>()
     const result: MicrosoftTodoTask[] = []
-    for (const listTasks of tasks.values()) result.push(...listTasks)
+    for (const listTasks of tasks.values()) {
+      for (const task of listTasks) {
+        if (seen.has(task.id)) continue
+        seen.add(task.id)
+        result.push(task)
+      }
+    }
     return result
   }
 
