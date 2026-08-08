@@ -11,7 +11,7 @@ describe('Period', () => {
   test('CURRENT', () => {
     const period = fromUrlString('CURRENT')
     expect(toUrlString(period)).toBe('CURRENT')
-    const today = Temporal.Now.plainDateISO()
+    const today = Temporal.Now.plainDateISO().subtract({ months: 1 })
     expect(startDate(period)).toEqual(`${today.year.toString().padStart(4, '0')}-${today.month.toString().padStart(2, '0')}-01`)
   })
 

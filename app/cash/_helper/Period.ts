@@ -13,7 +13,7 @@ export const all: Period = { }
 export function fromUrlString(s: string): Period {
   if (s === 'ALL') return all
   if (s === 'CURRENT') {
-    const date = Temporal.Now.plainDateISO()
+    const date = Temporal.Now.plainDateISO().subtract({ months: 1 })
     return { current: true, year: date.year, month: date.month }
   }
   const parts = s.split('-').map(part => parseInt(part))
