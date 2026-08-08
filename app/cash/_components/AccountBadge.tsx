@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { AccountType } from '../_data/AccountType'
 import { AccountBadgeIconColor, AccountBadgeIcon } from './AccountBadgeIcons'
 
-export function AccountBadge({ type, name, link }: { type: AccountType, name: string, link?: string }) {
+export function AccountBadge({ type, name, link, tabIndex }: { type: AccountType, name: string, link?: string, tabIndex?: number }) {
   const content = (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
       <svg
@@ -20,7 +20,7 @@ export function AccountBadge({ type, name, link }: { type: AccountType, name: st
   )
 
   if (link)
-    return <Link href={link} onClick={(e) => { e.stopPropagation() }}>{content}</Link>
+    return <Link href={link} tabIndex={tabIndex} onClick={(e) => { e.stopPropagation() }}>{content}</Link>
   else
     return content
 }

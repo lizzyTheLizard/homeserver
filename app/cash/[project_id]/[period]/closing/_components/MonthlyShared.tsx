@@ -63,7 +63,7 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
   const columns = [
     dateColumn('date', { header: 'Date', style: { width: '7rem' } }),
     textColumn('description', { header: 'Description' }),
-    accountColumn('other_account_id', otherAccounts, period, { header: 'Other Account', sort: false }),
+    accountColumn('other_account_id', otherAccounts, period, { header: 'Other Account', sort: false, tabIndex: -1 }),
     currencyColumn('amount', { header: 'Amount', style: { width: '8rem' } }),
     textColumn('category', { header: 'Category', cell: categoryCell }),
   ]
