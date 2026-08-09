@@ -1,3 +1,7 @@
+:80 {
+	respond /health "OK" 200
+}
+
 :8370 {
 	basicauth {
 		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
@@ -18,3 +22,4 @@
 	}
 	reverse_proxy pgwebtest:8081
 }
+
