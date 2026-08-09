@@ -1,10 +1,10 @@
 export interface Config {
   NODE_ENV: 'development' | 'production' | 'test'
   LOG_LEVEL: string
+  LOG_URL: string
   APP_URL: string
   DB_CONNECTION_STRING: string
   ADMIN_EMAIL: string
-  GRAFANA_URL: string
   OIDC: {
     ISSUER: string
     CLIENT_ID: string
@@ -52,10 +52,10 @@ function optional(name: string, defaultValue: string): string {
 export const config: Config = {
   NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
+  LOG_URL: required('LOG_URL', 'http://localhost:4000'),
   APP_URL: required('APP_URL', 'http://localhost:3000'),
   DB_CONNECTION_STRING: required('DB_CONNECTION_STRING', 'postgres://user:password@localhost:5432/homeserver?sslmode=disable'),
   ADMIN_EMAIL: required('ADMIN_EMAIL', 'admin@example.com'),
-  GRAFANA_URL: required('GRAFANA_URL', 'http://localhost:3000'),
   AI: {
     API_KEY: required('AI_API_KEY', 'dev-only-key'),
     LOG_REQUEST_RESPONSE: optional('AI_LOG_REQUEST_RESPONSE', 'false').toLowerCase() === 'true',

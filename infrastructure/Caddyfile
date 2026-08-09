@@ -1,0 +1,20 @@
+:8370 {
+	basicauth {
+		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy dozzle:8080
+}
+
+:8371 {
+	basic_auth {
+		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy pgwebprod:8081
+}
+
+:8372 {
+	basic_auth {
+		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy pgwebtest:8081
+}

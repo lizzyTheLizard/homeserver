@@ -31,7 +31,7 @@ export default async function Page() {
           <DashboardCard header="Config" url="/admin/config" items={configInfo} />
           <DashboardCard header="Metrics" url="/admin/metrics" items={metricsInfo} />
         </div>
-        <EventsCard events={events} logUrl={config.GRAFANA_URL} />
+        <EventsCard events={events} logUrl={config.LOG_URL} />
       </main>
     )
   })
