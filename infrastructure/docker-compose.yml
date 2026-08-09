@@ -97,7 +97,6 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    container_name: caddy
     env_file:
       - .env
     volumes:
