@@ -11,6 +11,9 @@ const config: StorybookConfig = {
     '@storybook/addon-docs',
   ],
   framework: '@storybook/nextjs-vite',
+  core: {
+    allowedHosts: ['dev.gutschi.site', 'localhost'],
+  },
   staticDirs: [
     '../public',
   ],
