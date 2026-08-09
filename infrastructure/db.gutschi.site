@@ -1,0 +1,16 @@
+$TTL 300
+@       IN      SOA     gutschi.site. noc.gutschi.site. (
+                        2024080901  ; serial
+                        3600        ; refresh
+                        600         ; retry
+                        604800      ; expire
+                        300 )       ; minimum
+@       IN      NS      gutschi.site.
+@       IN      MX      0 354054060.pamx1.hotmail.com.
+@       IN      TXT     "v=spf1 include:spf.protection.outlook.com -all"
+dev     IN      A       __HOST_IP__
+test    IN      A       __HOST_IP__
+www-devserver IN A      __HOST_IP__       
+www     IN      CNAME   gutschisitewsdlddur-www-gutschi-site.functions.fnc.fr-par.scw.cloud.
+_dmarc  IN      TXT     "v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@gutschi.site; ruf=mailto:dmarc-forensics@gutschi.site"
+autodiscover IN  CNAME   autodiscover.outlook.com.

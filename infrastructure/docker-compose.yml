@@ -1,5 +1,6 @@
 services:
   postgresprod:
+    container_name: Prod-Database
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -16,6 +17,7 @@ services:
       start_period: 30s
 
   postgrestest:
+    container_name: Test-Database
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -32,6 +34,7 @@ services:
       start_period: 30s
 
   applicationprod:
+    container_name: Prod-Application
     image: mytest:latest
     restart: unless-stopped
     env_file:
@@ -51,6 +54,7 @@ services:
       start_period: 40s
 
   applicationtest:
+    container_name: Test-Application
     image: mytest:latest
     restart: unless-stopped
     env_file:
@@ -70,6 +74,7 @@ services:
       start_period: 40s
 
   pgwebprod:
+    container_name: Prod-Pgweb
     image: sosedoff/pgweb
     restart: unless-stopped
     command: --bind=0.0.0.0 --listen=8081
@@ -80,6 +85,7 @@ services:
         condition: service_healthy
 
   pgwebtest:
+    container_name: Test-Pgweb
     image: sosedoff/pgweb
     restart: unless-stopped
     command: --bind=0.0.0.0 --listen=8081
@@ -90,12 +96,14 @@ services:
         condition: service_healthy
 
   dozzle:
+    container_name: Dozzle
     image: amir20/dozzle:latest
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   caddy:
+    container_name: Caddy
     image: caddy:2-alpine
     env_file:
       - .env
@@ -112,7 +120,28 @@ services:
       - pgwebtest
     restart: unless-stopped
 
+  bind9:
+    container_name: Bind9
+    image: ubuntu/bind9:latest
+    restart: unless-stopped
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    environment:
+      HOST_IP: ${HOST_IP}
+    env_file:
+      - .env
+    volumes:
+      - ./named.conf:/etc/bind/named.conf:ro
+      - ./db.gutschi.site:/etc/bind/db.gutschi.site.template:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed "s/__HOST_IP__/$${HOST_IP}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
+        exec named -g -u named
+
   nginx:
+    container_name: Nginx
     image: nginx:alpine
     restart: unless-stopped
     ports:
