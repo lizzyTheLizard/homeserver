@@ -35,7 +35,7 @@ services:
 
   applicationprod:
     container_name: Prod-Application
-    image: mytest:latest
+    image: ghcr.io/www_gutschi_site:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -55,7 +55,7 @@ services:
 
   applicationtest:
     container_name: Test-Application
-    image: mytest:latest
+    image: ghcr.io/www_gutschi_site:test
     restart: unless-stopped
     env_file:
       - .env

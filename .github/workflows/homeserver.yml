@@ -104,73 +104,22 @@ jobs:
               name: myimage
               path: ${{ runner.temp }}/myimage.tar
               retention-days: 5
-    infrastructure:
-        name: Check Infrastructure
+    push:
+        name: Push Docker Container to Registry
         runs-on: ubuntu-latest
-        if: github.actor != 'dependabot[bot]'
-        env:
-            TF_CLOUD_ORGANIZATION: "gutschi-site"
-            TF_API_TOKEN: "${{ secrets.TF_TOKEN }}"
-            TF_WORKSPACE: "homesever-cicd"
-            CONFIG_DIRECTORY: "./"
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v7
-          - name: Upload Configuration
-            uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.2
-            id: apply-upload
-            with:
-                directory: "./infrastructure"
-                workspace: ${{ env.TF_WORKSPACE }}
-          - name: Create Plan Run
-            uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.2
-            id: plan-run
-            with:
-                plan_only: true
-                workspace: ${{ env.TF_WORKSPACE }}
-                configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-          - name: Get Plan Output
-            uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.3.2
-            id: plan-output
-            with:
-              plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
-          - name: Check for changes
-            run: |
-              if ((${{ steps.plan-output.outputs.add }} + ${{ steps.plan-output.outputs.change }} + ${{ steps.plan-output.outputs.destroy }} == 0 )); then
-                echo "No changes detected in infrastructure."
-                exit 0
-              else
-                echo "Changes detected in infrastructure! ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy."
-                echo "See ${{ steps.plan-run.outputs.run_link }} for details."
-                echo "Updating infrastructure manually."
-                exit 1
-              fi
-    deploy:
-        name: Push Docker Container and restart
-        needs: [lint, test, whatsapp, chromatic, build, infrastructure]
-        runs-on: ubuntu-latest
-        if: github.actor != 'dependabot[bot]'        
-        env:
-            registry: rg.fr-par.scw.cloud/gutschi-site
+        needs: [lint, test, whatsapp, chromatic, build]
+        permissions:
+          contents: read
+          packages: write
         steps:
           - name: Checkout
             uses: actions/checkout@v7
           - name: Set Environment Variables (Prod)
             if : github.ref == 'refs/heads/main'
-            run: |
-              echo "container_tag=latest" >> $GITHUB_ENV
-              echo "container_id=dc5af598-12a1-442d-a2c8-abab4e59fd1e" >> $GITHUB_ENV
+            run: echo "container_tag=latest" >> $GITHUB_ENV
           - name: Set Environment Variables (Test)
             if : github.ref != 'refs/heads/main'
-            run: |
-              echo "container_tag=test" >> $GITHUB_ENV
-              echo "container_id=89160430-514c-49ef-a53d-9e936beaec8a" >> $GITHUB_ENV
-          - name: Login to Registry
-            uses: docker/login-action@v4
-            with:
-              username: nologin
-              password: ${{ secrets.SCW_SECRET_KEY }}
-              registry: ${{env.registry}}
+            run: echo "container_tag=test" >> $GITHUB_ENV
           - name: Download artifact
             uses: actions/download-artifact@v8
             with:
@@ -179,14 +128,38 @@ jobs:
           - name: Load image
             run: docker load --input ${{ runner.temp }}/myimage.tar
           - name: Tag image
-            run: docker tag myimage:latest ${{env.registry}}/www_gutschi_site:${{env.container_tag}}
+            run: docker tag myimage:latest ghcr.io/www_gutschi_site:${{env.container_tag}}
+          - name: Log in to GitHub Container Registry
+            uses: docker/login-action@v3
+            with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
           - name: Docker Push
-            run: docker push  ${{env.registry}}/www_gutschi_site:${{env.container_tag}}
-          - name: Restart Container
+            run: docker push ghcr.io/www_gutschi_site:${{env.container_tag}}
+    deploy:
+        name: Restart Homeserver Stack
+        needs: [push]
+        runs-on: ubuntu-latest
+        if: github.actor != 'dependabot[bot]'        
+        steps:
+          - name: Set up SSH key
+            uses: webfactory/ssh-agent@v0.9.0
+            with:
+              ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          - name: Add Host Key to Known Hosts
             run: |
-              # deploy the container using the API
-              curl --silent --fail -o /dev/null -w "Response: %{http_code}\n" \
-                --request POST \
-                --header "X-Auth-Token: ${{ secrets.SCW_SECRET_KEY }}" \
-                --data '{}' \
-                https://api.scaleway.com/containers/v1beta1/regions/fr-par/containers/${{env.container_id}}/deploy
+              mkdir -p ~/.ssh
+              ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          - name: Sync compose and infrastructure files
+            run: |
+              rsync -avz -e ssh --exclude='.git*' ./infrastructure ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+          - name: Pull image and restart stack
+            run: |
+              ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+                cd /opt/homeserver
+                echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+                docker compose pull
+                docker compose up -d --remove-orphans
+                docker image prune -f
+              EOF
