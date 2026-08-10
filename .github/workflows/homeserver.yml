@@ -152,8 +152,7 @@ jobs:
               mkdir -p ~/.ssh
               ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           - name: Sync compose and infrastructure files
-            run: |
-              rsync -avz -e ssh --exclude='.git*' ./infrastructure ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+            run: rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
           - name: Pull image and restart stack
             run: |
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
