@@ -1,0 +1,197 @@
+services:
+  postgresprod:
+    container_name: Prod-Database
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homeserver
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
+      POSTGRES_DB: homeserver
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  postgrestest:
+    container_name: Test-Database
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homeserver
+      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD}
+      POSTGRES_DB: homeserver
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  applicationprod:
+    container_name: Prod-Application
+    image: ghcr.io/lizzythelizard/www_gutschi_site:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      APP_URL: https://www-devserver.gutschi.site
+      DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
+    depends_on:
+      postgresprod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://applicationprod:3000/api/ping',function(r){process.exit(r.statusCode===200?0:1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  applicationtest:
+    container_name: Test-Application
+    image: ghcr.io/lizzythelizard/www_gutschi_site:test
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      APP_URL: https://test.gutschi.site
+      DB_CONNECTION_STRING: postgres://homeserver:${TEST_DB_PASSWORD}@postgrestest:5432/homeserver?sslmode=disable
+    depends_on:
+      postgrestest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://applicationtest:3000/api/ping',function(r){process.exit(r.statusCode===200?0:1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  pgwebprod:
+    container_name: Prod-Pgweb
+    image: sosedoff/pgweb
+    restart: unless-stopped
+    command: --bind=0.0.0.0 --listen=8081
+    environment:
+      DATABASE_URL: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
+    depends_on:
+      postgresprod:
+        condition: service_healthy
+
+  pgwebtest:
+    container_name: Test-Pgweb
+    image: sosedoff/pgweb
+    restart: unless-stopped
+    command: --bind=0.0.0.0 --listen=8081
+    environment:
+      DATABASE_URL: postgres://homeserver:${TEST_DB_PASSWORD}@postgrestest:5432/homeserver?sslmode=disable
+    depends_on:
+      postgrestest:
+        condition: service_healthy
+
+  dozzle:
+    container_name: Dozzle
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    command: --enable-actions --enable-shell
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  caddy:
+    container_name: Caddy
+    image: caddy:2-alpine
+    env_file:
+      - .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    entrypoint: ["/bin/sh", "-c"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - |
+        export ADMIN_PASSWORD_HASH=$$(caddy hash-password --plaintext "$$ADMIN_PASSWORD")
+        export DEV_PASSWORD_HASH=$$(caddy hash-password --plaintext "$$DEV_PASSWORD")
+        caddy run --config /etc/caddy/Caddyfile
+    depends_on:
+      - dozzle
+      - pgwebprod
+      - pgwebtest
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+
+
+  bind9:
+    container_name: Bind9
+    image: ubuntu/bind9:latest
+    restart: unless-stopped
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    environment:
+      HOST_IP: ${HOST_IP}
+    env_file:
+      - .env
+    volumes:
+      - ./named.conf:/etc/bind/named.conf:ro
+      - ./db.gutschi.site:/etc/bind/db.gutschi.site.template:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed "s/__HOST_IP__/$${HOST_IP}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
+        exec named -g -c /etc/bind/named.conf
+
+  nginx:
+    container_name: Nginx
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+      - "8444:8444"
+      - "8445:8445"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      applicationprod:
+        condition: service_healthy
+      applicationtest:
+        condition: service_healthy
+      caddy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # Periodically reload nginx to pick up renewed certificates
+    command: '/bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\""'
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: Certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot:rw
+      - ./certbot/conf:/etc/letsencrypt:rw
+    # Check for certificate renewal every 12 hours
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres_prod_data:
+  postgres_test_data:

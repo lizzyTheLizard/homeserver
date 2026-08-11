@@ -1,4 +1,2 @@
-# Terraform
-.terraform
-.terraform.lock.hcl
-tfplan
+.env
+certbot

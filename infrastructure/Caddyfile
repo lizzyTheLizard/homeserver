@@ -1,0 +1,39 @@
+:80 {
+	respond /health "OK" 200
+}
+
+:8370 {
+	basic_auth {
+		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy dozzle:8080
+}
+
+:8371 {
+	basic_auth {
+		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy pgwebprod:8081
+}
+
+:8372 {
+	basic_auth {
+		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy pgwebtest:8081
+}
+
+:8443 {
+	basic_auth {
+		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
+	}
+	reverse_proxy host.docker.internal:9080
+}
+
+:8444 {
+	basic_auth {
+		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
+	}
+	reverse_proxy host.docker.internal:4096
+}
+

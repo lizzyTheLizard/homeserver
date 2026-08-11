@@ -18,7 +18,7 @@ export default function Loading() {
         <DashboardCard header="Config" url="/admin/config" items={[]}></DashboardCard>
         <DashboardCard header="Metrics" url="/admin/metrics" items={[]}></DashboardCard>
       </div>
-      <EventsCard events={[]} logUrl={config.GRAFANA_URL} />
+      <EventsCard events={[]} logUrl={config.LOG_URL} />
     </main>
   )
 }
