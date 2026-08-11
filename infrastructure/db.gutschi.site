@@ -1,6 +1,6 @@
 $TTL 300
 @       IN      SOA     ns.gutschi.site. noc.gutschi.site. (
-                        2024080901  ; serial
+                        2024080902  ; serial
                         3600        ; refresh
                         600         ; retry
                         604800      ; expire
@@ -8,6 +8,8 @@ $TTL 300
 @       IN      NS      ns.gutschi.site.
 @       IN      MX      0 354054060.pamx1.hotmail.com.
 @       IN      TXT     "v=spf1 include:spf.protection.outlook.com -all"
+@       IN      CAA     0 issue "letsencrypt.org"
+@       IN      CAA     0 issuewild "letsencrypt.org"
 ns      IN      A       __HOST_IP__
 dev     IN      A       __HOST_IP__
 test    IN      A       __HOST_IP__
