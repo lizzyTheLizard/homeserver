@@ -99,7 +99,7 @@ services:
     container_name: Dozzle
     image: amir20/dozzle:latest
     restart: unless-stopped
-    command: --enable-actions
+    command: --enable-actions --enable-shell
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
