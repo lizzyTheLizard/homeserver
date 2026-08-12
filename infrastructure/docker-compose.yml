@@ -111,8 +111,6 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     entrypoint: ["/bin/sh", "-c"]
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     command:
       - |
         export ADMIN_PASSWORD_HASH=$$(caddy hash-password --plaintext "$$ADMIN_PASSWORD")
@@ -129,8 +127,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-
 
   bind9:
     container_name: Bind9
@@ -192,6 +188,32 @@ services:
     # Check for certificate renewal every 12 hours
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
+  opencode:
+    image: ghcr.io/pilinux/opencode:latest
+    container_name: Opencode
+    user: "${DEV_UID:-1000}:${DEV_GID:-1000}"
+    restart: unless-stopped
+    command: opencode serve --port 4096
+    volumes:
+      - /home/magraf/homeserver:/home/magraf/homeserver
+      - opencode_data:/home/magraf/.local
+      - opencode_config:/home/magraf/.config
+
+  code-server:
+    image: codercom/code-server
+    container_name: CodeServer
+    restart: unless-stopped
+    command: code-server --auth none /home/magraf/homeserver
+    environment:
+      - PUID=${DEV_UID}
+      - PGID=${DEV_GID}
+    volumes:
+      - /home/magraf/homeserver:/home/magraf/homeserver
+      - code_server_config:/config
+
 volumes:
+  code_server_config:
+  opencode_config:
+  opencode_data:
   postgres_prod_data:
   postgres_test_data:

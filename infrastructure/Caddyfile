@@ -27,13 +27,13 @@
 	basic_auth {
 		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
 	}
-	reverse_proxy host.docker.internal:9080
+	reverse_proxy code-server:8080
 }
 
 :8444 {
 	basic_auth {
 		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
 	}
-	reverse_proxy host.docker.internal:4096
+	reverse_proxy opencode:4096
 }
 

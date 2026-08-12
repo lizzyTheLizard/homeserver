@@ -13,9 +13,12 @@ A personal multi-application portal running at [www.gutschi.site](https://www.gu
 
 ## Getting started
 
-**Prerequisites:** Node 24, pnpm 10, a PostgreSQL 14+ instance.
+**Prerequisites:** Node 24, pnpm 10, Docker (for the dev database).
+
+The local PostgreSQL database runs in Docker and must be started **before** the application:
 
 ```bash
+docker compose -f infrastructure/docker-compose.dev.yml up -d   # dev database (postgres:16, homeserver/homeserver)
 pnpm install
 cp .env.example .env   # then fill in the values
 pnpm dev

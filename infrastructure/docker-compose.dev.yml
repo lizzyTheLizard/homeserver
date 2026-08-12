@@ -1,0 +1,22 @@
+services:
+  postgresdev:
+    container_name: Dev-Database
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+    - 5432:5432
+    environment:
+      POSTGRES_USER: homeserver
+      POSTGRES_PASSWORD: homeserver
+      POSTGRES_DB: homeserver
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres_dev_data:
