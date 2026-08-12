@@ -33,6 +33,25 @@ services:
       retries: 5
       start_period: 30s
 
+  postgresdev:
+    container_name: Dev-Database
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+    - 5432:5432
+    environment:
+      POSTGRES_USER: homeserver
+      POSTGRES_PASSWORD: homeserver
+      POSTGRES_DB: homeserver
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   applicationprod:
     container_name: Prod-Application
     image: ghcr.io/lizzythelizard/www_gutschi_site:latest
@@ -109,7 +128,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -140,8 +159,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./named.conf:/etc/bind/named.conf:ro
-      - ./db.gutschi.site:/etc/bind/db.gutschi.site.template:ro
+      - ./bind9/named.conf:/etc/bind/named.conf:ro
+      - ./bind9/db.gutschi.site:/etc/bind/db.gutschi.site.template:ro
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -159,7 +178,7 @@ services:
       - "8444:8444"
       - "8445:8445"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
     extra_hosts:
@@ -188,32 +207,26 @@ services:
     # Check for certificate renewal every 12 hours
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
-  opencode:
-    image: ghcr.io/pilinux/opencode:latest
-    container_name: Opencode
-    user: "${DEV_UID:-1000}:${DEV_GID:-1000}"
+  dev-machine:
+    build:
+      context: ./dev
+      args:
+        REPO_URL: "${REPO_URL}"
+        GIT_USER_NAME: "${GIT_NAME}"
+        GIT_USER_EMAIL: "${GIT_MAIL}"
+    container_name: Dev
     restart: unless-stopped
-    command: opencode serve --port 4096
-    volumes:
-      - /home/magraf/homeserver:/home/magraf/homeserver
-      - opencode_data:/home/magraf/.local
-      - opencode_config:/home/magraf/.config
-
-  code-server:
-    image: codercom/code-server
-    container_name: CodeServer
-    restart: unless-stopped
-    command: code-server --auth none /home/magraf/homeserver
+    ports:
+      - "2222:2222"   # SSH for VS Code Remote
     environment:
-      - PUID=${DEV_UID}
-      - PGID=${DEV_GID}
+      # Pass your public key here so you can log in over SSH
+      - SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY}
+      - SSH_KEY=${SSH_KEY}
     volumes:
-      - /home/magraf/homeserver:/home/magraf/homeserver
-      - code_server_config:/config
+      - dev_home:/home/dev
 
 volumes:
-  code_server_config:
-  opencode_config:
-  opencode_data:
   postgres_prod_data:
   postgres_test_data:
+  postgres_dev_data:
+  dev_home:

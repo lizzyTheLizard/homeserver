@@ -37,3 +37,11 @@
 	reverse_proxy opencode:4096
 }
 
+:8445 {
+	basic_auth {
+		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
+	}
+	reverse_proxy dev-machine:6006
+}
+
+
