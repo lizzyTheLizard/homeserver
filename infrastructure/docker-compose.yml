@@ -181,8 +181,6 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       applicationprod:
         condition: service_healthy
@@ -210,23 +208,20 @@ services:
   dev-machine:
     build:
       context: ./dev
-      args:
-        REPO_URL: "${REPO_URL}"
-        GIT_USER_NAME: "${GIT_NAME}"
-        GIT_USER_EMAIL: "${GIT_MAIL}"
     container_name: Dev
+    environment:
+      REPO_URL: "${REPO_URL}"
+      GIT_USER_NAME: "${GIT_NAME}"
+      GIT_USER_EMAIL: "${GIT_MAIL}"
+      DEV_SSH_KEY_PUB: "${DEV_SSH_KEY_PUB}"
+    volumes:
+      - dev_home:/home/dev
     restart: unless-stopped
     ports:
       - "2222:2222"   # SSH for VS Code Remote
-    environment:
-      # Pass your public key here so you can log in over SSH
-      - SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY}
-      - SSH_KEY=${SSH_KEY}
-    volumes:
-      - dev_home:/home/dev
-
 volumes:
   postgres_prod_data:
   postgres_test_data:
   postgres_dev_data:
   dev_home:
+

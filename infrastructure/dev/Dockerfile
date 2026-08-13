@@ -6,13 +6,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-# Build Arguments
-ARG REPO_URL
-ARG GIT_USER_NAME
-ARG GIT_USER_EMAIL
-ARG GO_VERSION="1.23.0"
-ARG NODE_VERSION="24"
-
 # 1. Install base utilities, SSH server, supervisor, and GitHub CLI repo dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -43,6 +36,8 @@ RUN mkdir -p -m 0755 /etc/apt/keyrings \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Install Node.js & Corepack (pnpm)
+# Build Arguments
+ARG NODE_VERSION="24"
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y nodejs \
     && corepack enable \
@@ -50,22 +45,18 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # 4. Install Go
+ARG GO_VERSION="1.23.0"
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
 ENV PATH="/usr/local/go/bin:${PATH}"
+ENV GOPATH=/home/dev/go
+ENV PATH=/home/dev/go/bin:${PATH}
 
 # 5. Install code-server and OpenCode CLI
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN npm install -g opencode-ai
 
 # 6. Create dedicated non-root user "dev"
-RUN useradd -m -s /bin/bash -u 1000 dev \
-    && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && mkdir -p /home/dev/.ssh /home/dev/.vscode-server/extensions /home/dev/.vscode-server/bin /home/dev/workspace \
-    && chmod 700 /home/dev/.ssh
-
-# Configure Go and Node path environment for user "dev"
-ENV GOPATH=/home/dev/go
-ENV PATH=/home/dev/go/bin:${PATH}
+RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # 7. Configure OpenSSH Server (sshd on port 2222, key-only auth, disable root)
 RUN mkdir -p /var/run/sshd \
@@ -75,31 +66,10 @@ RUN mkdir -p /var/run/sshd \
     && echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config \
     && echo "AllowUsers dev" >> /etc/ssh/sshd_config
 
-# 8. Checkout target repository at build time using secret SSH key
-RUN --mount=type=secret,id=ssh_key \
-    if [ -n "$REPO_URL" ]; then \
-        mkdir -p ~/.ssh && \
-        chmod 700 ~/.ssh && \
-        ssh-keyscan github.com gitlab.com >> ~/.ssh/known_hosts 2>/dev/null && \
-        eval $(ssh-agent -s) && \
-        SSH_KEY_PATH="/run/secrets/ssh_key" && \
-        chmod 600 $SSH_KEY_PATH && \
-        ssh-add $SSH_KEY_PATH && \
-        git config --global user.name "$GIT_USER_NAME" && \
-        git config --global user.email "$GIT_USER_EMAIL" && \
-        git clone "$REPO_URL" /home/dev/workspace; \
-    fi
-
-# Fix ownership for user "dev"
-RUN chown -R dev:dev /home/dev
-
-# Copy configuration files & entrypoint script
+# 8 Copy configuration files & entrypoint script
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Ports exposed:
-# 2222 (SSH for VSCode Remote), 8080 (code-server), 4096 (opencode serve)
-EXPOSE 2222 8080 4096
-
+USER dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
