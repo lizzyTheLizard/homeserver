@@ -81,16 +81,22 @@ jobs:
           - name: Get Datetime
             run: echo "datetime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
             id: get-datetime
+          - name: Set Environment Variables (Prod)
+            if : github.ref == 'refs/heads/main'
+            run: echo "container_tag=latest" >> $GITHUB_ENV
+          - name: Set Environment Variables (Test)
+            if : github.ref != 'refs/heads/main'
+            run: echo "container_tag=test" >> $GITHUB_ENV
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
               context: .
               platforms: linux/amd64
               push: false
-              tags: myimage:latest
+              tags: homeserver:${{ env.container_tag }}
               cache-from: type=gha
               cache-to: type=gha,mode=max 
-              outputs: type=docker,dest=${{ runner.temp }}/myimage.tar
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}
                 GIT_BRANCH=${{ github.ref_name }}
@@ -101,8 +107,8 @@ jobs:
           - name: Upload artifact
             uses: actions/upload-artifact@v7
             with:
-              name: myimage
-              path: ${{ runner.temp }}/myimage.tar
+              name: homeserver
+              path: ${{ runner.temp }}/homeserver.tar
               retention-days: 5
     deploy:
         name: Restart Homeserver Stack
@@ -112,16 +118,10 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v7
-          - name: Set Environment Variables (Prod)
-            if : github.ref == 'refs/heads/main'
-            run: echo "container_tag=latest" >> $GITHUB_ENV
-          - name: Set Environment Variables (Test)
-            if : github.ref != 'refs/heads/main'
-            run: echo "container_tag=test" >> $GITHUB_ENV
           - name: Download artifact
             uses: actions/download-artifact@v8
             with:
-              name: myimage
+              name: homeserver
               path: ${{ runner.temp }}
           - name: Set up SSH key
             uses: webfactory/ssh-agent@v0.9.0
@@ -134,14 +134,18 @@ jobs:
           - name: Sync compose, infrastructure files and image
             run: |
               rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
-              rsync -avz ${{ runner.temp }}/myimage.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+              rsync -avz ${{ runner.temp }}/homeserver.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
           - name: Load image and restart stack
             run: |
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+                set -e
                 cd /opt/homeserver
-                docker load --input myimage.tar
-                docker tag myimage:latest homeserver:${{env.container_tag}}
-                rm myimage.tar
+                docker load --input homeserver.tar
+                rm homeserver.tar
+                # latest must exist (on branch deploys it comes from a previous main deploy), otherwise fail
+                docker image inspect homeserver:latest > /dev/null
+                # test falls back to latest if it does not exist yet
+                docker image inspect homeserver:test > /dev/null 2>&1 || docker tag homeserver:latest homeserver:test
                 docker compose up -d --remove-orphans
                 docker image prune -f
               EOF
