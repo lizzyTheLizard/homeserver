@@ -54,7 +54,8 @@ services:
 
   applicationprod:
     container_name: Prod-Application
-    image: ghcr.io/lizzythelizard/www_gutschi_site:latest
+    image: homeserver:latest
+    pull_policy: never
     restart: unless-stopped
     env_file:
       - .env
@@ -74,7 +75,8 @@ services:
 
   applicationtest:
     container_name: Test-Application
-    image: ghcr.io/lizzythelizard/www_gutschi_site:test
+    image: homeserver:test
+    pull_policy: never
     restart: unless-stopped
     env_file:
       - .env

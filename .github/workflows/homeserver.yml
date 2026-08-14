@@ -104,13 +104,11 @@ jobs:
               name: myimage
               path: ${{ runner.temp }}/myimage.tar
               retention-days: 5
-    push:
-        name: Push Docker Container to Registry
-        runs-on: ubuntu-latest
+    deploy:
+        name: Restart Homeserver Stack
         needs: [lint, test, whatsapp, chromatic, build]
-        permissions:
-          contents: read
-          packages: write
+        runs-on: ubuntu-latest
+        if: github.actor != 'dependabot[bot]'        
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -125,26 +123,6 @@ jobs:
             with:
               name: myimage
               path: ${{ runner.temp }}
-          - name: Load image
-            run: docker load --input ${{ runner.temp }}/myimage.tar
-          - name: Tag image
-            run: docker tag myimage:latest ghcr.io/lizzythelizard/www_gutschi_site:${{env.container_tag}}
-          - name: Log in to GitHub Container Registry
-            uses: docker/login-action@v3
-            with:
-              registry: ghcr.io
-              username: ${{ github.actor }}
-              password: ${{ secrets.GITHUB_TOKEN }}
-          - name: Docker Push
-            run: docker push ghcr.io/lizzythelizard/www_gutschi_site:${{env.container_tag}}
-    deploy:
-        name: Restart Homeserver Stack
-        needs: [push]
-        runs-on: ubuntu-latest
-        if: github.actor != 'dependabot[bot]'        
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v7
           - name: Set up SSH key
             uses: webfactory/ssh-agent@v0.9.0
             with:
@@ -153,14 +131,17 @@ jobs:
             run: |
               mkdir -p ~/.ssh
               ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          - name: Sync compose and infrastructure files
-            run: rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
-          - name: Pull image and restart stack
+          - name: Sync compose, infrastructure files and image
+            run: |
+              rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+              rsync -avz ${{ runner.temp }}/myimage.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+          - name: Load image and restart stack
             run: |
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
                 cd /opt/homeserver
-                echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-                docker compose pull
+                docker load --input myimage.tar
+                docker tag myimage:latest homeserver:${{env.container_tag}}
+                rm myimage.tar
                 docker compose up -d --remove-orphans
                 docker image prune -f
               EOF
