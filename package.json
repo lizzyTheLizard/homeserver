@@ -69,7 +69,7 @@
     "eslint-plugin-react-refresh": "^0.5.3",
     "eslint-plugin-storybook": "^10.5.5",
     "globals": "^17.7.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "pg-copy-streams": "^7.0.0",
     "playwright": "^1.62.1",
     "rimraf": "^6.1.3",
