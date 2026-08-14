@@ -29,6 +29,8 @@ Six skills manage the full issue lifecycle in the Homeserver project. Each handl
 
 **Typical flow:** `create-issue` → `refine-issue` (if needed) → `implement-ui-design` (if needed) → `start-implementing` → `implement-issue` → `implementation-finish`
 
+**Fast track:** `implement-without-issue` skips GitHub issue creation entirely — it drafts requirements in-chat for user approval, implements everything on an `issue-XXX-<kebab-title>` branch, runs all checks, and ships a PR.
+
 ## Architecture
 
 **Next.js App Router** — pages are React Server Components by default. Use `"use client"` only when browser interactivity is required. Data mutations go through Next.js Server Actions, not a separate API layer.
