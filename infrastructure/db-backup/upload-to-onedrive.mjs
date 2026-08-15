@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Uploads a file to OneDrive via the Microsoft Graph API using the client
-// credentials flow. Requires the application permission 'Files.ReadWrite'
-// (admin consent) on the app registration and a work/school account.
+// Uploads a file to a PERSONAL OneDrive account via the Microsoft Graph API
+// using a delegated refresh token (the device-code helper in
+// get-onedrive-token.mjs prints one to save in ONEDRIVE_REFRESH_TOKEN).
 // No npm dependencies - plain Node.js (>= 20) only.
 
 import { open } from 'node:fs/promises'
@@ -9,6 +9,7 @@ import path from 'node:path'
 import process from 'node:process'
 
 const CHUNK_SIZE = 10 * 1024 * 1024 // must be a multiple of 320 KiB
+const TOKEN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
 
 async function main() {
   const filePath = process.argv[2]
@@ -23,37 +24,41 @@ async function main() {
 }
 
 async function getAccessToken() {
-  const issuer = requiredEnv('MICROSOFT_GRAPH_ISSUER').replace(/\/+$/, '')
-  const tokenUrl = `${issuer.replace(/\/v2\.0$/, '')}/oauth2/v2.0/token`
-  const response = await fetch(tokenUrl, {
+  const body = new URLSearchParams({
+    client_id: requiredEnv('MICROSOFT_GRAPH_APPLICATION_ID'),
+    scope: 'https://graph.microsoft.com/Files.ReadWrite offline_access',
+    grant_type: 'refresh_token',
+    refresh_token: requiredEnv('ONEDRIVE_REFRESH_TOKEN'),
+  })
+  const clientSecret = process.env.MICROSOFT_GRAPH_CLIENT_SECRET
+  if (clientSecret) body.set('client_secret', clientSecret)
+
+  const response = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: requiredEnv('MICROSOFT_GRAPH_APPLICATION_ID'),
-      client_secret: requiredEnv('MICROSOFT_GRAPH_CLIENT_SECRET'),
-      scope: 'https://graph.microsoft.com/.default',
-      grant_type: 'client_credentials',
-    }),
+    body,
   })
   if (!response.ok) throw new Error(`Token request failed (${response.status}): ${await response.text()}`)
-  const body = await response.json()
-  if (!body.access_token) throw new Error('Token response did not contain an access_token')
-  return body.access_token
+  const json = await response.json()
+  if (!json.access_token) throw new Error('Token response did not contain an access_token')
+  if (json.refresh_token) {
+    console.log(`[upload] New refresh token issued - update ONEDRIVE_REFRESH_TOKEN with: ${json.refresh_token}`)
+  }
+  return json.access_token
 }
 
 async function createUploadSession(accessToken, folder, fileName) {
-  const user = encodeURIComponent(requiredEnv('ONEDRIVE_USER'))
   const itemPath = [...folder.split('/'), fileName].map(encodeURIComponent).join('/')
-  const url = `https://graph.microsoft.com/v1.0/users/${user}/drive/root:/${itemPath}:/createUploadSession`
+  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${itemPath}:/createUploadSession`
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'replace' } }),
   })
   if (!response.ok) throw new Error(`Failed to create upload session (${response.status}): ${await response.text()}`)
-  const body = await response.json()
-  if (!body.uploadUrl) throw new Error('Upload session response did not contain an uploadUrl')
-  return body.uploadUrl
+  const json = await response.json()
+  if (!json.uploadUrl) throw new Error('Upload session response did not contain an uploadUrl')
+  return json.uploadUrl
 }
 
 async function uploadInChunks(uploadUrl, filePath) {
