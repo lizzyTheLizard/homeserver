@@ -107,8 +107,26 @@ Access options:
 The `backup` service ([`db-backup/`](db-backup/)) runs a full nightly
 `pg_dump` (custom format) of the **prod** database, stores it in
 `/opt/homeserver/backup` on the host (kept `RETENTION_DAYS`, default 31), and
-uploads each dump to OneDrive via the Microsoft Graph app registration. The
-dev-machine mounts that folder read-only.
+uploads each dump to a **personal** OneDrive account via the Microsoft Graph
+API using a delegated refresh token. The dev-machine mounts that folder
+read-only.
+
+### Setting up the OneDrive token
+
+1. In Azure, register an app as "Accounts in any organizational directory and
+   personal Microsoft accounts" and add the **delegated** permissions
+   `Files.ReadWrite` and `offline_access` (user consent).
+2. Run the device-code helper to sign in with your personal Microsoft account
+   and print a refresh token:
+
+   ```bash
+   docker compose run --rm backup node /usr/local/bin/get-onedrive-token.mjs
+   # or locally: node infrastructure/db-backup/get-onedrive-token.mjs
+   ```
+
+3. Save the printed value as `ONEDRIVE_REFRESH_TOKEN` in `.env`. The uploader
+   exchanges it for a fresh access token on every run and prints a new refresh
+   token when the old one is rotated — update `.env` when you see that message.
 
 Restore from anywhere with:
 
@@ -131,7 +149,8 @@ All variables are listed in [`env.example`](env.example). Highlights:
 | `ADMIN_USERNAME`/`ADMIN_PASSWORD` | Basic-auth for admin tools (dozzle, pgweb) |
 | `DEV_USERNAME`/`DEV_PASSWORD`     | Basic-auth for dev tools (code-server, OpenCode) |
 | `REPO_URL`/`GIT_NAME`/`GIT_MAIL`/`DEV_SSH_KEY_PUB` | dev-machine git + SSH setup |
-| `ONEDRIVE_USER`    | Account the backup is uploaded to                      |
+| `ONEDRIVE_REFRESH_TOKEN` | Delegated refresh token for the personal OneDrive upload |
+| `ONEDRIVE_BACKUP_FOLDER` | OneDrive folder the dumps are stored in (default: Homeserver) |
 | OIDC / session / AI / Graph vars | Same as the app (see root `README.md`)     |
 
 ## Deployment
