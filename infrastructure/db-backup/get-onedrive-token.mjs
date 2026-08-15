@@ -3,15 +3,22 @@
 //
 // Runs the Microsoft identity device-code flow against a personal Microsoft
 // account, prints the resulting ONEDRIVE_REFRESH_TOKEN to save in your .env.
-// The app registration must allow "Accounts in any organizational directory
-// and personal Microsoft accounts" with delegated Files.ReadWrite + offline_access.
+// The HomeserverGraphAccess app registration is configured for personal
+// Microsoft accounts only, so we target the /consumers tenant endpoint
+// (the /common endpoint rejects it with AADSTS9002346).
+//
+// Prerequisites in the Azure app registration:
+//   - "Allow public client flows" must be ENABLED (Authentication > Advanced
+//     settings), because the device-code flow is a public-client flow. Without
+//     it Azure rejects with AADSTS70002 ("client must be marked as 'mobile'").
+//   - Delegated Files.ReadWrite + offline_access are required.
 //
 // Usage: node get-onedrive-token.mjs
 
 import process from 'node:process'
 
-const TOKEN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
-const DEVICECODE_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/devicecode'
+const TOKEN_URL = 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token'
+const DEVICECODE_URL = 'https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode'
 const SCOPE = 'https://graph.microsoft.com/Files.ReadWrite offline_access'
 
 function requiredEnv(name) {
@@ -26,7 +33,18 @@ async function requestDeviceCode(clientId) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: clientId, scope: SCOPE }),
   })
-  if (!response.ok) throw new Error(`Device code request failed (${response.status}): ${await response.text()}`)
+  if (!response.ok) {
+    const text = await response.text()
+    if (text.includes('AADSTS70002')) {
+      throw new Error(
+        `Device code request failed (${response.status}): ${text}\n`
+        + 'Fix: in the Azure app registration, enable "Allow public client flows" '
+        + '(Authentication > Advanced settings). The device-code flow is a public-client '
+        + 'flow and is rejected otherwise (AADSTS70002).',
+      )
+    }
+    throw new Error(`Device code request failed: ${text}`)
+  }
   return response.json()
 }
 
