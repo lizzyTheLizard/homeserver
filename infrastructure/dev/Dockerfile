@@ -47,21 +47,25 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && corepack prepare pnpm@latest --activate \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Install Go
+# 4. Install Playwright browser OS dependencies. The browser binaries themselves
+#    are fetched at runtime (see AGENTS.md) via `pnpm exec playwright install --with-deps`.
+RUN apt-get update && npx -y playwright@1.62.1 install-deps && rm -rf /var/lib/apt/lists/*
+
+# 5. Install Go
 ARG GO_VERSION="1.23.0"
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH=/home/dev/go
 ENV PATH=/home/dev/go/bin:${PATH}
 
-# 5. Install code-server and OpenCode CLI
+# 6. Install code-server and OpenCode CLI
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN npm install -g opencode-ai
 
-# 6. Create dedicated non-root user "dev"
+# 7. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# 7. Configure OpenSSH Server (sshd on port 2222, key-only auth, disable root)
+# 8. Configure OpenSSH Server (sshd on port 2222, key-only auth, disable root)
 RUN mkdir -p /var/run/sshd \
     && echo "Port 2222" >> /etc/ssh/sshd_config \
     && echo "PermitRootLogin no" >> /etc/ssh/sshd_config \
@@ -69,7 +73,7 @@ RUN mkdir -p /var/run/sshd \
     && echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config \
     && echo "AllowUsers dev" >> /etc/ssh/sshd_config
 
-# 8 Copy configuration files & entrypoint script
+# 9. Copy configuration files & entrypoint script
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
