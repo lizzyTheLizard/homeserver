@@ -70,6 +70,12 @@ The `backup` service in `infrastructure/docker-compose.yml` (image sources in `i
 
 `pnpm restoreBackup <file> <dev|test|prod> [--yes]` (`app/shared/_external/db/restoreBackup.ts`) replaces the target database with a backup: drops/recreates the `public` schema, then runs `pg_restore`. Bare filenames are resolved against `/opt/homeserver/backup`. Connection strings: `dev` → `DB_CONNECTION_STRING` (default local dev DB), `test` → `DB_CONNECTION_STRING_TEST`, `prod` → `DB_CONNECTION_STRING_PROD` (requires typing `restore prod` or `--yes`).
 
+## Infrastructure
+
+The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container.
+
+Development happens inside `dev-machine` (see `infrastructure/README.md`): it runs **code-server** (VS Code in the browser, `dev.gutschi.site:8443`), **OpenCode** (`opencode serve`, `dev.gutschi.site:8444`), and Storybook (`:8445`), plus an SSH server on port `2222` for VS Code Remote. The repo is cloned into `/home/dev/workspace`; OpenCode and `pnpm` are available there.
+
 ## Whatsapp Bridge
 
 `Whatsapp/` is a standalone Go module (not part of the pnpm/Next.js toolchain). It is a bridge process that connects a WhatsApp account via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store.
