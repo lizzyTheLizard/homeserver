@@ -1,50 +1,48 @@
+#!/usr/bin/env node
+// Restores a database backup into the DEV or PROD database.
+// Runs inside the `backup` container (node:24-alpine + postgresql16-client),
+// so it cannot be a pnpm script on the dev-machine. Invoke it with:
+//   docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev|prod> [--yes]
+// No npm dependencies - plain Node.js (>= 20) only.
+
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 
-export type BackupTarget = 'dev' | 'test' | 'prod'
+const DEFAULT_BACKUP_DIR = '/backup'
+// Default DEV connection points at the dev database container. The PROD
+// connection has no default - it must come from DB_CONNECTION_STRING_PROD.
+const DEFAULT_DEV_CONNECTION = 'postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable'
 
-export interface RestoreOptions {
-  file: string
-  target: BackupTarget
-  assumeYes: boolean
-}
-
-export function parseArgs(argv: string[]): RestoreOptions {
+function parseArgs(argv) {
   const args = argv.filter(arg => arg !== '--')
   const assumeYes = args.includes('--yes')
   const positional = args.filter(arg => arg !== '--yes')
-  if (positional.length !== 2) throw new Error('Usage: pnpm restoreBackup <backup-file> <dev|test|prod> [--yes]')
+  if (positional.length !== 2) throw new Error('Usage: restore-backup.mjs <backup-file> <dev|prod> [--yes]')
   const [file, target] = positional
-  if (target !== 'dev' && target !== 'test' && target !== 'prod') throw new Error(`Invalid target '${target}' - expected dev, test or prod`)
+  if (target !== 'dev' && target !== 'prod') throw new Error(`Invalid target '${target}' - expected dev or prod`)
   return { file, target, assumeYes }
 }
 
-export function resolveConnectionString(target: BackupTarget, env: Record<string, string | undefined> = process.env): string {
+function resolveConnectionString(target, env = process.env) {
   switch (target) {
     case 'dev':
       return env.DB_CONNECTION_STRING ?? DEFAULT_DEV_CONNECTION
-    case 'test':
-      if (!env.DB_CONNECTION_STRING_TEST) throw new Error('Missing required environment variable: DB_CONNECTION_STRING_TEST')
-      return env.DB_CONNECTION_STRING_TEST
     case 'prod':
       if (!env.DB_CONNECTION_STRING_PROD) throw new Error('Missing required environment variable: DB_CONNECTION_STRING_PROD')
       return env.DB_CONNECTION_STRING_PROD
   }
 }
 
-export function resolveBackupFile(file: string, backupDir: string = DEFAULT_BACKUP_DIR): string {
+function resolveBackupFile(file, backupDir = DEFAULT_BACKUP_DIR) {
   const fullPath = path.isAbsolute(file) ? file : path.join(backupDir, file)
   if (!existsSync(fullPath)) throw new Error(`Backup file not found: ${fullPath}`)
   return fullPath
 }
 
-const DEFAULT_BACKUP_DIR = '/opt/homeserver/backup'
-const DEFAULT_DEV_CONNECTION = 'postgres://homeserver:homeserver@localhost:5432/homeserver?sslmode=disable'
-
-async function main(): Promise<void> {
+async function main() {
   const options = parseArgs(process.argv.slice(2))
   const file = resolveBackupFile(options.file)
   const connectionString = resolveConnectionString(options.target)
@@ -57,7 +55,7 @@ async function main(): Promise<void> {
   console.log('[restoreBackup] Done - restart the target application so that any pending migrations are applied')
 }
 
-async function confirmProd(file: string, connectionString: string): Promise<void> {
+async function confirmProd(file, connectionString) {
   if (!process.stdin.isTTY) throw new Error('Restoring into the PROD database requires interactive confirmation or the --yes flag')
   const rl = createInterface({ input: process.stdin, output: process.stdout })
   try {
@@ -69,8 +67,8 @@ async function confirmProd(file: string, connectionString: string): Promise<void
   }
 }
 
-async function run(command: string, args: string[]): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
+async function run(command, args) {
+  await new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: 'inherit' })
     child.on('error', reject)
     child.on('exit', (code) => {
@@ -80,8 +78,8 @@ async function run(command: string, args: string[]): Promise<void> {
   })
 }
 
-if (process.argv[1]?.endsWith('restoreBackup.ts')) {
-  main().catch((error: unknown) => {
+if (process.argv[1]?.endsWith('restore-backup.mjs')) {
+  main().catch((error) => {
     console.error('[restoreBackup] Failed:', error instanceof Error ? error.message : error)
     process.exitCode = 1
   })

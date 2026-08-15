@@ -68,6 +68,10 @@ services:
       PGUSER: homeserver
       PGDATABASE: homeserver
       PGPASSWORD: ${PROD_DB_PASSWORD}
+      # Connection strings used by restore-backup.mjs (run via
+      # `docker compose exec backup node /usr/local/bin/restore-backup.mjs`).
+      DB_CONNECTION_STRING: postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable
+      DB_CONNECTION_STRING_PROD: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
     volumes:
       # resolves to /opt/homeserver/backup on the host (the compose project dir)
       - ./backup:/backup
@@ -191,8 +195,6 @@ services:
       DEV_SSH_KEY_PUB: "${DEV_SSH_KEY_PUB}"
     volumes:
       - dev_home:/home/dev
-      # database backups, readable for pnpm restoreBackup
-      - ./backup:/opt/homeserver/backup:ro
     restart: unless-stopped
     ports:
       - "2222:2222"   # SSH for VS Code Remote

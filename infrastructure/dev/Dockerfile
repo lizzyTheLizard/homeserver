@@ -6,8 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-# 1. Install base utilities, SSH server, supervisor, PostgreSQL client tools (pg_restore/psql
-#    for pnpm restoreBackup), and GitHub CLI repo dependencies
+# 1. Install base utilities, SSH server, supervisor, PostgreSQL client tools, and
+#    GitHub CLI repo dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \

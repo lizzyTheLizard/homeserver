@@ -71,7 +71,7 @@ In production every required var must be set; the app fails fast on startup othe
 | `pnpm storybook`   | Storybook on port 6006 |
 | `pnpm chromatic`   | Visual regression tests |
 | `pnpm clean`       | Remove build artefacts |
-| `pnpm restoreBackup <file> <dev\|test\|prod>` | Restore a database backup (see [infrastructure/env.example](infrastructure/env.example)) |
+| `docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev\|prod> [--yes]` | Restore a database backup into the dev or prod DB (see [infrastructure/README.md](infrastructure/README.md)) |
 
 ## Architecture
 

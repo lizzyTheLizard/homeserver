@@ -94,8 +94,7 @@ Stories (Storybook) run on `:6006` → `dev.gutschi.site:8445`.
 On startup the entrypoint ([`dev/entrypoint.sh`](dev/entrypoint.sh)) configures
 git, installs the SSH key from `DEV_SSH_KEY_PUB`, clones `REPO_URL` into
 `/home/dev/workspace`, and launches supervisord. The dev home is persisted in the
-`dev_home` volume, and the host backup folder is mounted read-only at
-`/opt/homeserver/backup` so `pnpm restoreBackup` works from inside the machine.
+`dev_home` volume.
 
 Access options:
 - **VS Code Remote SSH** → `ssh dev@<host> -p 2222` (use the key from `DEV_SSH_KEY_PUB`).
@@ -128,11 +127,20 @@ read-only.
    exchanges it for a fresh access token on every run and prints a new refresh
    token when the old one is rotated — update `.env` when you see that message.
 
-Restore from anywhere with:
+Restore a backup from the server with:
 
 ```bash
-pnpm restoreBackup <file> <dev|test|prod> [--yes]
+docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev|prod> [--yes]
 ```
+
+The restore script runs **inside** the `backup` container, so it can reach both
+databases directly: `dev`
+restores into `postgresdev`, `prod` into `postgresprod`. Bare filenames are
+resolved against `/backup` (the host `./backup` mount). The connection strings
+come from the `backup` service environment (`DB_CONNECTION_STRING` for dev,
+`DB_CONNECTION_STRING_PROD` for prod). Restoring into prod requires either typing
+`restore prod` interactively or passing `--yes`; because `docker compose exec`
+does not allocate a TTY by default, use `--yes` for prod restores.
 
 See `AGENTS.md` (Database Backup section) for details.
 
