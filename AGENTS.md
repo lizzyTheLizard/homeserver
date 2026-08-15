@@ -64,6 +64,12 @@ Vitest runs three projects in parallel:
 
 All design files are in the `design/` folder — component designs, screen mockups, and exported artifacts. Edit them with OpenDesign.
 
+## Database Backup
+
+The `backup` service in `infrastructure/docker-compose.yml` (image sources in `infrastructure/db-backup/`) takes a full `pg_dump` (custom format) of the PROD database every night (cron schedule via `BACKUP_SCHEDULE`, default `0 3 * * *`), stores it in `/opt/homeserver/backup` on the host, deletes local files older than `RETENTION_DAYS` (default 31), and uploads each dump to OneDrive via Microsoft Graph client-credentials (no npm deps, plain fetch). The dev-machine mounts that folder read-only at `/opt/homeserver/backup`.
+
+`pnpm restoreBackup <file> <dev|test|prod> [--yes]` (`app/shared/_external/db/restoreBackup.ts`) replaces the target database with a backup: drops/recreates the `public` schema, then runs `pg_restore`. Bare filenames are resolved against `/opt/homeserver/backup`. Connection strings: `dev` → `DB_CONNECTION_STRING` (default local dev DB), `test` → `DB_CONNECTION_STRING_TEST`, `prod` → `DB_CONNECTION_STRING_PROD` (requires typing `restore prod` or `--yes`).
+
 ## Whatsapp Bridge
 
 `Whatsapp/` is a standalone Go module (not part of the pnpm/Next.js toolchain). It is a bridge process that connects a WhatsApp account via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store.

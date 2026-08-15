@@ -15,7 +15,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "npx chromatic --build-script-name build-storybook",
-    "prodToDev": "node --import tsx --env-file .env ./app/shared/_external/db/prodToDev.ts"
+    "restoreBackup": "node --import tsx --env-file-if-exists=.env ./app/shared/_external/db/restoreBackup.ts"
   },
   "dependencies": {
     "@ai-sdk/groq": "^4.0.17",

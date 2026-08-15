@@ -58,6 +58,7 @@ In production every required var must be set; the app fails fast on startup othe
 | `pnpm storybook`   | Storybook on port 6006 |
 | `pnpm chromatic`   | Visual regression tests |
 | `pnpm clean`       | Remove build artefacts |
+| `pnpm restoreBackup <file> <dev\|test\|prod>` | Restore a database backup (see [infrastructure/env.example](infrastructure/env.example)) |
 
 ## Architecture
 
