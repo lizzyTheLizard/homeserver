@@ -41,7 +41,7 @@ async function pollForToken(clientId, deviceCode, interval, expiresIn) {
   if (clientSecret) body.set('client_secret', clientSecret)
 
   while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, interval * 1000))
+    await new Promise(resolve => setTimeout(resolve, interval * 1000))
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
