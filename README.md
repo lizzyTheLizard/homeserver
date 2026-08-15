@@ -13,22 +13,35 @@ A personal multi-application portal running at [www.gutschi.site](https://www.gu
 
 ## Getting started
 
-**Prerequisites:** Node 24, pnpm 10, Docker (for the dev database).
+Development happens on the home server's **`dev-machine`** container — that is the
+only supported environment, and the dev database already runs there. You do **not**
+start the database manually with Docker Compose.
 
-The local PostgreSQL database runs in Docker and must be started **before** the application:
+Connect to the dev machine (see [infrastructure/README.md](infrastructure/README.md)
+for the full setup):
+
+- **Browser VS Code:** <https://dev.gutschi.site:8443> (dev auth)
+- **OpenCode:** <https://dev.gutschi.site:8444> (dev auth)
+- **VS Code Remote SSH:** `ssh dev@<host> -p 2222`
+
+Inside the dev machine the repo is already cloned at `/home/dev/workspace` with
+`pnpm` and the dev Postgres database available:
 
 ```bash
-docker compose -f infrastructure/docker-compose.dev.yml up -d   # dev database (postgres:16, homeserver/homeserver)
 pnpm install
-cp .env.example .env   # then fill in the values
+cp infrastructure/env.example .env   # then fill in the values
 pnpm dev
 ```
+
+The full stack (prod database, application, reverse proxies, DNS, backups, and the
+`dev-machine` container with VS Code + OpenCode) is described in
+[infrastructure/README.md](infrastructure/README.md).
 
 The dev server is at `http://localhost:3000`. All routes are protected by OpenID Connect (Microsoft Azure AD by default). Migrations in [db/](db/) run automatically on first DB connection.
 
 ## Environment
 
-See [.env.example](.env.example) for the full list. The most important ones:
+See [infrastructure/env.example](infrastructure/env.example) for the full list. The most important ones:
 
 | Variable                 | Purpose                                          |
 |--------------------------|--------------------------------------------------|
@@ -88,10 +101,10 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 │   ├── startpage/      Personal startpage settings and components
 │   └── shared/         Cross-cutting helpers, components, DB access, authentication
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
-├── infrastructure/     Terraform (Scaleway, Terraform Cloud, see [infrastructure/README.md](infrastructure/README.md))
+├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
 ├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → deploy)
 ├── .storybook/         Storybook configuration
-├── Dockerfile          Production image (Node 20 Alpine)
+├── Dockerfile          Production image (Node 24 Alpine)
 ├── server.ts            Custom HTTP server (auth, WS)
 ```
 
