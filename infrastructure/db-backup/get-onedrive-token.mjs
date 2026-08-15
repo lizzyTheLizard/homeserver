@@ -55,8 +55,6 @@ async function pollForToken(clientId, deviceCode, interval, expiresIn) {
     grant_type: 'device_code',
     device_code: deviceCode,
   })
-  const clientSecret = process.env.MICROSOFT_GRAPH_CLIENT_SECRET
-  if (clientSecret) body.set('client_secret', clientSecret)
 
   while (Date.now() < deadline) {
     await new Promise(resolve => setTimeout(resolve, interval * 1000))

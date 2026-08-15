@@ -32,8 +32,6 @@ async function getAccessToken() {
     grant_type: 'refresh_token',
     refresh_token: requiredEnv('ONEDRIVE_REFRESH_TOKEN'),
   })
-  const clientSecret = process.env.MICROSOFT_GRAPH_CLIENT_SECRET
-  if (clientSecret) body.set('client_secret', clientSecret)
 
   const response = await fetch(TOKEN_URL, {
     method: 'POST',
