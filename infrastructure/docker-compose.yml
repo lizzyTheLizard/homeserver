@@ -94,6 +94,30 @@ services:
       retries: 3
       start_period: 40s
 
+  backup:
+    build:
+      context: ./db-backup
+    container_name: Backup
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PGHOST: postgresprod
+      PGUSER: homeserver
+      PGDATABASE: homeserver
+      PGPASSWORD: ${PROD_DB_PASSWORD}
+    volumes:
+      # resolves to /opt/homeserver/backup on the host (the compose project dir)
+      - ./backup:/backup
+    depends_on:
+      postgresprod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pidof crond"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
   pgwebprod:
     container_name: Prod-Pgweb
     image: sosedoff/pgweb
@@ -191,10 +215,11 @@ services:
       caddy:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      test: ["CMD", "wget", "-q", "-Y", "off", "-O", "/dev/null", "http://127.0.0.1/health"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
+      start_period: 10s
     # Periodically reload nginx to pick up renewed certificates
     command: '/bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\""'
 
@@ -218,6 +243,8 @@ services:
       DEV_SSH_KEY_PUB: "${DEV_SSH_KEY_PUB}"
     volumes:
       - dev_home:/home/dev
+      # database backups, readable for pnpm restoreBackup
+      - ./backup:/opt/homeserver/backup:ro
     restart: unless-stopped
     ports:
       - "2222:2222"   # SSH for VS Code Remote
