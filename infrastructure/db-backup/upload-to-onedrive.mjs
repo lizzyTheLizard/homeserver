@@ -9,7 +9,9 @@ import path from 'node:path'
 import process from 'node:process'
 
 const CHUNK_SIZE = 10 * 1024 * 1024 // must be a multiple of 320 KiB
-const TOKEN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+// App registration is personal Microsoft accounts only, so use the /consumers
+// tenant endpoint (the /common endpoint rejects it with AADSTS9002346).
+const TOKEN_URL = 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token'
 
 async function main() {
   const filePath = process.argv[2]

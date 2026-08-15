@@ -136,6 +136,29 @@ jobs:
                 cd /opt/homeserver
                 docker load --input homeserver.tar
                 rm homeserver.tar
-                docker compose up -d --remove-orphans
+                docker compose up -d --build --force-recreate --remove-orphans
                 docker image prune -f
+              EOF
+          - name: Wait for stack to become healthy
+            run: |
+              ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+                set -e
+                cd /opt/homeserver
+                timeout 180s bash -c '
+                  while true; do
+                    bad=0
+                    for cid in $(docker compose ps -q); do
+                      state=$(docker inspect -f "{{.State.Status}}" "$cid")
+                      health=$(docker inspect -f "{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}" "$cid")
+                      if [ "$state" != "running" ]; then bad=1; break; fi
+                      if [ "$health" != "none" ] && [ "$health" != "healthy" ]; then bad=1; break; fi
+                    done
+                    if [ "$bad" -eq 0 ]; then
+                      echo "All containers are running and healthy."
+                      break
+                    fi
+                    echo "Waiting for containers to become healthy..."
+                    sleep 5
+                  done
+                '
               EOF
