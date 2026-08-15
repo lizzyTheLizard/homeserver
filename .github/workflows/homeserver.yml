@@ -81,19 +81,13 @@ jobs:
           - name: Get Datetime
             run: echo "datetime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
             id: get-datetime
-          - name: Set Environment Variables (Prod)
-            if : github.ref == 'refs/heads/main'
-            run: echo "container_tag=latest" >> $GITHUB_ENV
-          - name: Set Environment Variables (Test)
-            if : github.ref != 'refs/heads/main'
-            run: echo "container_tag=test" >> $GITHUB_ENV
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
               context: .
               platforms: linux/amd64
               push: false
-              tags: homeserver:${{ env.container_tag }}
+              tags: homeserver:latest
               cache-from: type=gha
               cache-to: type=gha,mode=max 
               outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
@@ -114,7 +108,7 @@ jobs:
         name: Restart Homeserver Stack
         needs: [lint, test, whatsapp, chromatic, build]
         runs-on: ubuntu-latest
-        if: github.actor != 'dependabot[bot]'        
+        if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'        
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -142,10 +136,6 @@ jobs:
                 cd /opt/homeserver
                 docker load --input homeserver.tar
                 rm homeserver.tar
-                # latest must exist (on branch deploys it comes from a previous main deploy), otherwise fail
-                docker image inspect homeserver:latest > /dev/null
-                # test falls back to latest if it does not exist yet
-                docker image inspect homeserver:test > /dev/null 2>&1 || docker tag homeserver:latest homeserver:test
                 docker compose up -d --remove-orphans
                 docker image prune -f
               EOF

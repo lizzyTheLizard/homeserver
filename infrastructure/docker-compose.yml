@@ -16,23 +16,6 @@ services:
       retries: 5
       start_period: 30s
 
-  postgrestest:
-    container_name: Test-Database
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: homeserver
-      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD}
-      POSTGRES_DB: homeserver
-    volumes:
-      - postgres_test_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
   postgresdev:
     container_name: Dev-Database
     image: postgres:16-alpine
@@ -73,27 +56,6 @@ services:
       retries: 3
       start_period: 40s
 
-  applicationtest:
-    container_name: Test-Application
-    image: homeserver:test
-    pull_policy: never
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: production
-      APP_URL: https://test.gutschi.site
-      DB_CONNECTION_STRING: postgres://homeserver:${TEST_DB_PASSWORD}@postgrestest:5432/homeserver?sslmode=disable
-    depends_on:
-      postgrestest:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://applicationtest:3000/api/ping',function(r){process.exit(r.statusCode===200?0:1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   backup:
     build:
       context: ./db-backup
@@ -129,17 +91,6 @@ services:
       postgresprod:
         condition: service_healthy
 
-  pgwebtest:
-    container_name: Test-Pgweb
-    image: sosedoff/pgweb
-    restart: unless-stopped
-    command: --bind=0.0.0.0 --listen=8081
-    environment:
-      DATABASE_URL: postgres://homeserver:${TEST_DB_PASSWORD}@postgrestest:5432/homeserver?sslmode=disable
-    depends_on:
-      postgrestest:
-        condition: service_healthy
-
   dozzle:
     container_name: Dozzle
     image: amir20/dozzle:latest
@@ -164,7 +115,6 @@ services:
     depends_on:
       - dozzle
       - pgwebprod
-      - pgwebtest
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
@@ -210,8 +160,6 @@ services:
     depends_on:
       applicationprod:
         condition: service_healthy
-      applicationtest:
-        condition: service_healthy
       caddy:
         condition: service_healthy
     healthcheck:
@@ -250,7 +198,6 @@ services:
       - "2222:2222"   # SSH for VS Code Remote
 volumes:
   postgres_prod_data:
-  postgres_test_data:
   postgres_dev_data:
   dev_home:
 

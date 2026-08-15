@@ -12,7 +12,6 @@ $TTL 300
 @       IN      CAA     0 issuewild "letsencrypt.org"
 ns      IN      A       __HOST_IP__
 dev     IN      A       __HOST_IP__
-test    IN      A       __HOST_IP__
 logs    IN      A       __HOST_IP__
 www-devserver IN A      __HOST_IP__       
 www     IN      CNAME   gutschisitewsdlddur-www-gutschi-site.functions.fnc.fr-par.scw.cloud.
