@@ -44,7 +44,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      APP_URL: https://www-devserver.gutschi.site
+      APP_URL: https://www.gutschi.site
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
     depends_on:
       postgresprod:
