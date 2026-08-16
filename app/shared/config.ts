@@ -54,7 +54,7 @@ export const config: Config = {
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
   LOG_URL: required('LOG_URL', 'http://localhost:4000'),
   APP_URL: required('APP_URL', 'http://localhost:3000'),
-  DB_CONNECTION_STRING: required('DB_CONNECTION_STRING', 'postgres://user:password@localhost:5432/homeserver?sslmode=disable'),
+  DB_CONNECTION_STRING: required('DB_CONNECTION_STRING', 'postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable'),
   ADMIN_EMAIL: required('ADMIN_EMAIL', 'admin@example.com'),
   AI: {
     API_KEY: required('AI_API_KEY', 'dev-only-key'),
