@@ -62,7 +62,7 @@ starting the stack.
 ### DNS
 
 - **`bind9`** — `Bind9`, authoritative DNS for `gutschi.site`, so the various
-  subdomains (`www-devserver`, `dev`, `logs`) resolve to the home server. The
+  subdomains (`www`, `dev`, `logs`) resolve to the home server. The
   zone template [`bind9/db.gutschi.site`](bind9/db.gutschi.site) is rendered with
   `HOST_IP` substituted at container start.
 

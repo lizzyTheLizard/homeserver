@@ -58,6 +58,10 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH=/home/dev/go
 ENV PATH=/home/dev/go/bin:${PATH}
 
+# Make Go available to login/PAM sessions (e.g. SSH), which read
+# /etc/environment instead of the container ENV above.
+RUN echo 'PATH="/usr/local/go/bin:/home/dev/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"' > /etc/environment
+
 # 6. Install code-server and OpenCode CLI
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN npm install -g opencode-ai
