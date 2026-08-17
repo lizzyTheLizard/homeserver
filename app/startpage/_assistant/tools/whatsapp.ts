@@ -1,7 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/auth'
-import { getWAWorker } from '../../_external/whatsapp'
+import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../../_external/whatsapp'
 import { transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
@@ -12,10 +12,9 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(chatOverviewSchema),
     execute: async () => {
-      const wa = await getWAWorker(user)
-      const chats = (await wa.getChats()).filter(c => !c.isArchived)
+      const chats = (await getWhatsappChats(user.email)).filter(c => !c.isArchived)
       return Promise.all(chats
-        .map(async chat => ({ chat, messages: await wa.getMessagesForChat(chat.id) }))
+        .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) }))
         .map(c => c.then(({ chat, messages }) => ({ chat, messages: filterRecentMessages(messages) }))),
       )
     },
@@ -26,8 +25,7 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(chatSchema),
     execute: async () => {
-      const wa = await getWAWorker(user)
-      const chats = (await wa.getChats()).filter(c => !c.isArchived)
+      const chats = (await getWhatsappChats(user.email)).filter(c => !c.isArchived)
       return chats
     },
   })
@@ -37,28 +35,26 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({}),
     outputSchema: z.array(chatSchema),
     execute: async () => {
-      const wa = await getWAWorker(user)
-      if (wa.getStatus().type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${wa.getStatus().type}`)
-      const chats = await wa.getChats()
-      return chats
+      const status = await getWhatsappStatus(user.email)
+      if (status.type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${status.type}`)
+      return getWhatsappChats(user.email)
     },
   })
 
-  const getWhatsappMessages = tool({
+  const getWhatsappMessagesTool = tool({
     description: 'Get messages for a specific WhatsApp chat by its ID (jid)',
     inputSchema: z.object({
       chatId: z.string().describe('The chat ID (jid) to get messages for'),
     }),
     outputSchema: z.array(messageSchema),
     execute: async ({ chatId }) => {
-      const wa = await getWAWorker(user)
-      if (wa.getStatus().type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${wa.getStatus().type}`)
-      const messages = await wa.getMessagesForChat(chatId)
-      return messages
+      const status = await getWhatsappStatus(user.email)
+      if (status.type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${status.type}`)
+      return getWhatsappMessages(user.email, chatId)
     },
   })
 
-  const sendWhatsappMessage = tool({
+  const sendWhatsappMessageTool = tool({
     description: 'Send a WhatsApp message to a chat',
     inputSchema: z.object({
       chatId: z.string().describe('The chat ID (jid) to send the message to'),
@@ -66,8 +62,7 @@ export default function getTools(user: UserSession): ToolSet {
     }),
     execute: async ({ chatId, message }) => transactional(async (tx) => {
       try {
-        const wa = await getWAWorker(user)
-        await wa.sendMessage(chatId, message)
+        await sendWhatsappMessage(user.email, chatId, message)
         await logEvent(tx, 'INFO', `Sent WhatsApp message to chat ${chatId}`)
         return 'Message sent successfully'
       }
@@ -79,15 +74,14 @@ export default function getTools(user: UserSession): ToolSet {
     }),
   })
 
-  const archiveWhatsappChat = tool({
+  const archiveWhatsappChatTool = tool({
     description: 'Archive a WhatsApp chat',
     inputSchema: z.object({
       chatId: z.string().describe('The chat ID (jid) to archive'),
     }),
     execute: async ({ chatId }) => transactional(async (tx) => {
       try {
-        const wa = await getWAWorker(user)
-        await wa.setArchived(chatId, true)
+        await archiveWhatsappChat(user.email, chatId, true)
         await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId} and marked as read`)
         return 'Chat archived successfully'
       }
@@ -103,9 +97,9 @@ export default function getTools(user: UserSession): ToolSet {
     get_whatsapp_overview: getWhatsappOverview,
     list_whatsapp_chats: listWhatsappChats,
     list_all_whatsapp_chats: listAllWhatsappChats,
-    get_whatsapp_messages: getWhatsappMessages,
-    send_whatsapp_message: sendWhatsappMessage,
-    archive_whatsapp_chat: archiveWhatsappChat,
+    get_whatsapp_messages: getWhatsappMessagesTool,
+    send_whatsapp_message: sendWhatsappMessageTool,
+    archive_whatsapp_chat: archiveWhatsappChatTool,
   }
 }
 

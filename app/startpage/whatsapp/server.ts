@@ -3,38 +3,32 @@ import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { logEvent } from '@/app/shared/_data/Event'
-import { Chat, Message, SyncStatus, getWAWorker } from '../_external/whatsapp'
+import { Chat, Message, SyncStatus, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat, triggerWhatsappFullSync } from '../_external/whatsapp'
 import { logger } from '@/app/shared/logger'
 
 export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus }> {
   const user = await getAuthenticatedUserSession('startpage')
-  const wa = await getWAWorker(user)
-  const chats = await wa.getChats()
-  const status = wa.getStatus()
+  const [chats, status] = await Promise.all([getWhatsappChats(user.email), getWhatsappStatus(user.email)])
   logger.debug(`Loaded ${chats.length.toString()} chats and status ${status.type} for user ${user.email}`)
   return { chats, status }
 }
 
 export async function loadMessages(chatId: string): Promise<Message[]> {
   const user = await getAuthenticatedUserSession('startpage')
-  const wa = await getWAWorker(user)
-  return wa.getMessagesForChat(chatId)
+  return getWhatsappMessages(user.email, chatId)
 }
 
 export async function getStatus(): ActionResponse<SyncStatus> {
   return toResponse(nontransactional(async () => {
     const user = await getAuthenticatedUserSession('startpage')
-    const wa = await getWAWorker(user)
-    const status = wa.getStatus()
-    return status
+    return getWhatsappStatus(user.email)
   }))
 }
 
 export async function archiveChat(chatJid: string, archived: boolean): ActionResponse<void> {
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('startpage')
-    const wa = await getWAWorker(user)
-    await wa.setArchived(chatJid, archived)
+    await archiveWhatsappChat(user.email, chatJid, archived)
     await logEvent(client, 'INFO', `${archived ? 'Archived' : 'Unarchived'} WhatsApp chat ${chatJid}`)
   }))
 }
@@ -42,8 +36,7 @@ export async function archiveChat(chatJid: string, archived: boolean): ActionRes
 export async function sendChatMessage(chatJid: string, text: string): ActionResponse<void> {
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('startpage')
-    const wa = await getWAWorker(user)
-    await wa.sendMessage(chatJid, text)
+    await sendWhatsappMessage(user.email, chatJid, text)
     await logEvent(client, 'INFO', `Sent WhatsApp message to chat ${chatJid}`)
   }))
 }
@@ -51,8 +44,7 @@ export async function sendChatMessage(chatJid: string, text: string): ActionResp
 export async function fullSync(): ActionResponse<void> {
   return toResponse(transactional(async (client) => {
     const user = await getAuthenticatedUserSession('startpage')
-    const wa = await getWAWorker(user)
-    wa.fullSync()
+    await triggerWhatsappFullSync(user.email)
     await logEvent(client, 'INFO', 'Triggered WhatsApp full sync')
   }))
 }

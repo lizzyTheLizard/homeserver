@@ -35,6 +35,44 @@ services:
       retries: 5
       start_period: 30s
 
+  whatsapp-bridge:
+    container_name: Prod-WhatsApp-Bridge
+    image: whatsapp-bridge:latest
+    pull_policy: never
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
+      DEV: "false"
+    depends_on:
+      postgresprod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  whatsapp-bridge-dev:
+    container_name: Dev-WhatsApp-Bridge
+    image: whatsapp-bridge:latest
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      DB_CONNECTION_STRING: postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable
+      DEV: "true"
+    depends_on:
+      postgresdev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   applicationprod:
     container_name: Prod-Application
     image: homeserver:latest
@@ -46,8 +84,11 @@ services:
       NODE_ENV: production
       APP_URL: https://www.gutschi.site
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
+      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8080
     depends_on:
       postgresprod:
+        condition: service_healthy
+      whatsapp-bridge:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://applicationprod:3000/api/ping',function(r){process.exit(r.statusCode===200?0:1)})"]
@@ -193,6 +234,7 @@ services:
       GIT_USER_NAME: "${GIT_NAME}"
       GIT_USER_EMAIL: "${GIT_MAIL}"
       DEV_SSH_KEY_PUB: "${DEV_SSH_KEY_PUB}"
+      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge-dev:8080
     volumes:
       - dev_home:/home/dev
     restart: unless-stopped

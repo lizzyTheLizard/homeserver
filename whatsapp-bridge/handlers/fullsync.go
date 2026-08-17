@@ -1,6 +1,7 @@
-package main
+package handlers
 
 import (
+	"log"
 	"context"
 	"database/sql"
 	"errors"
@@ -12,20 +13,20 @@ import (
 	"go.mau.fi/whatsmeow/appstate"
 )
 
-func fullSync(ctx context.Context, client *whatsmeow.Client, db *sql.DB) (err error) {
+func FullSyncRequest(ctx context.Context, client *whatsmeow.Client, db *sql.DB) (err error) {
 	defer func() {
-		evt := Event{Type: EventFullSyncFinished}
 		if err != nil {
-			evt.Error = err.Error()
+			log.Printf("[warn] full sync completed with error: %v", err)
+		} else {
+			log.Printf("[info] full sync completed")
 		}
-		emitEvent(evt)
 	}()
 
 	if client.Store.ID == nil {
 		return errors.New("full_sync: not connected")
 	}
 	start := time.Now()
-	emitLog("debug", "full sync started")
+	log.Printf("[debug] full sync started")
 
 	prog := newProgress("syncing contacts")
 	defer prog.stop()
@@ -48,7 +49,7 @@ func fullSync(ctx context.Context, client *whatsmeow.Client, db *sql.DB) (err er
 		return fmt.Errorf("full_sync: sync groups: %w", err)
 	}
 
-	emitLog("info", fmt.Sprintf("full sync completed (total took %s)", time.Since(start).Round(time.Millisecond)))
+	log.Printf("[info] full sync completed (total took %s)", time.Since(start).Round(time.Millisecond))
 	return nil
 }
 
@@ -86,7 +87,7 @@ func (p *progress) run() {
 			p.mu.Lock()
 			s := p.state
 			p.mu.Unlock()
-			emitLog("debug", fmt.Sprintf("full sync still running after %s (%s)", time.Since(p.start).Round(time.Second), s))
+			log.Printf("[debug] full sync still running after %s (%s)", time.Since(p.start).Round(time.Second), s)
 		}
 	}
 }
@@ -101,6 +102,6 @@ func timedStep(p *progress, label, progressState string, fn func() error) error 
 	if err := fn(); err != nil {
 		return err
 	}
-	emitLog("debug", fmt.Sprintf("%s (step took %s)", label, time.Since(start).Round(time.Millisecond)))
+	log.Printf("[debug] %s (step took %s)", label, time.Since(start).Round(time.Millisecond))
 	return nil
 }
