@@ -74,7 +74,7 @@ The `backup` service in `infrastructure/docker-compose.yml` (image sources in `i
 
 ## Infrastructure
 
-The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the `whatsapp-bridge` / `whatsapp-bridge-dev` containers (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container.
+The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the prod `whatsapp-bridge` container (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container. In development the WhatsApp bridge is not a separate container — `pnpm dev` starts it as a local Go process (the `dev-machine` has Go installed) alongside the Next.js server and ties both lifecycles together.
 
 Development happens inside `dev-machine` (see `infrastructure/README.md`): it runs **code-server** (VS Code in the browser, `dev.gutschi.site:8443`), **OpenCode** (`opencode serve`, `dev.gutschi.site:8444`), and Storybook (`:8445`), plus an SSH server on port `2222` for VS Code Remote. The repo is cloned into `/home/dev/workspace`; OpenCode and `pnpm` are available there.
 

@@ -1,169 +1,346 @@
-# Infrastructure
+# Homeserver — Infrastructure & Operations Guide
 
-The entire stack is **self-hosted on a home server** (no cloud provider / Terraform).
-Everything is orchestrated by a single `docker-compose.yml` that brings up the
-databases, the application, the reverse proxies, DNS, log/DB viewers, nightly
-backups, and a dedicated `dev-machine` container used for development with
-**VS Code (code-server)** and **OpenCode**.
+> **Repository:** https://github.com/lizzyTheLizard/homeserver
+> **Infrastructure source:** [`infrastructure/`](https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure)
+>
+> This document is the operator's manual for the self-hosted Homeserver stack.
+> It is copied to the production installation and explains how to set the system
+> up, what state it keeps, and how to perform day-to-day and emergency
+> operations. It assumes a working Docker + `docker compose` (v2) host.
 
-## Overview
+---
 
-| Concern            | Component(s)                                   |
-|--------------------|------------------------------------------------|
-| App (prod)         | `applicationprod` (image `homeserver:latest`)  |
-| Databases          | `postgresprod`, `postgresdev` (postgres:16)    |
-| Reverse proxy      | `nginx` (TLS + routing) → `caddy` (auth)       |
-| DNS                | `bind9` (authoritative for `*.gutschi.site`)   |
-| TLS certificates   | `certbot` (Let's Encrypt, auto-renew)          |
-| Observability      | `dozzle` (container logs), `pgwebprod` (DB UI) |
-| Backups            | `backup` (nightly `pg_dump` → OneDrive)        |
-| Development        | `dev-machine` (code-server, OpenCode, SSH)     |
+## 1. System setup — what is contained and how it is available
 
-All services are defined in [`docker-compose.yml`](docker-compose.yml). Copy
-[`env.example`](env.example) to `.env` and fill in the real values before
-starting the stack.
+The entire stack is **self-hosted on a single home server** (no cloud provider,
+no Terraform). A single `docker-compose.yml` brings up every component. There is
+no container registry: the `homeserver:latest` and `whatsapp-bridge:latest`
+images are built directly on the server (by CI, see
+[§6.8](#68-deploying--upgrading-the-application)).
 
-## Services
+### Components
 
-### Databases
+| Concern            | Container (`container_name`)     | Image                       |
+|--------------------|---------------------------------|-----------------------------|
+| App (prod)         | `applicationprod` (`Prod-Application`) | `homeserver:latest`   |
+| WhatsApp bridge    | `whatsapp-bridge` (`Prod-WhatsApp-Bridge`) | `whatsapp-bridge:latest` |
+| Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
+| Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
+| Front TLS proxy    | `nginx` (`Nginx`)                | `nginx:alpine`             |
+| Auth proxy         | `caddy` (`Caddy`)                | `caddy:2-alpine`           |
+| DNS                | `bind9` (`Bind9`)                | `ubuntu/bind9:latest`      |
+| TLS issuance       | `certbot` (`Certbot`)            | `certbot/certbot:latest`   |
+| Backups            | `backup` (`Backup`)              | built from `db-backup/`    |
+| Logs UI            | `dozzle` (`Dozzle`)              | `amir20/dozzle:latest`     |
+| DB UI (prod)       | `pgwebprod` (`Prod-Pgweb`)       | `sosedoff/pgweb`           |
+| Development        | `dev-machine` (`Dev`)            | built from `dev/`          |
 
-- **`postgresprod`** — `Prod-Database`, postgres:16-alpine, `homeserver`/`homeserver`
-  DB. No published host port; only reachable from other containers.
-- **`postgresdev`** — `Dev-Database`, postgres:16-alpine, same credentials, publishes
-  **5432:5432** for local development. Start it on its own with
-  `docker compose up postgresdev -d`.
+### How things are reachable
 
-### Application
+* **`nginx`** terminates TLS (Let's Encrypt certs) on the host and routes to
+  the backends. If authentication is needed, requests are sent through `caddy`,
+  which performs the basic auth. The following endpoints are reachable through
+  nginx:
 
-- **`applicationprod`** — `Prod-Application`, built from the repo `Dockerfile`
-  (`node:24-alpine`). Sets `NODE_ENV=production`, `APP_URL`, and the prod
-  `DB_CONNECTION_STRING` pointing at `postgresprod:5432`. Healthy when
-  `http://applicationprod:3000/api/ping` returns `200`.
+  | Public URL / port        | Basic auth | Backend              | Purpose              |
+  |--------------------------|------------|----------------------|----------------------|
+  | `www.gutschi.site:443`   | —          | `applicationprod:3000` | The application    |
+  | `dev.gutschi.site:443`   | —          | `dev-machine:3000`   | Dev app (when running) |
+  | `dev.gutschi.site:8443`  | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server) |
+  | `dev.gutschi.site:8444`  | dev        | `caddy` → `dev-machine:4096` | OpenCode         |
+  | `dev.gutschi.site:8445`  | dev        | `caddy` → `dev-machine:6006` | Storybook       |
+  | `logs.gutschi.site:443`  | admin      | `caddy` → `dozzle:8080` | Container logs    |
+  | `www.gutschi.site:8443`  | admin      | `caddy` → `pgwebprod:8081` | Prod DB web UI |
 
-### Reverse proxy & routing
-
-- **`nginx`** terminates TLS (Let's Encrypt certs from `certbot`) and routes by
-  hostname/port. It proxies to `applicationprod`, `dev-machine`, and `caddy`
-  (see [`nginx/nginx.conf`](nginx/nginx.conf)).
-- **`caddy`** sits behind nginx and adds HTTP basic-auth in front of the
-  internal tools. Endpoints ([`caddy/Caddyfile`](caddy/Caddyfile)):
-
-  | Port  | Auth        | Backend                | Purpose              |
-  |-------|-------------|------------------------|----------------------|
-  | 8370  | admin       | `dozzle:8080`          | Container logs       |
-  | 8371  | admin       | `pgwebprod:8081`       | Prod DB web UI       |
-  | 8443  | dev         | `dev-machine:8080`     | VS Code (code-server)|
-  | 8444  | dev         | `dev-machine:4096`     | OpenCode             |
-  | 8445  | dev         | `dev-machine:6006`     | Storybook            |
-
-  Password hashes are derived at startup from `ADMIN_PASSWORD` / `DEV_PASSWORD`
-  via `caddy hash-password`.
-
-### DNS
-
-- **`bind9`** — `Bind9`, authoritative DNS for `gutschi.site`, so the various
-  subdomains (`www`, `dev`, `logs`) resolve to the home server. The
-  zone template [`bind9/db.gutschi.site`](bind9/db.gutschi.site) is rendered with
-  `HOST_IP` substituted at container start.
-
-### TLS
-
-- **`certbot`** issues and auto-renews Let's Encrypt certificates into
+* **`bind9`** is the authoritative DNS for `gutschi.site`, so the subdomains
+  (`www`, `dev`, `logs`) resolve to the home server. Its zone template
+  (`bind9/db.gutschi.site`) is rendered with `HOST_IP` substituted at start.
+* **`certbot`** issues and auto-renews Let's Encrypt certificates into
   `./certbot/conf`; nginx reloads every 6h to pick up renewed certs.
+* **`dozzle`** gives live container logs at `https://logs.gutschi.site`.
+* **`pgwebprod`** is a web UI for the prod DB at `https://www.gutschi.site:8443`
+  (admin auth).
+* **`dev-machine`** is a full Linux dev environment (ubuntu:24.04) with Node 24,
+  pnpm, Go, the GitHub CLI, PostgreSQL client tools, **code-server** and the
+  **OpenCode** CLI, managed by `supervisord`. Access:
+  * VS Code Remote SSH → `ssh dev@<host> -p 2222`
+  * Browser VS Code → `https://dev.gutschi.site:8443`
+  * OpenCode → `https://dev.gutschi.site:8444`
 
-### Observability
+In development the WhatsApp bridge is **not** a separate container: `pnpm dev`
+inside `dev-machine` starts it as a local Go process alongside the Next.js server, 
+tied to the same lifecycle. It uses `postgresdev`.
 
-- **`dozzle`** — live container logs (`--enable-actions --enable-shell`).
-- **`pgwebprod`** — web UI for the prod database.
+---
 
-## Development machine (`dev-machine`)
+## 2. Prerequisites
 
-The `dev-machine` container ([`dev/`](dev/)) is a full Linux dev environment
-(ubuntu:24.04) with Node 24, pnpm, Go, the GitHub CLI, PostgreSQL client tools,
-**code-server** (VS Code in the browser) and the **OpenCode** CLI preinstalled.
-It is managed by `supervisord` ([`dev/supervisord.conf`](dev/supervisord.conf)):
-
-| Program     | Command                                      | Port (via caddy/nginx) |
-|-------------|----------------------------------------------|------------------------|
-| `sshd`      | `sshd -D` on port **2222** (key-only)        | `2222` (host)          |
-| `code-server` | `code-server --auth none` on `:8080`       | `dev.gutschi.site:8443`|
-| `opencode`  | `opencode serve --port 4096` on `:4096`      | `dev.gutschi.site:8444`|
-
-Stories (Storybook) run on `:6006` → `dev.gutschi.site:8445`.
-
-On startup the entrypoint ([`dev/entrypoint.sh`](dev/entrypoint.sh)) configures
-git, installs the SSH key from `DEV_SSH_KEY_PUB`, clones `REPO_URL` into
-`/home/dev/workspace`, and launches supervisord. The dev home is persisted in the
-`dev_home` volume.
-
-Access options:
-- **VS Code Remote SSH** → `ssh dev@<host> -p 2222` (use the key from `DEV_SSH_KEY_PUB`).
-- **Browser VS Code** → `https://dev.gutschi.site:8443` (dev auth).
-- **OpenCode** → `https://dev.gutschi.site:8444` (dev auth).
-
-## Database backup
-
-The `backup` service ([`db-backup/`](db-backup/)) runs a full nightly
-`pg_dump` (custom format) of the **prod** database, stores it in
-`/opt/homeserver/backup` on the host (kept `RETENTION_DAYS`, default 31), and
-uploads each dump to a **personal** OneDrive account via the Microsoft Graph
-API using a delegated refresh token. The dev-machine mounts that folder
-read-only.
-
-### Setting up the OneDrive token
-
-1. In Azure, register an app as "Accounts in any organizational directory and
-   personal Microsoft accounts" and add the **delegated** permissions
-   `Files.ReadWrite` and `offline_access` (user consent).
-2. Run the device-code helper to sign in with your personal Microsoft account
-   and print a refresh token:
-
-   ```bash
-   docker compose run --rm backup node /usr/local/bin/get-onedrive-token.mjs
-   # or locally: node infrastructure/db-backup/get-onedrive-token.mjs
-   ```
-
-3. Save the printed value as `ONEDRIVE_REFRESH_TOKEN` in `.env`. The uploader
-   exchanges it for a fresh access token on every run and prints a new refresh
-   token when the old one is rotated — update `.env` when you see that message.
-
-Restore a backup from the server with:
+Copy the template and fill in real values:
 
 ```bash
-docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev|prod> [--yes]
+cp infrastructure/env.example infrastructure/.env
+$EDITOR infrastructure/.env
 ```
 
-The restore script runs **inside** the `backup` container, so it can reach both
-databases directly: `dev`
-restores into `postgresdev`, `prod` into `postgresprod`. Bare filenames are
-resolved against `/backup` (the host `./backup` mount). The connection strings
-come from the `backup` service environment (`DB_CONNECTION_STRING` for dev,
-`DB_CONNECTION_STRING_PROD` for prod). Restoring into prod requires either typing
-`restore prod` interactively or passing `--yes`; because `docker compose exec`
-does not allocate a TTY by default, use `--yes` for prod restores.
+Before first start you also need
 
-See `AGENTS.md` (Database Backup section) for details.
+1. **DNS** — `bind9` must resolve `*.gutschi.site` to this host. Set `HOST_IP`
+   correctly and ensure your registrar/router points the zone at the server.
+2. **TLS bootstrap** — Let's Encrypt certs do **not** exist yet; nginx will
+   refuse to start without them. Follow [§5.1](#51-certificate-bootstrap) first.
 
-## Environment variables
+---
 
-All variables are listed in [`env.example`](env.example). Highlights:
+## 3. Persistent state — what is stored where
 
-| Variable           | Purpose                                                |
-|--------------------|--------------------------------------------------------|
-| `HOST_IP`          | Home server IP, injected into the bind9 zone           |
-| `PROD_DB_PASSWORD` | Prod Postgres password                                 |
-| `NODE_ENV`         | `production` for the app container                     |
-| `APP_URL`          | Public app URL (OIDC redirect)                         |
-| `ADMIN_USERNAME`/`ADMIN_PASSWORD` | Basic-auth for admin tools (dozzle, pgweb) |
-| `DEV_USERNAME`/`DEV_PASSWORD`     | Basic-auth for dev tools (code-server, OpenCode) |
-| `REPO_URL`/`GIT_NAME`/`GIT_MAIL`/`DEV_SSH_KEY_PUB` | dev-machine git + SSH setup |
-| `ONEDRIVE_REFRESH_TOKEN` | Delegated refresh token for the personal OneDrive upload |
-| `ONEDRIVE_BACKUP_FOLDER` | OneDrive folder the dumps are stored in (default: Homeserver) |
-| OIDC / session / AI / Graph vars | Same as the app (see root `README.md`)     |
+Understanding where state lives is critical: destroying the wrong thing loses
+data.
 
-## Deployment
+### Docker named volumes (managed by compose, live in the Docker data root)
 
-The application image is built and run directly on the home server (no container
-registry). The CI pipeline in `.github/workflows/homeserver.yml` builds the
-`homeserver:latest` image (including the WhatsApp bridge) and deploys it; the
-compose stack is then started/updated on the server with `docker compose up -d`.
+| Volume | Holds |
+|--------|-------|
+| `postgres_prod_data` | Prod Postgres data directory (`/var/lib/postgresql/data`) |
+| `postgres_dev_data` | Dev Postgres data directory |
+| `dev_home` | The `dev` user's home (`/home/dev`) — git checkout, SSH keys, editor state |
+
+These survive `docker compose down` / `up`. They are **only** removed by
+`docker compose down -v` or manual `docker volume rm`.
+
+### Host bind mounts
+
+| Path on host | Mounted into | Holds |
+|--------------|--------------|-------|
+| `./certbot/conf` | `certbot:/etc/letsencrypt`, `nginx:/etc/letsencrypt:ro` | Let's Encrypt account + issued certs (`live/`, `archive/`, `renewal/`) |
+| `./certbot/www` | `certbot:/var/www/certbot`, `nginx:/var/www/certbot:ro` | ACME HTTP-01 challenge files |
+| `./backup` | `backup:/backup` | Nightly `pg_dump` dumps (`homeserver-prod-*.dump`), retained `RETENTION_DAYS` (default 31) |
+| `./.env` | (read by compose `env_file`) | All secrets — **back this up securely** |
+| `./nginx`, `./caddy`, `./bind9` | the respective containers | Config files (read-only) |
+
+---
+
+## 4. Starting, stopping and recreating the system
+
+### First start
+
+```bash
+# 1. Bootstrap TLS certs (see §5.1) so nginx can start
+# 2. Launch everything:
+docker compose up -d
+docker compose ps          # verify all containers are "healthy"/"running"
+```
+
+### Everyday control
+
+```bash
+docker compose ps                       # status of all services
+docker compose logs -f --tail=100 nginx # follow logs for one service
+docker compose stop                     # stop all (keeps containers + volumes)
+docker compose start                    # resume
+docker compose restart caddy            # restart a single service
+docker compose down                     # stop AND remove containers/networks
+                                        # (volumes + bind mounts are kept)
+docker compose down -v                  # DANGER: also deletes named volumes
+```
+
+### Recreating / pulling
+
+```bash
+docker compose pull                      # pull newer images for prebuilt services
+docker compose up -d                     # apply changed config / recreate changed services
+docker compose up -d --force-recreate    # force recreate even if nothing "changed"
+docker compose up -d --build             # rebuild the locally-built images
+                                        # (backup, dev-machine)
+docker compose config                    # dry-run: validate the rendered compose file
+```
+
+### Where to look when something is wrong
+
+* Live logs UI: **https://logs.gutschi.site** (dozzle, admin auth).
+* Container health: `docker compose ps` shows the healthcheck state.
+* Per-service logs: `docker compose logs <service>`.
+
+---
+
+## 5. Operational tasks
+
+### 5.1 Certificate bootstrap
+
+nginx needs the TLS certs to start, but certs can only be issued once the
+`*.gutschi.site` names resolve to this host (DNS via bind9) **and** port 80 is
+reachable for the ACME challenge. Bootstrap with certbot in **standalone** mode
+(nothing else may hold port 80 during this step):
+
+```bash
+docker compose down            # ensure nothing is bound to :80
+docker run --rm \
+  -v "$PWD/certbot/conf:/etc/letsencrypt" \
+  -v "$PWD/certbot/www:/var/www/certbot" \
+  -p 80:80 \
+  certbot/certbot certonly --standalone \
+    -d dev.gutschi.site -d logs.gutschi.site -d www.gutschi.site
+docker compose up -d           # now nginx has certs and can start
+```
+
+The certs land in `./certbot/conf/live/<domain>/` and are picked up by nginx.
+`nginx` also serves the ACME challenge at `:80/.well-known/acme-challenge/`, so
+subsequent renewals use the webroot method automatically (see below).
+
+### 5.2 Check certificate status
+
+```bash
+# List all issued certs with expiry dates:
+docker compose exec certbot certbot certificates
+
+# Or inspect a single cert directly:
+openssl x509 -enddate -noout -in certbot/conf/live/www.gutschi.site/cert.pem
+openssl x509 -startdate -enddate -noout -in certbot/conf/live/www.gutschi.site/cert.pem
+```
+
+Certbot auto-renews when a cert is within 30 days of expiry (the `certbot`
+container loops `certbot renew` every 12h); nginx reloads every 6h to load the
+new certs. No manual action is normally needed.
+
+### 5.3 Manually renew certificates
+
+```bash
+# Standard renewal (only renews if within the renewal window):
+docker compose exec certbot certbot renew
+
+# Force renewal immediately (e.g. before expiry or after a config change):
+docker compose exec certbot certbot renew --force-renewal
+
+# After forcing, make nginx reload the new certs right away:
+docker compose exec nginx nginx -s reload
+```
+
+### 5.4 Manually trigger a backup
+
+The nightly backup is a cron job inside the `backup` container. To run it on
+demand (full `pg_dump` of prod → `./backup` → upload to OneDrive):
+
+```bash
+docker compose exec backup /usr/local/bin/backup.sh
+```
+
+This uses the same environment the cron job sources, so a successful run proves
+the backup pipeline (DB connection + OneDrive upload) is healthy.
+
+List local dumps:
+
+```bash
+ls -lh backup/
+```
+
+### 5.5 Recreate a database from a backup
+
+Use the restore helper, which runs **inside** the `backup` container so it can
+reach both databases directly:
+
+```bash
+# Restore into the DEV database (no confirmation needed):
+docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> dev
+
+# Restore into PROD (interactive confirmation, or --yes since exec has no TTY):
+docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> prod --yes
+```
+
+* `<file>` may be a bare filename (resolved against `/backup`) or an absolute
+  path inside the container.
+* `dev` → `postgresdev`, `prod` → `postgresprod`.
+* The script drops/recreates the `public` schema and runs `pg_restore`.
+* **After restoring**, restart the target application so pending migrations run:
+  `docker compose restart applicationprod` (or `dev-machine`).
+
+To fetch a remote dump from OneDrive for a disaster recovery, download it to
+`./backup` first (via the OneDrive web UI or `rclone`/`onedrive`), then restore.
+
+### 5.6 Refreshing the OneDrive backup token
+
+The delegated `ONEDRIVE_REFRESH_TOKEN` is rotated by Microsoft. When the nightly
+upload starts failing, or the token script prints a new refresh token, update
+`.env`:
+
+```bash
+docker compose run --rm --entrypoint node backup /usr/local/bin/get-onedrive-token.mjs
+# paste the printed token into ONEDRIVE_REFRESH_TOKEN in .env, then:
+docker compose up -d --force-recreate backup
+```
+
+### 5.7 Bootstrap / re-bootstrap the dev-machine
+
+On first start the `dev-machine` entrypoint (`dev/entrypoint.sh`):
+
+1. Sets the git identity from `GIT_NAME` / `GIT_MAIL`.
+2. Appends every key in `DEV_SSH_KEY_PUB` to `/home/dev/.ssh/authorized_keys`.
+3. Generates `id_ed25519` / `id_sshd` SSH keys if missing.
+4. Verifies GitHub SSH auth; **if it fails it prints the public key to add**.
+5. Clones `REPO_URL` into `/home/dev/workspace` and launches `supervisord`.
+
+**First-time / new-key bootstrap flow:**
+
+1. Make sure `REPO_URL`, `GIT_NAME`, `GIT_MAIL` and `DEV_SSH_KEY_PUB` are set in
+   `.env`.
+2. `docker compose up -d dev-machine`.
+3. If GitHub auth fails, the container exits and prints a public key — add it to
+   **https://github.com/settings/keys**, then:
+   `docker compose up -d --force-recreate dev-machine`.
+4. If you already have a key pair you want to use, put its **public** half in
+   `DEV_SSH_KEY_PUB` (the private half stays on your workstation).
+
+### 5.8 Change the dev-machine public-key auth
+
+The `dev_home` volume persists `authorized_keys`, so changes survive restarts.
+
+* **Add a key** (no restart needed):
+  ```bash
+  docker compose exec dev sh -c 'echo "<ssh-ed25519 AAAA... comment>" >> /home/dev/.ssh/authorized_keys'
+  ```
+* **Rotate / replace keys** via `.env`: update `DEV_SSH_KEY_PUB` and recreate:
+  ```bash
+  docker compose up -d --force-recreate dev-machine
+  ```
+  (Keys not present in `DEV_SSH_KEY_PUB` are not removed automatically — prune
+  stale lines from `authorized_keys` manually if needed.)
+* **Remove a key**: edit the file inside the container:
+  ```bash
+  docker compose exec dev vi /home/dev/.ssh/authorized_keys
+  ```
+
+### 5.9 Change passwords
+
+**Admin / dev basic-auth (caddy):** edit `ADMIN_PASSWORD` / `DEV_PASSWORD` in
+`.env`, then recreate caddy so it re-hashes them at startup:
+
+```bash
+docker compose up -d --force-recreate caddy
+```
+
+**Prod database password:** changing `PROD_DB_PASSWORD` in `.env` updates the
+connection strings used by `applicationprod`, `whatsapp-bridge` and `backup` —
+but Postgres only applies `POSTGRES_PASSWORD` on **first** initialization. You
+must also change the password inside the running DB:
+
+```bash
+docker compose exec postgresprod psql -U homeserver -c \
+  "ALTER USER homeserver WITH PASSWORD '<new-prod-password>';"
+```
+
+Then `docker compose up -d --force-recreate applicationprod whatsapp-bridge backup`
+so the new `.env` value is picked up.
+
+**Dev database password:** hardcoded to `homeserver`/`homeserver` in compose and
+used by the dev-machine. Changing it requires editing `docker-compose.yml`
+(`postgresdev` + `dev-machine` `DB_CONNECTION_STRING`) and recreating both —
+only do this if you have a reason to.
+
+---
+
+## 6. Deployment & repository
+
+* **Repo:** https://github.com/lizzyTheLizard/homeserver
+* **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
+* **CI deploy pipeline:** `.github/workflows/homeserver.yml` builds the
+  `homeserver:latest` image (including the WhatsApp bridge) and deploys it to the
+  server; the compose stack is then started/updated with `docker compose up -d`.
+

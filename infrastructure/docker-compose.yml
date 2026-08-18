@@ -55,24 +55,6 @@ services:
       retries: 3
       start_period: 40s
 
-  whatsapp-bridge-dev:
-    container_name: Dev-WhatsApp-Bridge
-    image: whatsapp-bridge:latest
-    pull_policy: never
-    restart: unless-stopped
-    environment:
-      DB_CONNECTION_STRING: postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable
-      DEV: "true"
-    depends_on:
-      postgresdev:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   applicationprod:
     container_name: Prod-Application
     image: homeserver:latest
@@ -234,7 +216,7 @@ services:
       GIT_USER_NAME: "${GIT_NAME}"
       GIT_USER_EMAIL: "${GIT_MAIL}"
       DEV_SSH_KEY_PUB: "${DEV_SSH_KEY_PUB}"
-      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge-dev:8080
+      DEV: "true"
     volumes:
       - dev_home:/home/dev
     restart: unless-stopped

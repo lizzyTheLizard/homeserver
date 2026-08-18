@@ -54,10 +54,6 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := ensureSchema(ctx, db); err != nil {
-		log.Fatalf("ensure schema: %v", err)
-	}
-
 	container := sqlstore.NewWithDB(db, "pgx", waLog.Noop)
 	if err := container.Upgrade(ctx); err != nil {
 		log.Fatalf("upgrade whatsmeow database: %v", err)
