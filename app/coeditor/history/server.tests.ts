@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createOrModifyTemplate } from '../_data/Template'
 import { loadHistory } from './server'

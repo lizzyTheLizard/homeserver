@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n web,bridge -c blue,green \"pnpm dev:app\" \"pnpm dev:bridge\"",
+    "dev": "concurrently -k -n web,bridge,assistant -c blue,green,yellow \"pnpm dev:app\" \"pnpm dev:bridge\" \"pnpm dev:assistant\"",
     "dev:app": "tsx watch server.ts",
     "dev:bridge": "cd whatsapp-bridge && { set -a; [ -f ../.env ] && . ../.env; set +a; } && PORT=8081 go run .",
+    "dev:assistant": "tsx watch assistant/server.ts",
     "dev:nowatch": "tsx server.ts",
     "build": "tsc --project tsconfig.build.json && tsc-alias --project tsconfig.build.json && next build",
     "start": "node dist/server.js",

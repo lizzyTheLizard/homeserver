@@ -1,6 +1,6 @@
 import { ModelMessage, ToolSet } from 'ai'
 import { send as groqSend } from '../_external/groq'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { generateInitialMessages } from './initial'
 import { logger } from '@/app/shared/logger'
 import { getTools } from './tools'

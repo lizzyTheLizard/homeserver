@@ -35,7 +35,7 @@ Six skills manage the full issue lifecycle in the Homeserver project. Each handl
 
 **Next.js App Router** — pages are React Server Components by default. Use `"use client"` only when browser interactivity is required. Data mutations go through Next.js Server Actions, not a separate API layer.
 
-**Authentication** — `server.ts` is the custom HTTP server that runs before every route. It validates the iron-session cookie and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login via the `startLogin()` function in `app/shared/auth/auth.ts`. AJAX requests get a 401 instead. All `/shared/auth/*` paths bypass authentication (e.g. the login callback).
+**Authentication** — `server.ts` is the custom HTTP server that runs before every route. It validates the iron-session cookie and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login via the `startLogin()` function in `app/shared/auth/auth.ts`. AJAX requests get a 401 instead. All `/shared/auth/*` paths bypass authentication (e.g. the login callback). The standalone assistant service (`assistant/server.ts`) validates the same iron-session cookie for its WebSocket endpoint.
 
 **Database** — PostgreSQL with `pg` driver. Connection pool initialized once at startup in `app/shared/_external/db/setup.ts`. All DB access goes through two wrappers in `app/shared/_external/db/access.ts`:
 - `transactional(fn)` — wraps `fn` in a BEGIN/COMMIT/ROLLBACK
@@ -74,7 +74,7 @@ The `backup` service in `infrastructure/docker-compose.yml` (image sources in `i
 
 ## Infrastructure
 
-The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the prod `whatsapp-bridge` container (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container. In development the WhatsApp bridge is not a separate container — `pnpm dev` starts it as a local Go process (the `dev-machine` has Go installed) alongside the Next.js server and ties both lifecycles together.
+The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the prod `assistant` container (same `homeserver:latest` image, command `node dist/assistant/server.js`), the prod `whatsapp-bridge` container (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container. In development neither the WhatsApp bridge nor the assistant is a separate container — `pnpm dev` starts both as local processes alongside the Next.js server and ties all lifecycles together.
 
 Development happens inside `dev-machine` (see `infrastructure/README.md`): it runs **code-server** (VS Code in the browser, `dev.gutschi.site:8443`), **OpenCode** (`opencode serve`, `dev.gutschi.site:8444`), and Storybook (`:8445`), plus an SSH server on port `2222` for VS Code Remote. The repo is cloned into `/home/dev/workspace`; OpenCode and `pnpm` are available there.
 

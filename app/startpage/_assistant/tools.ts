@@ -1,5 +1,5 @@
 import { ToolSet } from 'ai'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { readdir } from 'node:fs/promises'
 import { Dirent } from 'node:fs'
 import { join } from 'path'

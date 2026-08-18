@@ -1,11 +1,12 @@
-import { IncomingMessage } from 'http'
+import 'dotenv/config'
+import { createServer, IncomingMessage } from 'http'
+import type { Duplex } from 'stream'
 import { WebSocketServer, WebSocket } from 'ws'
-import { validateObject } from './shared/_helper/validation'
-import { UserSession } from './shared/auth/auth'
-import { WebSocketHandler } from './shared/_helper/websocket'
+import { validateObject } from '@/app/shared/_helper/validation'
+import { getSession, parseCookieHeader, UserSession } from '@/app/shared/auth/session'
+import { logger } from '@/app/shared/logger'
+import { Assistant, AssistantEvent, createAssistantInstance, InitialContext } from '@/app/startpage/_assistant/assistant'
 import z from 'zod'
-import { Assistant, AssistantEvent, createAssistantInstance, InitialContext } from './startpage/_assistant/assistant'
-import { logger } from './shared/logger'
 
 interface ActiveAssistant {
   assistant: Assistant
@@ -17,14 +18,55 @@ interface ActiveAssistant {
 const activeAssistants = new Map<string, ActiveAssistant>()
 const ASSISTANT_TTL_MS = 5 * 60 * 1000
 
-export function createAssistantWebSocketServer(): WebSocketHandler {
-  const canHandle = (request: IncomingMessage) => request.url?.startsWith('/ws/assistant') ?? false
-  const createServer = (user: UserSession) => {
-    const server = new WebSocketServer({ noServer: true })
-    server.on('connection', (ws) => { handleConnection(ws, user) })
-    return server
+try {
+  main()
+}
+catch (e: unknown) {
+  console.error('Error starting assistant', e)
+}
+
+function main() {
+  const server = createServer((req, res) => {
+    if (req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
+      return
+    }
+    res.writeHead(404).end()
+  })
+
+  server.on('upgrade', (request, socket, head) => {
+    handleUpgrade(request, socket, head).catch((e: unknown) => {
+      logger.warn('Error during WebSocket upgrade', e)
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+      socket.destroy()
+    })
+  })
+
+  const hostname = process.env.HOSTNAME ?? '0.0.0.0'
+  const port = parseInt(process.env.PORT ?? '8500', 10)
+  server.listen(port, hostname, () => {
+    logger.info(`Assistant ready on http://${hostname}:${port.toString()}`)
+  })
+}
+
+async function handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buffer) {
+  const url = request.url
+  if (!url?.startsWith('/ws/assistant')) {
+    socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
+    socket.destroy()
+    return
   }
-  return { name: 'assistant', createServer, canHandle }
+  const user = await authenticate(request)
+  const wsServer = new WebSocketServer({ noServer: true })
+  wsServer.on('connection', (ws) => { handleConnection(ws, user) })
+  wsServer.handleUpgrade(request, socket, head, (ws) => { wsServer.emit('connection', ws, request) })
+}
+
+async function authenticate(request: IncomingMessage): Promise<UserSession> {
+  const cookies = parseCookieHeader(request.headers.cookie)
+  const session = await getSession(cookies)
+  if (!session.userInfo) throw new Error('No authenticated user session found')
+  return session.userInfo
 }
 
 function handleConnection(ws: WebSocket, user: UserSession): void {

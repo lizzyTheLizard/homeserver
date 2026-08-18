@@ -1,4 +1,4 @@
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { AssistantEvent, InitialContext } from './assistant'
 import { openmeteoRequest, parseOpenMeteoData } from '../_external/openmeteo'
 import { getLocationDescription } from '../_external/openstreetmap'

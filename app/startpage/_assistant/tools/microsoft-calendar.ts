@@ -1,6 +1,6 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { getMicrosoftCalendarWorker, type MicrosoftCalendarEvent } from '../../_external/microsoft-calendar'
 import { toInstant } from '../../_external/microsoft'
 

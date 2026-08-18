@@ -1,6 +1,6 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { getMicrosoftMailWorker } from '../../_external/microsoft-mail'
 
 export default function getTools(user: UserSession): ToolSet {

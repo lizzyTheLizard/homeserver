@@ -3,7 +3,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '@/app/shared/_external/db/access'
 import { setMicrosoftToken } from '../_data/Microsoft'
 import { getMicrosoftMailWorker } from './microsoft-mail'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 
 const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
 const TEST_TO_MAIL_ADDRESS = process.env.TEST_TO_MAIL_ADDRESS

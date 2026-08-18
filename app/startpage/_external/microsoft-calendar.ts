@@ -3,7 +3,7 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { Mutex } from 'async-mutex'
 import { graphApiRequest, toGraphDateTime, toInstant, DeltaResponse } from './microsoft'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'

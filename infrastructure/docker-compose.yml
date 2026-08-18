@@ -79,6 +79,31 @@ services:
       retries: 3
       start_period: 40s
 
+  assistant:
+    container_name: Prod-Assistant
+    image: homeserver:latest
+    pull_policy: never
+    restart: unless-stopped
+    command: node dist/assistant/server.js
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      APP_URL: https://www.gutschi.site
+      DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
+      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8080
+    depends_on:
+      postgresprod:
+        condition: service_healthy
+      whatsapp-bridge:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://assistant:8500/health',function(r){process.exit(r.statusCode===200?0:1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   backup:
     build:
       context: ./db-backup
@@ -186,6 +211,8 @@ services:
       - ./certbot/conf:/etc/letsencrypt:ro
     depends_on:
       applicationprod:
+        condition: service_healthy
+      assistant:
         condition: service_healthy
       caddy:
         condition: service_healthy

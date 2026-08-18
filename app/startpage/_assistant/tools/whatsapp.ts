@@ -1,6 +1,6 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../../_external/whatsapp'
 import { transactional } from '@/app/shared/_external/db/access'
 import { logEvent } from '@/app/shared/_data/Event'

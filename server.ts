@@ -2,9 +2,7 @@
 import type { RequestHandler } from 'next/dist/server/next'
 import type { Server, IncomingMessage, ServerResponse } from 'http'
 import type { Logger } from 'winston'
-import type { WebSocketHandler } from '@/app/shared/_helper/websocket'
-import type Stream from 'stream'
-import type { CookieStore, UserSession } from './app/shared/auth/auth'
+import type { CookieStore } from './app/shared/auth/session'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 main().catch((e: unknown) => { console.error('Error starting server', e) })
@@ -13,7 +11,6 @@ async function main() {
   const options = await loadOptions()
   const server = await createReactApp(options, options.logger)
   registerMonitoringHandler(server, options)
-  await registerWebSockets(server, options.logger)
   server.listen(options.port, () => {
     options.logger.info(`Application ready on http://${options.hostname}:${options.port.toString()}`)
   })
@@ -69,7 +66,7 @@ function registerMonitoringHandler(server: Server, options: Options): void {
 
 async function reactRequestHandler(handler: RequestHandler, options: Options, req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { getUserSession } = await import('./app/shared/auth/auth')
-  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/__nextjs_original-stack-frames', '/ws/', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png', '/icon-192-maskable.png', '/icon-512-maskable.png', '/api/ping', '/pwa.html']
+  const publicDoNotLogPaths = ['/_next/', '/__nextjs_source-map', '/__nextjs_original-stack-frames', '/.well-known/', '/global.css', '/favicon.ico', '/sw.js', '/manifest.webmanifest', '/manifest.json', '/robots.txt', '/icon-192.png', '/icon-512.png', '/icon-192-maskable.png', '/icon-512-maskable.png', '/api/ping', '/pwa.html']
   const publicLogPaths = ['/shared/auth/']
   const url = new URL(req.url ?? '', `http://${options.hostname}:${options.port.toString()}`)
   const method = req.method?.toUpperCase() ?? 'GET'
@@ -104,44 +101,6 @@ function isXHttpRequest(req: IncomingMessage): boolean {
     return requestWithHeaders.toLowerCase() === 'xmlhttprequest'
   }
   return requestWithHeaders?.includes('XMLHttpRequest') ?? false
-}
-
-async function registerWebSockets(server: Server, logger: Logger) {
-  const { createAssistantWebSocketServer } = await import('./app/server')
-  const webSocketHandlers: WebSocketHandler[] = [createAssistantWebSocketServer()]
-  server.on('upgrade', (request, socket, head) => {
-    try {
-      const url = request.url
-      if (!url) throw new Error('WebSocket upgrade request received without URL')
-      const handler = webSocketHandlers.find(h => h.canHandle(request))
-      if (!handler) return
-      withAuthentication(request, socket, logger, (user) => {
-        const server = handler.createServer(user)
-        server.handleUpgrade(request, socket, head, (ws) => { server.emit('connection', ws, request) })
-        logger.debug(`WS ${url} connected`)
-      })
-    }
-    catch (e: unknown) {
-      handleWsConnectionError(e, socket, logger)
-    }
-  })
-  logger.debug(`Registered WebSocket(s) ${webSocketHandlers.map(h => h.name).join(', ')}`)
-}
-
-function withAuthentication(req: IncomingMessage, socket: Stream.Duplex, logger: Logger, fn: (user: UserSession) => Promise<void> | void): void {
-  parseCookie(req)
-    .then(async (c) => {
-      const { getAuthenticatedUserSession } = await import('./app/shared/auth/auth')
-      const user = await getAuthenticatedUserSession('startpage', c)
-      await fn(user)
-    })
-    .catch((e: unknown) => { handleWsConnectionError(e, socket, logger) })
-}
-
-function handleWsConnectionError(e: unknown, socket: Stream.Duplex, logger: Logger) {
-  logger.warn('Error during WebSocket upgrade', e)
-  socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
-  socket.destroy()
 }
 
 async function parseCookie(req: IncomingMessage, res?: ServerResponse): Promise<CookieStore> {
