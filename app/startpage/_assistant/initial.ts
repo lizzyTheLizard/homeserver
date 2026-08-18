@@ -2,7 +2,7 @@ import { UserSession } from '@/app/shared/auth/auth'
 import { AssistantEvent, InitialContext } from './assistant'
 import { openmeteoRequest, parseOpenMeteoData } from '../_external/openmeteo'
 import { getLocationDescription } from '../_external/openstreetmap'
-import { getWAWorker } from '../_external/whatsapp'
+import { getWhatsappChats, getWhatsappStatus } from '../_external/whatsapp'
 import { getMicrosoftMailWorker } from '../_external/microsoft-mail'
 import { getMicrosoftTodoWorker } from '../_external/microsoft-todo'
 import { getMicrosoftCalendarWorker } from '../_external/microsoft-calendar'
@@ -13,7 +13,6 @@ import { join } from 'path'
 import { logger } from '@/app/shared/logger'
 import { getMicrosoftToken } from '../_data/Microsoft'
 import { nontransactional } from '@/app/shared/_external/db/access'
-import { getUserJID } from '../_data/Whatsapp'
 
 const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
@@ -178,10 +177,9 @@ async function getMicrosoft(user: UserSession): Promise<PartResult> {
 }
 
 async function getWhatsapp(user: UserSession): Promise<PartResult> {
-  const whatsappUser = await nontransactional(db => getUserJID(db, user.email))
-  if (!whatsappUser) return { text: 'WhatsApp is not connected. ', actions: [] }
-  const waWorker = await getWAWorker(user)
-  const chats = await waWorker.getChats()
+  const status = await getWhatsappStatus(user.email)
+  if (status.type !== 'connected') return { text: 'WhatsApp is not connected. ', actions: [] }
+  const chats = await getWhatsappChats(user.email)
   const unarchived = chats.filter(c => !c.isArchived).length
   const text = `There are **${unarchived.toString()}** unarchived WhatsApp chats. `
   const actions = (unarchived > 0 ? ['Get WhatsApp Overview'] : [])

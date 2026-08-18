@@ -74,17 +74,17 @@ The `backup` service in `infrastructure/docker-compose.yml` (image sources in `i
 
 ## Infrastructure
 
-The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container.
+The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the prod `whatsapp-bridge` container (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container. In development the WhatsApp bridge is not a separate container — `pnpm dev` starts it as a local Go process (the `dev-machine` has Go installed) alongside the Next.js server and ties both lifecycles together.
 
 Development happens inside `dev-machine` (see `infrastructure/README.md`): it runs **code-server** (VS Code in the browser, `dev.gutschi.site:8443`), **OpenCode** (`opencode serve`, `dev.gutschi.site:8444`), and Storybook (`:8445`), plus an SSH server on port `2222` for VS Code Remote. The repo is cloned into `/home/dev/workspace`; OpenCode and `pnpm` are available there.
 
 ## Whatsapp Bridge
 
-`Whatsapp/` is a standalone Go module (not part of the pnpm/Next.js toolchain). It is a bridge process that connects a WhatsApp account via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store.
+`whatsapp-bridge/` is a standalone Go HTTP service (not part of the pnpm/Next.js toolchain). It connects WhatsApp accounts via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store, and exposes a REST API for the Next.js app.
 
-- Usage: `whatsapp <user-id> <postgres-connection-string> <dev>` — the `dev` flag (`true`/`false`) selects the device name shown in WhatsApp's linked devices list (`Gutschi.Site (dev)` vs `Gutschi.Site`). The name is only sent at pairing time, so existing sessions keep their old name until re-paired.
-- Reads commands as JSON lines from stdin (`send_message`, `archive_chat`, `mark_chat_read`), publishes events as JSON lines on stdout (`connection_established`, `qr_code`, `error`). Nothing else may be written to stdout — keep whatsmeow logging disabled (`waLog.Noop`).
+- Configuration via environment variables: `DB_CONNECTION_STRING`, `DEV` (`true`/`false`, selects the device name shown in WhatsApp's linked devices list: `Gutschi.Site (dev)` vs `Gutschi.Site`), and `PORT` (default `8080`).
+- The service manages multiple user sessions in one process. Endpoints include `POST /sessions/{userId}/start`, `GET /sessions/{userId}/status`, `GET /sessions/{userId}/chats`, `GET /sessions/{userId}/messages?chatId=...`, `POST /sessions/{userId}/send-message`, `POST /sessions/{userId}/archive-chat`, `POST /sessions/{userId}/mark-chat-read`, and `POST /sessions/{userId}/full-sync`.
 - All received messages (live and history sync) are stored in the `whatsmeow_messages` table, created automatically at startup.
-- Build/test it with the standard Go toolchain (`go build ./...`, `go vet ./...`, `go test ./...`) inside `Whatsapp/`.
-- CI: the `whatsapp` job in `.github/workflows/homeserver.yml` runs build, vet and tests; the `whatsapp-builder` stage in the `Dockerfile` compiles the binary into the final image at `/app/whatsapp`.
+- Build/test it with the standard Go toolchain (`go build ./...`, `go vet ./...`, `go test ./...`) inside `whatsapp-bridge/`.
+- The bridge container is built from `whatsapp-bridge/Dockerfile` as `whatsapp-bridge:latest`; the main `Dockerfile` no longer contains any WhatsApp binary.
 
