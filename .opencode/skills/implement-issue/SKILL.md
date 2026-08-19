@@ -82,7 +82,7 @@ pnpm lint
 pnpm vitest run <affected-test-files>
 ```
 
-Fix any issues found.
+Report any issues and a potential fix to the user. Do NOT change files in this step without explicit user acceptance as the user has already performed its code review. Do NOT revert changes to files done in the code review
 
 ### Step 9: Commit and push
 
