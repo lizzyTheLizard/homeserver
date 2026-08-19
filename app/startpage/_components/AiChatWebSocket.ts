@@ -1,7 +1,5 @@
 'use client'
 
-import { InitialContext } from '../_assistant/assistant'
-
 export type ChatState = { type: 'initial' }
   | { type: 'connecting' }
   | { type: 'ready' }
@@ -30,14 +28,14 @@ export class AiChatWebSocket {
   onStateChange: (state: ChatState) => void = () => { /* empty */ }
   onIncomingMessageChange: (message: string) => void = () => { /* empty */ }
 
-  constructor(private readonly initialContext: InitialContext) {
+  constructor(private readonly initialContext: { location: { lat: number, lon: number } }) {
   }
 
   public connect() {
     console.log('Connecting WebSocket')
     if (this.#ws) throw new Error('WebSocket already connected')
     this.onStateChange({ type: 'connecting' })
-    this.#ws = new WebSocket('/ws/assistant')
+    this.#ws = new WebSocket(getWebSocketUrl())
     this.#ws.onopen = () => { this.handleWebSocketOpen() }
     this.#ws.onmessage = (event) => { this.handleMessage(event) }
     this.#ws.onclose = (event) => { this.handleClose(event) }
@@ -213,6 +211,14 @@ export class AiChatWebSocket {
     if (this.#reconnectionInterval) clearInterval(this.#reconnectionInterval)
     this.#reconnectionInterval = undefined
   }
+}
+
+function getWebSocketUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_ASSISTANT_WEBSOCKET_URL
+  if (configured) return configured
+  if (typeof window === 'undefined') return ''
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}/ws/assistant`
 }
 
 interface IncommingMessage {

@@ -4,6 +4,7 @@ go 1.26.5
 
 require (
 	github.com/jackc/pgx/v5 v5.10.0
+	github.com/joho/godotenv v1.5.1
 	go.mau.fi/whatsmeow v0.0.0-20260716095330-85d99080dee8
 	google.golang.org/protobuf v1.36.11
 )

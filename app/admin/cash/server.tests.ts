@@ -3,7 +3,7 @@ import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 import { deleteProject, loadProjects, saveProject } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 // Mock the auth module

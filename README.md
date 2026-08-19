@@ -77,7 +77,7 @@ In production every required var must be set; the app fails fast on startup othe
 
 Next.js App Router with React Server Components by default. Mutations are exposed as Server Actions (`'use server'` files); there is no separate API layer.
 
-`server.ts` is a custom HTTP server that wraps Next.js and handles authentication before every route. It validates the iron-session cookie and redirects unauthenticated users to the OIDC provider; AJAX requests get a `401` instead. All `/shared/auth/*` paths are allowed without authentication.
+`proxy.ts` runs before every route and handles authentication and request logging. It validates the iron-session cookie and redirects unauthenticated users to the OIDC provider; AJAX requests get a `401` instead. All `/shared/auth/*` paths, static assets, Next.js internals and `/api/ping` are allowed without authentication.
 
 Postgres is accessed through one connection pool created lazily on first use. Two helpers in `app/shared/_external/db/access.ts` wrap every query:
 
@@ -105,7 +105,7 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 ├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → deploy)
 ├── .storybook/         Storybook configuration
 ├── Dockerfile          Production image (Node 24 Alpine)
-├── server.ts            Custom HTTP server (auth, WS)
+├── proxy.ts             Request proxy (auth, logging)
 ```
 
 Inside `app/`, folders that are not Next.js routes are prefixed with `_` (e.g. `shared/_components/`, `cash/_data/`, `coeditor/_external/`) to opt out of the router. Server-side action files use the `server.ts` suffix; integration tests use `server.tests.ts`; unit tests use `*.tests.ts`.

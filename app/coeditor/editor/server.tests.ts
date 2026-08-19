@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { CommandInput, createCommand } from '../_data/Command'
 import { ExecuteCommandInput } from './server'

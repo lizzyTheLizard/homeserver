@@ -4,30 +4,19 @@ import { config } from '@/app/shared/config'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 import { logEvent } from '@/app/shared/_data/Event'
-import { IronSession, getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
+import { cookies as nextCookies } from 'next/headers'
 import * as client from 'openid-client'
-import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import { getActualUrl } from '../_helper/UrlHelper'
+import { CookieStore, getSession, UserSession } from './session'
 
-export interface UserSession {
-  name: string
-  email: string
-  applications: string[]
-}
-
-export interface CookieStore {
-  get: (name: string) => { name: string, value: string } | undefined
-  set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void, (options: ResponseCookie): void }
-}
-
-export async function getUserSession(cookies?: CookieStore): Promise<UserSession | undefined> {
-  const session = await getSession(cookies)
+export async function getUserSession(alreadyParsedCookies?: CookieStore): Promise<UserSession | undefined> {
+  const cookiesList = alreadyParsedCookies ?? await nextCookies()
+  const session = await getSession(cookiesList)
   return session.userInfo
 }
 
-export async function getAuthenticatedUserSession(app?: string, cookies?: CookieStore): Promise<UserSession> {
-  const user = await getUserSession(cookies)
+export async function getAuthenticatedUserSession(app?: string, alreadyParsedCookies?: CookieStore): Promise<UserSession> {
+  const user = await getUserSession(alreadyParsedCookies)
   if (!user) {
     throw authenticationFailed(`No user session found`)
   }
@@ -37,7 +26,7 @@ export async function getAuthenticatedUserSession(app?: string, cookies?: Cookie
   return user
 }
 
-export async function startLogin(urlOrRequest: URL | Request, cookies?: CookieStore): Promise<URL> {
+export async function startLogin(urlOrRequest: URL | Request, alreadyParsedCookies?: CookieStore): Promise<URL> {
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
   const parameters: Record<string, string> = {
@@ -49,7 +38,7 @@ export async function startLogin(urlOrRequest: URL | Request, cookies?: CookieSt
     prompt: 'select_account',
   }
 
-  const session = await getSession(cookies)
+  const session = await getSession(alreadyParsedCookies ?? await nextCookies())
   session.userInfo = undefined
   session.code_verifier = code_verifier
   session.state = parameters.state
@@ -61,7 +50,7 @@ export async function startLogin(urlOrRequest: URL | Request, cookies?: CookieSt
 }
 
 export async function callback(urlOrRequest: URL | Request): Promise<string> {
-  const session = await getSession()
+  const session = await getSession(await nextCookies())
   const url = getActualUrl(urlOrRequest)
   const clientConfig = await getClientConfig()
   const tokenSet = await client.authorizationCodeGrant(clientConfig, url, {
@@ -87,7 +76,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
 }
 
 export async function logout(): Promise<void> {
-  const session = await getSession()
+  const session = await getSession(await nextCookies())
   const oldInfo = session.userInfo
   session.userInfo = undefined
   session.code_verifier = undefined
@@ -96,24 +85,6 @@ export async function logout(): Promise<void> {
   await session.save()
   logger.info(`User ${oldInfo?.email ?? ''} logged out successfully`)
   await nontransactional(c => logEvent(c, 'INFO', `User ${oldInfo?.email ?? 'unknown'} logged out`))
-}
-
-interface SessionData {
-  userInfo?: UserSession
-  code_verifier?: string
-  state?: string
-  originalUrlRelative?: string
-}
-
-async function getSession(alreadyParsedCookies?: CookieStore): Promise<IronSession<SessionData>> {
-  const cookiesList = alreadyParsedCookies ?? await cookies()
-  const settings = {
-    cookieName: config.SESSION.COOKIE_NAME,
-    password: config.SESSION.SESSION_PASSWORD,
-    ttl: 604800, // 1 week in seconds
-    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
-  }
-  return getIronSession<SessionData>(cookiesList, settings)
 }
 
 async function getClientConfig(): Promise<client.Configuration> {

@@ -82,7 +82,8 @@ Functions in `handlers/` are suffixed by their source:
 
 - `DB_CONNECTION_STRING` — Postgres connection string (required).
 - `DEV` — `"true"` or `"false"`; selects the device name shown in WhatsApp's linked devices list.
-- `PORT` — HTTP listen port (default `8080`).
+
+The bridge always listens on port `8400`. A `.env` file in the current directory or the parent directory is loaded automatically, if present.
 
 ## Build and test
 

@@ -9,5 +9,5 @@
     "isolatedModules": false,
     "noEmit": false
   },
-  "include": ["server.ts", "app/startpage/_assistant/tools/*.ts"]
+  "include": ["assistant/server.ts", "assistant/tools/*.ts"]
 }

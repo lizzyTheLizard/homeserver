@@ -14,15 +14,16 @@
 
 The entire stack is **self-hosted on a single home server** (no cloud provider,
 no Terraform). A single `docker-compose.yml` brings up every component. There is
-no container registry: the `homeserver:latest` and `whatsapp-bridge:latest`
-images are built directly on the server (by CI, see
-[§6.8](#68-deploying--upgrading-the-application)).
+no container registry: the `homeserver:latest`, `whatsapp-bridge:latest` and
+`homeserver-assistant:latest` images are built directly on the server (by CI,
+see [§6.8](#68-deploying--upgrading-the-application)).
 
 ### Components
 
 | Concern            | Container (`container_name`)     | Image                       |
 |--------------------|---------------------------------|-----------------------------|
 | App (prod)         | `applicationprod` (`Prod-Application`) | `homeserver:latest`   |
+| Assistant          | `assistant` (`Prod-Assistant`)   | `homeserver-assistant:latest` |
 | WhatsApp bridge    | `whatsapp-bridge` (`Prod-WhatsApp-Bridge`) | `whatsapp-bridge:latest` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
 | Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
@@ -341,6 +342,7 @@ only do this if you have a reason to.
 * **Repo:** https://github.com/lizzyTheLizard/homeserver
 * **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
 * **CI deploy pipeline:** `.github/workflows/homeserver.yml` builds the
-  `homeserver:latest` image (including the WhatsApp bridge) and deploys it to the
-  server; the compose stack is then started/updated with `docker compose up -d`.
+  `homeserver:latest`, `whatsapp-bridge:latest` and `homeserver-assistant:latest`
+  images and deploys them to the server; the compose stack is then started/updated
+  with `docker compose up -d`.
 

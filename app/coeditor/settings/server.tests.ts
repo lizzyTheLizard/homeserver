@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createOrModifyTemplate, findTemplateById } from '../_data/Template'
 import { deleteProfile, deleteTemplate, loadSettings, saveProfile, saveTemplate } from './server'

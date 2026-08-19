@@ -7,7 +7,7 @@ import { loadAccounts, saveAccount, deleteAccount } from './server'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { createOrModifyAccount } from '@/app/cash/_data/Account'
 import type { AccountInput } from '@/app/cash/_data/Account'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 // Mock the auth module

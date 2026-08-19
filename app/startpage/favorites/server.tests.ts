@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/_external/db/access'
 import { loadFavorites, saveFavorite, deleteFavorite } from './server'
 import { createOrModifyFavorite } from '@/app/startpage/_data/Favorite'
-import type { UserSession } from '@/app/shared/auth/auth'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 vi.mock('@/app/shared/auth/auth', async () => {

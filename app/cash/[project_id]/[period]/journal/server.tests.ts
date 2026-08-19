@@ -7,7 +7,7 @@ import { loadJournal, saveTransaction, deleteTransaction, loadAccountJournal } f
 import { createOrModifyProject, ProjectInput } from '@/app/cash/_data/Project'
 import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
 import { createTransaction } from '@/app/cash/_data/Transaction'
-import { UserSession } from '@/app/shared/auth/auth'
+import { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createClosing } from '@/app/cash/_data/Closing'
 import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'

@@ -25,7 +25,7 @@ COPY . .
 
 RUN corepack enable pnpm && pnpm run build;
 
-# Production image, copy all the files and run the custom server
+# Production image, copy all the files and run next start
 FROM base AS runner
 WORKDIR /app
 
@@ -39,9 +39,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
-COPY ./app ./app
 COPY ./db ./db
 
 # Custom modifications: We want log files, db scripts and .env variables
@@ -60,4 +58,4 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "dist/server.js"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]

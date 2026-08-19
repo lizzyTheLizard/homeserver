@@ -6,11 +6,11 @@ import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { connectMicrosoft, disconnectMicrosoft } from '../server'
 import { useSearchParams } from 'next/navigation'
 import styles from './MicrosoftUserInfo.module.css'
-import type { MicrosoftUserInfo as MSUserInfo } from '../../_external/microsoft'
+import type { MicrosoftUserInfo } from '../types'
 
 interface MicrosoftUserInfoParam {
   connected: boolean
-  userInfo?: MSUserInfo
+  userInfo?: MicrosoftUserInfo
 }
 
 export function MicrosoftUserInfo({ connected, userInfo }: MicrosoftUserInfoParam) {
