@@ -130,9 +130,44 @@ jobs:
               name: whatsapp-bridge
               path: ${{ runner.temp }}/whatsapp-bridge.tar
               retention-days: 1
+    build-assistant:
+        name: Build Assistant Docker Container
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v4
+          - name: Get Datetime
+            run: echo "datetime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+            id: get-datetime
+          - name: Build Docker
+            uses: docker/build-push-action@v7
+            with:
+              context: .
+              file: ./assistant/Dockerfile
+              platforms: linux/amd64
+              push: false
+              tags: homeserver-assistant:latest
+              cache-from: type=gha
+              cache-to: type=gha,mode=max
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver-assistant.tar
+              build-args: |
+                GIT_COMMIT_HASH=${{ github.sha }}
+                GIT_BRANCH=${{ github.ref_name }}
+                GITHUB_RUN_ID=${{ github.run_id }}
+                BUILD_TIME=${{ steps.get-datetime.outputs.datetime }}
+            env:
+              DOCKER_BUILD_RECORD_UPLOAD: false
+          - name: Upload artifact
+            uses: actions/upload-artifact@v7
+            with:
+              name: homeserver-assistant
+              path: ${{ runner.temp }}/homeserver-assistant.tar
+              retention-days: 1
     deploy:
         name: Restart Homeserver Stack
-        needs: [lint, test, test-whatsapp, chromatic, build-app, build-whatsapp]
+        needs: [lint, test, test-whatsapp, chromatic, build-app, build-whatsapp, build-assistant]
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'        
         steps:
@@ -148,6 +183,11 @@ jobs:
             with:
               name: whatsapp-bridge
               path: ${{ runner.temp }}
+          - name: Download assistant artifact
+            uses: actions/download-artifact@v8
+            with:
+              name: homeserver-assistant
+              path: ${{ runner.temp }}
           - name: Set up SSH key
             uses: webfactory/ssh-agent@v0.10.0
             with:
@@ -161,6 +201,7 @@ jobs:
               rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
               rsync -avz ${{ runner.temp }}/homeserver.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
               rsync -avz ${{ runner.temp }}/whatsapp-bridge.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+              rsync -avz ${{ runner.temp }}/homeserver-assistant.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
           - name: Load images and restart stack
             run: |
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
@@ -168,7 +209,8 @@ jobs:
                 cd /opt/homeserver
                 docker load --input homeserver.tar
                 docker load --input whatsapp-bridge.tar
-                rm -f homeserver.tar whatsapp-bridge.tar
+                docker load --input homeserver-assistant.tar
+                rm -f homeserver.tar whatsapp-bridge.tar homeserver-assistant.tar
                 docker compose up -d --build --force-recreate --remove-orphans
                 docker image prune -f
               EOF

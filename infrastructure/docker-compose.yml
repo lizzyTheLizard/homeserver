@@ -84,10 +84,9 @@ services:
 
   assistant:
     container_name: Prod-Assistant
-    image: homeserver:latest
+    image: homeserver-assistant:latest
     pull_policy: never
     restart: unless-stopped
-    command: node dist/assistant/server.js
     env_file:
       - .env
     environment:
