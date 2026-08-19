@@ -3,7 +3,7 @@ import { z } from 'zod/v4'
 import { Temporal } from '@js-temporal/polyfill'
 import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
-import { openmeteoRequest, parseOpenMeteoData } from '../../_external/openmeteo'
+import { openmeteoRequest, parseOpenMeteoData } from './openmeteo'
 
 export default function getTools(): ToolSet {
   return {

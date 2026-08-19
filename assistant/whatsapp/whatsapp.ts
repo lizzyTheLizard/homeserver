@@ -1,24 +1,7 @@
-'use server'
-
 import { config } from '@/app/shared/config'
+import { Chat, Message, SyncStatus } from '@/app/startpage/whatsapp/types'
 
-export type SyncStatus = { type: 'connecting' } | { type: 'needAuth', qr: string } | { type: 'connected' } | { type: 'fullsync' } | { type: 'closed', error?: string }
-
-export interface Message {
-  id: string
-  fromMe: boolean
-  fromName: string
-  content: string
-  messageTimestamp: string
-}
-
-export interface Chat {
-  id: string
-  name: string
-  isArchived: boolean
-  isGroup: boolean
-  lastMessageTimestamp: string
-}
+export type { Chat, Message, SyncStatus }
 
 export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
   const url = `${bridgeUrl(userId)}/status`

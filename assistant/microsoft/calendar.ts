@@ -1,12 +1,9 @@
-'use server'
-
 import { Temporal } from '@js-temporal/polyfill'
 import { Mutex } from 'async-mutex'
-import { graphApiRequest, toGraphDateTime, toInstant, DeltaResponse } from './microsoft'
+import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant } from './graph'
 import { UserSession } from '@/app/shared/auth/session'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export interface MicrosoftCalendar {
   id: string
@@ -147,15 +144,15 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     body?: string,
     location?: string,
   ): Promise<MicrosoftCalendarEvent> {
-    return await transactional(async (tx) => {
+    try {
+      const eventBody: Record<string, unknown> = {
+        subject,
+        start: toGraphDateTime(start),
+        end: toGraphDateTime(end),
+      }
+      if (body) eventBody.body = { contentType: 'text', content: body }
+      if (location) eventBody.location = { displayName: location }
       const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async (request) => {
-        const eventBody: Record<string, unknown> = {
-          subject,
-          start: toGraphDateTime(start),
-          end: toGraphDateTime(end),
-        }
-        if (body) eventBody.body = { contentType: 'text', content: body }
-        if (location) eventBody.location = { displayName: location }
         return await request.post(eventBody) as RawCalendarEvent
       })
       const event = convertCalendarEvent(response)
@@ -163,13 +160,14 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
       if (Temporal.Instant.compare(event.start, windowEnd) <= 0) {
         events.set(event.id, event)
       }
-      await logEvent(tx, 'INFO', `Created calendar event "${subject}"`)
+      await logEvent(undefined, 'INFO', `Created calendar event "${subject}"`)
       return event
-    }).catch(async (error: unknown) => {
+    }
+    catch (error: unknown) {
       logger.warn(`Failed to create calendar event "${subject}"`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to create calendar event "${subject}"`) })
+      await logEvent(undefined, 'ERROR', `Failed to create calendar event "${subject}"`)
       throw error
-    })
+    }
   }
 
   async function doInitialFetch(): Promise<void> {

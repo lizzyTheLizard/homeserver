@@ -1,12 +1,9 @@
-'use server'
-
 import { Temporal } from '@js-temporal/polyfill'
 import { Mutex } from 'async-mutex'
 import { UserSession } from '@/app/shared/auth/session'
-import { graphApiRequest, toInstant, DeltaResponse } from './microsoft'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
+import { DeltaResponse, graphApiRequest, toInstant } from './graph'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export type InferenceClassification = 'focused' | 'other'
 
@@ -123,7 +120,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   }
 
   async function sendMail(user: UserSession, to: string[], subject: string, body: string): Promise<void> {
-    await transactional(async (tx) => {
+    try {
       const toRecipients = to.map(address => ({ emailAddress: { address } }))
       logger.debug(`Send mail to ${to.join(', ')}`)
       await graphApiRequest(user, `/me/sendMail`, async (request) => {
@@ -132,31 +129,34 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
           saveToSentItems: 'true',
         })
       })
-      await logEvent(tx, 'INFO', `Sent Outlook email to ${to.join(', ')}`)
-    }).catch(async (error: unknown) => {
+      await logEvent(undefined, 'INFO', `Sent Outlook email to ${to.join(', ')}`)
+    }
+    catch (error: unknown) {
       logger.warn(`Failed to send Outlook email to ${to.join(', ')}`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to send Outlook email to ${to.join(', ')}`) })
+      await logEvent(undefined, 'ERROR', `Failed to send Outlook email to ${to.join(', ')}`)
       throw error
-    })
+    }
   }
 
   async function archiveMessage(user: UserSession, messageId: string): Promise<void> {
-    const message = messages.get(messageId)
-    if (!message) throw new Error(`Message with ID ${messageId} not found in cache`)
-    messages.delete(messageId)
-    await transactional(async (tx) => {
+    try {
+      const message = messages.get(messageId)
+      if (!message) throw new Error(`Message with ID ${messageId} not found in cache`)
+      messages.delete(messageId)
       const archiveFolder = await getArchiveFolder(user)
       if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
       logger.debug(`Archive mail ${messageId}`)
       await graphApiRequest(user, `/me/messages/${messageId}/move`, async (request) => {
         await request.post({ destinationId: archiveFolder })
       })
-      await logEvent(tx, 'INFO', `Archived Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`)
-    }).catch(async (error: unknown) => {
-      logger.warn(`Failed to archive Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to archive Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`) })
+      await logEvent(undefined, 'INFO', `Archived Outlook email from ${message.from.emailAddress.address} with subject "${message.subject}"`)
+    }
+    catch (error: unknown) {
+      const message = messages.get(messageId)
+      logger.warn(`Failed to archive Outlook email from ${message?.from.emailAddress.address ?? 'unknown'} with subject "${message?.subject ?? 'unknown'}"`, error)
+      await logEvent(undefined, 'ERROR', `Failed to archive Outlook email from ${message?.from.emailAddress.address ?? 'unknown'} with subject "${message?.subject ?? 'unknown'}"`)
       throw error
-    })
+    }
   }
 
   async function archiveMessagesFromSender(user: UserSession, senderEmail: string): Promise<number> {
@@ -173,13 +173,11 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
           await request.post({ destinationId: archiveFolder })
         })
       }
-      await transactional(async (tx) => {
-        await logEvent(tx, 'INFO', `Archived ${matching.length.toString()} Outlook emails from ${senderEmail}`)
-      })
+      await logEvent(undefined, 'INFO', `Archived ${matching.length.toString()} Outlook emails from ${senderEmail}`)
       return matching.length
     }).catch(async (error: unknown) => {
       logger.warn(`Failed to archive Outlook emails from ${senderEmail}`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to archive Outlook emails from ${senderEmail}`) })
+      await logEvent(undefined, 'ERROR', `Failed to archive Outlook emails from ${senderEmail}`)
       throw error
     })
   }

@@ -65,12 +65,15 @@ services:
     environment:
       NODE_ENV: production
       APP_URL: https://www.gutschi.site
+      ASSISTANT_INTERNAL_URL: http://assistant:8500
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
       WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8080
     depends_on:
       postgresprod:
         condition: service_healthy
       whatsapp-bridge:
+        condition: service_healthy
+      assistant:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://applicationprod:3000/api/ping',function(r){process.exit(r.statusCode===200?0:1)})"]

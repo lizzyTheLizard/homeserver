@@ -6,7 +6,7 @@ import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MicrosoftCalendar.module.css'
-import type { SerializedCalendarEvent } from '../server'
+import type { SerializedCalendarEvent } from '../types'
 
 export function MicrosoftCalendar({ events }: { events: SerializedCalendarEvent[] }) {
   const [selectedEvent, setSelectedEvent] = useState<SerializedCalendarEvent | null>(null)

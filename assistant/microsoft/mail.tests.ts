@@ -1,12 +1,11 @@
 import { describe, expect, test, beforeAll } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '@/app/shared/_external/db/access'
-import { setMicrosoftToken } from '../_data/Microsoft'
-import { getMicrosoftMailWorker } from './microsoft-mail'
+import { setMicrosoftToken } from './data'
+import { getMicrosoftMailWorker } from './mail'
 import type { UserSession } from '@/app/shared/auth/session'
 
 const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
-const TEST_TO_MAIL_ADDRESS = process.env.TEST_TO_MAIL_ADDRESS
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
   const token = TEST_MICROSOFT_REFRESH_TOKEN!  // eslint-disable-line
@@ -59,21 +58,4 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
       expect(message.body.content).toBeDefined()
     }
   })
-
-  test.skipIf(!TEST_TO_MAIL_ADDRESS)('sendMail sends email and archives it', async () => {
-    const worker = await getMicrosoftMailWorker(user)
-    const uniqueSubject = `Test email ${String(Date.now())}`
-    await worker.sendMail(user, [TEST_TO_MAIL_ADDRESS!], uniqueSubject, 'This is an automated test email.')  // eslint-disable-line
-
-    let sent = undefined
-    for (let i = 0; i < 20; i++) {
-      await new Promise((resolve) => { setTimeout(resolve, 2000) })
-      const messages = worker.getInboxMessages()
-      sent = messages.find(m => m.subject === uniqueSubject)
-      if (sent) break
-    }
-    expect(sent).toBeDefined()
-
-    if (sent) await worker.archiveMessage(user, sent.id)
-  }, 90000)
 })

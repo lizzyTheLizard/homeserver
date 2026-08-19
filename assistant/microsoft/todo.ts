@@ -1,12 +1,9 @@
-'use server'
-
 import { Mutex } from 'async-mutex'
 import { Temporal } from '@js-temporal/polyfill'
-import { toInstant, toPlainDate, toGraphDateTime, graphApiRequest, DeltaResponse } from './microsoft'
+import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant, toPlainDate } from './graph'
 import { UserSession } from '@/app/shared/auth/session'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
 import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export interface MicrosoftTodoList {
   id: string
@@ -145,7 +142,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   }
 
   async function createTask(user: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask> {
-    return await transactional(async (tx) => {
+    try {
       const taskBody: Record<string, unknown> = { title }
       if (body) taskBody.body = { content: body, contentType: 'text' }
       if (reminderDateTime) taskBody.reminderDateTime = toGraphDateTime(reminderDateTime)
@@ -157,17 +154,18 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         return { ...convertTask(response), listName: list.displayName }
       })
       addTaskToMemory(result, listId)
-      await logEvent(tx, 'INFO', `Created Microsoft Todo task "${title}"`)
+      await logEvent(undefined, 'INFO', `Created Microsoft Todo task "${title}"`)
       return result
-    }).catch(async (error: unknown) => {
+    }
+    catch (error: unknown) {
       logger.warn(`Failed to create Microsoft Todo task "${title}"`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to create Microsoft Todo task "${title}"`) })
+      await logEvent(undefined, 'ERROR', `Failed to create Microsoft Todo task "${title}"`)
       throw error
-    })
+    }
   }
 
   async function updateTask(user: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask> {
-    return await transactional(async (tx) => {
+    try {
       const targetListId = updates.listId ?? listId
       const list = lists.find(l => l.id === targetListId)
       if (!list) throw new Error(`List with ID ${targetListId} not found`)
@@ -182,17 +180,18 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       })
       if (targetListId !== listId) removeTaskFromMemory(taskId, listId)
       addTaskToMemory(result, targetListId)
-      await logEvent(tx, 'INFO', `Updated Microsoft Todo task "${taskId}"`)
+      await logEvent(undefined, 'INFO', `Updated Microsoft Todo task "${taskId}"`)
       return result
-    }).catch(async (error: unknown) => {
+    }
+    catch (error: unknown) {
       logger.warn(`Failed to update Microsoft Todo task "${taskId}"`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to update Microsoft Todo task "${taskId}"`) })
+      await logEvent(undefined, 'ERROR', `Failed to update Microsoft Todo task "${taskId}"`)
       throw error
-    })
+    }
   }
 
   async function completeTask(user: UserSession, listId: string, taskId: string): Promise<void> {
-    await transactional(async (tx) => {
+    try {
       logger.debug(`Complete task ${taskId}`)
       await graphApiRequest(user, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
         await request.patch({ status: 'completed' })
@@ -202,27 +201,29 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         const idx = listTasks.findIndex(t => t.id === taskId)
         if (idx >= 0) listTasks[idx] = { ...listTasks[idx], status: 'completed' }
       }
-      await logEvent(tx, 'INFO', `Completed Microsoft Todo task "${taskId}"`)
-    }).catch(async (error: unknown) => {
+      await logEvent(undefined, 'INFO', `Completed Microsoft Todo task "${taskId}"`)
+    }
+    catch (error: unknown) {
       logger.warn(`Failed to complete Microsoft Todo task "${taskId}"`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to complete Microsoft Todo task "${taskId}"`) })
+      await logEvent(undefined, 'ERROR', `Failed to complete Microsoft Todo task "${taskId}"`)
       throw error
-    })
+    }
   }
 
   async function deleteTask(user: UserSession, listId: string, taskId: string): Promise<void> {
-    await transactional(async (tx) => {
+    try {
       logger.debug(`Delete task ${taskId}`)
       await graphApiRequest(user, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
         await request.delete()
       })
       removeTaskFromMemory(taskId, listId)
-      await logEvent(tx, 'INFO', `Deleted Microsoft Todo task "${taskId}"`)
-    }).catch(async (error: unknown) => {
+      await logEvent(undefined, 'INFO', `Deleted Microsoft Todo task "${taskId}"`)
+    }
+    catch (error: unknown) {
       logger.warn(`Failed to delete Microsoft Todo task "${taskId}"`, error)
-      await transactional(async (tx) => { await logEvent(tx, 'ERROR', `Failed to delete Microsoft Todo task "${taskId}"`) })
+      await logEvent(undefined, 'ERROR', `Failed to delete Microsoft Todo task "${taskId}"`)
       throw error
-    })
+    }
   }
 
   async function doInitialFetch(): Promise<void> {

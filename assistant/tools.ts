@@ -25,7 +25,6 @@ export async function getTools(user: UserSession): Promise<ToolSet> {
 
 function isToolFile(f: Dirent): boolean {
   if (!f.isFile()) return false // Skip directories and symlinks
-  if (!/\.(ts|js)$/.test(f.name)) return false // Only TypeScript and JavaScript files
-  if (/\.tests\.(ts|js)$/.test(f.name)) return false // Skip test files
+  if (!/-tools\.(ts|js)$/.test(f.name)) return false // Only tool implementation files
   return true
 }

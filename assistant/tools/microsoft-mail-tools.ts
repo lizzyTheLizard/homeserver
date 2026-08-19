@@ -1,7 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { UserSession } from '@/app/shared/auth/session'
-import { getMicrosoftMailWorker } from '../../_external/microsoft-mail'
+import { getMicrosoftMailWorker } from '../microsoft/mail'
 
 export default function getTools(user: UserSession): ToolSet {
   const getOutlookInbox = tool({

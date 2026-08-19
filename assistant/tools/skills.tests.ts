@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach, afterEach } from 'vitest'
 import { promises as fs } from 'fs'
 import { join } from 'path'
-import { getSkillTools } from './skills'
+import { getSkillTools } from './skills-tools'
 import { tmpdir } from 'os'
 
 const SKILL_NAME = 'test-skill'

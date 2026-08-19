@@ -1,7 +1,5 @@
 'use client'
 
-import { InitialContext } from '../_assistant/assistant'
-
 export type ChatState = { type: 'initial' }
   | { type: 'connecting' }
   | { type: 'ready' }
@@ -30,7 +28,7 @@ export class AiChatWebSocket {
   onStateChange: (state: ChatState) => void = () => { /* empty */ }
   onIncomingMessageChange: (message: string) => void = () => { /* empty */ }
 
-  constructor(private readonly initialContext: InitialContext) {
+  constructor(private readonly initialContext: { location: { lat: number, lon: number } }) {
   }
 
   public connect() {

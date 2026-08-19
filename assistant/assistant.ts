@@ -1,25 +1,10 @@
 import { ModelMessage, ToolSet } from 'ai'
-import { send as groqSend } from '../_external/groq'
+import { send as groqSend } from './groq'
 import { UserSession } from '@/app/shared/auth/session'
 import { generateInitialMessages } from './initial'
 import { logger } from '@/app/shared/logger'
 import { getTools } from './tools'
-
-export interface InitialContext { location: { lat: number, lon: number } }
-
-export type AssistantEvent = { type: 'stream_response', chunk: string }
-  | { type: 'tool_call' }
-  | { type: 'finished_response' }
-  | { type: 'got_actions', actions: string[] }
-
-export type AssistantEventListener = (event: AssistantEvent) => void
-
-export interface Assistant {
-  on(listener: AssistantEventListener): void
-  off(listener: AssistantEventListener): void
-  init(initialContext: InitialContext): Promise<void>
-  send(message: string): Promise<void>
-}
+import { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
 
 export function createAssistantInstance(user: UserSession): Assistant {
   const listeners: AssistantEventListener[] = []

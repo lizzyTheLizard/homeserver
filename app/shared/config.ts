@@ -26,6 +26,7 @@ export interface Config {
   NODE_PUBLIC_LOCALE: string
   NODE_PUBLIC_CURRENCY: string
   WHATSAPP_BRIDGE_URL: string
+  ASSISTANT_INTERNAL_URL: string
   GIT_COMMIT_HASH: string
   GIT_BRANCH: string
   GITHUB_RUN_ID?: string
@@ -78,6 +79,7 @@ export const config: Config = {
   NODE_PUBLIC_LOCALE: optional('NODE_PUBLIC_LOCALE', 'de-CH'),
   NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),
   WHATSAPP_BRIDGE_URL: required('WHATSAPP_BRIDGE_URL', 'http://localhost:8081'),
+  ASSISTANT_INTERNAL_URL: required('ASSISTANT_INTERNAL_URL', 'http://localhost:8500'),
   GIT_BRANCH: required('GIT_BRANCH', 'DEVELOPMENT'),
   GIT_COMMIT_HASH: required('GIT_COMMIT_HASH', 'DEVELOPMENT'),
   GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // not required, no default

@@ -1,20 +1,18 @@
 import { UserSession } from '@/app/shared/auth/session'
-import { AssistantEvent, InitialContext } from './assistant'
-import { openmeteoRequest, parseOpenMeteoData } from '../_external/openmeteo'
-import { getLocationDescription } from '../_external/openstreetmap'
-import { getWhatsappChats, getWhatsappStatus } from '../_external/whatsapp'
-import { getMicrosoftMailWorker } from '../_external/microsoft-mail'
-import { getMicrosoftTodoWorker } from '../_external/microsoft-todo'
-import { getMicrosoftCalendarWorker } from '../_external/microsoft-calendar'
+import { AssistantEvent, InitialContext } from './types'
+import { openmeteoRequest, parseOpenMeteoData } from './tools/openmeteo'
+import { getLocationDescription } from './tools/openstreetmap'
+import { getWhatsappChats, getWhatsappStatus } from './whatsapp/whatsapp'
+import { getMicrosoftMailWorker } from './microsoft/mail'
+import { getMicrosoftTodoWorker } from './microsoft/todo'
+import { getMicrosoftCalendarWorker } from './microsoft/calendar'
 import { ModelMessage } from 'ai'
 import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
 import { join } from 'path'
 import { logger } from '@/app/shared/logger'
-import { getMicrosoftToken } from '../_data/Microsoft'
-import { nontransactional } from '@/app/shared/_external/db/access'
 
-const ASSISTANT_DIR = join(process.cwd(), 'app', 'startpage', '_assistant')
+const ASSISTANT_DIR = join(process.cwd(), 'assistant')
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 
 export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {
@@ -138,8 +136,6 @@ function formatTime(input: string): string {
 }
 
 async function getMicrosoft(user: UserSession): Promise<PartResult> {
-  const microsoftToken = await nontransactional(db => getMicrosoftToken(db, user.email))
-  if (!microsoftToken) return { text: 'Microsoft is not connected. ', actions: [] }
   const [mailWorker, todoWorker, calendarWorker] = await Promise.all([
     getMicrosoftMailWorker(user),
     getMicrosoftTodoWorker(user),

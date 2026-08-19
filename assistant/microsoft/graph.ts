@@ -1,6 +1,6 @@
 import { Client, GraphRequest } from '@microsoft/microsoft-graph-client'
 import { Temporal } from '@js-temporal/polyfill'
-import { getMicrosoftToken, MicrosoftToken, setMicrosoftToken } from '../_data/Microsoft'
+import { MicrosoftToken, getMicrosoftToken, setMicrosoftToken } from './data'
 import * as oidc from 'openid-client'
 import { UserSession } from '@/app/shared/auth/session'
 import { logger } from '@/app/shared/logger'
@@ -48,18 +48,18 @@ export async function getUserInfo(user: UserSession): Promise<MicrosoftUserInfo 
 export async function graphApiRequest<T>(user: UserSession, url: string, request: (c: GraphRequest) => Promise<T>): Promise<T> {
   const token = await getCurrentToken(user)
   if (!token) throw new Error('No Microsoft Graph token available')
-  const client = Client.init({ authProvider: (done) => { done(null, token.access_token) } })
+  const graphClient = Client.init({ authProvider: (done) => { done(null, token.access_token) } })
   logger.silly(`Fetch data from GraphAPI ${url}`)
   const start = Date.now()
-  const result = await request(client.api(url))
+  const result = await request(graphClient.api(url))
   logger.silly(`GraphAPI request ${url} completed in ${(Date.now() - start).toString()}ms`)
   return result
 }
 
 const tokenMutex = new Mutex()
 
-async function getCurrentToken(user: UserSession): Promise<MicrosoftToken | undefined> {
-  return tokenMutex.runExclusive(() => {
+export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken | undefined> {
+  return tokenMutex.runExclusive(async () => {
     const now = Math.floor(Date.now() / 1000)
     return transactional(async (db) => {
       const token = await nontransactional(db => getMicrosoftToken(db, user.email))

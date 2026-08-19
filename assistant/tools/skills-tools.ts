@@ -4,7 +4,7 @@ import fs from 'fs'
 import { join } from 'path'
 import z from 'zod'
 
-const SKILLS_DIR = join(process.cwd(), 'app', 'startpage', '_assistant', 'skills')
+const SKILLS_DIR = join(process.cwd(), 'assistant', 'skills')
 
 export default function getTools(): ToolSet {
   return getSkillTools(SKILLS_DIR)

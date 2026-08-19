@@ -1,6 +1,6 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
-import { getLocationByName } from '@/app/startpage/_external/openstreetmap'
+import { getLocationByName } from './openstreetmap'
 
 export default function getTools(): ToolSet {
   return {

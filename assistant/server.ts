@@ -5,7 +5,10 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { getSession, parseCookieHeader, UserSession } from '@/app/shared/auth/session'
 import { logger } from '@/app/shared/logger'
-import { Assistant, AssistantEvent, createAssistantInstance, InitialContext } from '@/app/startpage/_assistant/assistant'
+import { createAssistantInstance } from './assistant'
+import { Assistant, AssistantEvent, InitialContext } from './types'
+import { handleMicrosoftApi } from './microsoft/route'
+import { handleWhatsappApi } from './whatsapp/route'
 import z from 'zod'
 
 interface ActiveAssistant {
@@ -31,7 +34,21 @@ function main() {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
       return
     }
-    res.writeHead(404).end()
+    const pathname = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`).pathname
+    handleMicrosoftApi(req, res, pathname)
+      .then((handled) => {
+        if (handled) return true
+        return handleWhatsappApi(req, res, pathname)
+      })
+      .then((handled) => {
+        if (!handled) {
+          res.writeHead(404).end()
+        }
+      })
+      .catch((e: unknown) => {
+        logger.error('Error handling assistant request', e)
+        res.writeHead(500).end('Internal Server Error')
+      })
   })
 
   server.on('upgrade', (request, socket, head) => {
@@ -63,7 +80,8 @@ async function handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buf
 }
 
 async function authenticate(request: IncomingMessage): Promise<UserSession> {
-  const cookies = parseCookieHeader(request.headers.cookie)
+  const cookieHeader = request.headers.cookie ?? ''
+  const cookies = parseCookieHeader(cookieHeader)
   const session = await getSession(cookies)
   if (!session.userInfo) throw new Error('No authenticated user session found')
   return session.userInfo

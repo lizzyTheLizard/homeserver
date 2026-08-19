@@ -1,8 +1,8 @@
 import { describe, expect, test, beforeAll } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '@/app/shared/_external/db/access'
-import { setMicrosoftToken } from '../_data/Microsoft'
-import { getMicrosoftTodoWorker, type MicrosoftTodoWorker } from './microsoft-todo'
+import { setMicrosoftToken } from './data'
+import { getMicrosoftTodoWorker, type MicrosoftTodoWorker } from './todo'
 import type { UserSession } from '@/app/shared/auth/session'
 
 const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN

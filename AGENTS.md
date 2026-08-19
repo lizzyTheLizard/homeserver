@@ -37,6 +37,8 @@ Six skills manage the full issue lifecycle in the Homeserver project. Each handl
 
 **Authentication** — `server.ts` is the custom HTTP server that runs before every route. It validates the iron-session cookie and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login via the `startLogin()` function in `app/shared/auth/auth.ts`. AJAX requests get a 401 instead. All `/shared/auth/*` paths bypass authentication (e.g. the login callback). The standalone assistant service (`assistant/server.ts`) validates the same iron-session cookie for its WebSocket endpoint.
 
+**Assistant** — The assistant runs as a dedicated service on port `8500`. It proxies WebSocket traffic through nginx and exposes internal REST APIs at `/microsoft/*` and `/whatsapp/*` that the Next.js app calls via `ASSISTANT_INTERNAL_URL` (not exposed through nginx). The assistant manages Microsoft tokens, mail/todo/calendar workers, WhatsApp bridge proxying, weather/geolocation helpers, and background sync directly using the shared PostgreSQL database.
+
 **Database** — PostgreSQL with `pg` driver. Connection pool initialized once at startup in `app/shared/_external/db/setup.ts`. All DB access goes through two wrappers in `app/shared/_external/db/access.ts`:
 - `transactional(fn)` — wraps `fn` in a BEGIN/COMMIT/ROLLBACK
 - `nontransactional(fn)` — plain pool client, no transaction

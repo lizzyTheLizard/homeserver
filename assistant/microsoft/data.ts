@@ -1,5 +1,4 @@
-import { Queryable } from '@/app/shared/_external/db/access'
-import { removeNull } from '@/app/shared/_external/db/access'
+import { Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface MicrosoftToken {
   access_token: string
