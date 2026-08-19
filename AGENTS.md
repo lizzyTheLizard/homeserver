@@ -39,8 +39,6 @@ Six skills manage the full issue lifecycle in the Homeserver project. Each handl
 
 **Assistant** — The assistant runs as a dedicated service on port `8500`. It proxies WebSocket traffic through nginx and exposes internal REST APIs at `/microsoft/*` and `/whatsapp/*` that the Next.js app calls via `ASSISTANT_INTERNAL_URL` (not exposed through nginx). The assistant manages Microsoft tokens, mail/todo/calendar workers, WhatsApp bridge proxying, weather/geolocation helpers, and background sync directly using the shared PostgreSQL database.
 
-**Assistant** — The assistant runs as a dedicated service on port `8500`. It proxies WebSocket traffic through nginx and exposes internal REST APIs at `/microsoft/*` and `/whatsapp/*` that the Next.js app calls via `ASSISTANT_INTERNAL_URL` (not exposed through nginx). The assistant manages Microsoft tokens, mail/todo/calendar workers, WhatsApp bridge proxying, weather/geolocation helpers, and background sync directly using the shared PostgreSQL database.
-
 **Database** — PostgreSQL with `pg` driver. Connection pool initialized once at startup in `app/shared/_external/db/setup.ts`. All DB access goes through two wrappers in `app/shared/_external/db/access.ts`:
 - `transactional(fn)` — wraps `fn` in a BEGIN/COMMIT/ROLLBACK
 - `nontransactional(fn)` — plain pool client, no transaction
