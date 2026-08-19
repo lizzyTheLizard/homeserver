@@ -218,7 +218,7 @@
       }
       var controller = new AbortController();
       var timeout = setTimeout(function () { controller.abort(); }, PING_TIMEOUT_MS);
-      fetch('/api/ping', { signal: controller.signal })
+      fetch('/shared/ping', { signal: controller.signal })
         .then(function (response) {
           clearTimeout(timeout);
           if (response.ok) {

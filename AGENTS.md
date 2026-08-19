@@ -35,7 +35,7 @@ Six skills manage the full issue lifecycle in the Homeserver project. Each handl
 
 **Next.js App Router** — pages are React Server Components by default. Use `"use client"` only when browser interactivity is required. Data mutations go through Next.js Server Actions, not a separate API layer.
 
-**Authentication** — `server.ts` is the custom HTTP server that runs before every route. It validates the iron-session cookie and redirects unauthenticated users to Microsoft Azure AD (OpenID Connect) login via the `startLogin()` function in `app/shared/auth/auth.ts`. AJAX requests get a 401 instead. All `/shared/auth/*` paths bypass authentication (e.g. the login callback). The standalone assistant service (`assistant/server.ts`) validates the same iron-session cookie for its WebSocket endpoint.
+**Authentication** — `proxy.ts` runs before every route and validates the iron-session cookie. Unauthenticated users are redirected to Microsoft Azure AD (OpenID Connect) login via the `startLogin()` function in `app/shared/auth/auth.ts`. AJAX requests get a 401 instead. All `/shared/auth/*` paths bypass authentication (e.g. the login callback), as do static assets, Next.js internals and `/shared/ping`. The standalone assistant service (`assistant/server.ts`) validates the same iron-session cookie for its WebSocket endpoint.
 
 **Assistant** — The assistant runs as a dedicated service on port `8500`. It proxies WebSocket traffic through nginx and exposes internal REST APIs at `/microsoft/*` and `/whatsapp/*` that the Next.js app calls via `ASSISTANT_INTERNAL_URL` (not exposed through nginx). The assistant manages Microsoft tokens, mail/todo/calendar workers, WhatsApp bridge proxying, weather/geolocation helpers, and background sync directly using the shared PostgreSQL database.
 
@@ -84,7 +84,7 @@ Development happens inside `dev-machine` (see `infrastructure/README.md`): it ru
 
 `whatsapp-bridge/` is a standalone Go HTTP service (not part of the pnpm/Next.js toolchain). It connects WhatsApp accounts via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store, and exposes a REST API for the Next.js app.
 
-- Configuration via environment variables: `DB_CONNECTION_STRING`, `DEV` (`true`/`false`, selects the device name shown in WhatsApp's linked devices list: `Gutschi.Site (dev)` vs `Gutschi.Site`), and `PORT` (default `8080`).
+- Configuration via environment variables: `DB_CONNECTION_STRING`, `DEV` (`true`/`false`, selects the device name shown in WhatsApp's linked devices list: `Gutschi.Site (dev)` vs `Gutschi.Site`). The bridge listens on port `8400` and loads a `.env` file from the current or parent directory if present.
 - The service manages multiple user sessions in one process. Endpoints include `POST /sessions/{userId}/start`, `GET /sessions/{userId}/status`, `GET /sessions/{userId}/chats`, `GET /sessions/{userId}/messages?chatId=...`, `POST /sessions/{userId}/send-message`, `POST /sessions/{userId}/archive-chat`, `POST /sessions/{userId}/mark-chat-read`, and `POST /sessions/{userId}/full-sync`.
 - All received messages (live and history sync) are stored in the `whatsmeow_messages` table, created automatically at startup.
 - Build/test it with the standard Go toolchain (`go build ./...`, `go vet ./...`, `go test ./...`) inside `whatsapp-bridge/`.
