@@ -12,8 +12,7 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /build/whatsapp .
 
-ENV PORT=8080
 ENV DEV=false
-EXPOSE 8080
+EXPOSE 8400
 
 CMD ["./whatsapp"]

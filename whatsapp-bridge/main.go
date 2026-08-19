@@ -7,7 +7,6 @@
 // Environment variables:
 //   - DB_CONNECTION_STRING: Postgres connection string (required)
 //   - DEV: "true" or "false" selects the device name in WhatsApp's linked devices list
-//   - PORT: HTTP listen port (default 8080)
 package main
 
 import (
@@ -21,6 +20,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
@@ -28,11 +28,14 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+const bridgePort = "8400"
+
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	// Load a .env file if one exists in the current directory or the parent
+	// directory. Errors are ignored because the file is optional. The current
+	// directory file is loaded last so it takes precedence over the parent.
+	_ = godotenv.Load("../.env")
+	_ = godotenv.Load(".env")
 
 	connString := os.Getenv("DB_CONNECTION_STRING")
 	if connString == "" {
@@ -66,7 +69,7 @@ func main() {
 	server.RegisterRoutes(mux)
 
 	srv := &http.Server{
-		Addr:    ":" + port,
+		Addr:    ":" + bridgePort,
 		Handler: mux,
 	}
 
@@ -79,7 +82,7 @@ func main() {
 		}
 	}()
 
-	log.Printf("WhatsApp bridge listening on :%s", port)
+	log.Printf("WhatsApp bridge listening on :%s", bridgePort)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("listen: %v", err)
 	}
