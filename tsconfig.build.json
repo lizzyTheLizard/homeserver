@@ -9,5 +9,5 @@
     "isolatedModules": false,
     "noEmit": false
   },
-  "include": ["assistant/server.ts", "assistant/tools/*.ts"]
+  "include": ["server.ts", "assistant/server.ts", "assistant/tools/*.ts"]
 }
