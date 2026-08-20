@@ -1,5 +1,5 @@
 import { ToolSet } from 'ai'
-import type { UserSession } from '../session'
+import type { UserSession } from './session'
 import { readdir } from 'node:fs/promises'
 import { Dirent } from 'node:fs'
 import { join } from 'path'
