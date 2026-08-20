@@ -1,10 +1,10 @@
 import { ToolSet } from 'ai'
-import { UserSession } from '@/app/shared/auth/session'
+import type { UserSession } from './session'
 import { readdir } from 'node:fs/promises'
 import { Dirent } from 'node:fs'
 import { join } from 'path'
 import { pathToFileURL } from 'node:url'
-import { logger } from '@/app/shared/logger'
+import { logger } from './logger'
 
 declare const __dirname: string
 const TOOLS_DIR = join(__dirname, 'tools')

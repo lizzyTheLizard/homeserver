@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "dist",
+    "rootDir": ".",
+    "lib": ["es2021"],
+    "target": "es2021",
+    "isolatedModules": false,
+    "noEmit": false
+  },
+  "include": ["assistant/server.ts", "assistant/tools/*.ts"]
+}
+

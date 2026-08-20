@@ -1,8 +1,8 @@
-import { logger } from '@/app/shared/logger'
 import { tool, ToolSet } from 'ai'
 import fs from 'fs'
 import { join } from 'path'
 import z from 'zod'
+import { logger } from '../logger'
 
 const SKILLS_DIR = join(process.cwd(), 'assistant', 'skills')
 

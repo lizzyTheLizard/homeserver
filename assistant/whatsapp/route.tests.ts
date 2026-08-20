@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { EventEmitter } from 'events'
 import { handleWhatsappApi } from './route'
-import type { UserSession } from '@/app/shared/auth/session'
+import type { UserSession } from '../session'
 
 const { mockGetSession, mockGetWhatsappStatus, mockGetWhatsappChats } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -11,11 +11,11 @@ const { mockGetSession, mockGetWhatsappStatus, mockGetWhatsappChats } = vi.hoist
 
 const mockUser: UserSession = { name: 'Test', email: 'test@test.com', applications: ['startpage'] }
 
-vi.mock('@/app/shared/auth/session', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/shared/auth/session')>()
+vi.mock('../session', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../session')>()
   return {
     ...actual,
-    getSession: mockGetSession as typeof import('@/app/shared/auth/session').getSession,
+    getUserSession: mockGetSession as typeof import('../session').getUserSession,
   }
 })
 
@@ -55,7 +55,7 @@ function createResponse(): EventEmitter & { writeHead: ReturnType<typeof vi.fn>,
 describe('handleWhatsappApi', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetSession.mockResolvedValue({ userInfo: mockUser })
+    mockGetSession.mockResolvedValue(mockUser)
   })
 
   test('returns false for non-whatsapp paths', async () => {

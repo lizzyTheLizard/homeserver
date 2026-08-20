@@ -18,7 +18,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN corepack enable pnpm && pnpm exec tsc --project tsconfig.build.json && pnpm exec tsc-alias --project tsconfig.build.json
+RUN corepack enable pnpm && \
+ pnpm exec tsc --project tsconfig.assistant.json && \
+ pnpm exec tsc-alias --project tsconfig.assistant.json && \
+ pnpm exec copyfiles assistant/**/*.md dist
 
 # Production image, copy all the files and run the assistant server
 FROM base AS runner
@@ -32,8 +35,6 @@ RUN adduser --system --uid 1001 nodejs
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
-COPY ./app ./app
-COPY ./db ./db
 
 USER nodejs
 
@@ -41,4 +42,5 @@ EXPOSE 8500
 
 ENV PORT=8500
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "dist/assistant/server.js"]
+WORKDIR /app/dist
+CMD ["node", "assistant/server.js"]

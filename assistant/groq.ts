@@ -1,7 +1,7 @@
 import { generateText, isStepCount, ModelMessage, streamText, ToolSet } from 'ai'
-import { config } from '@/app/shared/config'
-import { logger } from '@/app/shared/logger'
+import { logger } from './logger'
 import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import { config } from './config'
 
 const MAX_TOOL_ITERATIONS = 10
 const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })

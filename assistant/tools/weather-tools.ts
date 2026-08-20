@@ -1,8 +1,7 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import { Temporal } from '@js-temporal/polyfill'
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
+import { logger } from '../logger'
 import { openmeteoRequest, parseOpenMeteoData } from './openmeteo'
 
 export default function getTools(): ToolSet {
@@ -30,7 +29,6 @@ const detailedWeatherTool = tool({
     }
     catch (error) {
       logger.warn('Could not get detailed weather', error)
-      await logEvent(undefined, 'WARN', `Could not get detailed weather for ${date} at (${latitude.toString()}, ${longitude.toString()})`)
       throw error
     }
   },
@@ -52,7 +50,6 @@ const weatherForcastTool = tool({
     }
     catch (error) {
       logger.warn('Could not get weather forecast', error)
-      await logEvent(undefined, 'WARN', `Could not get weather forecast for ${startDay} at (${latitude.toString()}, ${longitude.toString()})`)
       throw error
     }
   },

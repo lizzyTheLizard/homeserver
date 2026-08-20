@@ -1,15 +1,14 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { Temporal } from '@js-temporal/polyfill'
-import { getSession, parseCookieHeader, UserSession } from '@/app/shared/auth/session'
-import { logger } from '@/app/shared/logger'
+import { getUserSession, parseCookieHeader, UserSession } from '../session'
+import { logger } from '../logger'
 import { getUserInfo, handleMicrosoftLoginCallback } from './graph'
 import { getMicrosoftMailWorker, MicrosoftMessageFull, MicrosoftMessageListItem } from './mail'
 import { getMicrosoftTodoWorker, MicrosoftTodoTask } from './todo'
 import { getMicrosoftCalendarWorker, MicrosoftCalendarEvent } from './calendar'
 import { deleteMicrosoftToken } from './data'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
-import { MicrosoftStatus, SerializedCalendarEvent, SerializedMessageFull, SerializedMessageListItem, SerializedTodoTask } from '@/app/startpage/microsoft/types'
+import { transactional } from '../db'
+import { MicrosoftStatus, SerializedCalendarEvent, SerializedMessageFull, SerializedMessageListItem, SerializedTodoTask } from './types'
 
 export async function handleMicrosoftApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/microsoft')) return false
@@ -32,9 +31,7 @@ export async function handleMicrosoftApi(req: IncomingMessage, res: ServerRespon
 async function authenticate(req: IncomingMessage): Promise<UserSession> {
   const cookieHeader = req.headers.cookie ?? ''
   const cookies = parseCookieHeader(cookieHeader)
-  const session = await getSession(cookies)
-  if (!session.userInfo) throw new Error('No authenticated user session found')
-  return session.userInfo
+  return await getUserSession(cookies)
 }
 
 async function route(user: UserSession, req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
@@ -176,7 +173,6 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
 
   if (pathname === '/microsoft/disconnect' && method === 'POST') {
     await transactional(async (db) => {
-      await logEvent(db, 'INFO', `Microsoft token deleted for user ${user.email}`)
       await deleteMicrosoftToken(db, user.email)
     })
     sendJson(res, 200, { success: true })
