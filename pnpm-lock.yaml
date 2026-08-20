@@ -139,8 +139,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       chromatic:
-        specifier: ^18.2.0
-        version: 18.2.0
+        specifier: ^18.5.0
+        version: 18.5.0
       concurrently:
         specifier: ^10.0.5
         version: 10.0.5
@@ -2170,8 +2170,8 @@ packages:
       '@chromatic-com/vitest':
         optional: true
 
-  chromatic@18.2.0:
-    resolution: {integrity: sha512-xyTKDhBQPDd4qrsXhJK7GAJyIStpRoSTs4b7EtPyliSL0luej3DcqkeCZ9osHxbiLXiViNyWfMxo5Xgzejex8A==}
+  chromatic@18.5.0:
+    resolution: {integrity: sha512-3oBcGP4V+6SV0qu2NJnutnPYsrxnPpOHhtQAbzxEtIQrDJNzn1wfXtzwkEiJGQm5eANTW0AvL4WxHtz+BTJbYg==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -5751,7 +5751,7 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
-  chromatic@18.2.0:
+  chromatic@18.5.0:
     dependencies:
       semver: 7.8.5
 
