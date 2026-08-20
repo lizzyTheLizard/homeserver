@@ -1,4 +1,4 @@
-import { UserSession } from '@/app/shared/auth/session'
+import type { UserSession } from './session'
 import { AssistantEvent, InitialContext } from './types'
 import { openmeteoRequest, parseOpenMeteoData } from './tools/openmeteo'
 import { getLocationDescription } from './tools/openstreetmap'
@@ -10,7 +10,7 @@ import { ModelMessage } from 'ai'
 import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
 import { join } from 'path'
-import { logger } from '@/app/shared/logger'
+import { logger } from './logger'
 
 const ASSISTANT_DIR = join(process.cwd(), 'assistant')
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')

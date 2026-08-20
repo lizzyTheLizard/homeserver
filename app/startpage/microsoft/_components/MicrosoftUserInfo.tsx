@@ -6,7 +6,7 @@ import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { connectMicrosoft, disconnectMicrosoft } from '../server'
 import { useSearchParams } from 'next/navigation'
 import styles from './MicrosoftUserInfo.module.css'
-import type { MicrosoftUserInfo } from '../types'
+import type { MicrosoftUserInfo } from '../../../../assistant/microsoft/types'
 
 interface MicrosoftUserInfoParam {
   connected: boolean

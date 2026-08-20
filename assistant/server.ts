@@ -2,9 +2,8 @@ import 'dotenv/config'
 import { createServer, IncomingMessage } from 'http'
 import type { Duplex } from 'stream'
 import { WebSocketServer, WebSocket } from 'ws'
-import { validateObject } from '@/app/shared/_helper/validation'
-import { getSession, parseCookieHeader, UserSession } from '@/app/shared/auth/session'
-import { logger } from '@/app/shared/logger'
+import { getUserSession, parseCookieHeader, UserSession } from './session'
+import { logger } from './logger'
 import { createAssistantInstance } from './assistant'
 import { Assistant, AssistantEvent, InitialContext } from './types'
 import { handleMicrosoftApi } from './microsoft/route'
@@ -82,9 +81,7 @@ async function handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buf
 async function authenticate(request: IncomingMessage): Promise<UserSession> {
   const cookieHeader = request.headers.cookie ?? ''
   const cookies = parseCookieHeader(cookieHeader)
-  const session = await getSession(cookies)
-  if (!session.userInfo) throw new Error('No authenticated user session found')
-  return session.userInfo
+  return getUserSession(cookies)
 }
 
 function handleConnection(ws: WebSocket, user: UserSession): void {
@@ -153,6 +150,12 @@ function handleConnectionClose(code: number, currentUuid: string | undefined): v
   stored.assistant.off(stored.listener)
   stored.ws = undefined
   setTimeout(() => { activeAssistants.delete(currentUuid) }, ASSISTANT_TTL_MS)
+}
+
+function validateObject<T extends z.ZodType>(input: unknown, schema: T): z.infer<T> {
+  const result = schema.safeParse(input)
+  if (!result.success) throw new Error('Invalid input')
+  return result.data
 }
 
 const inputSchema = z.union([

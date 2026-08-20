@@ -1,9 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { Mutex } from 'async-mutex'
 import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant } from './graph'
-import { UserSession } from '@/app/shared/auth/session'
-import { logger } from '@/app/shared/logger'
-import { logEvent } from '@/app/shared/_data/Event'
+import type { UserSession } from '../session'
+import { logger } from '../logger'
 
 export interface MicrosoftCalendar {
   id: string
@@ -160,12 +159,10 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
       if (Temporal.Instant.compare(event.start, windowEnd) <= 0) {
         events.set(event.id, event)
       }
-      await logEvent(undefined, 'INFO', `Created calendar event "${subject}"`)
       return event
     }
     catch (error: unknown) {
       logger.warn(`Failed to create calendar event "${subject}"`, error)
-      await logEvent(undefined, 'ERROR', `Failed to create calendar event "${subject}"`)
       throw error
     }
   }

@@ -1,4 +1,4 @@
-import { Queryable, removeNull } from '@/app/shared/_external/db/access'
+import { PoolClient } from 'pg'
 
 export interface MicrosoftToken {
   access_token: string
@@ -6,17 +6,16 @@ export interface MicrosoftToken {
   expires_at: number
 }
 
-export async function getMicrosoftToken(client: Queryable, ownerEmail: string): Promise<MicrosoftToken | undefined> {
+export async function getMicrosoftToken(client: PoolClient, ownerEmail: string): Promise<MicrosoftToken | undefined> {
   const result = await client.query<{ access_token: string, refresh_token: string, expires_at: number }>(
     'SELECT access_token, refresh_token, expires_at FROM microsoft_token WHERE owner_email = $1',
     [ownerEmail],
   )
   if (result.rows.length === 0) return undefined
-  const row = removeNull(result.rows[0])
-  return { access_token: row.access_token, refresh_token: row.refresh_token, expires_at: row.expires_at }
+  return { access_token: result.rows[0].access_token, refresh_token: result.rows[0].refresh_token, expires_at: result.rows[0].expires_at }
 }
 
-export async function setMicrosoftToken(client: Queryable, ownerEmail: string, token: MicrosoftToken): Promise<void> {
+export async function setMicrosoftToken(client: PoolClient, ownerEmail: string, token: MicrosoftToken): Promise<void> {
   const existing = await client.query('SELECT FROM microsoft_token WHERE owner_email = $1', [ownerEmail])
   if (existing.rows.length > 0) {
     await client.query(
@@ -32,6 +31,6 @@ export async function setMicrosoftToken(client: Queryable, ownerEmail: string, t
   }
 }
 
-export async function deleteMicrosoftToken(client: Queryable, ownerEmail: string): Promise<void> {
+export async function deleteMicrosoftToken(client: PoolClient, ownerEmail: string): Promise<void> {
   await client.query('DELETE FROM microsoft_token WHERE owner_email = $1', [ownerEmail])
 }
