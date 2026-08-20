@@ -27,7 +27,7 @@
     "iron-session": "^8.0.4",
     "jimp": "^1.6.1",
     "next": "16.2.12",
-    "openid-client": "^6.8.4",
+    "openid-client": "^6.8.6",
     "papaparse": "^5.5.4",
     "pg": "^8.23.0",
     "react": "19.2.8",
