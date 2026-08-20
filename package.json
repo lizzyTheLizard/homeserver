@@ -7,6 +7,7 @@
     "dev:app": "next dev --hostname 0.0.0.0",
     "dev:bridge": "cd whatsapp-bridge && air",
     "dev:assistant": "tsx watch assistant/server.ts",
+    "build": "tsc --project tsconfig.build.json && tsc-alias --project tsconfig.build.json && next build",
     "lint": "eslint --fix --cache",
     "lint:ci": "eslint",
     "test": "vitest --run",
