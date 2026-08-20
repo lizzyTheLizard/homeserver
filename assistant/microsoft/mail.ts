@@ -169,7 +169,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
         })
       }
       return matching.length
-    }).catch(async (error: unknown) => {
+    }).catch((error: unknown) => {
       logger.warn(`Failed to archive Outlook emails from ${senderEmail}`, error)
       throw error
     })

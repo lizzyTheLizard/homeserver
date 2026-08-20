@@ -14,11 +14,11 @@ const { mockGetSession, mockGetUserInfo, mockGetMicrosoftMailWorker, mockGetMicr
 
 const mockUser: UserSession = { name: 'Test', email: 'test@test.com', applications: ['startpage'] }
 
-vi.mock('@/app/shared/auth/session', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/shared/auth/session')>()
+vi.mock('../session', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../session')>()
   return {
     ...actual,
-    getSession: mockGetSession as typeof import('@/app/shared/auth/session').getSession,
+    getUserSession: mockGetSession as typeof import('../session').getUserSession,
   }
 })
 
@@ -66,7 +66,7 @@ function createResponse(): EventEmitter & { writeHead: ReturnType<typeof vi.fn>,
 describe('handleMicrosoftApi', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetSession.mockResolvedValue({ userInfo: mockUser })
+    mockGetSession.mockResolvedValue(mockUser)
   })
 
   test('returns false for non-microsoft paths', async () => {
@@ -77,7 +77,7 @@ describe('handleMicrosoftApi', () => {
   })
 
   test('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ userInfo: undefined })
+    mockGetSession.mockRejectedValue(new Error('No authenticated user session found'))
     const req = createRequest('GET', '/microsoft/status')
     const res = createResponse()
     const handled = await handleMicrosoftApi(req as never, res as never, '/microsoft/status')

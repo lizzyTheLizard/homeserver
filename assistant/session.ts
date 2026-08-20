@@ -1,4 +1,4 @@
-import { getIronSession, IronSession } from 'iron-session'
+import { getIronSession } from 'iron-session'
 import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import { config } from './config'
 

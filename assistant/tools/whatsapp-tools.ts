@@ -2,7 +2,6 @@ import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 import type { UserSession } from '../session'
 import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../whatsapp/whatsapp'
-import { transactional } from '../db'
 import { logger } from '../logger'
 
 export default function getTools(user: UserSession): ToolSet {
