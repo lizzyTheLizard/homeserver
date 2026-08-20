@@ -1,8 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { getSession, parseCookieHeader, UserSession } from '@/app/shared/auth/session'
-import { logger } from '@/app/shared/logger'
+import { getUserSession, parseCookieHeader, UserSession } from '../session'
+import { logger } from '../logger'
 import { archiveWhatsappChat, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, triggerWhatsappFullSync } from './whatsapp'
-import { logEvent } from '@/app/shared/_data/Event'
 
 export async function handleWhatsappApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/whatsapp')) return false
@@ -25,9 +24,7 @@ export async function handleWhatsappApi(req: IncomingMessage, res: ServerRespons
 async function authenticate(req: IncomingMessage): Promise<UserSession> {
   const cookieHeader = req.headers.cookie ?? ''
   const cookies = parseCookieHeader(cookieHeader)
-  const session = await getSession(cookies)
-  if (!session.userInfo) throw new Error('No authenticated user session found')
-  return session.userInfo
+  return await getUserSession(cookies)
 }
 
 async function route(user: UserSession, req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
@@ -60,7 +57,6 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   if (pathname === '/whatsapp/send-message' && method === 'POST') {
     const body = await readJson(req, { chatId: '', text: '' })
     await sendWhatsappMessage(user.email, body.chatId, body.text)
-    await logEvent(undefined, 'INFO', `Sent WhatsApp message to chat ${body.chatId}`)
     sendJson(res, 200, { success: true })
     return true
   }
@@ -68,14 +64,12 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   if (pathname === '/whatsapp/archive-chat' && method === 'POST') {
     const body = await readJson(req, { chatId: '', archived: false })
     await archiveWhatsappChat(user.email, body.chatId, body.archived)
-    await logEvent(undefined, 'INFO', `${body.archived ? 'Archived' : 'Unarchived'} WhatsApp chat ${body.chatId}`)
     sendJson(res, 200, { success: true })
     return true
   }
 
   if (pathname === '/whatsapp/full-sync' && method === 'POST') {
     await triggerWhatsappFullSync(user.email)
-    await logEvent(undefined, 'INFO', 'Triggered WhatsApp full sync')
     sendJson(res, 200, { success: true })
     return true
   }

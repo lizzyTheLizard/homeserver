@@ -1,5 +1,4 @@
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
+import { logger } from '../logger'
 
 const CACHE_TTL_MS = 10 * 60 * 1000
 const cache = new Map<string, { data: unknown, timestamp: number }>()
@@ -24,7 +23,6 @@ export async function getLocationByName(placeName: string): Promise<{ lat: numbe
   }
   catch (error) {
     logger.warn('Could not get location by name', error)
-    await logEvent(undefined, 'WARN', `Could not get location for place name: ${placeName}`)
     throw error
   }
 }

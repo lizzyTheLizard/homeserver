@@ -2,13 +2,12 @@ import { Client, GraphRequest } from '@microsoft/microsoft-graph-client'
 import { Temporal } from '@js-temporal/polyfill'
 import { MicrosoftToken, getMicrosoftToken, setMicrosoftToken } from './data'
 import * as oidc from 'openid-client'
-import { UserSession } from '@/app/shared/auth/session'
-import { logger } from '@/app/shared/logger'
+import type { UserSession } from '../session'
+import { logger } from '../logger'
 import * as client from 'openid-client'
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
-import { config } from '@/app/shared/config'
+import { transactional } from '../db'
 import { Mutex } from 'async-mutex'
+import { config } from '../config'
 
 export interface MicrosoftUserInfo {
   id: string
@@ -37,7 +36,6 @@ export async function handleMicrosoftLoginCallback(user: UserSession, currentUrl
   const token = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
   await transactional(async (db) => {
     await setMicrosoftToken(db, user.email, token)
-    await logEvent(db, 'INFO', `Microsoft token saved for user ${user.email}`)
   })
 }
 
@@ -62,7 +60,7 @@ export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken
   return tokenMutex.runExclusive(async () => {
     const now = Math.floor(Date.now() / 1000)
     return transactional(async (db) => {
-      const token = await nontransactional(db => getMicrosoftToken(db, user.email))
+      const token = await transactional(db => getMicrosoftToken(db, user.email))
       if (!token) return undefined
       if (token.expires_at > now + 60) return token
       const clientConfig = await getClientConfig()

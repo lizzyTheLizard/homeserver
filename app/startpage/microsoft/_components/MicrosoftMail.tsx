@@ -8,7 +8,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { loadMessage } from '../server'
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MicrosoftMail.module.css'
-import type { SerializedMessageListItem, SerializedMessageFull } from '../types'
+import type { SerializedMessageListItem, SerializedMessageFull } from '../../../../assistant/microsoft/types'
 
 export function MicrosoftMail({ messages }: { messages: SerializedMessageListItem[] }) {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)

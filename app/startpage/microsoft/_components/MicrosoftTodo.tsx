@@ -6,7 +6,7 @@ import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MicrosoftTodo.module.css'
-import type { SerializedTodoTask } from '../types'
+import type { SerializedTodoTask } from '../../../../assistant/microsoft/types'
 
 export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
   const [selectedTodo, setSelectedTodo] = useState<SerializedTodoTask | null>(null)

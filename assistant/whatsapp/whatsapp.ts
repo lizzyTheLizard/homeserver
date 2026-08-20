@@ -1,5 +1,5 @@
-import { config } from '@/app/shared/config'
-import { Chat, Message, SyncStatus } from '@/app/startpage/whatsapp/types'
+import { Chat, Message, SyncStatus } from './types'
+import { config } from '../config'
 
 export type { Chat, Message, SyncStatus }
 

@@ -9,7 +9,7 @@ import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { getStatus, fullSync } from '../server'
 import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
-import type { Chat, SyncStatus } from '../types'
+import type { Chat, SyncStatus } from '../../../../assistant/whatsapp/types'
 import QRCode from 'react-qr-code'
 
 const columns = [

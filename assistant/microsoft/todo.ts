@@ -1,9 +1,8 @@
 import { Mutex } from 'async-mutex'
 import { Temporal } from '@js-temporal/polyfill'
 import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant, toPlainDate } from './graph'
-import { UserSession } from '@/app/shared/auth/session'
-import { logger } from '@/app/shared/logger'
-import { logEvent } from '@/app/shared/_data/Event'
+import type { UserSession } from '../session'
+import { logger } from '../logger'
 
 export interface MicrosoftTodoList {
   id: string
@@ -154,12 +153,10 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         return { ...convertTask(response), listName: list.displayName }
       })
       addTaskToMemory(result, listId)
-      await logEvent(undefined, 'INFO', `Created Microsoft Todo task "${title}"`)
       return result
     }
     catch (error: unknown) {
       logger.warn(`Failed to create Microsoft Todo task "${title}"`, error)
-      await logEvent(undefined, 'ERROR', `Failed to create Microsoft Todo task "${title}"`)
       throw error
     }
   }
@@ -180,12 +177,10 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       })
       if (targetListId !== listId) removeTaskFromMemory(taskId, listId)
       addTaskToMemory(result, targetListId)
-      await logEvent(undefined, 'INFO', `Updated Microsoft Todo task "${taskId}"`)
       return result
     }
     catch (error: unknown) {
       logger.warn(`Failed to update Microsoft Todo task "${taskId}"`, error)
-      await logEvent(undefined, 'ERROR', `Failed to update Microsoft Todo task "${taskId}"`)
       throw error
     }
   }
@@ -201,11 +196,9 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         const idx = listTasks.findIndex(t => t.id === taskId)
         if (idx >= 0) listTasks[idx] = { ...listTasks[idx], status: 'completed' }
       }
-      await logEvent(undefined, 'INFO', `Completed Microsoft Todo task "${taskId}"`)
     }
     catch (error: unknown) {
       logger.warn(`Failed to complete Microsoft Todo task "${taskId}"`, error)
-      await logEvent(undefined, 'ERROR', `Failed to complete Microsoft Todo task "${taskId}"`)
       throw error
     }
   }
@@ -217,11 +210,9 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         await request.delete()
       })
       removeTaskFromMemory(taskId, listId)
-      await logEvent(undefined, 'INFO', `Deleted Microsoft Todo task "${taskId}"`)
     }
     catch (error: unknown) {
       logger.warn(`Failed to delete Microsoft Todo task "${taskId}"`, error)
-      await logEvent(undefined, 'ERROR', `Failed to delete Microsoft Todo task "${taskId}"`)
       throw error
     }
   }

@@ -1,10 +1,9 @@
 import { tool, ToolSet } from 'ai'
 import { z } from 'zod/v4'
-import { UserSession } from '@/app/shared/auth/session'
+import type { UserSession } from '../session'
 import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../whatsapp/whatsapp'
-import { transactional } from '@/app/shared/_external/db/access'
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
+import { transactional } from '../db'
+import { logger } from '../logger'
 
 export default function getTools(user: UserSession): ToolSet {
   const getWhatsappOverview = tool({
@@ -60,18 +59,16 @@ export default function getTools(user: UserSession): ToolSet {
       chatId: z.string().describe('The chat ID (jid) to send the message to'),
       message: z.string().describe('The text message to send'),
     }),
-    execute: async ({ chatId, message }) => transactional(async (tx) => {
+    execute: async ({ chatId, message }) => {
       try {
         await sendWhatsappMessage(user.email, chatId, message)
-        await logEvent(tx, 'INFO', `Sent WhatsApp message to chat ${chatId}`)
         return 'Message sent successfully'
       }
       catch (error) {
         logger.warn(`Failed to send WhatsApp message to chat ${chatId}`, error)
-        await logEvent(tx, 'ERROR', `Failed to send WhatsApp message to chat ${chatId}: ${message}`)
         throw error
       }
-    }),
+    },
   })
 
   const archiveWhatsappChatTool = tool({
@@ -79,18 +76,16 @@ export default function getTools(user: UserSession): ToolSet {
     inputSchema: z.object({
       chatId: z.string().describe('The chat ID (jid) to archive'),
     }),
-    execute: async ({ chatId }) => transactional(async (tx) => {
+    execute: async ({ chatId }) => {
       try {
         await archiveWhatsappChat(user.email, chatId, true)
-        await logEvent(tx, 'INFO', `Archived WhatsApp chat ${chatId} and marked as read`)
         return 'Chat archived successfully'
       }
       catch (error) {
         logger.warn(`Failed to archive WhatsApp chat ${chatId}`, error)
-        await logEvent(tx, 'ERROR', `Failed to archive WhatsApp chat ${chatId}`)
         throw error
       }
-    }),
+    },
   })
 
   return {
