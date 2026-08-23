@@ -9,18 +9,16 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
-COPY frontend/package.json ./frontend/package.json
-COPY assistant/package.json ./assistant/package.json
+COPY assistant/package.json ./package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY ./assistant .
 
-RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
+RUN corepack enable pnpm && pnpm build
 
 # Production image, copy all the files and run the assistant server
 FROM base AS runner
@@ -32,8 +30,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/assistant/dist ./dist
-COPY --from=builder /app/assistant/package.json ./package.json
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
 
 USER nodejs
 
@@ -42,4 +40,4 @@ EXPOSE 8500
 ENV PORT=8500
 ENV HOSTNAME="0.0.0.0"
 WORKDIR /app/dist
-CMD ["node", "assistant/server.js"]
+CMD ["node", "server.js"]

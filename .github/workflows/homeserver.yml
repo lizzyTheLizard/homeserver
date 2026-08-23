@@ -25,7 +25,7 @@ jobs:
           - name: Setup
             uses: ./.github/actions/setup
           - name: Tests
-            run: pnpm --filter test
+            run: pnpm --project test
     test-web-unit:
         name: Test Web (Unit)
         runs-on: ubuntu-latest
@@ -127,7 +127,8 @@ jobs:
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
-              context: ./web
+              context: .
+              file: web/Dockerfile
               platforms: linux/amd64
               push: false
               tags: homeserver:latest
