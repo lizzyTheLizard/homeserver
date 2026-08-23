@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import { createServer, IncomingMessage } from 'http'
 import type { Duplex } from 'stream'
 import { WebSocketServer, WebSocket } from 'ws'

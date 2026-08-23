@@ -18,6 +18,7 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/assistant/node_modules ./assistant/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
 COPY assistant/ ./assistant

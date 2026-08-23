@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0",
+    "dev": "dotenv -e ../.env -- next dev --hostname 0.0.0.0",
     "build": "next build",
     "lint": "eslint --fix --cache",
     "lint:ci": "eslint",
@@ -52,6 +52,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "babel-plugin-react-compiler": "1.0.0",
     "chromatic": "^18.5.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",

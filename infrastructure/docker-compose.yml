@@ -1,42 +1,36 @@
 services:
-  postgresprod:
-    container_name: Prod-Database
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: homeserver
-      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
-      POSTGRES_DB: homeserver
-    volumes:
-      - postgres_prod_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  postgresdev:
-    container_name: Dev-Database
-    image: postgres:16-alpine
+  nginx:
+    container_name: Nginx
+    image: nginx:alpine
     restart: unless-stopped
     ports:
-    - 5432:5432
-    environment:
-      POSTGRES_USER: homeserver
-      POSTGRES_PASSWORD: homeserver
-      POSTGRES_DB: homeserver
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+      - "8444:8444"
+      - "8445:8445"
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    depends_on:
+      applicationprod:
+        condition: service_healthy
+      assistant:
+        condition: service_healthy
+      caddy:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: ["CMD", "wget", "-q", "-Y", "off", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Periodically reload nginx to pick up renewed certificates
+    command: '/bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\""'
 
   whatsapp-bridge:
-    container_name: Prod-WhatsApp-Bridge
+    container_name: WhatsApp-Bridge
     image: whatsapp-bridge:latest
     pull_policy: never
     restart: unless-stopped
@@ -56,7 +50,7 @@ services:
       start_period: 40s
 
   applicationprod:
-    container_name: Prod-Application
+    container_name: Application
     image: homeserver:latest
     pull_policy: never
     restart: unless-stopped
@@ -83,7 +77,7 @@ services:
       start_period: 40s
 
   assistant:
-    container_name: Prod-Assistant
+    container_name: Assistant
     image: homeserver-assistant:latest
     pull_policy: never
     restart: unless-stopped
@@ -105,6 +99,23 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  postgresprod:
+    container_name: Database
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homeserver
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
+      POSTGRES_DB: homeserver
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   backup:
     build:
@@ -135,7 +146,7 @@ services:
       retries: 3
 
   pgwebprod:
-    container_name: Prod-Pgweb
+    container_name: Pgweb
     image: sosedoff/pgweb
     restart: unless-stopped
     command: --bind=0.0.0.0 --listen=8081
@@ -197,36 +208,6 @@ services:
         sed "s/__HOST_IP__/$${HOST_IP}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
         exec named -g -c /etc/bind/named.conf
 
-  nginx:
-    container_name: Nginx
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8443:8443"
-      - "8444:8444"
-      - "8445:8445"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certbot/www:/var/www/certbot:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-    depends_on:
-      applicationprod:
-        condition: service_healthy
-      assistant:
-        condition: service_healthy
-      caddy:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-Y", "off", "-O", "/dev/null", "http://127.0.0.1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    # Periodically reload nginx to pick up renewed certificates
-    command: '/bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\""'
-
   certbot:
     image: certbot/certbot:latest
     container_name: Certbot
@@ -239,7 +220,7 @@ services:
   dev-machine:
     build:
       context: ./dev
-    container_name: Dev
+    container_name: DEV Machine
     environment:
       REPO_URL: "${REPO_URL}"
       GIT_USER_NAME: "${GIT_NAME}"
@@ -251,6 +232,26 @@ services:
     restart: unless-stopped
     ports:
       - "2222:2222"   # SSH for VS Code Remote
+
+  postgresdev:
+    container_name: DEV Database
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+    - 5432:5432
+    environment:
+      POSTGRES_USER: homeserver
+      POSTGRES_PASSWORD: homeserver
+      POSTGRES_DB: homeserver
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 volumes:
   postgres_prod_data:
   postgres_dev_data:
