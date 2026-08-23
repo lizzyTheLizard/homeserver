@@ -185,7 +185,8 @@ jobs:
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
-              context: ./assistant
+              context: .
+              file: assistant/Dockerfile
               platforms: linux/amd64
               push: false
               tags: homeserver-assistant:latest
