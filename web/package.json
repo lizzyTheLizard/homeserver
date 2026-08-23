@@ -1,5 +1,5 @@
 {
-  "name": "@homeserver/frontend",
+  "name": "@homeserver/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
