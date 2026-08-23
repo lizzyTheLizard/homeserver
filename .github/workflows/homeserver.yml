@@ -201,7 +201,7 @@ jobs:
               retention-days: 1
     deploy:
         name: Restart Homeserver Stack
-        needs: [lint, test_assistant, test-web-unit, test-web-integration, test-web-storybook, test-whatsapp, build-app, build-whatsapp, build-assistant]
+        needs: [lint, test-assistant, test-web-unit, test-web-integration, test-web-storybook, test-whatsapp, build-app, build-whatsapp, build-assistant]
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'        
         steps:
