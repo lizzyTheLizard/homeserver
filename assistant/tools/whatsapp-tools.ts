@@ -3,7 +3,6 @@ import { z } from 'zod/v4'
 import type { UserSession } from '../session'
 import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../whatsapp/whatsapp'
 import { logger } from '../logger'
-import { log } from 'node:console'
 
 export default function getTools(user: UserSession): ToolSet {
   const getWhatsappOverview = tool({
@@ -29,7 +28,7 @@ export default function getTools(user: UserSession): ToolSet {
       const filteredMessags = messages.map((value) => ({ chat: value.chat, messages: filterRecentMessages(value.messages) }))
       logger.debug('Got filtered messages ' + JSON.stringify(filteredMessags))
       return filteredMessags
-      } 
+      }
       catch (e) {
         logger.error('could not filter messagse', e)
         return []
@@ -117,8 +116,8 @@ export default function getTools(user: UserSession): ToolSet {
   }
 }
 
-function filterRecentMessages(messages: { messageTimestamp: string }[]): { messageTimestamp: string }[] {
-  if(!messages) return []
+function filterRecentMessages(messages?: { messageTimestamp: string }[]): { messageTimestamp: string }[] {
+  if (!messages) return []
   const messagesLastDay = messages.filter(m => isInLastDays(m, 1))
   if (messagesLastDay.length > 0) return messagesLastDay
   return messages.filter(m => isInLastDays(m, 7))
