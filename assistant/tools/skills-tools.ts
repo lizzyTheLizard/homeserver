@@ -4,7 +4,7 @@ import { join } from 'path'
 import z from 'zod'
 import { logger } from '../logger'
 
-const SKILLS_DIR = join(__dirname, '..', 'tools')
+const SKILLS_DIR = join(__dirname, '..', 'skills')
 
 export default function getTools(): ToolSet {
   return getSkillTools(SKILLS_DIR)
@@ -24,7 +24,7 @@ export function getSkillTools(skillDir: string): ToolSet {
       execute: skill.execute,
     })
   }
-  logger.debug(`Loaded skills ${Object.keys(skillTools).join(', ')} from ${skillDir}`)
+  logger.debug(`Loaded skills ${Object.keys(skillTools).map(s => s.substring(11)).join(', ')} from ${skillDir}`)
   return skillTools
 }
 

@@ -3,6 +3,15 @@ import { config } from '../config'
 
 export type { Chat, Message, SyncStatus }
 
+export async function ensureWhatsappStarted(userId: string): Promise<void> {
+  const url = `${bridgeUrl(userId)}/start`
+  const response = await fetch(url, { method: 'POST', signal: AbortSignal.timeout(10_000) })
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Failed to start WhatsApp: ${response.status.toString()} ${text}`)
+  }
+}
+
 export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
   const url = `${bridgeUrl(userId)}/status`
   const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(10_000) })

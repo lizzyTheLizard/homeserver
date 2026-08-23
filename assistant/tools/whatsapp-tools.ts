@@ -3,6 +3,7 @@ import { z } from 'zod/v4'
 import type { UserSession } from '../session'
 import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../whatsapp/whatsapp'
 import { logger } from '../logger'
+import { log } from 'node:console'
 
 export default function getTools(user: UserSession): ToolSet {
   const getWhatsappOverview = tool({
@@ -15,6 +16,25 @@ export default function getTools(user: UserSession): ToolSet {
         .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) }))
         .map(c => c.then(({ chat, messages }) => ({ chat, messages: filterRecentMessages(messages) }))),
       )
+
+      /*
+
+      logger.debug(' Got the following unarchived chats: ' + chats.map(x => x.name).join(", "))
+      const p = Promise.all(chats
+        .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) })))
+      logger.debug('Started the additional requests')
+      const messages = await p
+      logger.debug('Got messages ' + JSON.stringify(messages))
+      try {
+      const filteredMessags = messages.map((value) => ({ chat: value.chat, messages: filterRecentMessages(value.messages) }))
+      logger.debug('Got filtered messages ' + JSON.stringify(filteredMessags))
+      return filteredMessags
+      } 
+      catch (e) {
+        logger.error('could not filter messagse', e)
+        return []
+      }
+        */
     },
   })
 
@@ -98,6 +118,7 @@ export default function getTools(user: UserSession): ToolSet {
 }
 
 function filterRecentMessages(messages: { messageTimestamp: string }[]): { messageTimestamp: string }[] {
+  if(!messages) return []
   const messagesLastDay = messages.filter(m => isInLastDays(m, 1))
   if (messagesLastDay.length > 0) return messagesLastDay
   return messages.filter(m => isInLastDays(m, 7))

@@ -2,7 +2,7 @@ import type { UserSession } from './session'
 import { AssistantEvent, InitialContext } from './types'
 import { openmeteoRequest, parseOpenMeteoData } from './tools/openmeteo'
 import { getLocationDescription } from './tools/openstreetmap'
-import { getWhatsappChats, getWhatsappStatus } from './whatsapp/whatsapp'
+import { ensureWhatsappStarted, getWhatsappChats, getWhatsappStatus } from './whatsapp/whatsapp'
 import { getMicrosoftMailWorker } from './microsoft/mail'
 import { getMicrosoftTodoWorker } from './microsoft/todo'
 import { getMicrosoftCalendarWorker } from './microsoft/calendar'
@@ -173,7 +173,9 @@ async function getMicrosoft(user: UserSession): Promise<PartResult> {
 }
 
 async function getWhatsapp(user: UserSession): Promise<PartResult> {
+  await ensureWhatsappStarted(user.email)
   const status = await getWhatsappStatus(user.email)
+  if (status.type === 'connecting') return { text: 'WhatsApp is still connecting. ', actions: [] }
   if (status.type !== 'connected') return { text: 'WhatsApp is not connected. ', actions: [] }
   const chats = await getWhatsappChats(user.email)
   const unarchived = chats.filter(c => !c.isArchived).length
