@@ -220,7 +220,7 @@ services:
   dev-machine:
     build:
       context: ./dev
-    container_name: DEV Machine
+    container_name: DEV-Machine
     environment:
       REPO_URL: "${REPO_URL}"
       GIT_USER_NAME: "${GIT_NAME}"
@@ -234,7 +234,7 @@ services:
       - "2222:2222"   # SSH for VS Code Remote
 
   postgresdev:
-    container_name: DEV Database
+    container_name: DEV-Database
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
