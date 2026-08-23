@@ -34,7 +34,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/assistant/dist ./dist
+COPY --from=builder /app/assistant/node_modules ./assistant/node_modules
+COPY --from=builder /app/assistant/dist ./assistant/dist
 
 USER nodejs
 
@@ -42,5 +43,5 @@ EXPOSE 8500
 
 ENV PORT=8500
 ENV HOSTNAME="0.0.0.0"
-WORKDIR /app/dist
-CMD ["node", "assistant/server.js"]
+WORKDIR /app/
+CMD ["node", "assistant/dist/server.js"]

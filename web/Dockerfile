@@ -36,8 +36,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/web/public ./web/public
-COPY --from=builder /app/web/.next ./web/.next
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/web/.next ./web/.next
+COPY --from=builder /app/web/node_modules ./web/node_modules
 COPY ./db ./db
 
 # Custom modifications: We want log files, db scripts and .env variables
