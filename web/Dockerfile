@@ -9,7 +9,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package* ./
+COPY package.json ./package.json
+COPY pnpm* ./
 COPY web/package.json ./web/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
@@ -17,7 +18,11 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm* ./
 COPY ./web ./web
+COPY ./assistant/microsoft/types.ts ./assistant/microsoft/types.ts
+COPY ./assistant/whatsapp/types.ts ./assistant/whatsapp/types.ts
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/web build
 

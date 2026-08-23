@@ -9,7 +9,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package* ./
+COPY package.json ./package.json
+COPY pnpm* ./
 COPY assistant/package.json ./assistant/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
@@ -17,6 +18,8 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm* ./
 COPY assistant/ ./assistant
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
