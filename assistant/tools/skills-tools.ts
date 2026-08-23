@@ -4,7 +4,7 @@ import { join } from 'path'
 import z from 'zod'
 import { logger } from '../logger'
 
-const SKILLS_DIR = join(process.cwd(), 'assistant', 'skills')
+const SKILLS_DIR = join(process.cwd(), 'skills')
 
 export default function getTools(): ToolSet {
   return getSkillTools(SKILLS_DIR)

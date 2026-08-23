@@ -45,7 +45,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 }
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
-  const migrationsDir = './db'
+  const migrationsDir = '../db'
   const names = (await fs.readdir(migrationsDir))
     .filter(n => n.endsWith('.sql'))
     .sort()

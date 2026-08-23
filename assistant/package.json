@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch server.ts",
+    "dev": "NODE_ENV=development tsx watch server.ts",
     "build": "tsc --project tsconfig.build.json && tsc-alias --project tsconfig.build.json && copyfiles '**/*.md' dist",
     "lint": "eslint --fix --cache",
     "lint:ci": "eslint",
