@@ -19,11 +19,11 @@ vi.mock('@/app/shared/_external/db/access', async (importOriginal: () => Promise
 })
 
 beforeAll(async () => {
-  const names = (await fs.readdir('./db'))
+  const names = (await fs.readdir('../db'))
     .filter(n => n.endsWith('.sql'))
     .sort()
   for (const name of names) {
-    const content = await fs.readFile(`./db/${name}`, 'utf-8')
+    const content = await fs.readFile(`../db/${name}`, 'utf-8')
     for (const command of splitSql(content)) {
       await pglite.query(command)
     }

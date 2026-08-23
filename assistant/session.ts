@@ -1,11 +1,27 @@
 import { getIronSession } from 'iron-session'
-import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import { config } from './config'
 
 export interface UserSession {
   name: string
   email: string
   applications: string[]
+}
+
+interface CookieSerializeOptions {
+  domain?: string
+  expires?: Date
+  httpOnly?: boolean
+  maxAge?: number
+  path?: string
+  priority?: 'low' | 'medium' | 'high'
+  sameSite?: 'strict' | 'lax' | 'none'
+  secure?: boolean
+}
+
+interface ResponseCookie {
+  name: string
+  value: string
+  options?: CookieSerializeOptions
 }
 
 export interface CookieStore {

@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
 jobs:
     lint:
-        name: Lint Application
+        name: Lint (All)
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
@@ -13,8 +13,41 @@ jobs:
             uses: ./.github/actions/setup
           - name: Lint
             run: pnpm run lint:ci
-    test:
-        name: Test Application (Unit)
+    test_assistant:
+        name: Test Assistant
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            run: pnpm --filter test
+            working-directory: assistant
+    test_web_unit:
+        name: Test Web (Unit)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            working-directory: web
+            run: pnpm run test --project unit
+    test_web_integration:
+        name: Test Web (Integration)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            working-directory: web
+            run: pnpm run test --project integration
+    test_web_storybook:
+        name: Test Web (Storybook)
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
@@ -31,9 +64,25 @@ jobs:
             run: pnpm exec playwright install --with-deps
             if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Tests
-            run: pnpm run test
-            env:
-              DEEPINFRA_API_KEY: ${{ secrets.DEEPINFRA_API_KEY}}
+            working-directory: web
+            run: pnpm run test --project storybook
+    test_web_chromatic:
+        name: Test Application (Chromatic)
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+            with:
+               fetch-depth: 0
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Run Chromatic
+            uses: chromaui/action@latest
+            working-directory: web
+            with:
+              projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+              autoAcceptChanges: main
+              exitZeroOnChanges: false
     test-whatsapp:
         name: Build and Test WhatsApp Bridge
         runs-on: ubuntu-latest
@@ -54,22 +103,7 @@ jobs:
             run: go vet ./...
           - name: Test
             run: go test ./...
-    chromatic:
-        name: Test Application (Chromatic)
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v7
-            with:
-               fetch-depth: 0
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Run Chromatic
-            uses: chromaui/action@latest
-            with:
-              projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-              autoAcceptChanges: main
-              exitZeroOnChanges: false
+
     build-app:
         name: Build Application Docker Container
         runs-on: ubuntu-latest        
@@ -84,7 +118,7 @@ jobs:
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
-              context: .
+              context: ./web
               platforms: linux/amd64
               push: false
               tags: homeserver:latest
@@ -141,8 +175,7 @@ jobs:
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
-              context: .
-              file: ./assistant/Dockerfile
+              context: ./assistant
               platforms: linux/amd64
               push: false
               tags: homeserver-assistant:latest

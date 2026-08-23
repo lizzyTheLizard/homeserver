@@ -3,7 +3,7 @@ import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { cookies } from 'next/headers'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { config } from '@/app/shared/config'
-import { MicrosoftConnectionStatus, MicrosoftStatus, SerializedMessageFull } from '../../../assistant/microsoft/types'
+import { MicrosoftConnectionStatus, MicrosoftStatus, SerializedMessageFull } from '@assistant/microsoft/types'
 
 const MICROSOFT_CALLBACK_PATH = '/startpage/microsoft/callback'
 

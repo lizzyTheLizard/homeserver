@@ -10,6 +10,8 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
+COPY frontend/package.json ./frontend/package.json
+COPY assistant/package.json ./assistant/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -18,10 +20,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN corepack enable pnpm && \
- pnpm exec tsc --project tsconfig.assistant.json && \
- pnpm exec tsc-alias --project tsconfig.assistant.json && \
- pnpm exec copyfiles assistant/**/*.md dist
+RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
 
 # Production image, copy all the files and run the assistant server
 FROM base AS runner
@@ -33,8 +32,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/assistant/dist ./dist
+COPY --from=builder /app/assistant/package.json ./package.json
 
 USER nodejs
 

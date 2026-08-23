@@ -10,7 +10,9 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile;
+COPY frontend/package.json ./frontend/package.json
+COPY assistant/package.json ./assistant/package.json
+RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -23,7 +25,7 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN corepack enable pnpm && pnpm next build
+RUN corepack enable pnpm && pnpm --filter @homeserver/frontend build
 
 # Production image, copy all the files and run next start
 FROM base AS runner
@@ -36,10 +38,10 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder /app/frontend/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/frontend/package.json ./package.json
 COPY ./db ./db
 
 # Custom modifications: We want log files, db scripts and .env variables
@@ -59,4 +61,3 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]
-
