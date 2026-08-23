@@ -12,7 +12,7 @@ import fs from 'fs'
 import { join } from 'path'
 import { logger } from './logger'
 
-const ASSISTANT_DIR = join(process.cwd(), 'assistant')
+const ASSISTANT_DIR = __dirname
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 
 export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {

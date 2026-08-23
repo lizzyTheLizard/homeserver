@@ -3,7 +3,7 @@ import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { config } from '@/app/shared/config'
 import { cookies } from 'next/headers'
-import type { Chat, Message, SyncStatus } from '@/assistant/whatsapp/types'
+import type { Chat, Message, SyncStatus } from '@assistant/whatsapp/types'
 
 export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus }> {
   await getAuthenticatedUserSession('startpage')

@@ -1,10 +1,5 @@
-Dockerfile
-assistant/Dockerfile
-.dockerignore
-.storybook
+design
+.opencode
 .vscode
-node_modules
-npm-debug.log
-.next
-.git
+.github
 infrastructure

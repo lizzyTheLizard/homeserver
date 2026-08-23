@@ -9,37 +9,36 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile;
+COPY package.json ./package.json
+COPY pnpm* ./
+COPY web/package.json ./web/package.json
+RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm* ./
+COPY ./web ./web
+COPY ./assistant/microsoft/types.ts ./assistant/microsoft/types.ts
+COPY ./assistant/whatsapp/types.ts ./assistant/whatsapp/types.ts
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN corepack enable pnpm && pnpm next build
+RUN corepack enable pnpm && pnpm --filter @homeserver/web build
 
 # Production image, copy all the files and run next start
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/web/public ./web/public
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/web/.next ./web/.next
+COPY --from=builder /app/web/node_modules ./web/node_modules
 COPY ./db ./db
 
 # Custom modifications: We want log files, db scripts and .env variables
@@ -58,5 +57,6 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+WORKDIR /app/web
 CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]
 

@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
 jobs:
     lint:
-        name: Lint Application
+        name: Lint (All)
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
@@ -13,9 +13,51 @@ jobs:
             uses: ./.github/actions/setup
           - name: Lint
             run: pnpm run lint:ci
-    test:
-        name: Test Application (Unit)
+    test-assistant:
+        name: Test Assistant
         runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ./assistant
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            run: pnpm test
+    test-web-unit:
+        name: Test Web (Unit)
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ./web
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            run: pnpm run test --project unit
+    test-web-integration:
+        name: Test Web (Integration)
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ./web
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            run: pnpm run test --project integration
+    test-web-storybook:
+        name: Test Web (Storybook)
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ./web
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -31,9 +73,26 @@ jobs:
             run: pnpm exec playwright install --with-deps
             if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
           - name: Tests
-            run: pnpm run test
-            env:
-              DEEPINFRA_API_KEY: ${{ secrets.DEEPINFRA_API_KEY}}
+            run: pnpm run test --project storybook
+    test-web-chromatic:
+        name: Test Web (Chromatic)
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ./web
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+            with:
+               fetch-depth: 0
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Run Chromatic
+            uses: chromaui/action@latest
+            with:
+              projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+              autoAcceptChanges: main
+              exitZeroOnChanges: false
     test-whatsapp:
         name: Build and Test WhatsApp Bridge
         runs-on: ubuntu-latest
@@ -54,22 +113,6 @@ jobs:
             run: go vet ./...
           - name: Test
             run: go test ./...
-    chromatic:
-        name: Test Application (Chromatic)
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v7
-            with:
-               fetch-depth: 0
-          - name: Setup
-            uses: ./.github/actions/setup
-          - name: Run Chromatic
-            uses: chromaui/action@latest
-            with:
-              projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-              autoAcceptChanges: main
-              exitZeroOnChanges: false
     build-app:
         name: Build Application Docker Container
         runs-on: ubuntu-latest        
@@ -85,6 +128,7 @@ jobs:
             uses: docker/build-push-action@v7
             with:
               context: .
+              file: web/Dockerfile
               platforms: linux/amd64
               push: false
               tags: homeserver:latest
@@ -142,7 +186,7 @@ jobs:
             uses: docker/build-push-action@v7
             with:
               context: .
-              file: ./assistant/Dockerfile
+              file: assistant/Dockerfile
               platforms: linux/amd64
               push: false
               tags: homeserver-assistant:latest
@@ -159,7 +203,7 @@ jobs:
               retention-days: 1
     deploy:
         name: Restart Homeserver Stack
-        needs: [lint, test, test-whatsapp, chromatic, build-app, build-whatsapp, build-assistant]
+        needs: [lint, test-assistant, test-web-unit, test-web-integration, test-web-storybook, test-web-chromatic, test-whatsapp, build-app, build-whatsapp, build-assistant]
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'        
         steps:
