@@ -57,4 +57,6 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+WORKDIR /app/web
 CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]
+

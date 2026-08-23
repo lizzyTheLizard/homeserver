@@ -43,5 +43,6 @@ EXPOSE 8500
 
 ENV PORT=8500
 ENV HOSTNAME="0.0.0.0"
-WORKDIR /app/
-CMD ["node", "assistant/dist/server.js"]
+WORKDIR /app/assistant
+CMD ["node", "dist/server.js"]
+
