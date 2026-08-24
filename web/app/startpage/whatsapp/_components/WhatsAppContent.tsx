@@ -66,13 +66,13 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   if (liveStatus.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
   if (liveStatus.type === 'needAuth') {
     return (
-    <div className={styles.qrContainer}>
-      <h2>Scan QR Code with WhatsApp</h2>
-      <p>Open WhatsApp on your phone, go to Settings &rarr; Linked Devices &rarr; Link a Device</p>
-      <div className={styles.qrWrapper}>
-        <QRCode value={liveStatus.qr} size={300} />
+      <div className={styles.qrContainer}>
+        <h2>Scan QR Code with WhatsApp</h2>
+        <p>Open WhatsApp on your phone, go to Settings &rarr; Linked Devices &rarr; Link a Device</p>
+        <div className={styles.qrWrapper}>
+          <QRCode value={liveStatus.qr} size={300} />
+        </div>
       </div>
-    </div>
     )
   }
   return (
