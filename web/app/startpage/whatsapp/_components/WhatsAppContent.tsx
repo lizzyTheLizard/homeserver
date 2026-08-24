@@ -6,7 +6,7 @@ import { textColumn, boolColumn, dateColumn } from '@/app/shared/_components/tab
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
-import { getStatus, fullSync } from '../server'
+import { getStatus, fullSync, disconnectAccount } from '../server'
 import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
 import type { Chat, SyncStatus } from '@assistant/whatsapp/types'
@@ -23,7 +23,6 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [sidebarId, openSidebar] = useSidebar()
   const [error, setError] = useState<string | undefined>(status.type === 'closed' ? (status.error ?? 'Unknown error') : undefined)
-  const [syncLoading, setSyncLoading] = useState(false)
   const router = useRouter()
 
   function showMessages(chat: Chat) {
@@ -32,9 +31,13 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   }
 
   async function handleFullSync() {
-    setSyncLoading(true)
     const result = await fullSync()
-    setSyncLoading(false)
+    if (!result.success) setError(result.error)
+    else router.refresh()
+  }
+
+  async function handleDisconnect() {
+    const result = await disconnectAccount()
     if (!result.success) setError(result.error)
     else router.refresh()
   }
@@ -68,9 +71,10 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   return (
     <>
       {status.type === 'connected' && (
-        <ActionButton onClick={() => { void handleFullSync() }}>
-          {syncLoading ? 'Syncing...' : 'Full Sync'}
-        </ActionButton>
+        <>
+          <ActionButton onClick={() => { void handleFullSync() }}>Full Sync</ActionButton>
+          <ActionButton onClick={() => { void handleDisconnect() }}>Disconnect</ActionButton>
+        </>
       )}
       <DataTable
         data={chats}

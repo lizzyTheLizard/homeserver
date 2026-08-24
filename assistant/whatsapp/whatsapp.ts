@@ -12,6 +12,19 @@ export async function ensureWhatsappStarted(userId: string): Promise<void> {
   }
 }
 
+export async function startWhatsapp(userId: string): Promise<SyncStatus> {
+  const url = `${bridgeUrl(userId)}/start`
+  const response = await fetch(url, {
+    method: 'POST',
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Failed to start WhatsApp: ${response.status.toString()} ${text}`)
+  }
+  return response.json() as Promise<SyncStatus>
+}
+
 export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
   const url = `${bridgeUrl(userId)}/status`
   const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(10_000) })
@@ -75,6 +88,17 @@ export async function triggerWhatsappFullSync(userId: string): Promise<void> {
   })
   if (!response.ok && response.status !== 202) {
     throw new Error(`Failed to trigger full sync: ${response.status.toString()} ${await response.text()}`)
+  }
+}
+
+export async function disconnectWhatsapp(userId: string): Promise<void> {
+  const url = `${bridgeUrl(userId)}/disconnect`
+  const response = await fetch(url, {
+    method: 'POST',
+    signal: AbortSignal.timeout(30_000),
+  })
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Failed to disconnect: ${response.status.toString()} ${await response.text()}`)
   }
 }
 

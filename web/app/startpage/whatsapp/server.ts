@@ -7,10 +7,9 @@ import type { Chat, Message, SyncStatus } from '@assistant/whatsapp/types'
 
 export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus }> {
   await getAuthenticatedUserSession('startpage')
-  const [chats, status] = await Promise.all([
-    assistantGet('/whatsapp/chats') as Promise<Chat[]>,
-    assistantGet('/whatsapp/status') as Promise<SyncStatus>,
-  ])
+  const status = await assistantGet('/whatsapp/start') as SyncStatus
+  if (status.type !== 'connected') return { chats: [], status }
+  const chats = await assistantGet('/whatsapp/chats') as Chat[]
   return { chats, status }
 }
 
@@ -33,6 +32,10 @@ export async function sendChatMessage(chatJid: string, text: string): ActionResp
 
 export async function fullSync(): ActionResponse<void> {
   return toResponse(assistantPost('/whatsapp/full-sync', {}).then(() => undefined))
+}
+
+export async function disconnectAccount(): ActionResponse<void> {
+  return toResponse(assistantPost('/whatsapp/disconnect', {}).then(() => undefined))
 }
 
 async function assistantGet(path: string): Promise<unknown> {

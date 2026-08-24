@@ -393,6 +393,25 @@ func (s *Session) FullSync(ctx context.Context) error {
 	return nil
 }
 
+func (s *Session) Disconnect(ctx context.Context) error {
+	s.mu.Lock()
+	client := s.client
+	s.mu.Unlock()
+
+	if client != nil {
+		// Best-effort logout from WhatsApp to invalidate the linked device.
+		if err := client.Logout(ctx); err != nil {
+			log.Printf("[warn] logout failed during disconnect: %v", err)
+		}
+	}
+
+	if err := DeleteUserData(s.server.db, s.userID); err != nil {
+		return err
+	}
+	s.close(fmt.Errorf("disconnected by user"))
+	return nil
+}
+
 func (s *Session) GetChats(ctx context.Context) ([]handlers.Chat, error) {
 	if err := s.ensureStarted(ctx); err != nil {
 		return nil, err

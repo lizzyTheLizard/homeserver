@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { getUserSession, parseCookieHeader, UserSession } from '../session'
 import { logger } from '../logger'
-import { archiveWhatsappChat, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, triggerWhatsappFullSync } from './whatsapp'
+import { archiveWhatsappChat, disconnectWhatsapp, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, startWhatsapp, triggerWhatsappFullSync } from './whatsapp'
 
 export async function handleWhatsappApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/whatsapp')) return false
@@ -32,6 +32,12 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
 
   if (pathname === '/whatsapp/status' && method === 'GET') {
     const status = await getWhatsappStatus(user.email)
+    sendJson(res, 200, status)
+    return true
+  }
+
+  if (pathname === '/whatsapp/start' && method === 'GET') {
+    const status = await startWhatsapp(user.email)
     sendJson(res, 200, status)
     return true
   }
@@ -70,6 +76,12 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
 
   if (pathname === '/whatsapp/full-sync' && method === 'POST') {
     await triggerWhatsappFullSync(user.email)
+    sendJson(res, 200, { success: true })
+    return true
+  }
+
+  if (pathname === '/whatsapp/disconnect' && method === 'POST') {
+    await disconnectWhatsapp(user.email)
     sendJson(res, 200, { success: true })
     return true
   }

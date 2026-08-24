@@ -39,6 +39,7 @@ func (srv *Server) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /sessions/{userId}/archive-chat", srv.handleArchiveChat)
 	mux.HandleFunc("POST /sessions/{userId}/mark-chat-read", srv.handleMarkChatRead)
 	mux.HandleFunc("POST /sessions/{userId}/full-sync", srv.handleFullSync)
+	mux.HandleFunc("POST /sessions/{userId}/disconnect", srv.handleDisconnect)
 	mux.HandleFunc("GET /sessions/{userId}/chats", srv.handleGetChats)
 	mux.HandleFunc("GET /sessions/{userId}/messages", srv.handleGetMessages)
 }
@@ -139,6 +140,16 @@ func (srv *Server) handleFullSync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func (srv *Server) handleDisconnect(w http.ResponseWriter, r *http.Request) {
+	userID := userIDFromRequestHelper(r)
+	s := srv.getOrCreateSession(userID)
+	if err := s.Disconnect(r.Context()); err != nil {
+		writeErrorHelper(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (srv *Server) handleGetChats(w http.ResponseWriter, r *http.Request) {

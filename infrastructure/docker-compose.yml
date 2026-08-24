@@ -237,9 +237,7 @@ services:
     container_name: DEV-Database
     image: postgres:16-alpine
     restart: unless-stopped
-    ports:
-    - 5432:5432
-    environment:
+   environment:
       POSTGRES_USER: homeserver
       POSTGRES_PASSWORD: homeserver
       POSTGRES_DB: homeserver
