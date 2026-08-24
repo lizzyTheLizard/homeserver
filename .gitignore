@@ -3,4 +3,4 @@ dist
 .env
 .eslintcache
 build-storybook.log
-
+*.tsbuildinfo

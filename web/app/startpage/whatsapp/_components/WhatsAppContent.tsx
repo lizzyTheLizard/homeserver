@@ -23,6 +23,7 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [sidebarId, openSidebar] = useSidebar()
   const [error, setError] = useState<string | undefined>(status.type === 'closed' ? (status.error ?? 'Unknown error') : undefined)
+  const [liveStatus, setLiveStatus] = useState<SyncStatus>(status)
   const router = useRouter()
 
   function showMessages(chat: Chat) {
@@ -43,34 +44,40 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   }
 
   useEffect(() => {
-    if (status.type === 'connected') return
+    if (liveStatus.type === 'connected') return
     const interval = setInterval(() => {
       getStatus().then((r) => {
-        if (!r.success) setError(r.error)
-        else if (status.type !== r.data.type) router.refresh()
-        else if (status.type === 'needAuth' && status.qr !== status.qr) router.refresh()
+        if (!r.success) {
+          setError(r.error)
+          return
+        }
+        const next = r.data
+        setLiveStatus(next)
+        if (next.type !== liveStatus.type) router.refresh()
       }).catch((err: unknown) => {
         setError(err instanceof Error ? err.message : new String(err).toString())
       })
     }, 1000)
     return () => { clearInterval(interval) }
-  }, [status, router])
+  }, [liveStatus.type, router])
 
   if (error) return (<div className={styles.errorBox}>{error}</div>)
-  if (status.type === 'connecting') return <LoadingSpinner text="Syncing chats..."></LoadingSpinner>
-  if (status.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
-  if (status.type === 'needAuth') return (
+  if (liveStatus.type === 'connecting') return <LoadingSpinner text="Syncing chats..."></LoadingSpinner>
+  if (liveStatus.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
+  if (liveStatus.type === 'needAuth') {
+    return (
     <div className={styles.qrContainer}>
       <h2>Scan QR Code with WhatsApp</h2>
       <p>Open WhatsApp on your phone, go to Settings &rarr; Linked Devices &rarr; Link a Device</p>
       <div className={styles.qrWrapper}>
-        <QRCode value={status.qr} size={300} />
+        <QRCode value={liveStatus.qr} size={300} />
       </div>
     </div>
-  )
+    )
+  }
   return (
     <>
-      {status.type === 'connected' && (
+      {liveStatus.type === 'connected' && (
         <>
           <ActionButton onClick={() => { void handleFullSync() }}>Full Sync</ActionButton>
           <ActionButton onClick={() => { void handleDisconnect() }}>Disconnect</ActionButton>

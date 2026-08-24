@@ -171,23 +171,62 @@ func (s *Session) connect(ctx context.Context, startup chan<- startupResult) (*w
 	client := whatsmeow.NewClient(device, waLog.Noop)
 	client.AddEventHandler(func(evt any) { s.handleEvent(s.sessionCtx, client, evt, startup) })
 
-	var qrChan <-chan whatsmeow.QRChannelItem
-	if client.Store.ID == nil {
-		qrChan, err = client.GetQRChannel(ctx)
-		if err != nil {
-			return nil, nil, fmt.Errorf("open QR channel: %w", err)
-		}
-	}
-
-	if err := client.Connect(); err != nil {
-		return nil, nil, fmt.Errorf("connect to WhatsApp: %w", err)
-	}
-
-	if qrChan != nil {
-		go s.handleQRChannel(qrChan, startup)
-	}
+	go s.runQRFlow(client, startup)
 
 	return client, device, nil
+}
+
+// runQRFlow keeps the WhatsApp connection (and QR pairing codes, when the
+// device is not yet paired) alive for the lifetime of the session. It uses the
+// session context rather than a request context so the connection survives the
+// HTTP response that triggered it. When QR codes expire without a successful
+// pairing it automatically fetches a fresh batch.
+func (s *Session) runQRFlow(client *whatsmeow.Client, startup chan<- startupResult) {
+	for {
+		s.mu.RLock()
+		status := s.status
+		s.mu.RUnlock()
+		if status == statusClosed || status == statusConnected {
+			return
+		}
+
+		if client.Store.ID != nil {
+			if !client.IsConnected() {
+				if err := client.Connect(); err != nil {
+					log.Printf("[warn] failed to connect WhatsApp: %v", err)
+					time.Sleep(2 * time.Second)
+					continue
+				}
+			}
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		qrChan, err := client.GetQRChannel(s.sessionCtx)
+		if err != nil {
+			log.Printf("[warn] failed to open QR channel: %v", err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		if err := client.Connect(); err != nil {
+			log.Printf("[warn] failed to connect WhatsApp: %v", err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		qrDone := make(chan struct{})
+		go s.handleQRChannel(qrChan, startup, qrDone)
+		<-qrDone
+
+		s.mu.RLock()
+		paired := s.status == statusConnected
+		closed := s.status == statusClosed
+		s.mu.RUnlock()
+		if paired || closed {
+			return
+		}
+		log.Printf("[debug] QR codes expired without pairing, fetching a new batch")
+		time.Sleep(1 * time.Second)
+	}
 }
 
 func (s *Session) loadDevice(ctx context.Context) (*store.Device, error) {
@@ -213,10 +252,12 @@ func (s *Session) loadDevice(ctx context.Context) (*store.Device, error) {
 	return device, nil
 }
 
-func (s *Session) handleQRChannel(qrChan <-chan whatsmeow.QRChannelItem, startup chan<- startupResult) {
+func (s *Session) handleQRChannel(qrChan <-chan whatsmeow.QRChannelItem, startup chan<- startupResult, done chan struct{}) {
+	defer close(done)
 	for item := range qrChan {
 		switch item.Event {
 		case whatsmeow.QRChannelEventCode:
+			log.Printf("[debug] QR code received (len=%d): %s", len(item.Code), item.Code)
 			select {
 			case startup <- startupResult{status: statusNeedAuth, qr: item.Code}:
 			default:
@@ -226,22 +267,9 @@ func (s *Session) handleQRChannel(qrChan <-chan whatsmeow.QRChannelItem, startup
 			s.qr = item.Code
 			s.mu.Unlock()
 		case whatsmeow.QRChannelEventError:
-			select {
-			case startup <- startupResult{err: item.Error}:
-			default:
-			}
-		case whatsmeow.QRChannelSuccess.Event:
-			// Connection event will set the final status.
-		case whatsmeow.QRChannelTimeout.Event:
-			select {
-			case startup <- startupResult{err: fmt.Errorf("QR pairing timed out")}:
-			default:
-			}
+			log.Printf("[warn] QR channel error: %v", item.Error)
 		default:
-			select {
-			case startup <- startupResult{err: fmt.Errorf("QR pairing failed: %s", item.Event)}:
-			default:
-			}
+			log.Printf("[debug] QR channel reached terminal event: %s", item.Event)
 		}
 	}
 }
