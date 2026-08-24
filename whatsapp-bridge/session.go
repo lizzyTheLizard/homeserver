@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -62,6 +62,9 @@ type Session struct {
 	startMu     sync.Mutex
 	startCond   *sync.Cond
 	startActive bool
+
+	sessionCtx context.Context
+	cancel     context.CancelFunc
 }
 
 func newSession(userID string, server *Server) *Session {
@@ -73,6 +76,7 @@ func newSession(userID string, server *Server) *Session {
 		status:    statusConnecting,
 	}
 	s.startCond = sync.NewCond(&s.startMu)
+	s.sessionCtx, s.cancel = context.WithCancel(context.Background())
 	return s
 }
 
@@ -165,7 +169,7 @@ func (s *Session) connect(ctx context.Context, startup chan<- startupResult) (*w
 	}
 
 	client := whatsmeow.NewClient(device, waLog.Noop)
-	client.AddEventHandler(func(evt any) { s.handleEvent(ctx, client, evt, startup) })
+	client.AddEventHandler(func(evt any) { s.handleEvent(s.sessionCtx, client, evt, startup) })
 
 	var qrChan <-chan whatsmeow.QRChannelItem
 	if client.Store.ID == nil {
@@ -376,7 +380,7 @@ func (s *Session) FullSync(ctx context.Context) error {
 	s.mu.Unlock()
 
 	go func() {
-		err := handlers.FullSyncRequest(ctx, client, s.server.db)
+		err := handlers.FullSyncRequest(s.sessionCtx, client, s.server.db)
 		s.mu.Lock()
 		if err != nil {
 			s.fullSyncError = err.Error()
@@ -434,6 +438,9 @@ func (s *Session) close(err error) {
 	defer s.mu.Unlock()
 	if s.status == statusClosed {
 		return
+	}
+	if s.cancel != nil {
+		s.cancel()
 	}
 	if s.client != nil {
 		s.client.Disconnect()
