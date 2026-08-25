@@ -27,7 +27,7 @@
 	basic_auth {
 		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
 	}
-	reverse_proxy dev-machine:4096
+	reverse_proxy dev-machine:3080
 }
 
 :8445 {

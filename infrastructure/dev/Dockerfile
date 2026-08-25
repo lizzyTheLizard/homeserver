@@ -62,9 +62,9 @@ ENV PATH=/home/dev/go/bin:${PATH}
 # /etc/environment instead of the container ENV above.
 RUN echo 'PATH="/usr/local/go/bin:/home/dev/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"' > /etc/environment
 
-# 6. Install code-server and OpenCode CLI
+# 6. Install code-server and Deepsek harness
 RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN npm install -g opencode-ai
+RUN npm install -g @deepseek-ai/dsh && dsh plugin --profile web add dsh-web-startup-auth@latest
 
 # 7. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
