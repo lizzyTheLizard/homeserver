@@ -99,6 +99,22 @@ jobs:
         defaults:
             run:
                 working-directory: whatsapp-bridge
+        services:
+            postgres:
+                image: postgres:16
+                env:
+                    POSTGRES_USER: whatsapp
+                    POSTGRES_PASSWORD: whatsapp
+                    POSTGRES_DB: whatsapp
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+        env:
+            DB_CONNECTION_STRING: postgres://whatsapp:whatsapp@localhost:5432/whatsapp?sslmode=disable
         steps:
           - name: Checkout
             uses: actions/checkout@v7

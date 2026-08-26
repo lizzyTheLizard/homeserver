@@ -226,12 +226,33 @@ func upsertChats(ctx context.Context, ex execer, ourJID string, evts []*events.M
 	if unarchive {
 		updateSuffix += `, archived = FALSE`
 	}
+	// When a chat row is inserted for the first time (which happens during
+	// history sync, i.e. AFTER the app-state sync that already recorded the
+	// archive status in whatsmeow_chat_settings), copy that archived flag
+	// across. Otherwise a freshly created row would default to archived = FALSE
+	// and silently drop the archive status the client already reported, so
+	// chats would never appear as archived.
+	//
+	// Archived chats are keyed in whatsmeow_chat_settings by either the LID or
+	// the phone-number form of the JID, so we resolve both via whatsmeow_lid_map
+	// to find the matching setting regardless of which form the chat row uses.
+	archivedValue := `CASE WHEN $4 THEN FALSE
+		ELSE COALESCE(
+			(SELECT archived FROM whatsmeow_chat_settings WHERE our_jid = $1 AND chat_jid = $2),
+			(SELECT s.archived
+			 FROM whatsmeow_chat_settings s
+			 JOIN whatsmeow_lid_map m
+			   ON (m.lid = replace($2, '@lid', '') AND s.chat_jid = m.pn || '@s.whatsapp.net')
+			   OR (m.pn = replace($2, '@s.whatsapp.net', '') AND s.chat_jid = m.lid || '@lid')
+			 WHERE s.our_jid = $1),
+			FALSE
+		) END`
 	for chatJID, ts := range chatTimestamps {
 		_, err := ex.ExecContext(ctx,
 			`INSERT INTO whatsmeow_chats (our_jid, chat_jid, last_message_ts, archived)
-			 VALUES ($1, $2, $3, FALSE)
+			 VALUES ($1, $2, $3, `+archivedValue+`)
 			 ON CONFLICT (our_jid, chat_jid) `+updateSuffix,
-			ourJID, chatJID, ts)
+			ourJID, chatJID, ts, unarchive)
 		if err != nil {
 			return fmt.Errorf("upsert chat %s: %w", chatJID, err)
 		}
