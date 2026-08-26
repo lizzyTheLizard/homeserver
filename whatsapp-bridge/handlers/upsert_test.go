@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"database/sql"
-	"os"
 	"testing"
 	"time"
 
@@ -14,20 +13,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func openTestDBForUpsert(t *testing.T) *sql.DB {
-	dsn := os.Getenv("DB_CONNECTION_STRING")
-	if dsn == "" {
-		dsn = "postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable"
-	}
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
-	return db
-}
-
 func TestUpsertChatsCopiesArchivedFromSettings(t *testing.T) {
-	db := openTestDBForUpsert(t)
+	db := openTestDB(t)
 	defer db.Close()
 	ourJID := "test-upsert-our@s.whatsapp.net"
 

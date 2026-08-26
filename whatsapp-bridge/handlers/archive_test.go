@@ -4,24 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
-
-func openTestDB(t *testing.T) *sql.DB {
-	dsn := os.Getenv("DB_CONNECTION_STRING")
-	if dsn == "" {
-		dsn = "postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable"
-	}
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
-	return db
-}
 
 // resetTestData clears the test rows we use so each case is isolated.
 func resetTestData(t *testing.T, db *sql.DB, ourJID string) {
