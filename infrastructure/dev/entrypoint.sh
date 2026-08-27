@@ -78,5 +78,5 @@ if [ ! -d "$WORKSPACE_DIR" ]; then
 fi
 
 # 6. Start supervisord
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 

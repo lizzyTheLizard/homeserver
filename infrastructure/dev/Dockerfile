@@ -64,7 +64,11 @@ RUN echo 'PATH="/usr/local/go/bin:/home/dev/go/bin:/usr/local/sbin:/usr/local/bi
 
 # 6. Install code-server and Deepsek harness
 RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN npm install -g @deepseek-ai/dsh && dsh plugin --profile web add dsh-web-startup-auth@latest
+RUN npm install -g @deepseek-ai/dsh &&  \
+	dsh plugin --profile web add dsh-web-startup-auth@latest && \
+	dsh plugin --profile web add dsh-free-search@latest && \
+	dsh plugin --profile web add dsh-cost-meter@latest
+ 
 
 # 7. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -78,7 +82,7 @@ RUN mkdir -p /var/run/sshd \
     && echo "AllowUsers dev" >> /etc/ssh/sshd_config
 
 # 9. Copy configuration files & entrypoint script
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 USER dev
