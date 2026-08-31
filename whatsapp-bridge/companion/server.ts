@@ -111,6 +111,6 @@ function requestTracing(req: SessionRequest, res: Response, next: NextFunction) 
 }
 
 function errorHandler(err: Error, req: SessionRequest, res: Response, next: NextFunction) {
-  logger.warn("Error while serving request", err)
+  logger.warn('Error while serving request', err)
   res.status(500).json({ message: err.message })
 }
