@@ -82,11 +82,10 @@ Development happens inside `dev-machine` (see `infrastructure/README.md`): it ru
 
 ## Whatsapp Bridge
 
-`whatsapp-bridge/` is a standalone Go HTTP service (not part of the pnpm/Next.js toolchain). It connects WhatsApp accounts via [whatsmeow](https://github.com/tulir/whatsmeow) using Postgres (pgx driver) as the session store, and exposes a REST API for the Next.js app.
+`whatsapp-bridge/` is a single-container bridge. It runs [wacli](https://github.com/openclaw/wacli) — a prebuilt WhatsApp CLI built on [whatsmeow](https://github.com/tulir/whatsmeow) — plus a small TypeScript companion app built on Express (`companion/`) that drives wacli and exposes a REST API for the Next.js app. There is no Go code in this repository.
 
-- Configuration via environment variables: `DB_CONNECTION_STRING`, `DEV` (`true`/`false`, selects the device name shown in WhatsApp's linked devices list: `Gutschi.Site (dev)` vs `Gutschi.Site`). The bridge listens on port `8400` and loads a `.env` file from the current or parent directory if present.
-- The service manages multiple user sessions in one process. Endpoints include `POST /sessions/{userId}/start`, `GET /sessions/{userId}/status`, `GET /sessions/{userId}/chats`, `GET /sessions/{userId}/messages?chatId=...`, `POST /sessions/{userId}/send-message`, `POST /sessions/{userId}/archive-chat`, `POST /sessions/{userId}/mark-chat-read`, and `POST /sessions/{userId}/full-sync`.
-- All received messages (live and history sync) are stored in the `whatsmeow_messages` table, created automatically at startup.
-- Build/test it with the standard Go toolchain (`go build ./...`, `go vet ./...`, `go test ./...`) inside `whatsapp-bridge/`.
-- The bridge container is built from `whatsapp-bridge/Dockerfile` as `whatsapp-bridge:latest`; the main `Dockerfile` no longer contains any WhatsApp binary.
-
+- wacli stores each user's session and message mirror in **SQLite** (`session.db` + `wacli.db`), one isolated store directory per user under `WHATSAPP_DATA_DIR` (`/data` in the container). That directory is a named Docker volume (`whatsapp_data`) and is deliberately **not** included in the Postgres backup.
+- Configuration via environment variables: `WHATSAPP_DATA_DIR`, `PORT` (default `8400`), `WACLI_BIN`, the device identity `WACLI_DEVICE_PLATFORM`/`WACLI_DEVICE_LABEL`, optional `WACLI_SYNC_MAX_MESSAGES` / `WACLI_SYNC_MAX_DB_SIZE` caps, and `LOG_LEVEL`.
+- The companion manages one wacli process per user: `wacli auth --events` while unpaired (emits QR codes) and `wacli sync --follow --events` while paired (live mirror). Reads use one-shot `wacli --json` commands; `send` is delegated by wacli to the running sync; `archive-chat`/`mark-chat-read`/`full-sync` briefly pause sync to take the store lock.
+- The companion is standard workspace tooling: `tsc` build, ESLint, and Vitest — run `pnpm --filter @homeserver/whatsapp-bridge build|test|lint`.
+- The bridge container is built from `whatsapp-bridge/Dockerfile` (build context is the repo root, like the assistant) as `whatsapp-bridge:latest`; it installs the workspace, runs the `tsc` build, and ships the compiled `dist/`, its production dependencies (Express, winston, async-mutex), and the downloaded wacli binary.

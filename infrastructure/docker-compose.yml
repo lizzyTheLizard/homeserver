@@ -34,14 +34,10 @@ services:
     image: whatsapp-bridge:latest
     pull_policy: never
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
-      DEV: "false"
-    depends_on:
-      postgresprod:
-        condition: service_healthy
+      WHATSAPP_DATA_DIR: /data
+    volumes:
+      - whatsapp_data:/data
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8400/health || exit 1"]
       interval: 30s
@@ -254,4 +250,5 @@ volumes:
   postgres_prod_data:
   postgres_dev_data:
   dev_home:
+  whatsapp_data:
 

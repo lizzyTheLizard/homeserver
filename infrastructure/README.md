@@ -62,15 +62,18 @@ see [§6.8](#68-deploying--upgrading-the-application)).
 * **`pgwebprod`** is a web UI for the prod DB at `https://www.gutschi.site:8443`
   (admin auth).
 * **`dev-machine`** is a full Linux dev environment (ubuntu:24.04) with Node 24,
-  pnpm, Go, the GitHub CLI, PostgreSQL client tools, **code-server** and the
-  **OpenCode** CLI, managed by `supervisord`. Access:
+  pnpm, Go, the GitHub CLI, PostgreSQL client tools, `wacli` (WhatsApp CLI),
+  **code-server** and the **DeepSeek Harbenss**, managed by `supervisord`. Access:
   * VS Code Remote SSH → `ssh dev@<host> -p 2222`
   * Browser VS Code → `https://dev.gutschi.site:8443`
   * OpenCode → `https://dev.gutschi.site:8444`
 
 In development the WhatsApp bridge is **not** a separate container: `pnpm dev`
-inside `dev-machine` starts it as a local Go process alongside the Next.js server, 
-tied to the same lifecycle. It uses `postgresdev`.
+inside `dev-machine` starts the TypeScript companion (`pnpm --filter
+@homeserver/whatsapp-bridge dev`, i.e. `tsx watch`) which drives the `wacli`
+binary, as a local process alongside the Next.js server, tied to the same
+lifecycle. Its
+state is a local SQLite directory under `whatsapp-bridge/data/`, not `postgresdev`.
 
 ---
 
@@ -318,7 +321,7 @@ docker compose up -d --force-recreate caddy
 ```
 
 **Prod database password:** changing `PROD_DB_PASSWORD` in `.env` updates the
-connection strings used by `applicationprod`, `whatsapp-bridge` and `backup` —
+connection strings used by `applicationprod` and `backup` —
 but Postgres only applies `POSTGRES_PASSWORD` on **first** initialization. You
 must also change the password inside the running DB:
 
@@ -327,7 +330,7 @@ docker compose exec postgresprod psql -U homeserver -c \
   "ALTER USER homeserver WITH PASSWORD '<new-prod-password>';"
 ```
 
-Then `docker compose up -d --force-recreate applicationprod whatsapp-bridge backup`
+Then `docker compose up -d --force-recreate applicationprod backup`
 so the new `.env` value is picked up.
 
 **Dev database password:** hardcoded to `homeserver`/`homeserver` in compose and

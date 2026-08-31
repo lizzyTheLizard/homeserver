@@ -1,4 +1,2 @@
-/whatsapp
-/whatsapp.exe
-/whatsapp.exe~
-/tmp
+# Local wacli store (SQLite session + message mirror) used during development.
+/data
