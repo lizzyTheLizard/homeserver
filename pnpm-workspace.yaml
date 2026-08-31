@@ -1,6 +1,7 @@
 packages:
   - 'web'
   - 'assistant'
+  - 'whatsapp-bridge'
 allowBuilds:
   '@whiskeysockets/baileys': true
   esbuild: true

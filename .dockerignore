@@ -3,3 +3,10 @@ design
 .vscode
 .github
 infrastructure
+node_modules
+.git
+dist
+.env
+.next
+.eslintcache
+*.tsbuildinfo

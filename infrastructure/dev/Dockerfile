@@ -51,16 +51,15 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
 #    are fetched at runtime (see AGENTS.md) via `pnpm exec playwright install --with-deps`.
 RUN apt-get update && npx -y playwright@1.62.1 install-deps && rm -rf /var/lib/apt/lists/*
 
-# 5. Install Go
-ARG GO_VERSION="1.23.0"
-RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
-ENV PATH="/usr/local/go/bin:${PATH}"
-ENV GOPATH=/home/dev/go
-ENV PATH=/home/dev/go/bin:${PATH}
-
-# Make Go available to login/PAM sessions (e.g. SSH), which read
-# /etc/environment instead of the container ENV above.
-RUN echo 'PATH="/usr/local/go/bin:/home/dev/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"' > /etc/environment
+# 5. Install wacli (WhatsApp CLI) — the WhatsApp bridge companion drives this
+# binary, so it must be on PATH for `pnpm dev:bridge`.
+ARG WACLI_VERSION="0.17.1"
+RUN curl -fsSL "https://github.com/openclaw/wacli/releases/download/v${WACLI_VERSION}/wacli_${WACLI_VERSION}_linux_amd64.tar.gz" \
+      -o /tmp/wacli.tar.gz \
+ && tar -xzf /tmp/wacli.tar.gz -C /tmp \
+ && mv /tmp/wacli /usr/local/bin/wacli \
+ && chmod +x /usr/local/bin/wacli \
+ && rm -f /tmp/wacli.tar.gz /tmp/LICENSE /tmp/README.md
 
 # 6. Install code-server and Deepsek harness
 RUN curl -fsSL https://code-server.dev/install.sh | sh

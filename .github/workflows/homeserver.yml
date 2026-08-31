@@ -94,41 +94,18 @@ jobs:
               autoAcceptChanges: main
               exitZeroOnChanges: false
     test-whatsapp:
-        name: Build and Test WhatsApp Bridge
+        name: Test WhatsApp Bridge
         runs-on: ubuntu-latest
         defaults:
-            run:
-                working-directory: whatsapp-bridge
-        services:
-            postgres:
-                image: postgres:16
-                env:
-                    POSTGRES_USER: whatsapp
-                    POSTGRES_PASSWORD: whatsapp
-                    POSTGRES_DB: whatsapp
-                ports:
-                    - 5432:5432
-                options: >-
-                    --health-cmd pg_isready
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-        env:
-            DB_CONNECTION_STRING: postgres://whatsapp:whatsapp@localhost:5432/whatsapp?sslmode=disable
+          run:
+            working-directory: ./whatsapp-bridge
         steps:
           - name: Checkout
             uses: actions/checkout@v7
-          - name: Setup Go
-            uses: actions/setup-go@v7
-            with:
-              go-version-file: whatsapp-bridge/go.mod
-              cache-dependency-path: whatsapp-bridge/go.sum
-          - name: Build
-            run: go build ./...
-          - name: Vet
-            run: go vet ./...
-          - name: Test
-            run: go test ./...
+          - name: Setup
+            uses: ./.github/actions/setup
+          - name: Tests
+            run: pnpm test
     build-app:
         name: Build Application Docker Container
         runs-on: ubuntu-latest        
@@ -175,7 +152,8 @@ jobs:
           - name: Build Docker
             uses: docker/build-push-action@v7
             with:
-              context: ./whatsapp-bridge
+              context: .
+              file: whatsapp-bridge/Dockerfile
               platforms: linux/amd64
               push: false
               tags: whatsapp-bridge:latest
