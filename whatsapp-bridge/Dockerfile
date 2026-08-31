@@ -66,10 +66,10 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver
 
 # ---- Stage 5: runtime ---------------------------------------------------
 # We need slim here as wacli needs glibc
-FROM node:24-^slim AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=wacli /usr/local/bin/wacli /usr/local/bin/wacli
 COPY --from=prod-deps /app/node_modules ./node_modules
@@ -84,8 +84,8 @@ ENV WACLI_BIN=/usr/local/bin/wacli
 # Run as a non-root user. /data is the persistent volume that holds every
 # user's SQLite store; pre-creating it with the right owner means a fresh named
 # volume inherits those permissions on first mount.
-RUN addgroup -S -g 10001 wabridge \
- && adduser -S -D -u 10001 -G wabridge wabridge \
+RUN groupadd -g 10001 wabridge \
+ && useradd -u 10001 -g wabridge -m -s /bin/false wabridge \
  && mkdir -p /data \
  && chown -R wabridge:wabridge /data
 USER wabridge
