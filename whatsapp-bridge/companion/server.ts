@@ -110,7 +110,10 @@ function requestTracing(req: SessionRequest, res: Response, next: NextFunction) 
   next()
 }
 
-function errorHandler(err: Error, req: SessionRequest, res: Response, next: NextFunction) {
+// Express detects error middleware by its 4-argument signature, so `next`
+// must stay even though the handler writes the response itself.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function errorHandler(err: Error, _req: SessionRequest, res: Response, _next: NextFunction) {
   logger.warn('Error while serving request', err)
   res.status(500).json({ message: err.message })
 }

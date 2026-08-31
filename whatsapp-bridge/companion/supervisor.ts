@@ -179,7 +179,7 @@ export class Supervisor {
       return
     }
     await this.stop()
-    return this.mutex.runExclusive(async () => {
+    return this.mutex.runExclusive(() => {
       logger.info(`[${this.userId}] run full sync`)
       this.status = { type: 'fullsync' }
       runWacli(this.storeDir, ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'], false, 5 * 60 * 1000)
