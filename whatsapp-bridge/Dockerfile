@@ -65,7 +65,8 @@ COPY whatsapp-bridge/package.json ./whatsapp-bridge/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp-bridge
 
 # ---- Stage 5: runtime ---------------------------------------------------
-FROM base AS runner
+# We need slim here as wacli needs glibc
+FROM node:24-^slim AS runner
 WORKDIR /app
 
 RUN apk add --no-cache ca-certificates
