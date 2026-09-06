@@ -63,7 +63,7 @@ In production every required var must be set; the app fails fast on startup othe
 | `pnpm dev`         | Next.js dev server (hot reload) |
 | `pnpm build`       | Production build |
 | `pnpm start`       | Run the production build |
-| `pnpm test`        | All tests once (unit + integration + Storybook) |
+| `pnpm test`        | All tests once (unit + integration + Storybook) plus the docker-compose stack smoke suite (requires Docker) |
 | `pnpm test:watch`  | Tests in watch mode |
 | `pnpm vitest run path/to/file.tests.ts` | Run a single file |
 | `pnpm lint`        | ESLint |
@@ -94,15 +94,13 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 
 ```
 /
-├── app/
-│   ├── admin/          Admin portal
-│   ├── cash/           Bookkeeping app  (see [app/cash/CASH.md](app/cash/CASH.md))
-│   ├── coeditor/       AI editor
-│   ├── startpage/      Personal startpage settings and components
-│   └── shared/         Cross-cutting helpers, components, DB access, authentication
+├── web/                Next.js application (apps under web/app/)
+├── assistant/          Standalone assistant service (port 8500, WebSocket)
+├── whatsapp-bridge/    WhatsApp bridge container (wacli + companion)
+├── integration-test/   Smoke tests for the full docker-compose stack (Vitest + Playwright)
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
-├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → deploy)
+├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → integration smoke → deploy)
 ├── .storybook/         Storybook configuration
 ├── Dockerfile          Production image (Node 24 Alpine)
 ├── proxy.ts             Request proxy (auth, logging)
@@ -119,6 +117,43 @@ Three vitest projects run in parallel:
 - `storybook` — Story interaction tests via Playwright/Chromium
 
 `pnpm test` is configured with `--no-file-parallelism` because the integration tests share the PGlite instance.
+
+### Smoke tests (docker-compose stack)
+
+The `integration-test/` package boots the **full** docker-compose stack
+(`infrastructure/docker-compose.yml` plus the
+`integration-test/docker-compose.ci.yml` test-mode override) and verifies the
+whole system end to end:
+
+- SSH on port 2222 (dev-machine) and bind9 DNS answering `gutschi.site`
+- Dozzle and Pgweb UIs over HTTPS with HTTP basic auth
+- application healthy, `/shared/ping` and the root page reachable through nginx
+- authenticated pages in headless Chromium: the assistant greeting (WebSocket,
+  requires `AI_API_KEY`) and the WhatsApp bridge pairing QR code
+
+The suite runs the same way in CI (the `integration-smoke` job, before deploy)
+and locally with a **single command**:
+
+```bash
+pnpm --filter @homeserver/integration-test test
+```
+
+Requirements and behaviour:
+
+- **Docker** with the compose plugin is required; the stack is torn down
+  (`docker compose down --remove-orphans -v`) even when the run fails.
+- **No Entra credentials needed** — the test stack uses a self-signed mock OIDC
+  server (`integration-test/mock-oidc/`), fixed non-secret values from
+  `integration-test/env.test`, and an ephemeral WhatsApp data directory.
+- The only secret used is **`AI_API_KEY`** for the assistant greeting check; it
+  is read from the root `.env` if present, or from the `AI_API_KEY` environment
+  variable (CI passes the `AI_API_KEY` secret).
+- Self-signed certificates are generated into
+  `infrastructure/certbot/conf/live/<domain>/` (git-ignored) and the hosts
+  `dev/www/logs.gutschi.site` + `mock-oidc-server` must resolve to `127.0.0.1`;
+  the orchestrator adds `/etc/hosts` entries when it can (root/sudo).
+- Debugging: `SMOKE_KEEP_STACK=1` keeps the stack running after the run, and
+  `SMOKE_TIMEOUT_MS` raises the readiness timeout (default 300 s).
 
 ## License
 

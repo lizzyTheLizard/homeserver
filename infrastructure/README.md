@@ -338,6 +338,37 @@ used by the dev-machine. Changing it requires editing `docker-compose.yml`
 (`postgresdev` + `dev-machine` `DB_CONNECTION_STRING`) and recreating both —
 only do this if you have a reason to.
 
+### 5.10 Integration smoke suite (local run)
+
+The `integration-test/` package verifies the **full stack end to end**: it boots
+this `docker-compose.yml` together with the test-mode override
+`integration-test/docker-compose.ci.yml` (mock OIDC instead of Azure AD, fixed
+non-secret test values, ephemeral WhatsApp data), then checks SSH (2222), bind9
+DNS, the Dozzle and Pgweb UIs over HTTPS, the application over nginx, and
+authenticated pages in headless Chromium (assistant greeting + WhatsApp QR).
+
+```bash
+pnpm --filter @homeserver/integration-test test
+```
+
+* Requires **Docker** with the compose plugin. The stack is torn down
+  (`docker compose down --remove-orphans -v`) automatically, also on failure —
+  the suite never touches the real `.env` or the real stack (its project name is
+  `homeserver-smoke` and `env_file` values from `env.test` win over any
+  `infrastructure/.env`).
+* **No Entra credentials needed.** The only secret used is `AI_API_KEY` for the
+  assistant greeting check — it is read from the root `.env` or the
+  `AI_API_KEY` environment variable.
+* Self-signed certificates are written under `./certbot/conf/live/<domain>/`
+  (git-ignored), and the smoke hosts (`dev`/`www`/`logs.gutschi.site`,
+  `mock-oidc-server`) must resolve to `127.0.0.1` — the orchestrator adds
+  `/etc/hosts` entries when it can.
+* Debugging: `SMOKE_KEEP_STACK=1` keeps the stack running after the run;
+  `SMOKE_TIMEOUT_MS` raises the readiness timeout (default 300 s).
+
+CI runs the same suite as the `integration-smoke` job (after the three image
+builds, before `deploy`); the `All Build Check Success` job depends on it.
+
 ---
 
 ## 6. Deployment & repository
