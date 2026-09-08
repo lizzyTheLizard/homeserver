@@ -74,6 +74,10 @@ services:
     env_file:
       - ../integration-test/env.test
 
+  pgwebprod:
+    environment:
+      DATABASE_URL: postgres://homeserver:smoke-test-db-password@postgresprod:5432/homeserver?sslmode=disable
+
   dev-machine:
     environment:
       # The dev entrypoint requires GitHub SSH access (auth check + clone) and

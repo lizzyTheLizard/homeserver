@@ -111,7 +111,7 @@ function ensureHosts() {
     for (const [ip, name] of HOSTS) console.error(`[smoke]   ${ip} ${name}`)
     process.exit(1)
   }
-  const missing = HOSTS.filter(([ip, name]) => !new RegExp(`^\\s*${ip}\\s+${name}\\b`, 'm').test(current))
+  const missing = HOSTS.filter(([ip, name]) => !new RegExp(`^\\s*${ip}\\s+.*${name}\\b`, 'm').test(current))
   if (missing.length > 0) {
     console.error(`[smoke] ERROR: ${HOSTS_FILE} is missing entries that the smoke suite needs (it never edits the hosts file):`)
     for (const [ip, name] of missing) console.error(`[smoke]   ${ip} ${name}`)
@@ -180,114 +180,7 @@ function composeDown() {
 }
 
 // ---------------------------------------------------------------------------
-// 6. readiness polling
-// ---------------------------------------------------------------------------
-
-async function waitFor(name, check, timeoutMs = READY_TIMEOUT_MS) {
-  const deadline = Date.now() + timeoutMs
-  let lastError = 'check returned falsy'
-  while (Date.now() < deadline) {
-    try {
-      if (await check()) {
-        log('ready', `${name} is ready`)
-        return true
-      }
-    }
-    catch (error) {
-      lastError = error instanceof Error ? error.message : String(error)
-    }
-    await new Promise(resolvePromise => setTimeout(resolvePromise, POLL_INTERVAL_MS))
-  }
-  console.error(`[smoke] ERROR: ${name} did not become ready within ${Math.round(timeoutMs / 1000)}s (last: ${lastError})`)
-  return false
-}
-
-function httpsStatus(url, { auth } = {}) {
-  const headers = {}
-  if (auth) headers.authorization = `Basic ${Buffer.from(auth).toString('base64')}`
-  return fetch(url, { headers, redirect: 'manual' }).then(res => res.status).catch((error) => {
-    throw new Error(`GET ${url} failed: ${error instanceof Error ? error.message : String(error)}`)
-  })
-}
-
-function dnsAnswer(name, server = '127.0.0.1', port = 53) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const id = Math.floor(Math.random() * 0xFFFF)
-    const query = Buffer.alloc(12)
-    query.writeUInt16BE(id, 0)
-    query.writeUInt16BE(0x0100, 2) // RD=1
-    query.writeUInt16BE(1, 4) // QDCOUNT
-    const labels = name.split('.').map(part => `${String.fromCharCode(part.length)}${part}`).join('')
-    const question = Buffer.from(`${labels}\u0000`, 'binary')
-    const qtypeQclass = Buffer.from([0, 1, 0, 1]) // A, IN
-    const packet = Buffer.concat([query, question, qtypeQclass])
-
-    const socket = dgram.createSocket('udp4')
-    const timer = setTimeout(() => {
-      socket.close()
-      rejectPromise(new Error(`DNS query to ${server}:${port} timed out`))
-    }, 5000)
-    socket.on('message', (msg) => {
-      clearTimeout(timer)
-      socket.close()
-      const ancount = msg.readUInt16BE(6)
-      if (ancount >= 1) resolvePromise(ancount)
-      else rejectPromise(new Error(`DNS answered but no A record (ancount=${ancount})`))
-    })
-    socket.on('error', (error) => {
-      clearTimeout(timer)
-      socket.close()
-      rejectPromise(error)
-    })
-    socket.send(packet, port, server)
-  })
-}
-
-function tcpConnect(host, port) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const socket = net.connect({ host, port })
-    const timer = setTimeout(() => {
-      socket.destroy()
-      rejectPromise(new Error(`TCP connect to ${host}:${port} timed out`))
-    }, 5000)
-    socket.on('connect', () => {
-      clearTimeout(timer)
-      socket.destroy()
-      resolvePromise(true)
-    })
-    socket.on('error', (error) => {
-      clearTimeout(timer)
-      socket.destroy()
-      rejectPromise(error)
-    })
-  })
-}
-
-function loadTestEnv() {
-  return parseEnvFile(ENV_TEST)
-}
-
-async function waitForStack() {
-  const env = loadTestEnv()
-  const adminAuth = `${env.ADMIN_USERNAME}:${env.ADMIN_PASSWORD}`
-  const checks = [
-    ['bind9 DNS (A dev.gutschi.site @127.0.0.1:53)', () => dnsAnswer('dev.gutschi.site')],
-    ['mock-oidc-server (https://127.0.0.1:8080/health)', () => httpsStatus('https://127.0.0.1:8080/health').then((s) => { if (s !== 200) throw new Error(`status ${s}`) })],
-    ['SSH (TCP 127.0.0.1:2222)', () => tcpConnect('127.0.0.1', 2222)],
-    ['application ping (https://www.gutschi.site/shared/ping)', () => httpsStatus('https://www.gutschi.site/shared/ping').then((s) => { if (s !== 200) throw new Error(`status ${s}`) })],
-    ['dozzle UI (https://logs.gutschi.site)', () => httpsStatus('https://logs.gutschi.site', { auth: adminAuth }).then((s) => { if (s !== 200) throw new Error(`status ${s}`) })],
-    ['pgweb UI (https://www.gutschi.site:8443)', () => httpsStatus('https://www.gutschi.site:8443', { auth: adminAuth }).then((s) => { if (s !== 200) throw new Error(`status ${s}`) })],
-  ]
-
-  let ok = true
-  for (const [name, check] of checks) {
-    ok = (await waitFor(name, check)) && ok
-  }
-  return ok
-}
-
-// ---------------------------------------------------------------------------
-// 7. run the vitest checks
+// 6. run the vitest checks
 // ---------------------------------------------------------------------------
 
 function runChecks() {
@@ -314,13 +207,7 @@ async function main() {
   let exitCode = 1
   try {
     composeUp()
-    const ready = await waitForStack()
-    if (!ready) {
-      console.error('[smoke] ERROR: stack did not become ready; run with SMOKE_KEEP_STACK=1 to inspect')
-    }
-    else {
-      exitCode = runChecks()
-    }
+    exitCode = runChecks()
   }
   catch (error) {
     console.error(`[smoke] ERROR: ${error instanceof Error ? error.message : String(error)}`)
