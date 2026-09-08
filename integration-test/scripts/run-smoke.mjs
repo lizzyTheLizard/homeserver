@@ -14,8 +14,6 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import dgram from 'node:dgram'
-import net from 'node:net'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
@@ -41,9 +39,6 @@ const HOSTS = [
   ['127.0.0.1', 'mock-oidc-server'],
 ]
 const HOSTS_FILE = '/etc/hosts'
-
-const READY_TIMEOUT_MS = Number(process.env.SMOKE_TIMEOUT_MS ?? 300_000)
-const POLL_INTERVAL_MS = 2_000
 
 // ---------------------------------------------------------------------------
 // helpers
