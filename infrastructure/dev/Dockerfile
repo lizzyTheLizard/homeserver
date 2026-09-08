@@ -65,11 +65,7 @@ RUN curl -fsSL "https://github.com/openclaw/wacli/releases/download/v${WACLI_VER
 
 # 6. Install code-server and Deepsek harness
 RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN npm install -g @deepseek-ai/dsh &&  \
-	dsh plugin --profile web add dsh-web-startup-auth@latest && \
-	dsh plugin --profile web add dsh-free-search@latest && \
-	dsh plugin --profile web add dsh-cost-meter@latest
- 
+RUN npm install -g @deepseek-ai/dsh
 
 # 7. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
