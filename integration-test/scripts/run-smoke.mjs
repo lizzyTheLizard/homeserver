@@ -155,7 +155,7 @@ function loadAiApiKey() {
 // ---------------------------------------------------------------------------
 
 function composeArgs(extra = []) {
-  return ['-f', COMPOSE_BASE, '-f', COMPOSE_OVERRIDE, ...extra]
+  return ['compose', '-f', COMPOSE_BASE, '-f', COMPOSE_OVERRIDE, ...extra]
 }
 
 function composeUp() {
