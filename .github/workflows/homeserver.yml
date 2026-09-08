@@ -241,17 +241,10 @@ jobs:
               127.0.0.1 logs.gutschi.site
               127.0.0.1 mock-oidc-server
               EOF
-          # The orchestrator generates self-signed certs, creates
-          # infrastructure/.env from env.test, boots the stack with the
-          # docker-compose.ci.yml override, runs the checks and tears down.
           - name: Run smoke suite
             run: pnpm --filter @homeserver/integration-test test
             env:
               AI_API_KEY: ${{ secrets.AI_API_KEY }}
-          - name: Tear down the stack (always)
-            if: always()
-            run: |
-              docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml down --remove-orphans -v || true
     all-build-checks:
         name: All Build Check Success
         runs-on: ubuntu-latest
@@ -261,7 +254,7 @@ jobs:
             run: echo "All lint, test, build and integration smoke checks passed."
     deploy:
         name: Restart Homeserver Stack
-        needs: [all-build-checks, integration-smoke]
+        needs: [all-build-checks]
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'        
         steps:

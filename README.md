@@ -142,16 +142,20 @@ Requirements and behaviour:
 
 - **Docker** with the compose plugin is required; the stack is torn down
   (`docker compose down --remove-orphans -v`) even when the run fails.
-- **No Entra credentials needed** — the test stack uses a self-signed mock OIDC
-  server (`integration-test/mock-oidc/`), fixed non-secret values from
-  `integration-test/env.test`, and an ephemeral WhatsApp data directory.
+- **No Entra credentials needed** — the test stack uses a mock OIDC provider
+  (`integration-test/mock-oidc/`, built on the maintained `oidc-provider`
+  library; HTTPS with a self-signed cert, login auto-approved), fixed
+  non-secret values from `integration-test/env.test`, and an ephemeral WhatsApp
+  data directory.
 - The only secret used is **`AI_API_KEY`** for the assistant greeting check; it
   is read from the root `.env` if present, or from the `AI_API_KEY` environment
   variable (CI passes the `AI_API_KEY` secret).
 - Self-signed certificates are generated into
   `infrastructure/certbot/conf/live/<domain>/` (git-ignored) and the hosts
-  `dev/www/logs.gutschi.site` + `mock-oidc-server` must resolve to `127.0.0.1`;
-  the orchestrator adds `/etc/hosts` entries when it can (root/sudo).
+  `dev/www/logs.gutschi.site` + `mock-oidc-server` must already resolve to
+  `127.0.0.1` (e.g. in `/etc/hosts`); the orchestrator verifies the entries and
+  fails with a clear error if they are missing — it never edits `/etc/hosts`.
+  CI adds them with `sudo` before running the suite; local users add them once.
 - Debugging: `SMOKE_KEEP_STACK=1` keeps the stack running after the run, and
   `SMOKE_TIMEOUT_MS` raises the readiness timeout (default 300 s).
 

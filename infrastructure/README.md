@@ -292,6 +292,11 @@ On first start the `dev-machine` entrypoint (`dev/entrypoint.sh`):
 4. If you already have a key pair you want to use, put its **public** half in
    `DEV_SSH_KEY_PUB` (the private half stays on your workstation).
 
+For containers that only need the SSH server without the source checkout (e.g.
+the CI smoke-test stack), set `SKIP_GITHUB_BOOTSTRAP=1` in the service
+environment to skip the GitHub auth check and the initial clone; the default
+keeps the bootstrap above.
+
 ### 5.8 Change the dev-machine public-key auth
 
 The `dev_home` volume persists `authorized_keys`, so changes survive restarts.
@@ -361,8 +366,9 @@ pnpm --filter @homeserver/integration-test test
   `AI_API_KEY` environment variable.
 * Self-signed certificates are written under `./certbot/conf/live/<domain>/`
   (git-ignored), and the smoke hosts (`dev`/`www`/`logs.gutschi.site`,
-  `mock-oidc-server`) must resolve to `127.0.0.1` — the orchestrator adds
-  `/etc/hosts` entries when it can.
+  `mock-oidc-server`) must already resolve to `127.0.0.1` — the orchestrator
+  verifies the entries and fails with a clear error if they are missing; it
+  never edits `/etc/hosts`. CI adds them with `sudo` before running the suite.
 * Debugging: `SMOKE_KEEP_STACK=1` keeps the stack running after the run;
   `SMOKE_TIMEOUT_MS` raises the readiness timeout (default 300 s).
 

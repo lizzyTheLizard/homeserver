@@ -57,26 +57,34 @@ chmod 600 "${SSH_DIR}/config" 2>/dev/null || true
 chmod 600 "${SHH_DIR}/known_hosts" 2>/dev/null || true
 chmod 644 "${SSH_DIR}"/*.pub 2>/dev/null || true
 
-# 4. Check if can connect to github
-SSH_TEST_OUTPUT=$(ssh -T -o BatchMode=yes git@github.com 2>&1 || true)
-if ! echo "$SSH_TEST_OUTPUT" | grep -q "successfully authenticated"; then
-    echo "=================================================================="
-    echo "[✘] ERROR: Unable to authenticate with GitHub over SSH."
-    echo "    Please add the following public key to your GitHub account:"
-    echo "    https://github.com/settings/keys"
-    echo "------------------------------------------------------------------"
-    cat "/home/dev/.ssh/id_ed25519.pub"
-    echo "=================================================================="
-    exit 255
+# 4. GitHub bootstrap: verify GitHub SSH access, then clone the repository on
+# first start. The auth check exits hard on a volume whose key is not registered
+# with GitHub, and the initial clone requires that same access. Containers that
+# only provide the SSH server without needing the source checkout (e.g. test
+# stacks) can disable this whole phase with SKIP_GITHUB_BOOTSTRAP=1.
+if [ "${SKIP_GITHUB_BOOTSTRAP:-0}" = "1" ]; then
+    echo "[DEBUG] SKIP_GITHUB_BOOTSTRAP=1 - skipping GitHub auth check and repository clone."
+else
+    SSH_TEST_OUTPUT=$(ssh -T -o BatchMode=yes git@github.com 2>&1 || true)
+    if ! echo "$SSH_TEST_OUTPUT" | grep -q "successfully authenticated"; then
+        echo "=================================================================="
+        echo "[✘] ERROR: Unable to authenticate with GitHub over SSH."
+        echo "    Please add the following public key to your GitHub account:"
+        echo "    https://github.com/settings/keys"
+        echo "------------------------------------------------------------------"
+        cat "/home/dev/.ssh/id_ed25519.pub"
+        echo "=================================================================="
+        exit 255
+    fi
+
+    # Check out repo if needed
+    WORKSPACE_DIR="$HOME/workspace"
+    if [ ! -d "$WORKSPACE_DIR" ]; then
+        echo "Directory $WORKSPACE_DIR does not exist. Cloning repository..."
+        git clone "$REPO_URL" "$WORKSPACE_DIR"
+    fi
 fi
 
-# 5. Check out repo if needed
-WORKSPACE_DIR="$HOME/workspace"
-if [ ! -d "$WORKSPACE_DIR" ]; then
-    echo "Directory $WORKSPACE_DIR does not exist. Cloning repository..."
-    git clone "$REPO_URL" "$WORKSPACE_DIR"
-fi
-
-# 6. Start supervisord
+# 5. Start supervisord
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 
