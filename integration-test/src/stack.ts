@@ -25,7 +25,7 @@ export const stack = {
   adminPassword: get('ADMIN_PASSWORD') || '',
   sshPort: 2222,
   dnsServer: '127.0.0.1',
-  dnsPort: 53,
+  dnsPort: 8053,
   mockHealthUrl: 'https://127.0.0.1:8080/health',
 } as const
 

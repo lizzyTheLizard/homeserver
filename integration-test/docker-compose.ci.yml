@@ -69,6 +69,8 @@ services:
   bind9:
     env_file:
       - ../integration-test/env.test
+    environment:
+      PORT: 8053
 
   backup:
     env_file:
