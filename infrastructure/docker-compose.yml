@@ -189,11 +189,10 @@ services:
     image: ubuntu/bind9:latest
     restart: unless-stopped
     ports:
-      - "${PORT}:53/udp"
-      - "${PORT}:53/tcp"
+      - "53:53/udp"
+      - "53:53/tcp"
     environment:
       HOST_IP: ${HOST_IP}
-      PORT: 53
     env_file:
       - .env
     volumes:

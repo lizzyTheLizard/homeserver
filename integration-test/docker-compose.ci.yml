@@ -67,10 +67,13 @@ services:
       - ../integration-test/env.test
 
   bind9:
+    ports: !override
+      - "8053:53/udp" # asdgasdg
+      - "8053:53/tcp"
     env_file:
       - ../integration-test/env.test
-    environment:
-      PORT: 8053
+ 
+ 
 
   backup:
     env_file:
