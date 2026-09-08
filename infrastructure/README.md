@@ -292,6 +292,11 @@ On first start the `dev-machine` entrypoint (`dev/entrypoint.sh`):
 4. If you already have a key pair you want to use, put its **public** half in
    `DEV_SSH_KEY_PUB` (the private half stays on your workstation).
 
+For containers that only need the SSH server without the source checkout (e.g.
+the CI smoke-test stack), set `SKIP_GITHUB_BOOTSTRAP=1` in the service
+environment to skip the GitHub auth check and the initial clone; the default
+keeps the bootstrap above.
+
 ### 5.8 Change the dev-machine public-key auth
 
 The `dev_home` volume persists `authorized_keys`, so changes survive restarts.
@@ -337,6 +342,59 @@ so the new `.env` value is picked up.
 used by the dev-machine. Changing it requires editing `docker-compose.yml`
 (`postgresdev` + `dev-machine` `DB_CONNECTION_STRING`) and recreating both —
 only do this if you have a reason to.
+
+### 5.10 Integration smoke suite
+
+The `integration-test/` package verifies the **full stack end to end** against
+this `docker-compose.yml` together with the test-mode override
+`integration-test/docker-compose.ci.yml` (mock OIDC instead of Azure AD, fixed
+non-secret test values, ephemeral WhatsApp data), checking SSH (2222), bind9
+DNS, the Dozzle and Pgweb UIs over HTTPS, the application over nginx, and
+authenticated pages in headless Chromium (assistant greeting + WhatsApp QR).
+
+CI (the `integration-smoke` job, after the three image builds and before
+`deploy`) executes each step directly — there is no orchestrator script:
+
+```bash
+# 1. self-signed certificates for the smoke domains
+pnpm --filter @homeserver/integration-test certs
+
+# 2. smoke hosts (dev/www/logs.gutschi.site, mock-oidc-server) -> 127.0.0.1
+#    CI adds them with `sudo tee -a /etc/hosts`; add them once locally.
+
+# 3. compose project .env for ${VAR} interpolation (mirrors env.test)
+[ -f infrastructure/.env ] || cp integration-test/env.test infrastructure/.env
+
+# 4. boot the stack (AI_API_KEY is the only real secret)
+docker compose -f infrastructure/docker-compose.yml \
+  -f integration-test/docker-compose.ci.yml \
+  up -d --wait --wait-timeout 300 --remove-orphans
+
+# 5. run all checks (Vitest)
+pnpm --filter @homeserver/integration-test test
+
+# 6. tear down (also on failure)
+docker compose -f infrastructure/docker-compose.yml \
+  -f integration-test/docker-compose.ci.yml \
+  down --remove-orphans -v
+```
+
+* Requires **Docker** with the compose plugin. `docker compose up --wait` covers
+  the healthchecked services; the checks poll the rest (bind9, dozzle,
+  pgwebprod, dev-machine) themselves and each failing service reports its own
+  name. The teardown step runs even when a check fails — the suite never
+  touches the real `.env` or the real stack (its project name is
+  `homeserver-smoke` and `env_file` values from `env.test` win over any
+  `infrastructure/.env`).
+* **No Entra credentials needed.** The only secret used is `AI_API_KEY` for the
+  assistant greeting check — CI passes the `AI_API_KEY` secret to the compose
+  up step; locally, add it to `infrastructure/.env` or export it before step 4.
+* Self-signed certificates are written under `./certbot/conf/live/<domain>/`
+  (git-ignored) by `pnpm certs` before every run, and the smoke hosts
+  (`dev`/`www`/`logs.gutschi.site`, `mock-oidc-server`) must resolve to
+  `127.0.0.1` — CI adds them with `sudo`; local users add them once by hand.
+* The `integration-smoke` job feeds the "All Build Check Success" gate that is
+  the only required check for merging.
 
 ---
 

@@ -1,0 +1,90 @@
+# Smoke-test override for the full docker-compose stack.
+#
+# Usage (from the repo root):
+#   docker compose -f infrastructure/docker-compose.yml \
+#     -f integration-test/docker-compose.ci.yml up -d --wait
+#
+# Relative paths in ALL compose files resolve against the project directory
+# (the directory of the first -f file, i.e. infrastructure/), so paths into this
+# package are written as ../integration-test/<path>.
+
+name: homeserver-smoke
+
+services:
+  # Compose overrides cannot remove services; a profile keeps certbot out of the est stack
+  certbot:
+    profiles: ["never"]
+
+  # Add a mock oidc server instead of entra
+  mock-oidc-server:
+    build:
+      context: ../integration-test/mock-oidc
+    container_name: Mock-OIDC
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../integration-test/env.test
+    environment:
+      PORT: 8080
+      HEALTH_PORT: 8081
+      ISSUER: https://mock-oidc-server:8080
+      USER_EMAIL: smoke-test@example.com
+      USER_NAME: Smoke Test
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8081/health',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  postgresprod:
+    environment:
+      # Cannot use env-file as this is defined as environment property in base as well.
+      POSTGRES_PASSWORD: smoke-test-db-password
+
+  applicationprod:
+    env_file:
+      - ../integration-test/env.test
+    environment:
+      # Cannot use env-file as this is defined as environment property in base as well.
+      DB_CONNECTION_STRING: postgres://homeserver:smoke-test-db-password@postgresprod:5432/homeserver?sslmode=disable
+      # The mock IdP serves a self-signed cert; the app must accept it.
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
+  assistant:
+    env_file:
+      - ../integration-test/env.test
+    environment:
+      # Cannot use env-file as this is defined as environment property in base as well.
+      DB_CONNECTION_STRING: postgres://homeserver:smoke-test-db-password@postgresprod:5432/homeserver?sslmode=disable
+      # The one real secret of the smoke flow (CI secret or the local ../.env).
+      AI_API_KEY: ${AI_API_KEY:-}
+      # The mock IdP serves a self-signed cert; the assistant must accept it.
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
+  caddy:
+    env_file:
+      - ../integration-test/env.test
+
+  bind9:
+    ports: !override
+      - "8053:53/udp" # asdgasdg
+      - "8053:53/tcp"
+    env_file:
+      - ../integration-test/env.test
+ 
+ 
+
+  backup:
+    env_file:
+      - ../integration-test/env.test
+
+  pgwebprod:
+    environment:
+      DATABASE_URL: postgres://homeserver:smoke-test-db-password@postgresprod:5432/homeserver?sslmode=disable
+
+  dev-machine:
+    environment:
+      # The dev entrypoint requires GitHub SSH access (auth check + clone) and
+      # exits 255 without it on a fresh volume; the smoke stack only needs sshd.
+      SKIP_GITHUB_BOOTSTRAP: "1"
