@@ -1,18 +1,18 @@
 ## Purpose
 
-Provides a single-command smoke suite that boots the full docker-compose stack — with self-signed TLS, real DNS, a mock OIDC identity provider, and fixed non-secret test values — and verifies that each core service works, failing clearly per service and tearing the stack down cleanly.
+Provides the stack smoke suite for the full docker-compose stack — with self-signed TLS, real DNS, a mock OIDC identity provider, and fixed non-secret test values — that verifies each core service works, failing clearly per service and tearing the stack down cleanly. The lifecycle steps (certificates, `.env`, `docker compose up`/`down`) are executed directly by the CI pipeline and documented for local runs; there is no orchestrator script.
 
 ## ADDED Requirements
 
-### Requirement: Single-command local run
-The suite SHALL run locally with a single command and require only the optional `AI_API_KEY` — no Entra credentials and no other secrets. The stack images are built locally first, certificates are generated, the stack is brought up, the suite runs, and the stack is torn down.
+### Requirement: Documented local run
+The suite SHALL run locally through the documented step sequence and require only the optional `AI_API_KEY` — no Entra credentials and no other secrets. The stack images are built locally first, certificates are generated, the stack is brought up, the checks run, and the stack is torn down.
 
 #### Scenario: Local run with only AI_API_KEY
-- **WHEN** a developer runs the documented single command with only `AI_API_KEY` available from `.env`
-- **THEN** the suite boots the full stack, runs all checks, and reports pass or fail
+- **WHEN** a developer follows the documented steps (certs, hosts entries, `infrastructure/.env`, compose up, `pnpm test`, compose down) with only `AI_API_KEY` available
+- **THEN** the full stack boots, all checks run, and pass or fail is reported
 
-### Requirement: Orchestration lifecycle
-The orchestrator SHALL bring up the stack, wait for containers to become healthy before testing, and tear the stack down after the run — including when checks fail — leaving no orphan containers.
+### Requirement: Pipeline lifecycle
+The CI pipeline SHALL bring the stack up (`docker compose up --wait`, covering healthchecked services), then run the checks — which poll the services without healthchecks themselves — and SHALL tear the stack down after the run, including when checks fail, leaving no orphan containers.
 
 #### Scenario: Clean teardown on failure
 - **WHEN** one or more checks fail

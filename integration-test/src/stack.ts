@@ -3,11 +3,6 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 
-// Test-side configuration: reads the fixed non-secret values from
-// integration-test/env.test (process.env wins when set). The orchestrator
-// (scripts/run-smoke.mjs) exports the same file into the compose environment,
-// so the values here always match the running stack.
-
 const here = dirname(fileURLToPath(import.meta.url))
 const ENV_TEST = join(here, '..', 'env.test')
 

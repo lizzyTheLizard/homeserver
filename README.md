@@ -120,10 +120,9 @@ Three vitest projects run in parallel:
 
 ### Smoke tests (docker-compose stack)
 
-The `integration-test/` package boots the **full** docker-compose stack
+The `integration-test/` package verifies the **full** docker-compose stack
 (`infrastructure/docker-compose.yml` plus the
-`integration-test/docker-compose.ci.yml` test-mode override) and verifies the
-whole system end to end:
+`integration-test/docker-compose.ci.yml` test-mode override) end to end:
 
 - SSH on port 2222 (dev-machine) and bind9 DNS answering `gutschi.site`
 - Dozzle and Pgweb UIs over HTTPS with HTTP basic auth
@@ -131,33 +130,56 @@ whole system end to end:
 - authenticated pages in headless Chromium: the assistant greeting (WebSocket,
   requires `AI_API_KEY`) and the WhatsApp bridge pairing QR code
 
-The suite runs the same way in CI (the `integration-smoke` job, before deploy)
-and locally with a **single command**:
+The suite can be run manually using
 
 ```bash
+# 1. self-signed certificates for the smoke domains
+pnpm --filter @homeserver/integration-test certs
+
+# 2. smoke hosts must resolve to 127.0.0.1
+#    (CI adds them with `sudo tee -a /etc/hosts`; add them once locally)
+
+# 3. compose project .env for ${VAR} interpolation
+#    (mirrors env.test when missing; never touches the real .env)
+[ -f infrastructure/.env ] || cp integration-test/env.test infrastructure/.env
+
+# 4. boot the stack (AI_API_KEY is the only real secret)
+docker compose -f infrastructure/docker-compose.yml \
+  -f integration-test/docker-compose.ci.yml \
+  up -d --wait --wait-timeout 300 --remove-orphans
+
+# 5. run all checks (Vitest: infra checks + headless-browser checks)
 pnpm --filter @homeserver/integration-test test
+
+# 6. tear down (also on failure)
+docker compose -f infrastructure/docker-compose.yml \
+  -f integration-test/docker-compose.ci.yml \
+  down --remove-orphans -v
 ```
 
 Requirements and behaviour:
 
-- **Docker** with the compose plugin is required; the stack is torn down
-  (`docker compose down --remove-orphans -v`) even when the run fails.
+- **Docker** with the compose plugin is required. `docker compose up --wait`
+  covers the healthchecked services; the checks poll the rest (bind9, dozzle,
+  pgwebprod, dev-machine) themselves, so each service failing reports its own
+  name.
 - **No Entra credentials needed** — the test stack uses a mock OIDC provider
   (`integration-test/mock-oidc/`, built on the maintained `oidc-provider`
   library; HTTPS with a self-signed cert, login auto-approved), fixed
   non-secret values from `integration-test/env.test`, and an ephemeral WhatsApp
-  data directory.
-- The only secret used is **`AI_API_KEY`** for the assistant greeting check; it
-  is read from the root `.env` if present, or from the `AI_API_KEY` environment
-  variable (CI passes the `AI_API_KEY` secret).
+  data directory (`down -v` removes it, so the bridge is unpaired on every run).
+- The only secret used is **`AI_API_KEY`** for the assistant greeting check; CI
+  passes it to the `docker compose up` step as the `AI_API_KEY` secret. Locally,
+  add it to `infrastructure/.env` or export it before step 4 (the checks
+  themselves need no secret).
 - Self-signed certificates are generated into
-  `infrastructure/certbot/conf/live/<domain>/` (git-ignored) and the hosts
-  `dev/www/logs.gutschi.site` + `mock-oidc-server` must already resolve to
-  `127.0.0.1` (e.g. in `/etc/hosts`); the orchestrator verifies the entries and
-  fails with a clear error if they are missing — it never edits `/etc/hosts`.
-  CI adds them with `sudo` before running the suite; local users add them once.
-- Debugging: `SMOKE_KEEP_STACK=1` keeps the stack running after the run, and
-  `SMOKE_TIMEOUT_MS` raises the readiness timeout (default 300 s).
+  `infrastructure/certbot/conf/live/<domain>/` (git-ignored) before every run
+  (`pnpm certs`), and the hosts `dev/www/logs.gutschi.site` +
+  `mock-oidc-server` must resolve to `127.0.0.1` — CI adds the entries with
+  `sudo` before the suite; local users add them once by hand.
+- The stack never touches the real `.env` or the real stack: the project name
+  is `homeserver-smoke` and `env_file` values from `env.test` win over any
+  `infrastructure/.env`.
 
 ## License
 

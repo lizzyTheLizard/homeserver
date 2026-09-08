@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "node scripts/run-smoke.mjs",
-    "test:checks": "vitest run",
+    "certs": "bash scripts/generate-certs.sh",
+    "test": "vitest run",
     "vitest": "vitest",
     "lint": "eslint --fix --cache",
     "lint:ci": "eslint",

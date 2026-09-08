@@ -241,10 +241,22 @@ jobs:
               127.0.0.1 logs.gutschi.site
               127.0.0.1 mock-oidc-server
               EOF
-          - name: Run smoke suite
-            run: pnpm --filter @homeserver/integration-test test
+          - name: Generate self-signed certificates
+            run: pnpm --filter @homeserver/integration-test certs
+          - name: Create project .env for compose interpolation
+            run: |
+              if [ ! -f infrastructure/.env ]; then
+                cp integration-test/env.test infrastructure/.env
+              fi
+          - name: Start smoke stack
+            run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml up -d --wait --wait-timeout 300 --remove-orphans
             env:
               AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          - name: Run smoke checks
+            run: pnpm --filter @homeserver/integration-test test
+          - name: Tear down smoke stack
+            if: always()
+            run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml down --remove-orphans -v
     all-build-checks:
         name: All Build Check Success
         runs-on: ubuntu-latest
