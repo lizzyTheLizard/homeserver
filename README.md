@@ -60,18 +60,33 @@ In production every required var must be set; the app fails fast on startup othe
 
 | Command            | Description |
 |--------------------|-------------|
-| `pnpm dev`         | Next.js dev server (hot reload) |
-| `pnpm build`       | Production build |
-| `pnpm start`       | Run the production build |
-| `pnpm test`        | All tests once (unit + integration + Storybook) plus the docker-compose stack smoke suite (requires Docker) |
-| `pnpm test:watch`  | Tests in watch mode |
-| `pnpm vitest run path/to/file.tests.ts` | Run a single file |
-| `pnpm lint`        | ESLint |
-| `pnpm lint:fix`    | ESLint with auto-fix |
-| `pnpm storybook`   | Storybook on port 6006 |
-| `pnpm chromatic`   | Visual regression tests |
-| `pnpm clean`       | Remove build artefacts |
+| `pnpm dev`         | Run web + assistant + whatsapp-bridge together (dev server on :3000) |
+| `pnpm build`       | Build all packages |
+| `pnpm test`        | Run all tests in all packages (includes the integration smoke suite, which needs Docker) |
+| `pnpm test:watch`  | Tests in watch mode (all packages) |
+| `pnpm lint`        | Lint all packages (with --fix) |
+| `pnpm lint:ci`     | Lint all packages (no --fix, for CI) |
+| `pnpm clean`       | Remove build artefacts in all packages |
+| `pnpm --filter @homeserver/web storybook` | Storybook on port 6006 |
+| `pnpm --filter @homeserver/web chromatic` | Visual regression tests (web) |
+| `pnpm --filter @homeserver/web vitest run path/to/file.tests.ts` | Run a single test file |
 | `docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev\|prod> [--yes]` | Restore a database backup into the dev or prod DB (see [infrastructure/README.md](infrastructure/README.md)) |
+
+## Development workflow
+
+Changes are spec-driven via [OpenSpec](https://github.com/Fission-AI/OpenSpec) and anchored to a GitHub issue. The change name, the branch name, and the issue number are one triple: change `issue-<n>-<slug>` on branch `issue-<n>-<slug>` closing `#<n>`.
+
+Agent skills in `.agents/skills/` drive the lifecycle end to end:
+
+| Phase | Skill | What happens |
+|---|---|---|
+| Explore | `openspec-explore` | Understand the problem — nothing is written |
+| File issue | `gh-issue-draft` | Create a GitHub issue from the exploration (issue template) |
+| Start change | `gh-change-start` | Create the `issue-<n>-<slug>` branch and commit the reviewed plan |
+| Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
+| Ship | `gh-change-ship` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
+
+The `openspec-*` skills are auto-generated and must not be edited by hand; the `gh-*` skills are hand-written glue between OpenSpec and GitHub.
 
 ## Architecture
 
@@ -94,16 +109,15 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 
 ```
 /
-├── web/                Next.js application (apps under web/app/)
+├── web/                Next.js application
 ├── assistant/          Standalone assistant service (port 8500, WebSocket)
 ├── whatsapp-bridge/    WhatsApp bridge container (wacli + companion)
 ├── integration-test/   Smoke tests for the full docker-compose stack (Vitest + Playwright)
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
 ├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → integration smoke → deploy)
-├── .storybook/         Storybook configuration
-├── Dockerfile          Production image (Node 24 Alpine)
-├── proxy.ts             Request proxy (auth, logging)
+├── .agents/skills/     Agent skills: OpenSpec workflow + GitHub orchestration (see Development workflow)
+├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```
 
 Inside `app/`, folders that are not Next.js routes are prefixed with `_` (e.g. `shared/_components/`, `cash/_data/`, `coeditor/_external/`) to opt out of the router. Server-side action files use the `server.ts` suffix; integration tests use `server.tests.ts`; unit tests use `*.tests.ts`.

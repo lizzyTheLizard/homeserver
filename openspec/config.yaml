@@ -1,32 +1,31 @@
 schema: spec-driven
+context: |
+  Every change starts from a GitHub issue.
+  The change name, the branch name and the issue are one triple:
+  change set `issue-<number>-<slug>` lives on branch `issue-<number>-<slug>`
+  and closes issue #<number>. Never work on a change whose name does not
+  match the current branch.
+  
+rules:
+  proposal:
+    - Derive scope from the linked GitHub issue; do not widen it silently.
+      If the issue is too thin to propose from, say so instead of inventing scope.
+    - State the issue number in the proposal and keep the proposal's framing
+      consistent with the issue title.
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+  tasks:
+    - Every task must be independently implementable, reviewable and committable.
+      One task becomes exactly one commit, so a task that cannot stand alone as a
+      commit is the wrong size.
+    - Order tasks so the branch is never left in a broken state between commits.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
-
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - Work one task at a time. After finishing a task and ticking its checkbox,
+        stop and show the user the diff for review. Do not begin the next task
+        before they have responded.
+      - Once the user approves a task's diff, commit and push it. 
+        The commit message must follow the standard format: `<short imperative message> (#<NUMBER>)` 
+        and include the `OpenSpec-Change: <change>` and `Agent: <agent>` trailer.
+      - After the last task, do not archive yourself. Ask the user to run the gh-change-ship skill instead
