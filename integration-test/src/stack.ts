@@ -18,10 +18,14 @@ export const stack = {
   mockIssuer: get('LOGIN_ISSUER') || 'https://mock-oidc-server:8080',
   adminUsername: get('ADMIN_USERNAME') || 'admin',
   adminPassword: get('ADMIN_PASSWORD') || '',
+  devUsername: get('DEV_USERNAME') || 'dev',
+  devPassword: get('DEV_PASSWORD') || '',
   sshPort: 2222,
   dnsServer: '127.0.0.1',
   dnsPort: 8053,
   mockHealthUrl: 'https://127.0.0.1:8080/health',
+  openDesignUrl: 'https://dev.gutschi.site:8446',
 } as const
 
 export const adminAuth = `${stack.adminUsername}:${stack.adminPassword}`
+export const devAuth = `${stack.devUsername}:${stack.devPassword}`

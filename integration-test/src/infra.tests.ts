@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { describe, expect, test } from 'vitest'
-import { adminAuth, stack } from './stack'
+import { adminAuth, devAuth, stack } from './stack'
 import { dnsAnswerCount, httpsStatus, pollUntil, tcpConnect } from './helpers'
 
 // Plain HTTP/TLS/DNS/TCP checks against the running stack. Every check is its
@@ -79,5 +79,25 @@ describe('stack-smoke: infrastructure services', () => {
       90_000,
     )
     expect(allowed, `application root (${stack.appUrl}) did not answer through nginx (status ${String(status)})`).toContain(status)
+  })
+
+  test('OpenDesign serves its UI over HTTPS with dev basic auth', async () => {
+    const status = await pollUntil(
+      () => httpsStatus(stack.openDesignUrl, { auth: devAuth }),
+      code => code === 200,
+      `OpenDesign UI (${stack.openDesignUrl}) serves HTTP 200 over HTTPS with dev credentials`,
+      180_000,
+    )
+    expect(status, `OpenDesign (${stack.openDesignUrl}) is down or behind changed auth`).toBe(200)
+  })
+
+  test('OpenDesign rejects requests without credentials (401)', async () => {
+    const status = await pollUntil(
+      () => httpsStatus(stack.openDesignUrl),
+      code => code === 401,
+      `OpenDesign (${stack.openDesignUrl}) returns 401 without credentials`,
+      180_000,
+    )
+    expect(status, `OpenDesign (${stack.openDesignUrl}) did not require basic auth (status ${String(status)})`).toBe(401)
   })
 })

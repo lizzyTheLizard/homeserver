@@ -48,8 +48,9 @@ see [§6.8](#68-deploying--upgrading-the-application)).
   | `www.gutschi.site:443`   | —          | `applicationprod:3000` | The application    |
   | `dev.gutschi.site:443`   | —          | `dev-machine:3000`   | Dev app (when running) |
   | `dev.gutschi.site:8443`  | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server) |
-  | `dev.gutschi.site:8444`  | dev        | `caddy` → `dev-machine:4096` | OpenCode         |
+  | `dev.gutschi.site:8444`  | dev        | `caddy` → `dev-machine:3080` | DeepSeek Harness (dsh web) |
   | `dev.gutschi.site:8445`  | dev        | `caddy` → `dev-machine:6006` | Storybook       |
+  | `dev.gutschi.site:8446`  | dev        | `caddy` → `dev-machine:7456` | OpenDesign    |
   | `logs.gutschi.site:443`  | admin      | `caddy` → `dozzle:8080` | Container logs    |
   | `www.gutschi.site:8443`  | admin      | `caddy` → `pgwebprod:8081` | Prod DB web UI |
 
@@ -63,10 +64,27 @@ see [§6.8](#68-deploying--upgrading-the-application)).
   (admin auth).
 * **`dev-machine`** is a full Linux dev environment (ubuntu:24.04) with Node 24,
   pnpm, Go, the GitHub CLI, PostgreSQL client tools, `wacli` (WhatsApp CLI),
-  **code-server** and the **DeepSeek Harbenss**, managed by `supervisord`. Access:
+  **code-server**, the **DeepSeek Harness** and **OpenDesign**, managed by
+  `supervisord`. Access:
   * VS Code Remote SSH → `ssh dev@<host> -p 2222`
   * Browser VS Code → `https://dev.gutschi.site:8443`
-  * OpenCode → `https://dev.gutschi.site:8444`
+  * DeepSeek Harness (dsh web) → `https://dev.gutschi.site:8444`
+  * Storybook → `https://dev.gutschi.site:8445`
+  * OpenDesign → `https://dev.gutschi.site:8446` (dev basic auth)
+
+  OpenDesign (`od`) edits the `design/` folder of the workspace checkout. It is
+  installed in the dev image at `/opt/open-design` (daemon under
+  `apps/daemon/dist/cli.js`, `od` on `PATH`); the `[program:opendesign]`
+  supervisord entry runs `od --no-open`, so the daemon starts and restarts with
+  the dev-machine. Its state lives in `/home/dev/.od` (inside the `dev_home`
+  volume), so it survives dev-machine rebuilds. The `OD_*` daemon keys
+  (`OD_BIND_HOST=0.0.0.0`, `OD_PORT=7456`, `OD_DATA_DIR=/home/dev/.od`,
+  `OD_DISABLE_API_AUTH=1`, `OD_ALLOWED_ORIGINS=https://dev.gutschi.site:8446`)
+  are exported by `dev/entrypoint.sh` before supervisord starts — they are not
+  `.env` keys, so `env.example` does not carry them. The daemon port `7456` is
+  **not** published to the host — OpenDesign is only reachable through nginx
+  `:8446` → caddy basic auth. Open the repo's `design/` folder as a project once
+  in the UI; that binding is not automated.
 
 In development the WhatsApp bridge is **not** a separate container: `pnpm dev`
 inside `dev-machine` starts the TypeScript companion (`pnpm --filter
