@@ -19,7 +19,7 @@
     "iron-session": "^8.0.4",
     "next": "16.2.12",
     "openid-client": "^6.8.8",
-    "papaparse": "^5.5.4",
+    "papaparse": "^5.7.0",
     "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
