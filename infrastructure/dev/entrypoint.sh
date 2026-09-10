@@ -88,6 +88,14 @@ fi
 # 5. Configure deepseek harness so that it can start a server listening on 0.0.0.0
 dsh plugin --profile web add dsh-web-startup-auth@latest
 
-# 6. Start supervisord
+# 6. Configure opendesign
+export OD_BIND_HOST=0.0.0.0
+export OD_HOST=0.0.0.0
+export OD_PORT=7456
+export OD_DATA_DIR=/home/dev/.od
+export OD_DISABLE_API_AUTH=1
+export OD_ALLOWED_ORIGINS=https://dev.gutschi.site:8446
+
+# 7. Start supervisord
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 

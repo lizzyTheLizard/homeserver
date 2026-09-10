@@ -37,4 +37,11 @@
 	reverse_proxy dev-machine:6006
 }
 
+:8446 {
+	basic_auth {
+		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
+	}
+	reverse_proxy dev-machine:7456
+}
+
 

@@ -22,6 +22,7 @@ for the full setup):
 
 - **Browser VS Code:** <https://dev.gutschi.site:8443> (dev auth)
 - **OpenCode:** <https://dev.gutschi.site:8444> (dev auth)
+- **OpenDesign:** <https://dev.gutschi.site:8446> (dev auth)
 - **VS Code Remote SSH:** `ssh dev@<host> -p 2222`
 
 Inside the dev machine the repo is already cloned at `/home/dev/workspace` with
@@ -34,7 +35,7 @@ pnpm dev
 ```
 
 The full stack (prod database, application, reverse proxies, DNS, backups, and the
-`dev-machine` container with VS Code + OpenCode) is described in
+`dev-machine` container with VS Code, OpenCode and OpenDesign) is described in
 [infrastructure/README.md](infrastructure/README.md).
 
 The dev server is at `http://localhost:3000`. All routes are protected by OpenID Connect (Microsoft Azure AD by default). Migrations in [db/](db/) run automatically on first DB connection.
