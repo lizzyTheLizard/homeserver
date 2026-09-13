@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     rsync \
     net-tools \
-    poppler-utils \
     build-essential \
     python3 \
     && rm -rf /var/lib/apt/lists/*
@@ -48,20 +47,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && corepack prepare pnpm@latest --activate \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Install OpenDesign
-RUN git clone https://github.com/nexu-io/open-design && \
-    cd open-design && \
-    pnpm install && \
-    printf '#!/bin/sh\nexec node /opt/open-design/apps/daemon/bin/od.mjs "$@"\n' > /usr/local/bin/od && \
-    chmod a+x /usr/local/bin/od
-
-
-# 5. Install Playwright browser OS dependencies. The browser binaries themselves
+# 4. Install Playwright browser OS dependencies. The browser binaries themselves
 #    are fetched at runtime (see AGENTS.md) via `pnpm exec playwright install --with-deps`.
 RUN apt-get update && npx -y playwright@1.62.1 install-deps && rm -rf /var/lib/apt/lists/*
 
 
-# 6. Install wacli (WhatsApp CLI) — the WhatsApp bridge companion drives this
+# 5. Install wacli (WhatsApp CLI) — the WhatsApp bridge companion drives this
 # binary, so it must be on PATH for `pnpm dev:bridge`.
 ARG WACLI_VERSION="0.17.1"
 RUN curl -fsSL "https://github.com/openclaw/wacli/releases/download/v${WACLI_VERSION}/wacli_${WACLI_VERSION}_linux_amd64.tar.gz" \
@@ -72,15 +63,15 @@ RUN curl -fsSL "https://github.com/openclaw/wacli/releases/download/v${WACLI_VER
  && chmod +x /usr/local/bin/wacli \
  && rm -rf /tmp/wacli.tar.gz /tmp/wacli
 
-# 7. Install code-server, Deepsek harness and openspec
+# 6. Install code-server, Deepsek harness and openspec
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN npm install -g @deepseek-ai/dsh
 RUN npm install -g @fission-ai/openspec@latest
 
-# 8. Create dedicated non-root user "dev"
+# 7. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# 9. Configure OpenSSH Server (sshd on port 2222, key-only auth, disable root)
+# 8. Configure OpenSSH Server (sshd on port 2222, key-only auth, disable root)
 RUN mkdir -p /var/run/sshd \
     && echo "Port 2222" >> /etc/ssh/sshd_config \
     && echo "PermitRootLogin no" >> /etc/ssh/sshd_config \
@@ -88,10 +79,11 @@ RUN mkdir -p /var/run/sshd \
     && echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config \
     && echo "AllowUsers dev" >> /etc/ssh/sshd_config
 
-# 10. Copy configuration files & entrypoint script
+# 9. Copy configuration files & entrypoint script
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 USER dev
+WORKDIR /home/dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

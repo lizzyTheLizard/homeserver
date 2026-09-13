@@ -124,7 +124,7 @@ jobs:
               file: web/Dockerfile
               platforms: linux/amd64
               push: false
-              tags: homeserver:latest
+              tags: homeserver-web:latest
               cache-from: type=gha
               cache-to: type=gha,mode=max 
               outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
@@ -207,12 +207,12 @@ jobs:
           - name: Download application artifact
             uses: actions/download-artifact@v8
             with:
-              name: homeserver
+              name: homeserver-web
               path: ${{ runner.temp }}
           - name: Download WhatsApp bridge artifact
             uses: actions/download-artifact@v8
             with:
-              name: whatsapp-bridge
+              name: homeserver-whatsapp
               path: ${{ runner.temp }}
           - name: Download assistant artifact
             uses: actions/download-artifact@v8
@@ -221,8 +221,8 @@ jobs:
               path: ${{ runner.temp }}
           - name: Load Docker images
             run: |
-              docker load --input ${{ runner.temp }}/homeserver.tar
-              docker load --input ${{ runner.temp }}/whatsapp-bridge.tar
+              docker load --input ${{ runner.temp }}/homeserver-web.tar
+              docker load --input ${{ runner.temp }}/homeserver-whatsapp.tar
               docker load --input ${{ runner.temp }}/homeserver-assistant.tar
           - name: Cache Playwright Browsers
             uses: actions/cache@v6
@@ -275,12 +275,12 @@ jobs:
           - name: Download application artifact
             uses: actions/download-artifact@v8
             with:
-              name: homeserver
+              name: homeserver-web
               path: ${{ runner.temp }}
           - name: Download WhatsApp bridge artifact
             uses: actions/download-artifact@v8
             with:
-              name: whatsapp-bridge
+              name: homeserver-whatsapp
               path: ${{ runner.temp }}
           - name: Download assistant artifact
             uses: actions/download-artifact@v8
@@ -306,8 +306,8 @@ jobs:
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
                 set -e
                 cd /opt/homeserver
-                docker load --input homeserver.tar
-                docker load --input whatsapp-bridge.tar
+                docker load --input homeserver-web.tar
+                docker load --input homeserver-whatsapp.tar
                 docker load --input homeserver-assistant.tar
                 rm -f homeserver.tar whatsapp-bridge.tar homeserver-assistant.tar
                 docker compose up -d --build --force-recreate --remove-orphans
