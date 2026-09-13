@@ -127,7 +127,7 @@ jobs:
               tags: homeserver-web:latest
               cache-from: type=gha
               cache-to: type=gha,mode=max 
-              outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver-web.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}
                 GIT_BRANCH=${{ github.ref_name }}
@@ -138,8 +138,8 @@ jobs:
           - name: Upload artifact
             uses: actions/upload-artifact@v7
             with:
-              name: homeserver
-              path: ${{ runner.temp }}/homeserver.tar
+              name: homeserver-web
+              path: ${{ runner.temp }}/homeserver-web.tar
               retention-days: 1
     build-whatsapp:
         name: Build WhatsApp Bridge Docker Container
@@ -156,17 +156,17 @@ jobs:
               file: whatsapp-bridge/Dockerfile
               platforms: linux/amd64
               push: false
-              tags: whatsapp-bridge:latest
+              tags: homeserver-whatsapp:latest
               cache-from: type=gha
               cache-to: type=gha,mode=max
-              outputs: type=docker,dest=${{ runner.temp }}/whatsapp-bridge.tar
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver-whatsapp.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
           - name: Upload artifact
             uses: actions/upload-artifact@v7
             with:
-              name: whatsapp-bridge
-              path: ${{ runner.temp }}/whatsapp-bridge.tar
+              name: homeserver-whatsapp
+              path: ${{ runner.temp }}/homeserver-whatsapp.tar
               retention-days: 1
     build-assistant:
         name: Build Assistant Docker Container
