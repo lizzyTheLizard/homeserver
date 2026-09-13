@@ -6,14 +6,14 @@
 	basic_auth {
 		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
 	}
-	reverse_proxy dozzle:8080
+	reverse_proxy prod-logs:8080
 }
 
 :8371 {
 	basic_auth {
 		{$ADMIN_USERNAME} {$ADMIN_PASSWORD_HASH}
 	}
-	reverse_proxy pgwebprod:8081
+	reverse_proxy prod-pgweb:8081
 }
 
 :8443 {
@@ -41,7 +41,7 @@
 	basic_auth {
 		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
 	}
-	reverse_proxy dev-machine:7456
+	reverse_proxy dev-opendesign:7456
 }
 
 
