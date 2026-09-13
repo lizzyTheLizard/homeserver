@@ -88,3 +88,5 @@ services:
       # The dev entrypoint requires GitHub SSH access (auth check + clone) and
       # exits 255 without it on a fresh volume; the smoke stack only needs sshd.
       SKIP_GITHUB_BOOTSTRAP: "1"
+    volumes:
+      - ../design:/home/dev/workspace/design

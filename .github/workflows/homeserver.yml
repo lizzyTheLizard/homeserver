@@ -124,10 +124,10 @@ jobs:
               file: web/Dockerfile
               platforms: linux/amd64
               push: false
-              tags: homeserver:latest
+              tags: homeserver-web:latest
               cache-from: type=gha
               cache-to: type=gha,mode=max 
-              outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver-web.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}
                 GIT_BRANCH=${{ github.ref_name }}
@@ -138,8 +138,8 @@ jobs:
           - name: Upload artifact
             uses: actions/upload-artifact@v7
             with:
-              name: homeserver
-              path: ${{ runner.temp }}/homeserver.tar
+              name: homeserver-web
+              path: ${{ runner.temp }}/homeserver-web.tar
               retention-days: 1
     build-whatsapp:
         name: Build WhatsApp Bridge Docker Container
@@ -156,17 +156,17 @@ jobs:
               file: whatsapp-bridge/Dockerfile
               platforms: linux/amd64
               push: false
-              tags: whatsapp-bridge:latest
+              tags: homeserver-whatsapp:latest
               cache-from: type=gha
               cache-to: type=gha,mode=max
-              outputs: type=docker,dest=${{ runner.temp }}/whatsapp-bridge.tar
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver-whatsapp.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
           - name: Upload artifact
             uses: actions/upload-artifact@v7
             with:
-              name: whatsapp-bridge
-              path: ${{ runner.temp }}/whatsapp-bridge.tar
+              name: homeserver-whatsapp
+              path: ${{ runner.temp }}/homeserver-whatsapp.tar
               retention-days: 1
     build-assistant:
         name: Build Assistant Docker Container
@@ -207,12 +207,12 @@ jobs:
           - name: Download application artifact
             uses: actions/download-artifact@v8
             with:
-              name: homeserver
+              name: homeserver-web
               path: ${{ runner.temp }}
           - name: Download WhatsApp bridge artifact
             uses: actions/download-artifact@v8
             with:
-              name: whatsapp-bridge
+              name: homeserver-whatsapp
               path: ${{ runner.temp }}
           - name: Download assistant artifact
             uses: actions/download-artifact@v8
@@ -221,8 +221,8 @@ jobs:
               path: ${{ runner.temp }}
           - name: Load Docker images
             run: |
-              docker load --input ${{ runner.temp }}/homeserver.tar
-              docker load --input ${{ runner.temp }}/whatsapp-bridge.tar
+              docker load --input ${{ runner.temp }}/homeserver-web.tar
+              docker load --input ${{ runner.temp }}/homeserver-whatsapp.tar
               docker load --input ${{ runner.temp }}/homeserver-assistant.tar
           - name: Cache Playwright Browsers
             uses: actions/cache@v6
@@ -275,12 +275,12 @@ jobs:
           - name: Download application artifact
             uses: actions/download-artifact@v8
             with:
-              name: homeserver
+              name: homeserver-web
               path: ${{ runner.temp }}
           - name: Download WhatsApp bridge artifact
             uses: actions/download-artifact@v8
             with:
-              name: whatsapp-bridge
+              name: homeserver-whatsapp
               path: ${{ runner.temp }}
           - name: Download assistant artifact
             uses: actions/download-artifact@v8
@@ -306,8 +306,8 @@ jobs:
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
                 set -e
                 cd /opt/homeserver
-                docker load --input homeserver.tar
-                docker load --input whatsapp-bridge.tar
+                docker load --input homeserver-web.tar
+                docker load --input homeserver-whatsapp.tar
                 docker load --input homeserver-assistant.tar
                 rm -f homeserver.tar whatsapp-bridge.tar homeserver-assistant.tar
                 docker compose up -d --build --force-recreate --remove-orphans
