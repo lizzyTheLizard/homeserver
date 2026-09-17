@@ -51,7 +51,7 @@
     "@vitest/browser-playwright": "^4.1.11",
     "@vitest/coverage-v8": "^5.0.0",
     "babel-plugin-react-compiler": "1.0.0",
-    "chromatic": "^18.8.1",
+    "chromatic": "^18.9.1",
     "dotenv-cli": "^11.0.0",
     "eslint": "^10.10.0",
     "eslint-plugin-react-hooks": "^7.1.1",
