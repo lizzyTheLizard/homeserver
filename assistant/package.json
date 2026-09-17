@@ -15,7 +15,7 @@
     "@ai-sdk/groq": "^4.0.42",
     "@js-temporal/polyfill": "^0.5.1",
     "@microsoft/microsoft-graph-client": "^3.0.7",
-    "ai": "^7.0.99",
+    "ai": "^7.0.102",
     "async-mutex": "^0.5.0",
     "iron-session": "^9.0.1",
     "openid-client": "^6.8.8",
