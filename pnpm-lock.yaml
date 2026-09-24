@@ -245,8 +245,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       chromatic:
-        specifier: ^18.9.1
-        version: 18.9.1
+        specifier: ^18.9.5
+        version: 18.9.5
       dotenv-cli:
         specifier: ^11.0.0
         version: 11.0.0
@@ -2155,8 +2155,8 @@ packages:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
 
-  chromatic@18.9.1:
-    resolution: {integrity: sha512-2XNnsqMU8xb5NN3MMO7E2/uclu8jNspJI42F3q+zgA0HCuvhj3CXqNHlyup5WkExVF5L8BkJS96TVmN5Q6igKw==}
+  chromatic@18.9.5:
+    resolution: {integrity: sha512-PHYJ7f8j7eeautlPPgIy/FBWTaLY3H8UYavkCpRdfLP9w9wya/dJZ3tjL8RqbFb5EazUkXqg2qCuAOzUS/zTMA==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -4372,7 +4372,7 @@ snapshots:
   '@chromatic-com/storybook@5.3.1(storybook@10.6.0(@types/react@19.3.0)(react@19.3.0))':
     dependencies:
       '@neoconfetti/react': 1.0.0
-      chromatic: 18.9.1
+      chromatic: 18.9.5
       jsonfile: 6.2.1
       storybook: 10.6.0(@types/react@19.3.0)(react@19.3.0)
       strip-ansi: 7.2.0
@@ -5752,7 +5752,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  chromatic@18.9.1:
+  chromatic@18.9.5:
     dependencies:
       semver: 7.8.5
 
