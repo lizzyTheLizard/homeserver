@@ -12,7 +12,7 @@
     "clean": "rimraf dist .eslintcache"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^4.0.42",
+    "@ai-sdk/groq": "^4.0.47",
     "@js-temporal/polyfill": "^0.5.1",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "ai": "^7.0.102",
