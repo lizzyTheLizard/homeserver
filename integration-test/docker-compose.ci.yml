@@ -42,7 +42,7 @@ services:
       # Cannot use env-file as this is defined as environment property in base as well.
       POSTGRES_PASSWORD: smoke-test-db-password
 
-  prod-web::
+  prod-web:
     env_file:
       - ../integration-test/env.test
     environment:
