@@ -254,6 +254,9 @@ jobs:
               AI_API_KEY: ${{ secrets.AI_API_KEY }}
           - name: Run smoke checks
             run: pnpm --filter @homeserver/integration-test test
+          - name: Dump smoke stack logs
+            if: failure()
+            run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml logs --no-color --timestamps
           - name: Tear down smoke stack
             if: always()
             run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml down --remove-orphans -v
