@@ -36,10 +36,25 @@ user id, so it is deterministic and filesystem-safe.
 - **`sync --follow --events`** runs while the account is linked. It holds the
   store lock and keeps the SQLite mirror current. `send` commands are delegated
   to it by wacli (via a unix socket), so sending works while sync is running.
+  It also posts each stored live message to the companion's internal webhook
+  (see below).
 - Reads (`chats`, `messages`) and `auth status` are one-shot, lock-free `wacli`
   commands.
 - Commands that need the lock themselves (`archive-chat`, `mark-chat-read`,
   `full-sync`) briefly pause the follow sync, run, and resume it.
+
+### Auto-unarchive on incoming message
+
+WhatsApp unarchives a chat by default when a new message arrives in it, and the
+bridge mirrors that. While `sync --follow` runs, the companion passes `--webhook`,
+`--webhook-allow-private`, and `--webhook-secret <secret>` (a per-supervisor HMAC
+secret generated once, no new environment variable) so wacli posts every stored
+live message to the internal `POST /sessions/{userId}/webhook` endpoint, signed
+with `X-Wacli-Signature`. When the companion receives an incoming message
+(`fromMe: false`) for a chat that is currently archived, it unarchives that chat
+by reusing the archive/unarchive path (which briefly pauses sync) — for one-to-one
+and group chats alike. Messages the user sent themselves (`fromMe: true`) do not
+unarchive, and an already-unarchived chat is left unchanged.
 
 ## REST API
 
@@ -53,6 +68,7 @@ user id, so it is deterministic and filesystem-safe.
 | `POST` | `/sessions/{userId}/archive-chat` | `{id, archived}` | `204` |
 | `POST` | `/sessions/{userId}/mark-chat-read` | `{id}` | `204` |
 | `POST` | `/sessions/{userId}/full-sync` | — | `202` |
+| `POST` | `/sessions/{userId}/webhook` | (internal, wacli-signed) | `204` |
 | `POST` | `/sessions/{userId}/disconnect` | — | `204` |
 | `GET` | `/sessions/{userId}/chats` | — | `200` `Chat[]` |
 | `GET` | `/sessions/{userId}/messages?chatId=...` | — | `200` `Message[]` |

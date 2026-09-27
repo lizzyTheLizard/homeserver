@@ -9,4 +9,4 @@
 
 - [x] 2.1 Generate a per-supervisor HMAC secret and pass `--webhook http://127.0.0.1:<PORT>/sessions/<userId>/webhook`, `--webhook-allow-private`, and `--webhook-secret <secret>` to the `sync --follow --events` args in `Supervisor.start()`; update `supervisor.tests.ts` to assert the new flags
 - [x] 2.2 Add `POST /sessions/:userId/webhook` to `server.ts` that reads the raw body, verifies the `X-Wacli-Signature` HMAC, parses the JSON, and delegates to `handleMessageWebhook`; extract the HMAC check into a pure helper and unit-test it
-- [ ] 2.3 Document the auto-unarchive behaviour and the internal webhook in `whatsapp-bridge/README.md`, and verify `pnpm --filter @homeserver/whatsapp-bridge build` still passes
+- [x] 2.3 Document the auto-unarchive behaviour and the internal webhook in `whatsapp-bridge/README.md`, and verify `pnpm --filter @homeserver/whatsapp-bridge build` still passes
