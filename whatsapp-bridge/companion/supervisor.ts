@@ -5,7 +5,7 @@ import { logger } from './logger'
 import { mapAuthenticated, mapChatArchived, mapChats, mapMessages, type Chat, type Message } from './mapping'
 import { runWacli, spawnWacli, WacliEvent } from './wacli'
 import { config } from './config'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
@@ -15,6 +15,7 @@ export type Status = { type: 'connecting' }
 
 export class Supervisor {
   private readonly storeDir: string
+  private readonly webhookSecret: string
   private readonly mutex: Mutex = new Mutex()
   private status: Status = { type: 'connecting' }
   private child: ChildProcess | null = null
@@ -26,6 +27,7 @@ export class Supervisor {
   constructor(private readonly userId: string) {
     const storeId = createHash('sha256').update(userId).digest('hex').slice(0, 32)
     this.storeDir = join(config.WHATSAPP_DATA_DIR, storeId)
+    this.webhookSecret = randomBytes(32).toString('hex')
     logger.info(`[${this.userId}] Create a new session in folder ${this.storeDir}`)
   }
 
@@ -41,7 +43,13 @@ export class Supervisor {
       const isAuthenticated = mapAuthenticated(result)
       if (isAuthenticated) logger.debug('[${this.userId}] Is already authenticated, start sync')
       else logger.debug('[${this.userId}] Not authenticated, start login')
-      const args = isAuthenticated ? ['sync', '--follow', '--events'] : ['auth', '--events']
+      const args = isAuthenticated
+        ? [
+            'sync', '--follow', '--events',
+            '--webhook', `http://127.0.0.1:${String(config.PORT)}/sessions/${this.userId}/webhook`,
+            '--webhook-allow-private', '--webhook-secret', this.webhookSecret,
+          ]
+        : ['auth', '--events']
       let gotResult = false
       return new Promise((res, rej) => {
         this.child = spawnWacli(this.storeDir, args, (event) => {
@@ -162,6 +170,10 @@ export class Supervisor {
   public getStatus(): Status {
     logger.debug(`[${this.userId}] get status ${this.status.type}`)
     return this.status
+  }
+
+  public getWebhookSecret(): string {
+    return this.webhookSecret
   }
 
   public async sendMessage(to: string, text: string): Promise<void> {

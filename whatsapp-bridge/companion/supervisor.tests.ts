@@ -121,7 +121,23 @@ describe('Supervisor', () => {
     await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
     session.handleEvent?.({ event: 'connected' })
     await expect(startPromise).resolves.toEqual({ type: 'connected' })
-    expect(mockSpawnWacli).toHaveBeenCalledWith(storeDir, ['sync', '--follow', '--events'], expect.any(Function))
+    expect(mockSpawnWacli).toHaveBeenCalledWith(
+      storeDir,
+      [
+        'sync', '--follow', '--events',
+        '--webhook', `http://127.0.0.1:8400/sessions/${userId}/webhook`,
+        '--webhook-allow-private', '--webhook-secret', supervisor.getWebhookSecret(),
+      ],
+      expect.any(Function),
+    )
+  })
+
+  test('generates a stable per-supervisor webhook secret', () => {
+    const first = new Supervisor(userId)
+    const second = new Supervisor(userId)
+    expect(first.getWebhookSecret()).toMatch(/^[0-9a-f]{64}$/)
+    expect(first.getWebhookSecret()).toBe(first.getWebhookSecret())
+    expect(second.getWebhookSecret()).not.toBe(first.getWebhookSecret())
   })
 
   test('starts an auth process when not authenticated', async () => {
