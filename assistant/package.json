@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e ../.env -- tsx watch server.ts",
+    "dev": "dotenv run -f ../.env -- tsx watch server.ts",
     "build": "tsc --project tsconfig.build.json && tsc-alias --project tsconfig.build.json && copyfiles '**/*.md' dist",
     "lint": "eslint --fix --cache",
     "lint:ci": "eslint",
@@ -32,7 +32,7 @@
     "@types/ws": "^8.18.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "copyfiles": "^2.4.1",
-    "dotenv-cli": "^11.0.0",
+    "dotenv": "^18.0.4",
     "eslint": "^10.11.0",
     "globals": "^17.12.0",
     "rimraf": "^6.1.3",
