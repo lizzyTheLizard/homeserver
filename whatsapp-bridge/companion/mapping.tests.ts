@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { mapAuthenticated, mapChats, mapMessages } from './mapping'
+import { mapAuthenticated, mapChatArchived, mapChats, mapMessages } from './mapping'
 
 describe('mapChats', () => {
   test('returns an empty array for non-array input', () => {
@@ -52,6 +52,27 @@ describe('mapAuthenticated', () => {
     expect(mapAuthenticated(null)).toBe(false)
     expect(mapAuthenticated('yes')).toBe(false)
     expect(mapAuthenticated(undefined)).toBe(false)
+  })
+})
+
+describe('mapChatArchived', () => {
+  test('is true only when archived is exactly true', () => {
+    expect(mapChatArchived({ jid: '123@s.whatsapp.net', archived: true })).toBe(true)
+  })
+
+  test('is false when archived is explicitly false', () => {
+    expect(mapChatArchived({ jid: '123@s.whatsapp.net', archived: false })).toBe(false)
+  })
+
+  test('is false when archived is missing', () => {
+    expect(mapChatArchived({ jid: '123@s.whatsapp.net' })).toBe(false)
+  })
+
+  test('is false for non-object input', () => {
+    expect(mapChatArchived(undefined)).toBe(false)
+    expect(mapChatArchived(null)).toBe(false)
+    expect(mapChatArchived('yes')).toBe(false)
+    expect(mapChatArchived([{ archived: true }])).toBe(false)
   })
 })
 

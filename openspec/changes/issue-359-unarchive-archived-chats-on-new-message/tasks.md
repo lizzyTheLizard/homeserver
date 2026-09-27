@@ -2,7 +2,7 @@
 
 ## 1. Unarchive on incoming message
 
-- [ ] 1.1 Add a mapping helper that parses a single chat's `archived` flag from `wacli chats show --json`, and cover it in `mapping.tests.ts` (verify archived true / false / missing each parse correctly)
+- [x] 1.1 Add a mapping helper that parses a single chat's `archived` flag from `wacli chats show --json`, and cover it in `mapping.tests.ts` (verify archived true / false / missing each parse correctly)
 - [ ] 1.2 Add `Supervisor.handleMessageWebhook(payload)` that ignores `fromMe` messages, reads the chat's archived flag (lock-free `wacli chats show --jid <jid> --json`), unarchives via the existing `archiveChat(jid, false)` when archived, and coalesces concurrent triggers with a per-supervisor in-flight set; cover with `supervisor.tests.ts` (fromMe skip, archived → unarchive, not-archived → no-op)
 
 ## 2. Wire the webhook end-to-end
