@@ -240,7 +240,6 @@ services:
       OD_ALLOWED_ORIGINS: https://dev.gutschi.site:8446
       OD_DATA_DIR: /opendesign
     volumes:
-      - dev_opendesign:/opendesign
       - dev_home:/home/dev
 
   dev-db:
@@ -264,6 +263,5 @@ volumes:
   postgres_prod_data:
   postgres_dev_data:
   dev_home:
-  dev_opendesign:
   whatsapp_data:
 
