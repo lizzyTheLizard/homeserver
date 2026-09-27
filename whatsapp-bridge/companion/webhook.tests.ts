@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { createHmac } from 'node:crypto'
-import { verifyWebhookSignature } from './webhook'
+import { parseWebhookPayload, verifyWebhookSignature } from './webhook'
 
 const secret = 'test-secret'
 const body = '{"Chat":"123@s.whatsapp.net","FromMe":false}'
@@ -31,5 +31,22 @@ describe('verifyWebhookSignature', () => {
   test('rejects a non-hex signature', () => {
     expect(verifyWebhookSignature(secret, body, 'sha256=zzzz')).toBe(false)
     expect(verifyWebhookSignature(secret, body, `sha256=${'0'.repeat(64)}`)).toBe(false)
+  })
+})
+
+describe('parseWebhookPayload', () => {
+  test('returns the parsed payload for a valid signed body', () => {
+    const payload = { Chat: '123@s.whatsapp.net', FromMe: false }
+    const raw = JSON.stringify(payload)
+    expect(parseWebhookPayload(secret, Buffer.from(raw), sign(raw))).toEqual(payload)
+  })
+
+  test('throws on an invalid signature', () => {
+    expect(() => parseWebhookPayload(secret, body, 'sha256=bad')).toThrow('invalid webhook signature')
+  })
+
+  test('throws on invalid JSON with a valid signature', () => {
+    const raw = 'not-json'
+    expect(() => parseWebhookPayload(secret, raw, sign(raw))).toThrow()
   })
 })

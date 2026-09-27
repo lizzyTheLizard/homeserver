@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { config } from './config'
 import { logger } from './logger'
 import { Supervisor } from './supervisor'
-import { verifyWebhookSignature } from './webhook'
+import { parseWebhookPayload } from './webhook'
 
 type SessionRequest = Request<{ userId: string }>
 
@@ -20,19 +20,7 @@ app.post('/sessions/:userId/webhook', express.raw({ type: '*/*', limit: '1mb' })
     res.status(404).json({ error: 'webhook: no session' })
     return
   }
-  const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : String(req.body ?? '')
-  if (!verifyWebhookSignature(supervisor.getWebhookSecret(), rawBody, req.header('x-wacli-signature'))) {
-    res.status(401).json({ error: 'webhook: invalid signature' })
-    return
-  }
-  let payload: unknown
-  try {
-    payload = JSON.parse(rawBody)
-  }
-  catch {
-    res.status(400).json({ error: 'webhook: invalid json' })
-    return
-  }
+  const payload = parseWebhookPayload(supervisor.getWebhookSecret(), req.body, req.header('x-wacli-signature'))
   await supervisor.handleMessageWebhook(payload)
   res.status(204).end()
 })
