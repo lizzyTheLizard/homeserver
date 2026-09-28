@@ -84,5 +84,6 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 USER dev
+WORKDIR /home/dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
