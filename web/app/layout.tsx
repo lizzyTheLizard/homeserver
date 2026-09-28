@@ -16,7 +16,7 @@ export const viewport = {
 export default async function RootLayout({ children }: React.PropsWithChildren) {
   const user = await getUserSession()
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <link rel="stylesheet" href="/global.css" />
         <PwaManager />
