@@ -19,6 +19,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const sentMessageHistory = useRef<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const editedHistory = useRef<string | null>(null)
+  const pendingCaretRef = useRef<number | null>(null)
 
   const canInput = state.type === 'ready'
   const canSend = canInput && input.trim().length > 0
@@ -43,6 +44,11 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${String(el.scrollHeight)}px`
+    const caret = pendingCaretRef.current
+    if (caret !== null) {
+      pendingCaretRef.current = null
+      el.setSelectionRange(caret, caret)
+    }
   }, [input])
 
   function connectWebSocket(): AiChatWebSocket {
@@ -79,7 +85,15 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter') {
       if (e.nativeEvent.isComposing) return
-      if (e.ctrlKey || e.metaKey) return
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault()
+        const el = e.currentTarget
+        const start = el.selectionStart
+        const end = el.selectionEnd
+        pendingCaretRef.current = start + 1
+        setInput(`${input.slice(0, start)}\n${input.slice(end)}`)
+        return
+      }
       e.preventDefault()
       send(input)
       return

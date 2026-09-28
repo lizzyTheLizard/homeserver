@@ -8,7 +8,7 @@ The chat input lives in `web/app/startpage/_components/AiChatWindow.tsx`. It is 
 
 **Goals:**
 
-- Turn the input into a `<textarea>` that accepts multi-line text while Enter still sends (and Ctrl+Enter inserts a line break).
+- Turn the input into a `<textarea>` that accepts multi-line text while Enter still sends (and Ctrl/Cmd/Shift+Enter inserts a line break).
 - Auto-grow the input up to a maximum height, then scroll internally.
 - Keep send-button, disabled-while-not-ready, history-navigation, and empty-input behavior intact.
 
@@ -23,10 +23,10 @@ The chat input lives in `web/app/startpage/_components/AiChatWindow.tsx`. It is 
 
 A textarea does not submit its form on Enter, so the Enter-to-send behavior must move into `onKeyDown`:
 
-- Enter without Ctrl/Cmd → `e.preventDefault()` and `send(input)`.
-- Enter with `e.ctrlKey || e.metaKey` → return without preventing default, letting the browser insert a newline (covers Ctrl+Enter as required and Cmd+Enter for macOS parity).
+- Enter without a modifier → `e.preventDefault()` and `send(input)`.
+- Enter with `e.ctrlKey || e.metaKey || e.shiftKey` → `e.preventDefault()` and insert a newline at the caret (covers Ctrl+Enter, Cmd+Enter for macOS parity, and Shift+Enter).
 
-**Rationale:** explicit handling is required by the textarea's semantics; the `form onSubmit` path stays as the send-button (and any implicit-submit) path. Using `metaKey` as well as `ctrlKey` is a superset of the requirement and does not weaken it.
+**Rationale:** explicit handling is required by the textarea's semantics; the `form onSubmit` path stays as the send-button (and any implicit-submit) path. The newline is inserted at the caret explicitly because browsers do not insert one on Ctrl/Cmd+Enter by default; treating Shift+Enter the same way is a superset of the requirement and a common chat-input convention.
 
 ### 2. Guard Enter against IME composition
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the AI assistant chat window's message-composition input: multi-line entry, Enter-to-send and Ctrl+Enter-to-insert-newline key handling, auto-grow with internal scroll, and the preserved send-button, disabled-while-not-ready, history-navigation, and empty-input behaviors.
+Defines the AI assistant chat window's message-composition input: multi-line entry, Enter-to-send and modifier+Enter-to-insert-newline key handling, auto-grow with internal scroll, and the preserved send-button, disabled-while-not-ready, history-navigation, and empty-input behaviors.
 
 ## ADDED Requirements
 
@@ -39,13 +39,13 @@ Pressing Enter SHALL send the composed message when the input is non-empty and t
 - **WHEN** the user presses Enter while the assistant is not ready
 - **THEN** no message is sent
 
-### Requirement: Ctrl+Enter inserts a line break
+### Requirement: Modifier+Enter inserts a line break
 
-Pressing Ctrl+Enter SHALL insert a line break instead of sending the message.
+Pressing Enter with the Ctrl, Cmd, or Shift modifier SHALL insert a line break instead of sending the message.
 
-#### Scenario: Ctrl+Enter inserts a line break
+#### Scenario: Modifier+Enter inserts a line break
 
-- **WHEN** the user presses Ctrl+Enter while composing a message
+- **WHEN** the user presses Ctrl+Enter, Cmd+Enter, or Shift+Enter while composing a message
 - **THEN** a line break is inserted and the message is not sent
 
 ### Requirement: The input auto-grows and scrolls internally
