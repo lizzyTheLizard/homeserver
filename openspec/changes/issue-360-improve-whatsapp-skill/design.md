@@ -8,7 +8,7 @@ The WhatsApp skill is a single markdown file (`assistant/skills/whatsapp/SKILL.m
 
 **Goals:**
 
-- Make the draft → confirm → send flow explicit and ordered in the skill, and make "recent messages" well-defined so drafting is grounded in the right context.
+- Make the draft → confirm → send flow explicit and ordered in the skill, and return chat messages in chronological order so drafting reads them in the right order.
 - Lock the new skill instructions with a content test so regressions in the prompt are caught.
 
 **Non-Goals:**
@@ -29,16 +29,13 @@ The SKILL.md "Drafting And Sending Responses" section is rewritten into an order
 
 This is the issue's "decided" first step: improve the skill before reaching for a code-level gate. The send-approval behaviour therefore remains a skill-level guarantee in this iteration — sufficient for the acceptance criteria's behaviour, with a code gate available as a later hardening step if the improved skill still allows unsolicited sends.
 
-### Make recent messages well-defined in the tool
+### Return messages in chronological order
 
-`get_whatsapp_messages` (the tool) is changed to sort results by `messageTimestamp` (chronological) and apply the existing `filterRecentMessages` window (last 1 day, else last 7 days), reusing the same helper the overview tool already uses. This gives the skill's "load recent messages first" step actual recent context instead of an unordered full history.
-
-Trade-off: older-history exploration through this tool is capped to the same window as the overview. That is accepted for this change; a later `limit`/`all` parameter can widen it without changing the spec. The bridge itself is untouched — filtering stays in the assistant tool layer.
+`get_whatsapp_messages` (the tool) is changed to sort results by `messageTimestamp` (chronological) so the skill's "load messages first" step reads them in the order they happened, instead of an unordered full history. No age window is applied here — the full history is preserved, only ordered. The bridge itself is untouched.
 
 ## Risks / Trade-offs
 
 - **Send approval is still only a prompt instruction** → Without a code gate, the "never send without approval" guarantee relies on the model following the rewritten skill. This is the deliberate, issue-aligned first step; a code-level gate is the fallback if this proves insufficient.
-- **Recent-message cap hides older context** → Drafting is about the recent conversation; the same window already governs the overview. Mitigation: a later `limit`/`all` parameter can widen it without a spec change.
 - **Language detection depends on the model** → "Ask rather than guess when undeterminable" is an instruction; the model may still guess. Acceptable for a skill-level improvement.
 
 ## Migration Plan

@@ -67,7 +67,7 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async ({ chatId }) => {
       const status = await getWhatsappStatus(user.email)
       if (status.type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${status.type}`)
-      return getWhatsappMessages(user.email, chatId)
+      return sortChronologically(await getWhatsappMessages(user.email, chatId))
     },
   })
 
@@ -121,6 +121,10 @@ function filterRecentMessages(messages?: { messageTimestamp: string }[]): { mess
   const messagesLastDay = messages.filter(m => isInLastDays(m, 1))
   if (messagesLastDay.length > 0) return messagesLastDay
   return messages.filter(m => isInLastDays(m, 7))
+}
+
+function sortChronologically<T extends { messageTimestamp: string }>(messages: T[]): T[] {
+  return [...messages].sort((a, b) => new Date(a.messageTimestamp).getTime() - new Date(b.messageTimestamp).getTime())
 }
 
 function isInLastDays(message: { messageTimestamp: string }, n: number): boolean {

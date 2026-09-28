@@ -2,7 +2,7 @@
 
 ## 1. Make recent messages well-defined
 
-- [ ] 1.1 Order `get_whatsapp_messages` results by `messageTimestamp` (chronological) and apply the existing `filterRecentMessages` window (last 1 day, else last 7 days) in `assistant/tools/whatsapp-tools.ts`, and add `assistant/tools/whatsapp-tools.tests.ts` covering the ordering and window using timestamps relative to now; verify `pnpm --filter @homeserver/assistant test` passes
+- [x] 1.1 Order `get_whatsapp_messages` results by `messageTimestamp` (chronological) in `assistant/tools/whatsapp-tools.ts`, and add `assistant/tools/whatsapp-tools.tests.ts` covering the ordering; verify `pnpm --filter @homeserver/assistant test` passes
 
 ## 2. Rewrite the WhatsApp skill
 
