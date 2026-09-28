@@ -11,4 +11,4 @@
 
 ## 3. Integration check
 
-- [ ] 3.1 Run `pnpm --filter @homeserver/assistant build`, `pnpm --filter @homeserver/assistant test`, and `pnpm --filter @homeserver/assistant lint:ci` together and confirm the whole package is green
+- [x] 3.1 Run `pnpm --filter @homeserver/assistant build`, `pnpm --filter @homeserver/assistant test`, and `pnpm --filter @homeserver/assistant lint:ci` together and confirm the whole package is green
