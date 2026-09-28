@@ -61,3 +61,17 @@ The assistant SHALL draft replies that are natural and concise, SHALL ground the
 
 - **WHEN** a draft would require a fact, event, or commitment that is not present in the chat
 - **THEN** the assistant does not invent it and instead asks for the missing information or omits it
+
+### Requirement: Drafts omit greetings and farewells by default
+
+The assistant SHALL NOT include a greeting (for example "Hi") or a farewell (for example "Liebe Grüsse" or "Goodbye") in a reply draft, unless the chat's messages consistently use such greetings or farewells, in which case the draft SHALL match that style.
+
+#### Scenario: No greeting or farewell by default
+
+- **WHEN** the chat's messages do not consistently use greetings or farewells
+- **THEN** the draft contains no greeting and no farewell
+
+#### Scenario: Greeting and farewell mirror a chat that uses them
+
+- **WHEN** the chat's messages consistently use greetings and farewells
+- **THEN** the draft may include a greeting and a farewell matching that style

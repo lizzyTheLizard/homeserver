@@ -62,7 +62,7 @@ Trigger: user asks to send or write a response:
    - reference concrete points from the messages
    - ask for missing information when needed
 3. Mirror the language and writing style used in the chat. If the language cannot be determined, ask the user which language to use instead of guessing.
-4. Keep the draft natural and concise. Do not invent facts, events, or commitments that are not present in the chat.
+4. Keep the draft natural and concise. Do not invent facts, events, or commitments that are not present in the chat. Do not add a greeting (like "Hi") or a farewell (like "Liebe Grüsse" or "Goodbye") unless the chat's messages consistently use them.
 5. Present the draft in an editable input block:
    ~~~input
    Draft message text here
@@ -92,6 +92,7 @@ When user asks to archive a chat, archive directly using `archive_whatsapp_chat`
 - Always base a reply draft on the chat's messages; never return a generic reply that ignores them.
 - Write drafts in the same language as the chat; if the language cannot be determined, ask rather than guess.
 - Do not invent facts, events, or commitments that are not present in the chat.
+- Do not include a greeting or a farewell in a draft by default; include them only if the chat's messages consistently use them.
 - Never modify or delete existing messages.
 - Only send plain text messages.
 - Do not auto-mark chats as read.

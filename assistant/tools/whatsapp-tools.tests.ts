@@ -50,15 +50,49 @@ describe('get_whatsapp_messages', () => {
     expect(result.map(m => m.id)).toEqual(['oldest', 'middle', 'newest'])
   })
 
-  test('returns all messages without filtering by age', async () => {
+  test('returns only messages from the last day when any exist', async () => {
     mockGetWhatsappMessages.mockResolvedValue([
-      message('ten-days-ago', daysAgo(10)),
       message('today', hoursAgo(2)),
-      message('twelve-days-ago', daysAgo(12)),
+      message('three-days-ago', daysAgo(3)),
+      message('ten-days-ago', daysAgo(10)),
     ])
 
     const result = await getMessages('test-jid')
 
-    expect(result.map(m => m.id)).toEqual(['twelve-days-ago', 'ten-days-ago', 'today'])
+    expect(result.map(m => m.id)).toEqual(['today'])
+  })
+
+  test('falls back to the last week when nothing is within the last day', async () => {
+    mockGetWhatsappMessages.mockResolvedValue([
+      message('ten-days-ago', daysAgo(10)),
+      message('three-days-ago', daysAgo(3)),
+    ])
+
+    const result = await getMessages('test-jid')
+
+    expect(result.map(m => m.id)).toEqual(['three-days-ago'])
+  })
+
+  test('falls back to the last 30 days when nothing is within the last week', async () => {
+    mockGetWhatsappMessages.mockResolvedValue([
+      message('forty-days-ago', daysAgo(40)),
+      message('ten-days-ago', daysAgo(10)),
+      message('fifteen-days-ago', daysAgo(15)),
+    ])
+
+    const result = await getMessages('test-jid')
+
+    expect(result.map(m => m.id)).toEqual(['fifteen-days-ago', 'ten-days-ago'])
+  })
+
+  test('returns an empty list when there are no messages within the last 30 days', async () => {
+    mockGetWhatsappMessages.mockResolvedValue([
+      message('forty-days-ago', daysAgo(40)),
+      message('sixty-days-ago', daysAgo(60)),
+    ])
+
+    const result = await getMessages('test-jid')
+
+    expect(result).toEqual([])
   })
 })

@@ -106,4 +106,8 @@ describe('whatsapp skill content', () => {
   test('instructs not inventing facts', () => {
     expect(skillContent).toContain('Do not invent facts, events, or commitments')
   })
+
+  test('instructs omitting greetings and farewells by default', () => {
+    expect(skillContent).toContain('Do not include a greeting or a farewell in a draft by default')
+  })
 })

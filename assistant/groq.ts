@@ -5,7 +5,7 @@ import { config } from './config'
 
 const MAX_TOOL_ITERATIONS = 10
 const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
-const model = provider('openai/gpt-oss-20b')
+const model = provider('openai/gpt-oss-120b')
 const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: true, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
 const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
 
