@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from 'vitest'
-import { promises as fs } from 'fs'
+import { promises as fs, readFileSync } from 'fs'
 import { join } from 'path'
 import { getSkillTools } from './skills-tools'
 import { tmpdir } from 'os'
@@ -80,5 +80,30 @@ describe('skill loading from filesystem', () => {
     expect(fileContent['template.md']).toBe('# Template\nThis is a template file.')
     expect(fileContent['data.json']).toBe(JSON.stringify({ key: 'value' }))
     expect(Object.keys(fileContent)).toHaveLength(3)
+  })
+})
+
+describe('whatsapp skill content', () => {
+  const skillContent = readFileSync(join(__dirname, '..', 'skills', 'whatsapp', 'SKILL.md'), 'utf-8')
+
+  test('instructs reading the most recent messages first', () => {
+    expect(skillContent).toContain('read the most recent messages first')
+  })
+
+  test('instructs mirroring the chat language and asking when unknown', () => {
+    expect(skillContent).toContain('Mirror the language and writing style used in the chat')
+    expect(skillContent).toContain('ask the user which language to use instead of guessing')
+  })
+
+  test('instructs presenting a draft before sending', () => {
+    expect(skillContent).toContain('Present the draft in an editable input block')
+  })
+
+  test('instructs never sending without explicit confirmation', () => {
+    expect(skillContent).toContain('Never send a message without explicit confirmation')
+  })
+
+  test('instructs not inventing facts', () => {
+    expect(skillContent).toContain('Do not invent facts, events, or commitments')
   })
 })
