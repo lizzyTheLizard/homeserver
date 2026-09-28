@@ -41,7 +41,7 @@
 
 .inputRow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   background: white;
   border: 1.5px solid rgba(0,0,0,0.13);
   border-radius: 28px;
@@ -69,6 +69,8 @@
 .input {
   flex-grow: 1;
   min-height: 2.1rem;
+  max-height: 12rem;
+  overflow-y: auto;
   resize: none;
   font-size: 0.95rem;
   border: none;

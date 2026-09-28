@@ -38,6 +38,13 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     }
   }, [state.type])
 
+  useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${String(el.scrollHeight)}px`
+  }, [input])
+
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
     websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }]) }

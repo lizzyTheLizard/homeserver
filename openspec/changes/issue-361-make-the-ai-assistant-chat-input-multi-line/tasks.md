@@ -6,7 +6,7 @@
 
 ## 2. Auto-grow with internal scroll
 
-- [ ] 2.1 Add auto-grow to the textarea by resetting its height to `auto` and then to `scrollHeight` on input change (clearing it after send), and style it in `AiChatWindow.module.css` with `max-height: 12rem` and `overflow-y: auto`; change `.inputRow` from `align-items: center` to `align-items: flex-end` so the send button stays near the last line. Verify with `pnpm --filter @homeserver/web build` and `pnpm --filter @homeserver/web lint`, and confirm manually that the input grows with content up to the max height and then scrolls internally.
+- [x] 2.1 Add auto-grow to the textarea by resetting its height to `auto` and then to `scrollHeight` on input change (clearing it after send), and style it in `AiChatWindow.module.css` with `max-height: 12rem` and `overflow-y: auto`; change `.inputRow` from `align-items: center` to `align-items: flex-end` so the send button stays near the last line. Verify with `pnpm --filter @homeserver/web build` and `pnpm --filter @homeserver/web lint`, and confirm manually that the input grows with content up to the max height and then scrolls internally.
 
 ## 3. Interaction coverage
 
