@@ -68,7 +68,7 @@
 
 .input {
   flex-grow: 1;
-  min-height: 2.1rem;
+  min-height: 1.4rem;
   max-height: 12rem;
   overflow-y: auto;
   resize: none;
@@ -82,8 +82,8 @@
 }
 
 .sendButton {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 50%;
   flex-shrink: 0;
   background: rgba(0,0,210,1);
