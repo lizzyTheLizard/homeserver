@@ -15,25 +15,6 @@ export default function getTools(user: UserSession): ToolSet {
         .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) }))
         .map(c => c.then(({ chat, messages }) => ({ chat, messages: filterRecentMessages(messages) }))),
       )
-
-      /*
-
-      logger.debug(' Got the following unarchived chats: ' + chats.map(x => x.name).join(", "))
-      const p = Promise.all(chats
-        .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) })))
-      logger.debug('Started the additional requests')
-      const messages = await p
-      logger.debug('Got messages ' + JSON.stringify(messages))
-      try {
-      const filteredMessags = messages.map((value) => ({ chat: value.chat, messages: filterRecentMessages(value.messages) }))
-      logger.debug('Got filtered messages ' + JSON.stringify(filteredMessags))
-      return filteredMessags
-      }
-      catch (e) {
-        logger.error('could not filter messagse', e)
-        return []
-      }
-        */
     },
   })
 
@@ -67,7 +48,9 @@ export default function getTools(user: UserSession): ToolSet {
     execute: async ({ chatId }) => {
       const status = await getWhatsappStatus(user.email)
       if (status.type !== 'connected') throw new Error(`WhatsApp is not connected. Current status: ${status.type}`)
-      return getWhatsappMessages(user.email, chatId)
+      const messages = await getWhatsappMessages(user.email, chatId)
+      const recentMessages = filterRecentMessages(messages)
+      return sortChronologically(recentMessages)
     },
   })
 
@@ -120,7 +103,13 @@ function filterRecentMessages(messages?: { messageTimestamp: string }[]): { mess
   if (!messages) return []
   const messagesLastDay = messages.filter(m => isInLastDays(m, 1))
   if (messagesLastDay.length > 0) return messagesLastDay
-  return messages.filter(m => isInLastDays(m, 7))
+  const messagesLastWeek = messages.filter(m => isInLastDays(m, 7))
+  if (messagesLastWeek.length > 0) return messagesLastWeek
+  return messages.filter(m => isInLastDays(m, 30))
+}
+
+function sortChronologically<T extends { messageTimestamp: string }>(messages: T[]): T[] {
+  return [...messages].sort((a, b) => new Date(a.messageTimestamp).getTime() - new Date(b.messageTimestamp).getTime())
 }
 
 function isInLastDays(message: { messageTimestamp: string }, n: number): boolean {
