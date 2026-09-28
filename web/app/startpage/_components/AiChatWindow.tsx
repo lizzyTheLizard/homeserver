@@ -15,10 +15,11 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const [state, setState] = useState<ChatState>({ type: 'initial' })
   const [incomingMessage, setIncomingMessage] = useState('')
   const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const sentMessageHistory = useRef<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const editedHistory = useRef<string | null>(null)
+  const pendingCaretRef = useRef<number | null>(null)
 
   const canInput = state.type === 'ready'
   const canSend = canInput && input.trim().length > 0
@@ -37,6 +38,18 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       inputRef.current?.focus()
     }
   }, [state.type])
+
+  useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${String(el.scrollHeight)}px`
+    const caret = pendingCaretRef.current
+    if (caret !== null) {
+      pendingCaretRef.current = null
+      el.setSelectionRange(caret, caret)
+    }
+  }, [input])
 
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
@@ -69,8 +82,26 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     webSocketRef.current?.sendMessage(t)
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter') {
+      if (e.nativeEvent.isComposing) return
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault()
+        const el = e.currentTarget
+        const start = el.selectionStart
+        const end = el.selectionEnd
+        pendingCaretRef.current = start + 1
+        setInput(`${input.slice(0, start)}\n${input.slice(end)}`)
+        return
+      }
+      e.preventDefault()
+      send(input)
+      return
+    }
+
+    const el = inputRef.current
     if (e.key === 'ArrowUp') {
+      if (el?.selectionStart !== 0 || el.selectionEnd !== 0) return
       e.preventDefault()
       const history = sentMessageHistory.current
       if (history.length === 0) return
@@ -82,6 +113,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       setInput(history[history.length - 1 - nextIndex])
     }
     else if (e.key === 'ArrowDown') {
+      if (el?.selectionStart !== input.length || el.selectionEnd !== input.length) return
       e.preventDefault()
       if (historyIndex === -1) return
       if (historyIndex === 0) {
@@ -112,7 +144,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     webSocketRef.current = websocket
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(e.target.value)
     if (historyIndex >= 0) {
       setHistoryIndex(-1)
@@ -147,8 +179,9 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       )}
       <AiActionsList state={state} actions={actions} onSend={send} />
       <form onSubmit={handleSubmit} className={styles.inputRow}>
-        <input
+        <textarea
           ref={inputRef}
+          rows={1}
           disabled={!canInput}
           value={input}
           onChange={handleInputChange}
