@@ -2,7 +2,7 @@
 
 ## 1. Multi-line input with Enter/Ctrl+Enter key handling
 
-- [ ] 1.1 In `AiChatWindow.tsx`, replace the single-line `<input>` with a `<textarea>` (updating `inputRef` to `useRef<HTMLTextAreaElement>` and the `onChange`/`onKeyDown` handler types), and add explicit key handling so Enter sends when the input is non-empty and ready, Ctrl+Enter (and Cmd+Enter) inserts a line break, Enter during IME composition does not send, and Arrow Up / Arrow Down move the caret except at the start/end where they navigate history. Update `.input` in `AiChatWindow.module.css` from `height: 2.1rem` to `min-height: 2.1rem` and add `resize: none`. Verify with `pnpm --filter @homeserver/web build` and `pnpm --filter @homeserver/web lint`, and confirm manually that Enter sends, Ctrl+Enter inserts a newline, and empty input does not send.
+- [x] 1.1 In `AiChatWindow.tsx`, replace the single-line `<input>` with a `<textarea>` (updating `inputRef` to `useRef<HTMLTextAreaElement>` and the `onChange`/`onKeyDown` handler types), and add explicit key handling so Enter sends when the input is non-empty and ready, Ctrl+Enter (and Cmd+Enter) inserts a line break, Enter during IME composition does not send, and Arrow Up / Arrow Down move the caret except at the start/end where they navigate history. Update `.input` in `AiChatWindow.module.css` from `height: 2.1rem` to `min-height: 2.1rem` and add `resize: none`. Verify with `pnpm --filter @homeserver/web build` and `pnpm --filter @homeserver/web lint`, and confirm manually that Enter sends, Ctrl+Enter inserts a newline, and empty input does not send.
 
 ## 2. Auto-grow with internal scroll
 
