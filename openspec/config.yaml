@@ -22,10 +22,6 @@ rules:
 operations:
   apply:
     guidance:
-      - Work one task at a time. After finishing a task and ticking its checkbox,
-        stop and show the user the diff for review. Do not begin the next task
-        before they have responded.
-      - Once the user approves a task's diff, commit and push it. 
-        The commit message must follow the standard format: `<short imperative message> (#<NUMBER>)` 
-        and include the `OpenSpec-Change: <change>` and `Agent: <agent>` trailer.
-      - After the last task, do not archive yourself. Ask the user to run the gh-change-ship skill instead
+      - "Work one task at a time. After finishing a task and ticking its checkbox, stop and show the user the diff for review. Do not begin the next task before they have responded."
+      - "Once the user approves a task's diff, commit and push it. The commit message must follow the standard format: `<short imperative message> (#<NUMBER>)` and include the `OpenSpec-Change: <change>` and `Agent: <agent>` trailer."
+      - "After the last task, do not archive yourself. Ask the user to run the gh-change-ship skill instead"

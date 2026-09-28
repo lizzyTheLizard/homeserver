@@ -2,10 +2,10 @@ import { Mutex } from 'async-mutex'
 import { promises as fs } from 'node:fs'
 import type { ChildProcess } from 'node:child_process'
 import { logger } from './logger'
-import { mapAuthenticated, mapChats, mapMessages, type Chat, type Message } from './mapping'
+import { mapAuthenticated, mapChatArchived, mapChats, mapMessages, type Chat, type Message } from './mapping'
 import { runWacli, spawnWacli, WacliEvent } from './wacli'
 import { config } from './config'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
@@ -15,14 +15,19 @@ export type Status = { type: 'connecting' }
 
 export class Supervisor {
   private readonly storeDir: string
+  private readonly webhookSecret: string
   private readonly mutex: Mutex = new Mutex()
   private status: Status = { type: 'connecting' }
   private child: ChildProcess | null = null
   private isStopping = false
+  // Chat JIDs currently being auto-unarchived, so concurrent webhook
+  // deliveries for the same chat coalesce into a single pause/unarchive.
+  private readonly inflightUnarchive = new Set<string>()
 
   constructor(private readonly userId: string) {
     const storeId = createHash('sha256').update(userId).digest('hex').slice(0, 32)
     this.storeDir = join(config.WHATSAPP_DATA_DIR, storeId)
+    this.webhookSecret = randomBytes(32).toString('hex')
     logger.info(`[${this.userId}] Create a new session in folder ${this.storeDir}`)
   }
 
@@ -38,7 +43,13 @@ export class Supervisor {
       const isAuthenticated = mapAuthenticated(result)
       if (isAuthenticated) logger.debug('[${this.userId}] Is already authenticated, start sync')
       else logger.debug('[${this.userId}] Not authenticated, start login')
-      const args = isAuthenticated ? ['sync', '--follow', '--events'] : ['auth', '--events']
+      const args = isAuthenticated
+        ? [
+            'sync', '--follow', '--events',
+            '--webhook', `http://127.0.0.1:${String(config.PORT)}/sessions/${this.userId}/webhook`,
+            '--webhook-allow-private', '--webhook-secret', this.webhookSecret,
+          ]
+        : ['auth', '--events']
       let gotResult = false
       return new Promise((res, rej) => {
         this.child = spawnWacli(this.storeDir, args, (event) => {
@@ -161,6 +172,10 @@ export class Supervisor {
     return this.status
   }
 
+  public getWebhookSecret(): string {
+    return this.webhookSecret
+  }
+
   public async sendMessage(to: string, text: string): Promise<void> {
     await this.ensureStarted()
     logger.info(`[${this.userId}] send messages`)
@@ -171,6 +186,29 @@ export class Supervisor {
     await this.stop()
     logger.info(`[${this.userId}] archive chat`)
     await runWacli(this.storeDir, ['chats', archived ? 'archive' : 'unarchive', '--chat', chatId], false)
+  }
+
+  // Reacts to a wacli `sync --webhook` message delivery: unarchives the chat
+  // when a new incoming (fromMe: false) message lands in an archived chat.
+  public async handleMessageWebhook(payload: unknown): Promise<void> {
+    const message = (typeof payload === 'object' && payload !== null ? payload : {}) as Record<string, unknown>
+    if (message.FromMe === true || message.FromMe === 1) return
+    const chatId = typeof message.Chat === 'string' ? message.Chat : ''
+    if (!chatId || this.inflightUnarchive.has(chatId)) return
+    this.inflightUnarchive.add(chatId)
+    try {
+      logger.debug(`[${this.userId}] check archive state of ${chatId}`)
+      const result = await runWacli(this.storeDir, ['chats', 'show', '--jid', chatId], true)
+      if (!mapChatArchived(result)) return
+      logger.info(`[${this.userId}] auto-unarchive ${chatId} on incoming message`)
+      await this.archiveChat(chatId, false)
+    }
+    catch (err: unknown) {
+      logger.warn(`[${this.userId}] could not auto-unarchive ${chatId}`, err)
+    }
+    finally {
+      this.inflightUnarchive.delete(chatId)
+    }
   }
 
   public async fullSync(): Promise<void> {

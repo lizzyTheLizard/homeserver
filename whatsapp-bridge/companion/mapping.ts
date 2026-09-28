@@ -53,6 +53,11 @@ export function mapAuthenticated(data: unknown): boolean {
   return obj.authenticated === true
 }
 
+export function mapChatArchived(data: unknown): boolean {
+  const chat = (typeof data === 'object' && data !== null ? data : {}) as WacliChat
+  return chat.archived === true
+}
+
 export function mapMessages(data: unknown): Message[] {
   const result = data as { messages?: WacliMessage[] } | undefined
   if (!Array.isArray(result?.messages)) return []
