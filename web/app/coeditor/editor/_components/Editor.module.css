@@ -1,24 +1,49 @@
 .textarea {
     margin-top: var(--gap-small);
     flex-grow: 1;
+    min-height: 0;
 }
 
-.chatRow{
-    margin-top: var(--gap-small);
+.columns {
     display: flex;
-    gap: var(--gap-small);
-}
-
-.chatRow div {
+    flex-direction: row;
+    gap: var(--gap);
     flex-grow: 1;
+    min-height: 0;
 }
 
-.chatRow button {
-   width: initial;
+.mainColumn {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    min-width: 0;
 }
 
-.error{
-    color: var(--danger-background-color);
+.chatColumn {
+    display: flex;
+    flex-direction: column;
+    width: 26rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .columns {
+        flex-direction: column;
+        padding-top: var(--gap);
+        height: calc(100dvh - 5rem);
+    }
+
+    .mainColumn {
+        flex-grow: 1;
+        min-height: 0;
+    }
+
+    .chatColumn {
+        width: 100%;
+        height: 25vh;
+        flex: none;
+    }
 }
 
 .buttons {

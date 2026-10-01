@@ -26,5 +26,5 @@
 
 ## 6. Editor Chat UI & Layout
 
-- [ ] 6.1 Build the chat column in the editor: message list with bubbles (user requests and assistant responses, mirroring the start-page assistant), proposed-action chips for Improve/Reformulate/Summarize/Extend, and the custom-command input + send (moved from below the text area into the chat); wire loading and error display. Verify lint and the editor unit/integration tests pass
-- [ ] 6.2 Two-column responsive layout: desktop side-by-side (main column with `EditorContext` + text area; chat column to the right), mobile stacked with the chat at about 25% of the height and internally scrollable; Undo/Redo/New remain beside the text area. Verify lint, the editor tests, and a manual browser check at desktop and mobile widths
+- [x] 6.1 Build the chat column in the editor: message list with bubbles (user requests and assistant responses, mirroring the start-page assistant), proposed-action chips for Improve/Reformulate/Summarize/Extend, and the custom-command input + send (moved from below the text area into the chat); wire loading and error display. Verify lint and the editor unit/integration tests pass
+- [x] 6.2 Two-column responsive layout: desktop side-by-side (main column with `EditorContext` + text area; chat column to the right), mobile stacked with the chat at about 25% of the height and internally scrollable; Undo/Redo/New remain beside the text area. Verify lint, the editor tests, and a manual browser check at desktop and mobile widths
