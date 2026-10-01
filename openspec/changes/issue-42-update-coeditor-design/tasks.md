@@ -17,4 +17,4 @@
 
 ## 4. Integration Verification
 
-- [ ] 4.1 Run the full web validation and the whole-repo checks on the change: `pnpm --filter @homeserver/web test` and `pnpm lint:ci` from the repo root. Verify all test projects (unit, integration, storybook) and lint pass with no failures, confirming the restyle preserved all CoEditor functionality
+- [x] 4.1 Run the full web validation and the whole-repo checks on the change: `pnpm --filter @homeserver/web test` and `pnpm lint:ci` from the repo root. Verify all test projects (unit, integration, storybook) and lint pass with no failures, confirming the restyle preserved all CoEditor functionality
