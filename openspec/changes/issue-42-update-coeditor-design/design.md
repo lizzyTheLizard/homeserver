@@ -16,12 +16,13 @@ There is no CoEditor-specific mockup; the start page mockups are the design sour
 
 **Goals:**
 - Make editor, history, and settings pages visually match the new design language (navy headings/primary text, grey secondary text, white background, system font, card-based, consistent spacing/radius).
-- Keep the diff local and low-risk: styling/class changes only, no component behavior or state changes.
+- Restructure the editor into a two-column layout with an assistant chat that shows the discussion's request/response history and hosts the proposed actions and custom-command input.
+- Keep the diff local and low-risk: styling/class changes only, no component behavior or state changes for history/settings; the editor chat reuses existing data and components where possible.
 
 **Non-Goals:**
-- No backend, data, or logic changes (per issue's Out of Scope).
-- No new shared design primitives or a CoEditor design mockup.
-- No redesign of CoEditor functionality or information architecture.
+- No changes to the assistant service, WebSocket streaming, or the AI port — command execution stays the existing server action and returns one response per command.
+- No database schema changes (the `command` table already stores the request/response history).
+- No redesign of CoEditor functionality or information architecture beyond the editor layout.
 
 ## Decisions
 
@@ -42,6 +43,24 @@ Page/section headings (`<h1>` via `ActionTitle`, `<h2>` in settings sections) re
 
 ### D4: No behavioral changes
 Only `className`/CSS changes. Component state, reducers, server actions, and routing stay untouched; this is verified per page by the existing unit/integration tests (spec — "CoEditor restyle preserves existing functionality").
+
+### D5: Chat history reuses the persisted `command` table
+Each command execution already inserts a `command` row (user request as `custom_command`/`predefined_command`, assistant response as `result.text`, plus `created_at`). The editor chat is built from that data:
+
+- `loadEditorData` (editor `server.ts`) additionally loads the discussion's commands via `findCommandsByDiscussion` and exposes them on `EditorData`.
+- One command → one chat pair: user message = the custom command text or the predefined command label (e.g. "Improve"); assistant message = `result.text`.
+- Command execution stays the existing `executeCommand` server action (one response per command, no WebSocket streaming).
+
+- **Alternative considered**: streaming responses like the start-page assistant (WebSocket). Rejected: the AI port and server action pipeline return one result per command; adding streaming would be a large, separate change. The chat matches the start page visually, not its transport.
+
+### D6: Chat messages live in the editor reducer state
+`EditorState` gains a `messages` list. `initialState` seeds it from the discussion's loaded commands; the `COMMAND_EXECUTED` action appends the request/response pair (the payload is extended with the request text/label and the response). This keeps chat behavior testable via the existing `Editor.state.tests.ts` unit tests.
+
+### D7: Chat column mirrors the start-page assistant visually
+The chat column reuses the start-page assistant's look: message bubbles via the existing `AiMessageBubble` component (role + content), proposed actions as clickable chips (like `AiActionsList`), and an input bar for custom commands (shared `Input` + `Button`; the custom-command input moves from below the text area into the chat). Error display keeps the danger token and appears in the chat column.
+
+### D8: Two-column layout via a CSS module, breakpoint 600px
+The editor page shell uses a flex/grid container: desktop (min-width 600px, matching the existing media queries) shows the main column (flex-grow) and a chat column of fixed width on the right; mobile (max-width 600px) stacks the columns, with the chat column at about 25% of the viewport height (`25vh`) and `overflow-y: auto` — the message list scrolls inside it. Undo/Redo/New remain next to the text area (decision recorded on issue #42).
 
 ## Risks / Trade-offs
 
