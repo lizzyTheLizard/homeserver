@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useReducer, useState } from 'react'
-import { editorStateReducer, initialState } from '../_helper/Editor.state'
+import { editorStateReducer, initialState, predefinedCommandLabel } from '../_helper/Editor.state'
 import { Discussion } from '../../_data/Discussion'
 import { PredefinedCommandType } from '../../_data/Command'
 import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
@@ -47,7 +47,7 @@ export function Editor({ discussion, templates }: EditorProps) {
         setExecutePending(false)
         return
       }
-      dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
+      dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false, userMessage: command ? predefinedCommandLabel(command) ?? command : customCommand, assistantMessage: result.data.text })
       setCustomCommand('')
       setError(undefined)
       setExecutePending(false)
