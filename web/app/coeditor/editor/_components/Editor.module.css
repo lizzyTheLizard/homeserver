@@ -48,13 +48,34 @@
     }
 }
 
-.buttons {
+.toolbar {
     display: flex;
-    gap: var(--gap-small);
+    justify-content: flex-end;
+    gap: 0.25rem;
     margin-top: var(--gap-small);
 }
 
-.buttons button {
-    flex-grow: 1;
-    width: initial;
+.iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: none;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, background 0.15s;
+}
+
+.iconButton:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.iconButton:disabled {
+    color: #ccc;
+    background: transparent;
+    cursor: default;
 }

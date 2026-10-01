@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { EditorContext } from './EditorContext'
 import { EditorChat } from './EditorChat'
-import { Button } from '@/app/shared/_components/form/Button'
 import { executeCommand } from '../server'
 import style from './Editor.module.css'
 
@@ -95,6 +94,11 @@ export function Editor({ discussion, templates, commands }: EditorProps) {
             onTemplateChange={useCallback((template: Template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
             onParametersChange={useCallback((name: string, value: string | undefined) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
           />
+          <div className={style.toolbar}>
+            <button className={style.iconButton} onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length} title="Undo"><UndoIcon /></button>
+            <button className={style.iconButton} onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length} title="Redo"><RedoIcon /></button>
+            <button className={style.iconButton} onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id} title="New"><NewIcon /></button>
+          </div>
           <Textarea
             className={style.textarea}
             label="Text"
@@ -106,11 +110,6 @@ export function Editor({ discussion, templates, commands }: EditorProps) {
             onSelectionChange={setSelection}
           >
           </Textarea>
-          <div className={style.buttons + ' buttons row'}>
-            <Button onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length}>Undo</Button>
-            <Button onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length}>Redo</Button>
-            <Button onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id}>New</Button>
-          </div>
         </div>
         <div className={style.chatColumn}>
           <EditorChat
@@ -126,5 +125,31 @@ export function Editor({ discussion, templates, commands }: EditorProps) {
         </div>
       </div>
     </>
+  )
+}
+
+function UndoIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path fillRule="evenodd" d="M6.5 3.5a5 5 0 1 1-4.545 2.914.5.5 0 0 0 .909-.417A4 4 0 1 0 6.5 4.5v1z" />
+      <path d="M6.5 4.466V.534a.25.25 0 0 0-.41-.192L3.73 2.308a.25.25 0 0 0 0 .384l2.36 1.966a.25.25 0 0 0 .41-.192z" />
+    </svg>
+  )
+}
+
+function RedoIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style={{ transform: 'scaleX(-1)' }}>
+      <path fillRule="evenodd" d="M6.5 3.5a5 5 0 1 1-4.545 2.914.5.5 0 0 0 .909-.417A4 4 0 1 0 6.5 4.5v1z" />
+      <path d="M6.5 4.466V.534a.25.25 0 0 0-.41-.192L3.73 2.308a.25.25 0 0 0 0 .384l2.36 1.966a.25.25 0 0 0 .41-.192z" />
+    </svg>
+  )
+}
+
+function NewIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 3a.75.75 0 0 1 .75.75v3.5h3.5a.75.75 0 0 1 0 1.5h-3.5v3.5a.75.75 0 0 1-1.5 0v-3.5h-3.5a.75.75 0 0 1 0-1.5h3.5v-3.5A.75.75 0 0 1 8 3z" />
+    </svg>
   )
 }
