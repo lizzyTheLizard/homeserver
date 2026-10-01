@@ -79,6 +79,33 @@ describe('loadEditorData', () => {
     expect(result.discussion).toEqual(expect.objectContaining(input))
   })
 
+  test('Existing Discussion loads command history', async ({ task }) => {
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
+    const commandInput: CommandInput = { id: randomUUID(), discussion_id: input.id, text: 'New text', predefined_command: 'INITIALIZE', context: 'context', language: 'en', result: { text: 'Result text', title: 'Result title', durationMs: 100 } }
+    await transactional(async (tx) => {
+      await createOrModifyTemplate(tx, task.id, templateInput)
+      await createDiscussion(tx, task.id, input)
+      await createCommand(tx, task.id, commandInput)
+    })
+
+    const result = await loadEditorData(input.id)
+
+    expect(result.commands).toHaveLength(1)
+    expect(result.commands[0]).toEqual(expect.objectContaining(commandInput))
+  })
+
+  test('No discussion loads no commands', async ({ task }) => {
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+
+    const result = await loadEditorData(undefined)
+
+    expect(result.commands).toEqual([])
+  })
+
   test('Not existing Discussion', async ({ task }) => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)

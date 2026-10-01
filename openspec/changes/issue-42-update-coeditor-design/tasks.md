@@ -21,7 +21,7 @@
 
 ## 5. Editor Chat Backend & State
 
-- [ ] 5.1 Extend `loadEditorData` in `editor/server.ts` to also load the discussion's command history via `findCommandsByDiscussion` and expose it in `EditorData`; add a test in `editor/server.tests.ts` covering command-history loading. Verify the editor integration tests pass
+- [x] 5.1 Extend `loadEditorData` in `editor/server.ts` to also load the discussion's command history via `findCommandsByDiscussion` and expose it in `EditorData`; add a test in `editor/server.tests.ts` covering command-history loading. Verify the editor integration tests pass
 - [ ] 5.2 Extend the editor state (`editor/_helper/Editor.state.ts`): add chat `messages` seeded from the loaded commands, and append a user-request/assistant-response pair on `COMMAND_EXECUTED`; extend `Editor.state.tests.ts` accordingly. Verify the editor unit tests pass
 
 ## 6. Editor Chat UI & Layout

@@ -35,7 +35,7 @@ export function findNumberOfCommands(client: Queryable, since?: string): Promise
 
 export async function findCommandsByDiscussion(client: Queryable, discussionId: string): Promise<Command[]> {
   const result = await client.query<Command>(
-    'SELECT * FROM command WHERE discussion_id = $1',
+    'SELECT * FROM command WHERE discussion_id = $1 ORDER BY created_at ASC',
     [discussionId],
   )
   logger.debug(`Found ${result.rows.length.toString()} existing commands for discussion ${discussionId}`)
