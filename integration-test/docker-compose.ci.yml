@@ -50,6 +50,8 @@ services:
       DB_CONNECTION_STRING: postgres://homeserver:smoke-test-db-password@postgresprod:5432/homeserver?sslmode=disable
       # The mock IdP serves a self-signed cert; the app must accept it.
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      # The one real secret of the smoke flow (CI secret or the local ../.env).
+      AI_API_KEY: ${AI_API_KEY:-}
 
   assistant:
     env_file:
