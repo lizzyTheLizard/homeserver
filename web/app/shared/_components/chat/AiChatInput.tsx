@@ -17,6 +17,7 @@ export interface AiChatInputProps {
   onChange: (value: string) => void
   onSubmit: (text: string) => void
   disabled?: boolean
+  actionsDisabled?: boolean
   placeholder?: string
   actions?: AiChatInputAction[]
   status?: ChatState
@@ -27,6 +28,7 @@ export function AiChatInput({
   onChange,
   onSubmit,
   disabled = false,
+  actionsDisabled = false,
   placeholder,
   actions,
   status,
@@ -142,7 +144,7 @@ export function AiChatInput({
       {actions && actions.length > 0 && (
         <AiActionList
           actions={actions.map(action => ({ label: action.label, onSelect: () => { selectAction(action) } }))}
-          disabled={disabled}
+          disabled={disabled || actionsDisabled}
         />
       )}
       <form onSubmit={handleFormSubmit} className={styles.inputRow}>

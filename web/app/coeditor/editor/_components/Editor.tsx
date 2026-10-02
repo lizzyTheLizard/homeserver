@@ -106,7 +106,8 @@ export function Editor({ discussion, templates }: EditorProps) {
         value={customCommand}
         onChange={setCustomCommand}
         onSubmit={() => { execute() }}
-        disabled={!state.contextValid || state.text.length === 0}
+        disabled={!state.contextValid}
+        actionsDisabled={state.text.length === 0}
         placeholder="Custom command…"
         actions={PROPOSED_ACTIONS.map(action => ({ label: predefinedCommandLabel(action) ?? '', onSelect: () => { execute(action) } }))}
       />

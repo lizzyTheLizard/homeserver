@@ -59,6 +59,21 @@ export const Disabled: Story = {
   },
 }
 
+export const ActionsDisabledInputEnabled: Story = {
+  args: {
+    actionsDisabled: true,
+    actions: [{ label: 'Improve' }, { label: 'Summarize' }],
+  },
+  play: async ({ canvasElement }) => {
+    const input = getInput(canvasElement)
+    await expect(input).toBeEnabled()
+    await fireEvent.change(input, { target: { value: 'draft' } })
+    await expect(within(canvasElement).getByRole('button', { name: 'Improve' })).toBeDisabled()
+    await expect(within(canvasElement).getByRole('button', { name: 'Summarize' })).toBeDisabled()
+    await expect(within(canvasElement).getByRole('button', { name: 'Send' })).toBeEnabled()
+  },
+}
+
 export const MultiLineEntry: Story = {
   play: async ({ canvasElement }) => {
     const input = getInput(canvasElement)
