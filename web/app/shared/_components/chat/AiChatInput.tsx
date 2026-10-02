@@ -139,12 +139,6 @@ export function AiChatInput({
   return (
     <div className={styles.container}>
       {status && <AiConnectionStatusIndicator state={status} />}
-      {actions && actions.length > 0 && (
-        <AiActionList
-          actions={actions.map(action => ({ label: action.label, onSelect: () => { selectAction(action) } }))}
-          disabled={disabled}
-        />
-      )}
       <form onSubmit={handleFormSubmit} className={styles.inputRow}>
         <textarea
           ref={textareaRef}
@@ -161,6 +155,12 @@ export function AiChatInput({
           <Icon name="send" className={styles.sendIcon} style={{ width: 13, height: 13 }} />
         </button>
       </form>
+      {actions && actions.length > 0 && (
+        <AiActionList
+          actions={actions.map(action => ({ label: action.label, onSelect: () => { selectAction(action) } }))}
+          disabled={disabled}
+        />
+      )}
     </div>
   )
 }
