@@ -1,4 +1,5 @@
 'use client'
+import { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { Template } from '../../_data/Template'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
@@ -11,6 +12,7 @@ import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Templates.module.css'
 
 export interface TemplatesProps {
   templates?: Template[]
@@ -42,6 +44,16 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
     openSidebar()
   }
 
+  function renderMobile(template: Template): ReactNode {
+    return (
+      <div key={template.id} className={style.mobileItem} onClick={() => { showTemplate(template) }}>
+        <div className={style.mobileTitle}>{template.name}</div>
+        <div className={style.mobileMeta}>{template.language}</div>
+        <div className={style.mobileText}>{template.text}</div>
+      </div>
+    )
+  }
+
   return (
     <>
       <h2>Templates</h2>
@@ -51,6 +63,7 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
         columns={templateColumns}
         data={templates}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        renderMobile={renderMobile}
       />
       <Sidebar
         id={sidebarId}

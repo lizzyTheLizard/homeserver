@@ -222,7 +222,7 @@ export const ActionsSubmitTheirLabel: Story = {
   play: async ({ canvasElement, args }) => {
     const chip = await within(canvasElement).findByRole('button', { name: 'Improve' })
     const form = getInput(canvasElement).closest('form')
-    expect(form).not.toBeNull()
+    await expect(form).not.toBeNull()
     await expect(chip.compareDocumentPosition(form as Element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await fireEvent.click(chip)
     await expect(args.onSubmit).toHaveBeenCalledWith('Improve')

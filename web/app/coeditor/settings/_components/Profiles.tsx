@@ -1,4 +1,5 @@
 'use client'
+import { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { Profile } from '../../_data/Profile'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
@@ -11,6 +12,7 @@ import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Profiles.module.css'
 
 export interface ProfilesProps {
   profiles?: Profile[]
@@ -40,6 +42,15 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
     openSidebar()
   }
 
+  function renderMobile(profile: Profile): ReactNode {
+    return (
+      <div key={profile.id} className={style.mobileItem} onClick={() => { showProfile(profile) }}>
+        <div className={style.mobileTitle}>{profile.language}</div>
+        <div className={style.mobileText}>{profile.text}</div>
+      </div>
+    )
+  }
+
   return (
     <>
       <h2>Profiles</h2>
@@ -49,6 +60,7 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
         columns={profileColumns}
         data={profiles}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        renderMobile={renderMobile}
       />
       <Sidebar
         id={sidebarId}
