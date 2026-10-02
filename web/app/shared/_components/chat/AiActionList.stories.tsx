@@ -16,7 +16,7 @@ export const Normal: StoryObj<typeof meta> = {
   play: async ({ canvasElement, args }) => {
     const first = await within(canvasElement).findByRole('button', { name: 'Improve' })
     await fireEvent.click(first)
-    await expect(args.actions?.[0]?.onSelect).toHaveBeenCalled()
+    await expect(args.actions[0].onSelect).toHaveBeenCalled()
   },
 }
 

@@ -31,7 +31,13 @@ export function History({ discussions = [] }: HistoryProps) {
         <div className={style.mobileTitle}>{discussion.title}</div>
         <div className={style.mobileMeta}>
           <DateTime date={discussion.updated_at} oneLine />
-          {discussion.context && <span> · {discussion.context}</span>}
+          {discussion.context && (
+            <span>
+              {' '}
+              ·
+              {discussion.context}
+            </span>
+          )}
         </div>
         <div className={style.mobileText}>{discussion.text}</div>
       </div>
