@@ -20,11 +20,17 @@
   font-weight: 500;
   transition: background 0.12s, border-color 0.12s;
   white-space: nowrap;
+  width: initial;
 }
 
-.chip:hover {
+.chip:hover:not(:disabled) {
   background: rgba(0,0,210,0.13);
   border-color: rgba(0,0,210,0.45);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 @media (max-width: 600px) {

@@ -16,7 +16,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         <ActionTitle>
           <h1>CoEditor</h1>
         </ActionTitle>
-        <Editor discussion={editorData.discussion} templates={editorData.templates} />
+        <Editor {...editorData} />
       </main>
     )
   })

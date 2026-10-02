@@ -141,9 +141,15 @@ importers:
 
   web:
     dependencies:
+      '@ai-sdk/groq':
+        specifier: ^4.0.47
+        version: 4.0.47(zod@4.6.5)
       '@js-temporal/polyfill':
         specifier: ^0.5.1
         version: 0.5.1
+      ai:
+        specifier: ^7.0.123
+        version: 7.0.123(zod@4.6.5)
       iron-session:
         specifier: ^9.0.1
         version: 9.0.1

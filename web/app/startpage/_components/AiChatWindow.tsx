@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { AiChatMessageList, Message } from './AiChatMessageList'
-import { AiActionsList } from './AiActionsList'
-import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
+import { AiChatInput } from '@/app/shared/_components/chat/AiChatInput'
+import { Icon } from '@/app/shared/_components/Icon'
 import { AiChatWebSocket, ChatState } from './AiChatWebSocket'
 import styles from './AiChatWindow.module.css'
 import { getLocation } from '../_helper/location'
@@ -15,14 +15,13 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const [state, setState] = useState<ChatState>({ type: 'initial' })
   const [incomingMessage, setIncomingMessage] = useState('')
   const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const sentMessageHistory = useRef<string[]>([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
-  const editedHistory = useRef<string | null>(null)
-  const pendingCaretRef = useRef<number | null>(null)
 
   const canInput = state.type === 'ready'
-  const canSend = canInput && input.trim().length > 0
+  const retryLabel = state.type === 'wait-for-reconnecting'
+    ? 'Retry now'
+    : state.type === 'automatic-reconnecting-exhausted'
+      ? 'Retry again'
+      : undefined
 
   useEffect(() => {
     const websocket = connectWebSocket()
@@ -32,24 +31,6 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       webSocketRef.current = undefined
     }
   }, [])
-
-  useEffect(() => {
-    if (state.type === 'ready') {
-      inputRef.current?.focus()
-    }
-  }, [state.type])
-
-  useEffect(() => {
-    const el = inputRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${String(el.scrollHeight)}px`
-    const caret = pendingCaretRef.current
-    if (caret !== null) {
-      pendingCaretRef.current = null
-      el.setSelectionRange(caret, caret)
-    }
-  }, [input])
 
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
@@ -61,11 +42,6 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     return websocket
   }
 
-  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault()
-    send(input)
-  }
-
   function handleEdit(editedText: string) {
     send(`I updated the text\n~~~input\n${editedText}\n~~~`)
   }
@@ -74,59 +50,9 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     const t = text.trim()
     if (!t) return
     setInput('')
-    sentMessageHistory.current = [...sentMessageHistory.current, t]
-    setHistoryIndex(-1)
-    editedHistory.current = null
     setMessages(prev => [...prev, { role: 'user', content: text, id: prev.length }])
     setActions([])
     webSocketRef.current?.sendMessage(t)
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter') {
-      if (e.nativeEvent.isComposing) return
-      if (e.ctrlKey || e.metaKey || e.shiftKey) {
-        e.preventDefault()
-        const el = e.currentTarget
-        const start = el.selectionStart
-        const end = el.selectionEnd
-        pendingCaretRef.current = start + 1
-        setInput(`${input.slice(0, start)}\n${input.slice(end)}`)
-        return
-      }
-      e.preventDefault()
-      send(input)
-      return
-    }
-
-    const el = inputRef.current
-    if (e.key === 'ArrowUp') {
-      if (el?.selectionStart !== 0 || el.selectionEnd !== 0) return
-      e.preventDefault()
-      const history = sentMessageHistory.current
-      if (history.length === 0) return
-      if (historyIndex === -1) {
-        editedHistory.current = input
-      }
-      const nextIndex = Math.min(historyIndex + 1, history.length - 1)
-      setHistoryIndex(nextIndex)
-      setInput(history[history.length - 1 - nextIndex])
-    }
-    else if (e.key === 'ArrowDown') {
-      if (el?.selectionStart !== input.length || el.selectionEnd !== input.length) return
-      e.preventDefault()
-      if (historyIndex === -1) return
-      if (historyIndex === 0) {
-        setHistoryIndex(-1)
-        setInput(editedHistory.current ?? '')
-        editedHistory.current = null
-      }
-      else {
-        const nextIndex = historyIndex - 1
-        setHistoryIndex(nextIndex)
-        setInput(sentMessageHistory.current[sentMessageHistory.current.length - 1 - nextIndex])
-      }
-    }
   }
 
   function handleRestart() {
@@ -137,29 +63,25 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     setActions([])
     setState({ type: 'initial' })
     setIncomingMessage('')
-    sentMessageHistory.current = []
-    setHistoryIndex(-1)
-    editedHistory.current = null
     const websocket = connectWebSocket()
     webSocketRef.current = websocket
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setInput(e.target.value)
-    if (historyIndex >= 0) {
-      setHistoryIndex(-1)
-      editedHistory.current = null
-    }
+  function handleRetry() {
+    webSocketRef.current?.forceReconnect()
   }
 
   return (
     <div className={styles.window}>
       <div className={styles.header}>
+        {retryLabel && (
+          <button className={styles.restartButton} onClick={handleRetry} title="Retry connection">
+            <Icon name="reconnect" style={{ width: 14, height: 14 }} />
+            {retryLabel}
+          </button>
+        )}
         <button className={styles.restartButton} onClick={handleRestart} title="Restart conversation">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
-          </svg>
+          <Icon name="restart" style={{ width: 14, height: 14 }} />
           Restart
         </button>
       </div>
@@ -170,37 +92,15 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
         onEdit={handleEdit}
         hasActions={actions.length > 0}
       />
-      {!loading && (
-        <AiConnectionStatusIndicator
-          state={state}
-          onRetry={() => { webSocketRef.current?.forceReconnect() }}
-          onRestart={handleRestart}
-        />
-      )}
-      <AiActionsList state={state} actions={actions} onSend={send} />
-      <form onSubmit={handleSubmit} className={styles.inputRow}>
-        <textarea
-          ref={inputRef}
-          rows={1}
-          disabled={!canInput}
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask me anything…"
-          className={styles.input}
-        />
-        <button type="submit" disabled={!canSend} className={styles.sendButton}>
-          <SendIcon />
-        </button>
-      </form>
+      <AiChatInput
+        value={input}
+        onChange={setInput}
+        onSubmit={send}
+        disabled={!canInput}
+        placeholder="Ask me anything…"
+        status={loading ? undefined : state}
+        actions={state.type === 'ready' ? actions.map(action => ({ label: action })) : undefined}
+      />
     </div>
-  )
-}
-
-function SendIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" className={styles.sendIcon}>
-      <path d="M6.5 11V2M2 6.5l4.5-4.5 4.5 4.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }

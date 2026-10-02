@@ -23,7 +23,7 @@ vi.mock('@/app/shared/auth/auth', async () => {
 // Mock AI
 vi.mock('../_external/AiPort', () => {
   return {
-    aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title', durationMs: 100 }),
+    aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title' }),
   }
 })
 
@@ -295,7 +295,7 @@ describe('executeCommandAction AI integration', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
     const input1 = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
-    const input2 = { id: randomUUID(), discussion_id: input1.id, text: 'New text', predefined_command: 'INITIALIZE', context: 'context', language: 'en', result: { text: 'Result text', title: 'Result title', durationMs: 100 } } as CommandInput
+    const input2 = { id: randomUUID(), discussion_id: input1.id, text: 'New text', predefined_command: 'INITIALIZE', context: 'context', language: 'en', result: { text: 'Result text', title: 'Result title' } } as CommandInput
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input1)

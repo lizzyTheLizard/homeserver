@@ -1,33 +1,55 @@
 .textarea {
     margin-top: var(--gap-small);
     flex-grow: 1;
+    min-height: 0;
 }
 
-.chatRow{
-    margin-top: var(--gap-small);
+.toolbar {
     display: flex;
-    gap: var(--gap-small);
-}
-
-.chatRow div {
-    flex-grow: 1;
-}
-
-.chatRow button {
-   width: initial;
-}
-
-.error{
-    color: red;
-}
-
-.buttons {
-    display: flex;
-    gap: var(--gap-small);
+    justify-content: flex-end;
+    gap: 0.25rem;
     margin-top: var(--gap-small);
 }
 
-.buttons button {
+.iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: none;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, background 0.15s;
+}
+
+.iconButton:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.iconButton:disabled {
+    color: #ccc;
+    background: transparent;
+    cursor: default;
+}
+
+.error {
+    color: var(--danger-background-color);
+}
+
+.editorPage {
+    display:flex;
+    flex-direction: column;
     flex-grow: 1;
-    width: initial;
+}
+
+@media (max-width: 600px) {
+    .editorPage {
+        height: calc(100vh - 13rem);
+        padding-top: 1rem;
+        box-sizing: border-box;
+    }
 }

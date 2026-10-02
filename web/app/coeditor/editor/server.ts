@@ -59,7 +59,9 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
     const profile = await findProfileByOwnerAndLanguage(tx, user.email, template.language)
     const aiPortInput = toAiPortInput(input, discussion, template, profile)
     const pastCommands = await findCommandsByDiscussion(tx, input.discussion_id)
-    const commandResult = await aiPort(aiPortInput, pastCommands)
+    const commandResult = isNewRequestWithoutContext(input, discussion, aiPortInput.context)
+      ? { text: '', title: '' }
+      : await aiPort(aiPortInput, pastCommands)
     const updatedDiscussion = toDiscussionInput(input, aiPortInput.context, commandResult)
     const result = discussion
       ? await modifyDiscussion(tx, user.email, updatedDiscussion)
@@ -123,6 +125,10 @@ function toCommand(input: ExecuteCommandInput, aiInput: AiPortInput, commandResu
     result: commandResult,
     language: aiInput.language,
   }
+}
+
+function isNewRequestWithoutContext(input: ExecuteCommandInput, discussion: Discussion | undefined, context: string): boolean {
+  return discussion === undefined && input.predefined_command === 'INITIALIZE' && !context.trim()
 }
 
 const ExecuteCommandInputSchema = z.object({

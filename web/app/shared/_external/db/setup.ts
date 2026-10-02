@@ -29,6 +29,7 @@ export async function setupPool(): Promise<Pool> {
   try {
     logger.debug('Setting up database connection')
     const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING, max: 100 })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment -- all TYPE_MAPPINGS OIDs are members of pg's TypeId enum, so the runtime value is safe
     Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
 
     const connStart = Date.now()

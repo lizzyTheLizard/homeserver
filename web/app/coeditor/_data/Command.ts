@@ -23,7 +23,6 @@ export type PredefinedCommandType = typeof PREDEFINED_COMMAND_TYPES[number]
 export interface CommandResult {
   text: string
   title: string
-  durationMs: number
 }
 
 export function findNumberOfCommands(client: Queryable, since?: string): Promise<number> {

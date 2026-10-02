@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { AiMessageBubble } from './AiMessageBubble'
+import { AiMessageBubble } from '@/app/shared/_components/chat/AiMessageBubble'
 import styles from './AiChatMessageList.module.css'
 import { ChatState } from './AiChatWebSocket'
 

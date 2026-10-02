@@ -1,0 +1,72 @@
+# Design
+
+## Context
+
+See proposal.md — Why. This is a restyle of the CoEditor pages to the application's new design language, plus a functional fix: the editor's `aiPort` was a stub, so command execution is restored with a Groq-backed implementation.
+
+Current state (observed):
+
+- The CoEditor pages already use the shared component library (`web/app/shared/_components/`): `Button`, `Input`, `Textarea`, `DataTable`, `ActionTitle`, `Sidebar`, and the shared layout (`Header` + `SidebarContainer` in `web/app/layout.tsx`). Page shells wrap content via `serverPageFunction` in a `<main>`.
+- The CoEditor-specific styling (`Editor.module.css`, `EditorContext.module.css`) only defines layout/spacing (`--gap`, `--gap-small`) — no colors. Settings sections render bare `<h2>` + `DataTable` blocks.
+- The new design language already exists in the repo: the start page mockups (`design/Start Page.html`, `design/Start-Page-Mobile.html`, `design/StartPage/`) and its implementation (`web/app/startpage/`), which applies `color: #1a1a2e` (navy) directly in its CSS modules, greys for secondary text, white background, the system font stack, and the existing tokens (`--gap`, `--gap-small`, `--border-radius` from `web/public/global.css`).
+- `web/app/coeditor/_external/AiPort.ts` is a stub that throws; the editor's `executeCommand` server action calls it, so the editor cannot run commands until it is implemented.
+
+There is no CoEditor-specific mockup; the start page mockups are the design source of truth, per the decision recorded on issue #42.
+
+## Goals / Non-Goals
+
+**Goals:**
+- Make editor, history, and settings pages visually match the new design language (navy headings/primary text, grey secondary text, white background, system font, card-based, consistent spacing/radius).
+- Adjust the editor controls to the new design: Undo/Redo/New as small icon buttons above the text area (top-right), the predefined commands as proposed-action chips below the custom-command input bar (single-column layout).
+- Implement `aiPort` with Groq so the editor can execute commands again, keeping the implementation local to the CoEditor (not shared with the assistant service).
+- Keep the diff local and low-risk: styling/class changes only, no component behavior or state changes for history/settings.
+
+**Non-Goals:**
+- No assistant-service / WebSocket changes — command execution stays the existing server action and returns one response per command.
+- No database schema changes and no server-side command-history loading for the editor page.
+- No redesign of CoEditor functionality or information architecture beyond the editor layout.
+
+## Decisions
+
+### D1: Apply the tokens like the start page does — in CoEditor CSS modules
+Use `color: #1a1a2e` (navy) for headings and primary text, greys (`#333`, `#666`, `#888`, `#aaa`) for secondary text in the CoEditor CSS modules, mirroring `web/app/startpage/` (e.g. `AiMessageBubble.module.css`, `EditableBlock.module.css`).
+
+- **Rationale**: the reference implementation (start page) applies the navy directly; following the same pattern keeps the change consistent and local to `web/app/coeditor/`.
+- **Alternative considered**: introducing a shared token (e.g. `--heading-text-color`) in `web/public/global.css` and switching the start page to it. Rejected for this change: it widens the diff into shared code and the start page, and the issue asks only for CoEditor. Centralizing the navy token is a possible follow-up (see Open Questions).
+
+### D2: Reuse shared components; add card-like surfaces only where CoEditor has custom blocks
+The pages keep using the shared `Button`, `Input`, `Textarea`, `DataTable`, `ActionTitle`, `Sidebar`. CoEditor-specific blocks (the editor text area + command rows, the template/parameter context, and the settings sections) get card-like surface styling via the existing tokens (`--gap`, `--gap-small`, `--border-radius`, `--default-background-color`, `--default-border-color`), matching the look of the start page cards.
+
+- **Rationale**: the shared components already carry the application styling (see spec — "Shared components appear with application styling"); the deltas are the custom blocks and heading styles.
+- **Alternative considered**: wrapping content in the shared `Card` component (used by cash). Not applied uniformly because the start page reference does not use `Card` for its surfaces; section-level styling in the CoEditor modules matches the reference more closely.
+
+### D3: Editor controls — icon buttons and proposed-action chips
+The editor stays a single column. Undo/Redo/New render as small icon-only buttons (inline SVG, `fill="currentColor"`, mirroring the start-page restart button style) in a toolbar above the text area, aligned right; enabled buttons are navy `#1a1a2e`, disabled ones faint grey `#ccc`, so the state is clear at a glance. The custom-command input (shared `Input`) + Send button sit in an input row directly below the text area, followed by the proposed actions (Improve, Reformulate, Summarize, Extend) rendered as start-page-style blue chips that trigger the respective predefined commands.
+
+- **Rationale**: matches the start page's icon-button and action-chip patterns; keeps the original single-column information flow.
+
+### D4: `aiPort` implemented locally against Groq
+`web/app/coeditor/_external/AiPort.ts` implements the assistant call with the `ai` SDK's `generateText` (structured JSON output via `Output.json()`) against the `@ai-sdk/groq` provider — the same `ai`/`@ai-sdk/groq` versions the assistant package uses, added to the web package's dependencies — with model `openai/gpt-oss-120b`, temperature 0.2 and low reasoning effort, mirroring the assistant's parameters. It does not import the assistant's code ("copy, don't share"). The CoEditor contract from the previous OpenAI-based implementation is preserved: system prompt, command → message mapping (including prior commands as history), JSON response parsed and validated with the zod schema, selection replacement via `getFullNewText`. A custom `fetch` wraps the provider request to log request/response bodies when `AI_LOG_REQUEST_RESPONSE` is set. `web/app/shared/config.ts` gains an `AI` section reading `AI_API_KEY` (same env name as the assistant) and `AI_LOG_REQUEST_RESPONSE`.
+
+- **Alternative considered**: plain `fetch` against Groq's OpenAI-compatible endpoint (`https://api.groq.com/openai/v1/chat/completions`) with no new dependencies. Rejected: the `ai` SDK provides structured JSON output, provider-level request/response logging and a typed message flow for free, and using the same provider stack as the assistant keeps the AI setup consistent across packages (same `ai`/`@ai-sdk/groq` versions).
+
+### D5: Share the AI chat input as a reusable `AiChatInput` component
+The start page's chat input block is extracted into `web/app/shared/_components/chat/AiChatInput.tsx` (with the action chips in a dedicated `AiActionList` component) and reused by both the start-page `AiChatWindow` and the CoEditor `Editor`, so the two command UIs stay identical and the editor's proposed-action chips match the start page exactly. The message bubbles (`AiMessageBubble`) and the inline-edit block (`EditableBlock`) move into the same shared `chat/` folder, keeping the folder self-contained. The component owns the auto-resizing textarea, Enter-to-send / Ctrl/Shift+Enter-newline handling, ArrowUp/ArrowDown sent-message history, the action chips, the send button, and the AI connection status indicator; `ChatState` and `AiConnectionStatusIndicator` move into the shared `chat/` folder (`AiChatState.ts`, `AiConnectionStatusIndicator.*`) with `AiChatWebSocket` re-exporting `ChatState` so the start page imports stay stable. The action chips always render above the input row and the input row is always fixed to the bottom on small screens (start-page behavior, applied uniformly — no per-consumer props). A newline-Enter (Ctrl/Shift/Cmd+Enter) auto-scrolls the textarea so the caret stays visible when the content overflows. ArrowUp/ArrowDown recall the sent-message history: the caret-boundary check (start for up, end for down) only applies when entering history mode, so repeated presses scroll through all entries without extra presses, and the caret is reset to start/end after each recall. `status` is only provided by the chat window (the editor has no connection state); the status indicator renders the connection message only, while the retry ("Retry now"/"Retry again") and restart actions live in the chat window header as normal buttons (restart button always, retry button only while a retry is possible). Action chips without a custom `onSelect` submit their label through the shared submit path (chat suggestions enter the arrow-key history), while the editor chips pass `onSelect` to run the predefined command. The restart, send and reconnect icons are added to the shared `Icon` library.
+
+- **Rationale**: the editor's command area and the start page's chat input were near-duplicates of the same interaction (textarea, send, suggestion chips, status) with separate implementations; extracting the shared component removes the duplication and keeps the two UIs consistent as the new design language evolves.
+- **Alternative considered**: keeping `AiActionsList` and `AiConnectionStatusIndicator` in the start page and importing them into the shared component. Rejected: the shared component would then depend on start-page modules, and the start page would keep owning the reused UI; moving the building blocks into shared keeps the dependency direction clean.
+
+## Risks / Trade-offs
+
+- [Navy color duplicated across CSS modules] → Mitigation: same value as the start page (`#1a1a2e`), so no drift vs. the reference; centralization can follow later.
+- [Groq API availability/shape] → Mitigation: the implementation targets Groq's OpenAI-compatible API with the same model the assistant uses; failures surface as clear errors via the existing error path and `AI_LOG_REQUEST_RESPONSE` logs.
+- [Visual regression on pages with Storybook/Playwright interaction tests] → Mitigation: run the web tests (unit, integration, storybook) and review each page in the browser before committing each task.
+- [Shared components changed accidentally while restyling] → Mitigation: the restyle only touches `web/app/coeditor/` and `web/app/shared/config.ts`; shared components are imported, not edited (verified via `git status` per commit).
+
+## Migration Plan
+
+No data migration. The web app is deployed from the repo `Dockerfile`; each task lands as its own commit and the change ships as one PR (standard `gh-change-ship` flow). The `AI_API_KEY` environment variable already exists in the deployment env (the assistant uses it), so no new secrets are required. Rollback is a revert of the PR.
+
+## Open Questions
+
+- Whether the navy heading color should later become a shared token in `web/public/global.css` — deferrable, does not affect this change's approach or tasks.

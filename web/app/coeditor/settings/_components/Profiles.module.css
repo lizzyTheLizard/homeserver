@@ -1,0 +1,25 @@
+.mobileItem {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid rgba(230,230,230,1);
+  cursor: pointer;
+  background: white;
+}
+
+.mobileItem:hover {
+  background: var(--default-hover-color);
+}
+
+.mobileTitle {
+  font-weight: 600;
+  color: #1a1a2e;
+  word-break: break-word;
+}
+
+.mobileText {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+}

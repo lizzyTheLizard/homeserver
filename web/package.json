@@ -15,7 +15,9 @@
     "chromatic": "chromatic"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^4.0.47",
     "@js-temporal/polyfill": "^0.5.1",
+    "ai": "^7.0.123",
     "iron-session": "^9.0.1",
     "next": "^16.3.6",
     "openid-client": "^6.8.8",
