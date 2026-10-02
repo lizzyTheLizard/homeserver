@@ -51,13 +51,20 @@ export class Supervisor {
           ]
         : ['auth', '--events']
       let gotResult = false
+      logger.debug(`[${this.userId}] starting wacli sync`)
       return new Promise((res, rej) => {
         this.child = spawnWacli(this.storeDir, args, (event) => {
           const isResult = this.handleEvent(event)
           if (!isResult || gotResult) return
           gotResult = true
-          if (this.status.type === 'connected') res(this.status)
-          else if (this.status.type === 'needAuth') res (this.status)
+          if (this.status.type === 'connected') {
+            logger.info(`[${this.userId}] started wacli sync, now connected`)
+            res(this.status)
+          }
+          else if (this.status.type === 'needAuth') {
+            logger.info(`[${this.userId}] started wacli sync, but needs auth`)
+            res (this.status)
+          }
           else rej(new Error('Could not start wacli status is now ' + this.status.type))
         })
       })
@@ -67,7 +74,7 @@ export class Supervisor {
   private handleEvent(event: WacliEvent): boolean {
     switch (event.event) {
       case 'closed':
-        logger.debug(`[${this.userId}] wacli session was closed`)
+        logger.info(`[${this.userId}] wacli session was closed`)
         this.status = { type: 'closed' }
         this.child = null
         return true
@@ -109,11 +116,11 @@ export class Supervisor {
       // Check if process is already stopped
       if (child.exitCode !== null || child.signalCode !== null) return
       this.isStopping = true
-      logger.info(`[${this.userId}] stop wacli session using sigterm`)
+      logger.debug(`[${this.userId}] stop wacli sync`)
       return new Promise<void>((res) => {
         // Send a kill after 5s if child does not close, independant of the event loop
         const killTimer = setTimeout(() => {
-          logger.warn(`[${this.userId}] wacl dit not terminate normally, kill it`)
+          logger.warn(`[${this.userId}] wacli sync dit not terminate normally, kill it`)
           child.kill('SIGKILL')
           this.isStopping = false
           res()
@@ -125,7 +132,7 @@ export class Supervisor {
           clearTimeout(killTimer)
           this.status = { type: 'closed' }
           this.isStopping = false
-          logger.info(`[${this.userId}] stopped normally`)
+          logger.info(`[${this.userId}] wacli sync has been stopped normally using sigterm`)
           res()
         })
 
