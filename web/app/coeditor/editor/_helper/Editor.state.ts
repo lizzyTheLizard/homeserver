@@ -1,12 +1,6 @@
 import { Discussion } from '../../_data/Discussion'
 import { Template } from '../../_data/Template'
-import { Command, PredefinedCommandType } from '../../_data/Command'
-
-export interface ChatMessage {
-  id: number
-  role: 'user' | 'assistant'
-  content: string
-}
+import { PredefinedCommandType } from '../../_data/Command'
 
 export interface EditorState {
   text: string
@@ -16,10 +10,9 @@ export interface EditorState {
   template: Template
   parameters: Record<string, string>
   contextValid: boolean
-  messages: ChatMessage[]
 }
 
-export function initialState(discussion: Discussion | undefined, templates: Template[], commands: Command[] = []): EditorState {
+export function initialState(discussion: Discussion | undefined, templates: Template[]): EditorState {
   const template = discussion
     ? templates.find(t => t.id === discussion.template_id) ?? templates[0]
     : templates[0]
@@ -32,12 +25,11 @@ export function initialState(discussion: Discussion | undefined, templates: Temp
     text: discussion?.text ?? '',
     lastText: discussion?.text ?? '',
     contextValid: isValid(template, parameters),
-    messages: commandsToMessages(commands),
   }
 }
 
 export type EditorStateAction
-  = { type: 'COMMAND_EXECUTED', discussion: Discussion, restart: boolean, userMessage: string, assistantMessage: string }
+  = { type: 'COMMAND_EXECUTED', discussion: Discussion, restart: boolean }
     | { type: 'TEXT_BLUR' }
     | { type: 'TEXT_CHANGE', text: string }
     | { type: 'TEMPLATE_CHANGE', template: Template }
@@ -48,16 +40,11 @@ export type EditorStateAction
 export function editorStateReducer(state: EditorState, action: EditorStateAction): EditorState {
   switch (action.type) {
     case 'COMMAND_EXECUTED':{
-      const pair: ChatMessage[] = [
-        { id: state.messages.length, role: 'user', content: action.userMessage },
-        { id: state.messages.length + 1, role: 'assistant', content: action.assistantMessage },
-      ]
       return {
         ...state,
         text: action.discussion.text,
         undoStack: action.restart ? [] : [...state.undoStack, state.text],
         redoStack: [],
-        messages: action.restart ? pair : [...state.messages, ...pair],
       }
     }
     case 'TEMPLATE_CHANGE':{
@@ -117,6 +104,17 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
   }
 }
 
+export function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
+  switch (command) {
+    case 'INITIALIZE': return 'Initialize'
+    case 'IMPROVE': return 'Improve'
+    case 'REFORMULATE': return 'Reformulate'
+    case 'SUMMARIZE': return 'Summarize'
+    case 'EXTEND': return 'Extend'
+    default: return undefined
+  }
+}
+
 function isValid(template: Template | undefined, parameters: Record<string, string>): boolean {
   if (!template) return false
   for (const param of template.parameters) {
@@ -137,27 +135,4 @@ function removeKey<T>(obj: Record<string, T>, key: string): Record<string, T> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { [key]: _, ...rest } = obj
   return rest
-}
-
-function commandsToMessages(commands: Command[]): ChatMessage[] {
-  const messages: ChatMessage[] = []
-  for (const command of commands) {
-    const request = command.custom_command ?? predefinedCommandLabel(command.predefined_command)
-    if (request !== undefined) {
-      messages.push({ id: messages.length, role: 'user', content: request })
-    }
-    messages.push({ id: messages.length, role: 'assistant', content: command.result.text })
-  }
-  return messages
-}
-
-export function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
-  switch (command) {
-    case 'INITIALIZE': return 'Initialize'
-    case 'IMPROVE': return 'Improve'
-    case 'REFORMULATE': return 'Reformulate'
-    case 'SUMMARIZE': return 'Summarize'
-    case 'EXTEND': return 'Extend'
-    default: return undefined
-  }
 }

@@ -7,7 +7,7 @@ import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
 import { logEvent } from '@/app/shared/_data/Event'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { Command, CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES, PredefinedCommandType } from '../_data/Command'
+import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES, PredefinedCommandType } from '../_data/Command'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { findProfileByOwnerAndLanguage, Profile } from '../_data/Profile'
@@ -17,7 +17,6 @@ import z from 'zod'
 export interface EditorData {
   discussion: Discussion | undefined
   templates: Template[]
-  commands: Command[]
 }
 
 export async function loadEditorData(discussionId?: string): Promise<EditorData> {
@@ -34,8 +33,7 @@ export async function loadEditorData(discussionId?: string): Promise<EditorData>
     logger.warn(`User ${user.email} not authorized for discussion with id ${discussion.id}`)
     notFound()
   }
-  const commands = discussion ? await nontransactional(c => findCommandsByDiscussion(c, discussion.id)) : []
-  return { discussion, templates, commands }
+  return { discussion, templates }
 }
 
 export interface ExecuteCommandInput {

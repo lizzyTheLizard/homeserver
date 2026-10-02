@@ -2,13 +2,14 @@
 
 ## Context
 
-See proposal.md — Why. This is a UI-only restyle of the CoEditor pages to the application's new design language.
+See proposal.md — Why. This is a restyle of the CoEditor pages to the application's new design language, plus a functional fix: the editor's `aiPort` was a stub, so command execution is restored with a Groq-backed implementation.
 
 Current state (observed):
 
 - The CoEditor pages already use the shared component library (`web/app/shared/_components/`): `Button`, `Input`, `Textarea`, `DataTable`, `ActionTitle`, `Sidebar`, and the shared layout (`Header` + `SidebarContainer` in `web/app/layout.tsx`). Page shells wrap content via `serverPageFunction` in a `<main>`.
 - The CoEditor-specific styling (`Editor.module.css`, `EditorContext.module.css`) only defines layout/spacing (`--gap`, `--gap-small`) — no colors. Settings sections render bare `<h2>` + `DataTable` blocks.
 - The new design language already exists in the repo: the start page mockups (`design/Start Page.html`, `design/Start-Page-Mobile.html`, `design/StartPage/`) and its implementation (`web/app/startpage/`), which applies `color: #1a1a2e` (navy) directly in its CSS modules, greys for secondary text, white background, the system font stack, and the existing tokens (`--gap`, `--gap-small`, `--border-radius` from `web/public/global.css`).
+- `web/app/coeditor/_external/AiPort.ts` is a stub that throws; the editor's `executeCommand` server action calls it, so the editor cannot run commands until it is implemented.
 
 There is no CoEditor-specific mockup; the start page mockups are the design source of truth, per the decision recorded on issue #42.
 
@@ -16,12 +17,13 @@ There is no CoEditor-specific mockup; the start page mockups are the design sour
 
 **Goals:**
 - Make editor, history, and settings pages visually match the new design language (navy headings/primary text, grey secondary text, white background, system font, card-based, consistent spacing/radius).
-- Restructure the editor into a two-column layout with an assistant chat that shows the discussion's request/response history and hosts the proposed actions and custom-command input.
-- Keep the diff local and low-risk: styling/class changes only, no component behavior or state changes for history/settings; the editor chat reuses existing data and components where possible.
+- Adjust the editor controls to the new design: Undo/Redo/New as small icon buttons above the text area (top-right), the predefined commands as proposed-action chips below the custom-command input bar (single-column layout).
+- Implement `aiPort` with Groq so the editor can execute commands again, keeping the implementation local to the CoEditor (not shared with the assistant service).
+- Keep the diff local and low-risk: styling/class changes only, no component behavior or state changes for history/settings.
 
 **Non-Goals:**
-- No changes to the assistant service, WebSocket streaming, or the AI port — command execution stays the existing server action and returns one response per command.
-- No database schema changes (the `command` table already stores the request/response history).
+- No assistant-service / WebSocket changes — command execution stays the existing server action and returns one response per command.
+- No database schema changes and no server-side command-history loading for the editor page.
 - No redesign of CoEditor functionality or information architecture beyond the editor layout.
 
 ## Decisions
@@ -38,39 +40,26 @@ The pages keep using the shared `Button`, `Input`, `Textarea`, `DataTable`, `Act
 - **Rationale**: the shared components already carry the application styling (see spec — "Shared components appear with application styling"); the deltas are the custom blocks and heading styles.
 - **Alternative considered**: wrapping content in the shared `Card` component (used by cash). Not applied uniformly because the start page reference does not use `Card` for its surfaces; section-level styling in the CoEditor modules matches the reference more closely.
 
-### D3: Headings and error text
-Page/section headings (`<h1>` via `ActionTitle`, `<h2>` in settings sections) render in navy. The editor error message (currently plain `red`) moves to the danger token (`--danger-*`) so it participates in the application's color system.
+### D3: Editor controls — icon buttons and proposed-action chips
+The editor stays a single column. Undo/Redo/New render as small icon-only buttons (inline SVG, `fill="currentColor"`, mirroring the start-page restart button style) in a toolbar above the text area, aligned right; enabled buttons are navy `#1a1a2e`, disabled ones faint grey `#ccc`, so the state is clear at a glance. The custom-command input (shared `Input`) + Send button sit in an input row directly below the text area, followed by the proposed actions (Improve, Reformulate, Summarize, Extend) rendered as start-page-style blue chips that trigger the respective predefined commands.
 
-### D4: No behavioral changes
-Only `className`/CSS changes. Component state, reducers, server actions, and routing stay untouched; this is verified per page by the existing unit/integration tests (spec — "CoEditor restyle preserves existing functionality").
+- **Rationale**: matches the start page's icon-button and action-chip patterns; keeps the original single-column information flow.
 
-### D5: Chat history reuses the persisted `command` table
-Each command execution already inserts a `command` row (user request as `custom_command`/`predefined_command`, assistant response as `result.text`, plus `created_at`). The editor chat is built from that data:
+### D4: `aiPort` implemented locally against Groq
+`web/app/coeditor/_external/AiPort.ts` calls Groq's OpenAI-compatible endpoint (`https://api.groq.com/openai/v1/chat/completions`) via plain `fetch` — no new dependencies, and no import of the assistant's code ("copy, don't share"). It mirrors the assistant's parameters (model `openai/gpt-oss-120b`, temperature 0.2, max 2048 tokens) and the CoEditor contract from the previous OpenAI-based implementation: system prompt, command → message mapping (including prior commands as history), `json_object` response parsed and validated with the zod schema, selection replacement via `getFullNewText`. `web/app/shared/config.ts` gains an `AI` section reading `AI_API_KEY` (same env name as the assistant) and `AI_LOG_REQUEST_RESPONSE`.
 
-- `loadEditorData` (editor `server.ts`) additionally loads the discussion's commands via `findCommandsByDiscussion` and exposes them on `EditorData`.
-- One command → one chat pair: user message = the custom command text or the predefined command label (e.g. "Improve"); assistant message = `result.text`.
-- Command execution stays the existing `executeCommand` server action (one response per command, no WebSocket streaming).
-
-- **Alternative considered**: streaming responses like the start-page assistant (WebSocket). Rejected: the AI port and server action pipeline return one result per command; adding streaming would be a large, separate change. The chat matches the start page visually, not its transport.
-
-### D6: Chat messages live in the editor reducer state
-`EditorState` gains a `messages` list. `initialState` seeds it from the discussion's loaded commands; the `COMMAND_EXECUTED` action appends the request/response pair (the payload is extended with the request text/label and the response). This keeps chat behavior testable via the existing `Editor.state.tests.ts` unit tests.
-
-### D7: Chat column mirrors the start-page assistant visually
-The chat column reuses the start-page assistant's look: message bubbles via the existing `AiMessageBubble` component (role + content), proposed actions as clickable chips (like `AiActionsList`), and an input bar for custom commands (shared `Input` + `Button`; the custom-command input moves from below the text area into the chat). Error display keeps the danger token and appears in the chat column.
-
-### D8: Two-column layout via a CSS module, breakpoint 600px
-The editor page shell uses a flex/grid container: desktop (min-width 600px, matching the existing media queries) shows the main column (flex-grow) and a chat column of fixed width on the right; mobile (max-width 600px) stacks the columns, with the chat column at about 25% of the viewport height (`25vh`) and `overflow-y: auto` — the message list scrolls inside it. Undo/Redo/New remain next to the text area (decision recorded on issue #42).
+- **Alternative considered**: the `ai` SDK + `@ai-sdk/groq` like the assistant. Rejected: it would add two dependencies to the web package and duplicate the provider setup; a plain fetch against the OpenAI-compatible endpoint is self-contained and keeps the signature `aiPort(input, commandsSoFar) → CommandResult`.
 
 ## Risks / Trade-offs
 
 - [Navy color duplicated across CSS modules] → Mitigation: same value as the start page (`#1a1a2e`), so no drift vs. the reference; centralization can follow later.
+- [Groq API availability/shape] → Mitigation: the implementation targets Groq's OpenAI-compatible API with the same model the assistant uses; failures surface as clear errors via the existing error path and `AI_LOG_REQUEST_RESPONSE` logs.
 - [Visual regression on pages with Storybook/Playwright interaction tests] → Mitigation: run the web tests (unit, integration, storybook) and review each page in the browser before committing each task.
-- [Shared components changed accidentally while restyling] → Mitigation: the restyle only touches `web/app/coeditor/`; shared components are imported, not edited (verified via `git status` per commit).
+- [Shared components changed accidentally while restyling] → Mitigation: the restyle only touches `web/app/coeditor/` and `web/app/shared/config.ts`; shared components are imported, not edited (verified via `git status` per commit).
 
 ## Migration Plan
 
-No data migration. The web app is deployed from the repo `Dockerfile`; each task lands as its own commit and the change ships as one PR (standard `gh-change-ship` flow). Rollback is a revert of the PR — no schema or behavior changes make rollback risky.
+No data migration. The web app is deployed from the repo `Dockerfile`; each task lands as its own commit and the change ships as one PR (standard `gh-change-ship` flow). The `AI_API_KEY` environment variable already exists in the deployment env (the assistant uses it), so no new secrets are required. Rollback is a revert of the PR.
 
 ## Open Questions
 

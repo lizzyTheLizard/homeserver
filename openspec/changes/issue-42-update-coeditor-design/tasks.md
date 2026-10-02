@@ -19,12 +19,10 @@
 
 - [x] 4.1 Run the full web validation and the whole-repo checks on the change: `pnpm --filter @homeserver/web test` and `pnpm lint:ci` from the repo root. Verify all test projects (unit, integration, storybook) and lint pass with no failures, confirming the restyle preserved all CoEditor functionality
 
-## 5. Editor Chat Backend & State
+## 5. Editor AI Integration
 
-- [x] 5.1 Extend `loadEditorData` in `editor/server.ts` to also load the discussion's command history via `findCommandsByDiscussion` and expose it in `EditorData`; add a test in `editor/server.tests.ts` covering command-history loading. Verify the editor integration tests pass
-- [x] 5.2 Extend the editor state (`editor/_helper/Editor.state.ts`): add chat `messages` seeded from the loaded commands, and append a user-request/assistant-response pair on `COMMAND_EXECUTED`; extend `Editor.state.tests.ts` accordingly. Verify the editor unit tests pass
+- [x] 5.1 Implement the `aiPort` function in `web/app/coeditor/_external/AiPort.ts` using Groq (OpenAI-compatible endpoint, model `openai/gpt-oss-120b`, temperature/max tokens mirroring the assistant), add the `AI` section with `AI_API_KEY` to `web/app/shared/config.ts`, and cover the pure helpers with unit tests. Verify the `AiPort` unit tests and the editor integration tests pass and lint is clean
 
-## 6. Editor Chat UI & Layout
+## 6. Editor Layout Adjustment
 
-- [x] 6.1 Build the chat column in the editor: message list with bubbles (user requests and assistant responses, mirroring the start-page assistant), proposed-action chips for Improve/Reformulate/Summarize/Extend, and the custom-command input + send (moved from below the text area into the chat); wire loading and error display. Verify lint and the editor unit/integration tests pass
-- [x] 6.2 Two-column responsive layout: desktop side-by-side (main column with `EditorContext` + text area; chat column to the right), mobile stacked with the chat at about 25% of the height and internally scrollable; Undo/Redo/New remain beside the text area. Verify lint, the editor tests, and a manual browser check at desktop and mobile widths
+- [x] 6.1 Finalize the editor as a single-column layout: Undo/Redo/New as small icon buttons (top-right of the text area, clear enabled/disabled states), the custom-command input + Send just below the text area, and the proposed actions (Improve, Reformulate, Summarize, Extend) as start-page-style chips below the input; no command-history loading and no two-column chat. Verify lint, the editor unit/integration tests, and a manual browser check at desktop and mobile widths

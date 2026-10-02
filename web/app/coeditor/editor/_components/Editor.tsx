@@ -2,7 +2,7 @@
 
 import { useCallback, useReducer, useState } from 'react'
 import { editorStateReducer, initialState, predefinedCommandLabel } from '../_helper/Editor.state'
-import { Command, PredefinedCommandType } from '../../_data/Command'
+import { PredefinedCommandType } from '../../_data/Command'
 import { Discussion } from '../../_data/Discussion'
 import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
 import { Template } from '../../_data/Template'
@@ -10,18 +10,20 @@ import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { EditorContext } from './EditorContext'
-import { EditorChat } from './EditorChat'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Button } from '@/app/shared/_components/form/Button'
 import { executeCommand } from '../server'
 import style from './Editor.module.css'
+
+const PROPOSED_ACTIONS: PredefinedCommandType[] = ['IMPROVE', 'REFORMULATE', 'SUMMARIZE', 'EXTEND']
 
 export interface EditorProps {
   discussion?: Discussion
   templates: Template[]
-  commands: Command[]
 }
 
-export function Editor({ discussion, templates, commands }: EditorProps) {
-  const [state, dispatch] = useReducer(editorStateReducer, initialState(discussion, templates, commands))
+export function Editor({ discussion, templates }: EditorProps) {
+  const [state, dispatch] = useReducer(editorStateReducer, initialState(discussion, templates))
   const [customCommand, setCustomCommand] = useState('')
   const [selection, setSelection] = useState<Selection | undefined>(undefined)
   const [executePending, setExecutePending] = useState(false)
@@ -47,7 +49,7 @@ export function Editor({ discussion, templates, commands }: EditorProps) {
         setExecutePending(false)
         return
       }
-      dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false, userMessage: command ? predefinedCommandLabel(command) ?? command : customCommand, assistantMessage: result.data.text })
+      dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
       setCustomCommand('')
       setError(undefined)
       setExecutePending(false)
@@ -84,46 +86,49 @@ export function Editor({ discussion, templates, commands }: EditorProps) {
   return (
     <>
       {executePending && <LoadingSpinner text="Executing command..." />}
-      <div className={style.columns}>
-        <div className={style.mainColumn}>
-          <EditorContext
-            templates={templates}
-            template={state.template}
-            parameters={state.parameters}
-            onBlur={() => { initialize() }}
-            onTemplateChange={useCallback((template: Template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
-            onParametersChange={useCallback((name: string, value: string | undefined) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
-          />
-          <div className={style.toolbar}>
-            <button className={style.iconButton} onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length} title="Undo"><UndoIcon /></button>
-            <button className={style.iconButton} onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length} title="Redo"><RedoIcon /></button>
-            <button className={style.iconButton} onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id} title="New"><NewIcon /></button>
-          </div>
-          <Textarea
-            className={style.textarea}
-            label="Text"
-            value={state.text}
-            onChange={(e) => { dispatch({ type: 'TEXT_CHANGE', text: e.currentTarget.value }) }}
-            onBlur={() => { dispatch({ type: 'TEXT_BLUR' }) }}
-            disabled={!state.contextValid}
-            keepSelection={true}
-            onSelectionChange={setSelection}
-          >
-          </Textarea>
-        </div>
-        <div className={style.chatColumn}>
-          <EditorChat
-            messages={state.messages}
-            contextValid={state.contextValid}
-            customCommand={customCommand}
-            error={error}
-            onCustomCommandChange={setCustomCommand}
-            onCustomCommandKeyDown={(e) => { handleCustomCommandKeyDown(e) }}
-            onSend={() => { execute() }}
-            onAction={(command) => { execute(command) }}
-          />
-        </div>
+      <EditorContext
+        templates={templates}
+        template={state.template}
+        parameters={state.parameters}
+        onBlur={() => { initialize() }}
+        onTemplateChange={useCallback((template: Template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
+        onParametersChange={useCallback((name: string, value: string | undefined) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
+      />
+      <div className={style.toolbar}>
+        <button className={style.iconButton} onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length} title="Undo"><UndoIcon /></button>
+        <button className={style.iconButton} onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length} title="Redo"><RedoIcon /></button>
+        <button className={style.iconButton} onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id} title="New"><NewIcon /></button>
       </div>
+      <Textarea
+        className={style.textarea}
+        label="Text"
+        value={state.text}
+        onChange={(e) => { dispatch({ type: 'TEXT_CHANGE', text: e.currentTarget.value }) }}
+        onBlur={() => { dispatch({ type: 'TEXT_BLUR' }) }}
+        disabled={!state.contextValid}
+        keepSelection={true}
+        onSelectionChange={setSelection}
+      >
+      </Textarea>
+      <div className={style.chatRow}>
+        <Input
+          value={customCommand}
+          onChange={(e) => { setCustomCommand(e.currentTarget.value) }}
+          onKeyDown={(e) => { handleCustomCommandKeyDown(e) }}
+          label="Custom Command"
+          disabled={!state.contextValid}
+        >
+        </Input>
+        <Button onClick={() => { execute() }} disabled={!state.contextValid || !customCommand}>Send</Button>
+      </div>
+      <div className={style.actions}>
+        {PROPOSED_ACTIONS.map(action => (
+          <button key={action} className={style.chip} disabled={!state.contextValid} onClick={() => { execute(action) }}>
+            {predefinedCommandLabel(action)}
+          </button>
+        ))}
+      </div>
+      {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
     </>
   )
 }
