@@ -5,6 +5,10 @@ export interface Config {
   APP_URL: string
   DB_CONNECTION_STRING: string
   ADMIN_EMAIL: string
+  AI: {
+    API_KEY: string
+    LOG_REQUEST_RESPONSE: boolean
+  }
   OIDC: {
     ISSUER: string
     CLIENT_ID: string
@@ -49,6 +53,10 @@ export const config: Config = {
   APP_URL: required('APP_URL', 'http://localhost:3000'),
   DB_CONNECTION_STRING: required('DB_CONNECTION_STRING', 'postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable'),
   ADMIN_EMAIL: required('ADMIN_EMAIL', 'admin@example.com'),
+  AI: {
+    API_KEY: required('AI_API_KEY', 'dev-only-key'),
+    LOG_REQUEST_RESPONSE: optional('AI_LOG_REQUEST_RESPONSE', 'false').toLowerCase() === 'true',
+  },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),
     ISSUER: required('LOGIN_ISSUER', 'http://localhost:8080/realms/coeditor'),
