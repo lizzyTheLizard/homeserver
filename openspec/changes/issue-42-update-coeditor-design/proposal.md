@@ -10,6 +10,7 @@ Issue [#42](https://github.com/lizzyTheLizard/homeserver/issues/42): the CoEdito
 - CoEditor **history** page (`web/app/coeditor/history/` incl. `_components/History.tsx`) is restyled to the new design language.
 - CoEditor **settings** page (`web/app/coeditor/settings/`) is restyled to the new design language.
 - The **editor page** stays a single column and is adjusted to the new design: Undo/Redo/New become small icon buttons at the top-right of the text area, the predefined commands (Improve, Reformulate, Summarize, Extend) become proposed-action chips below a custom-command input bar placed right under the text area, and the editor's AI calls (`aiPort`) are implemented with Groq so commands execute again.
+- The start page's chat input block (auto-resizing textarea, Enter/arrow-key handling, action chips, send button, connection status indicator) is extracted into a shared `AiChatInput` component (`web/app/shared/_components/chat/`) that both the start-page `AiChatWindow` and the CoEditor editor use, so the two command UIs are identical; the restart and send icons move into the shared `Icon` library.
 - The restyle applies the design tokens established by the new start page mockups (`design/Start Page.html`, `design/Start-Page-Mobile.html`, `design/StartPage/`, implemented in `web/app/startpage/`): white background, deep navy text (`#1a1a2e`), grey secondary text, system font stack, existing spacing/radius tokens (`--gap`, `--gap-small`, `--border-radius`), and the clean card-based layout of the shared components (`web/app/shared/_components/`).
 - No database schema changes — the existing `command` table keeps recording executed commands; command execution stays the existing server action (one response per command, no WebSocket streaming).
 
@@ -24,6 +25,7 @@ Issue [#42](https://github.com/lizzyTheLizard/homeserver/issues/42): the CoEdito
 ## Impact
 
 - **Code**: `web/app/coeditor/` — `editor/_components/Editor.tsx`, `editor/_components/EditorContext.tsx`, `history/_components/History.tsx`, `settings/_components/*` and their CSS modules; page shells `editor/page.tsx`, `history/page.tsx`, `settings/page.tsx` only if needed for layout alignment.
+- **Shared components**: `web/app/shared/_components/chat/` — new `AiChatInput.*` and moved `AiChatState.ts` + `AiConnectionStatusIndicator.*`; the start-page `AiChatWindow` drops its inline input form and `AiActionsList`; the shared `Icon` library gains the `restart` and `send` icons.
 - **Editor AI**: `editor/_external/AiPort.ts` (Groq-backed `aiPort`, implemented locally, not shared with the assistant) and `shared/config.ts` (new `AI` section reading `AI_API_KEY`).
 - **Shared design tokens**: may add to `web/public/global.css` (e.g. a navy text token) if the new design language requires it; reused rather than duplicated where possible.
 - **No impact**: no database schema changes; no assistant-service / WebSocket / AI-port changes; no changes to history or settings behavior.

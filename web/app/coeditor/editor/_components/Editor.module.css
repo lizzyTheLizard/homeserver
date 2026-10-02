@@ -36,54 +36,6 @@
     cursor: default;
 }
 
-.chatRow {
-    margin-top: var(--gap-small);
-    display: flex;
-    gap: var(--gap-small);
-}
-
-.chatRow div {
-    flex-grow: 1;
-}
-
-.chatRow button {
-    width: initial;
-}
-
-.actions {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.45rem;
-    padding: 0.4rem 0.2rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-
-.chip {
-    padding: 0.33rem 0.85rem;
-    background: rgba(0, 0, 210, 0.07);
-    border: 1px solid rgba(0, 0, 210, 0.22);
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    color: rgba(0, 0, 180, 1);
-    font-family: inherit;
-    font-weight: 500;
-    transition: background 0.12s, border-color 0.12s;
-    white-space: nowrap;
-    width: initial;
-}
-
-.chip:hover:not(:disabled) {
-    background: rgba(0, 0, 210, 0.13);
-    border-color: rgba(0, 0, 210, 0.45);
-}
-
-.chip:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
 .error {
     color: var(--danger-background-color);
 }

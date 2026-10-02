@@ -11,8 +11,7 @@ import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { Icon } from '@/app/shared/_components/Icon'
 import { EditorContext } from './EditorContext'
-import { Input } from '@/app/shared/_components/form/Input'
-import { Button } from '@/app/shared/_components/form/Button'
+import { AiChatInput } from '@/app/shared/_components/chat/AiChatInput'
 import { executeCommand } from '../server'
 import style from './Editor.module.css'
 
@@ -63,14 +62,6 @@ export function Editor({ discussion, templates }: EditorProps) {
     })
   }
 
-  function handleCustomCommandKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (!state.contextValid || !customCommand) return
-      execute()
-    }
-  }
-
   function initialize() {
     // Initializ  e discussion automatically text when:
     // * A template with parameters is filled out
@@ -111,30 +102,20 @@ export function Editor({ discussion, templates }: EditorProps) {
         onSelectionChange={setSelection}
       >
       </Textarea>
-      <div className={style.chatRow}>
-        <Input
-          value={customCommand}
-          onChange={(e) => { setCustomCommand(e.currentTarget.value) }}
-          onKeyDown={(e) => { handleCustomCommandKeyDown(e) }}
-          label="Custom Command"
-          disabled={!state.contextValid}
-        >
-        </Input>
-        <Button onClick={() => { execute() }} disabled={!state.contextValid || !customCommand}>Send</Button>
-      </div>
-      <div className={style.actions}>
-        {PROPOSED_ACTIONS.map(action => (
-          <button key={action} className={style.chip} disabled={!state.contextValid} onClick={() => { execute(action) }}>
-            {predefinedCommandLabel(action)}
-          </button>
-        ))}
-      </div>
+      <AiChatInput
+        value={customCommand}
+        onChange={setCustomCommand}
+        onSubmit={() => { execute() }}
+        disabled={!state.contextValid}
+        placeholder="Custom command…"
+        actions={PROPOSED_ACTIONS.map(action => ({ label: predefinedCommandLabel(action) ?? '', onSelect: () => { execute(action) } }))}
+      />
       {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
     </>
   )
 }
 
-export function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
+function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
   switch (command) {
     case 'INITIALIZE': return 'Initialize'
     case 'IMPROVE': return 'Improve'

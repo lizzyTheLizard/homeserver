@@ -26,3 +26,7 @@
 ## 6. Editor Layout Adjustment
 
 - [x] 6.1 Finalize the editor as a single-column layout: Undo/Redo/New as small icon buttons (top-right of the text area, clear enabled/disabled states), the custom-command input + Send just below the text area, and the proposed actions (Improve, Reformulate, Summarize, Extend) as start-page-style chips below the input; no command-history loading and no two-column chat. Verify lint, the editor unit/integration tests, and a manual browser check at desktop and mobile widths
+
+## 7. Shared AiChatInput Component
+
+- [x] 7.1 Extract the start-page chat input into a shared `AiChatInput` component in `web/app/shared/_components/chat/`: the auto-resizing textarea with Enter/arrow-key history handling, the action chips above the input, the send button, and the AI connection status indicator; move `ChatState` and `AiConnectionStatusIndicator` into shared as part of it, and cover `AiChatInput` with Storybook interaction tests (send, newline, history, auto-grow, actions, status, disabled states). Use `AiChatInput` in the start-page `AiChatWindow` (mobile-fixed input, dropping `AiActionsList`) and in the CoEditor `Editor` command bar (custom command + proposed actions). Verify lint, the unit/integration tests, and the storybook test project pass

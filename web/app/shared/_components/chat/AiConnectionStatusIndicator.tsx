@@ -1,8 +1,8 @@
 'use client'
 
-import { Icon } from '@/app/shared/_components/Icon'
+import { Icon } from '../Icon'
 import styles from './AiConnectionStatusIndicator.module.css'
-import { ChatState } from './AiChatWebSocket'
+import { ChatState } from './AiChatState'
 
 export interface AiConnectionStatusIndicatorProps {
   state: ChatState

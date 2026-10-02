@@ -1,14 +1,7 @@
 'use client'
 
-export type ChatState = { type: 'initial' }
-  | { type: 'connecting' }
-  | { type: 'ready' }
-  | { type: 'waiting-for-response', stalled: boolean }
-  | { type: 'wait-for-reconnecting', nextAttempt: number, maxAttempts: number, inSeconds: number }
-  | { type: 'reconnecting' }
-  | { type: 'automatic-reconnecting-exhausted', maxAttempts: number }
-  | { type: 'reconnect-impossible' }
-  | { type: 'terminated' }
+import type { ChatState } from '@/app/shared/_components/chat/AiChatState'
+export type { ChatState } from '@/app/shared/_components/chat/AiChatState'
 
 const INTENTIONAL_CLOSE = 4100
 const STALL_TIMEOUT_MS = 15000

@@ -32,6 +32,8 @@ export const All: StoryObj<typeof meta> = {
       <Icon name="undo" style={{ width: 24, height: 24 }} />
       <Icon name="redo" style={{ width: 24, height: 24 }} />
       <Icon name="new" style={{ width: 24, height: 24 }} />
+      <Icon name="restart" style={{ width: 24, height: 24 }} />
+      <Icon name="send" style={{ width: 24, height: 24 }} />
     </div>
   ),
 }
