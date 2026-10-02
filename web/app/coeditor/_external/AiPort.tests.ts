@@ -20,7 +20,7 @@ describe('mapToChatMessages', () => {
   })
 
   test('command history result maps to a user/assistant pair', () => {
-    const command = { id: 'c1', discussion_id: '1', text: 'Some text', context: 'ctx', language: 'en', predefined_command: 'IMPROVE', result: { text: 'Improved text', title: 'Title', durationMs: 100 } } as unknown as Command
+    const command = { id: 'c1', discussion_id: '1', text: 'Some text', context: 'ctx', language: 'en', predefined_command: 'IMPROVE', result: { text: 'Improved text', title: 'Title' } } as unknown as Command
     const result = mapToChatMessages(command)
     expect(result).toHaveLength(2)
     expect(result[0].role).toBe('user')

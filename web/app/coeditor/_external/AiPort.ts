@@ -3,10 +3,15 @@ import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { validateObject } from '@/app/shared/_helper/validation'
+import { generateText, ModelMessage, Output } from 'ai'
+import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
 import { z } from 'zod'
 
-const GROQ_BASE_URL = 'https://api.groq.com/openai/v1'
 const GROQ_MODEL = 'openai/gpt-oss-120b'
+const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
+const model = provider(GROQ_MODEL)
+const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: false, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
+const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
 
 export interface AiPortInput {
   text?: string
@@ -25,53 +30,21 @@ interface ChatMessage {
   content: string
 }
 
-interface GroqChatCompletionResponse {
-  choices?: {
-    message?: {
-      content?: string | null
-    }
-  }[]
-}
-
 export async function aiPort(input: AiPortInput, commandsSoFar: Command[]): Promise<CommandResult> {
   const messagesSoFar = commandsSoFar.flatMap(command => mapToChatMessages(command))
   const systemMessage = createSystemMessage(input)
   const nextMessage = mapToChatMessages(input)[0]
-  const start = performance.now()
   const content = await chatCompletion(systemMessage, [...messagesSoFar, nextMessage])
-  const durationMs = performance.now() - start
-  logger.debug(`AI Port call took ${(durationMs / 1000).toString()} seconds`)
   const output = parseOutput(content)
   if (output.error) throw new Error(`AI Communication Error: ${output.error}`)
   const newText = getFullNewText(input, output.text)
-  return { title: output.title, text: newText, durationMs }
+  return { title: output.title, text: newText }
 }
 
-async function chatCompletion(systemMessage: string, messages: ChatMessage[]): Promise<string> {
-  const body = {
-    model: GROQ_MODEL,
-    temperature: 0.2,
-    max_tokens: 2048,
-    response_format: { type: 'json_object' },
-    messages: [{ role: 'system', content: systemMessage }, ...messages],
-  }
-  logRequest(body)
-  const response = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.AI.API_KEY}`,
-    },
-    body: JSON.stringify(body),
-  })
-  if (!response.ok) {
-    const detail = await response.text()
-    logger.warn(`LLM API request failed with status ${response.status.toString()} ${response.statusText}`)
-    throw new Error(`LLM API request failed with status ${response.status.toString()}: ${detail.slice(0, 200)}`)
-  }
-  const data = await response.json() as GroqChatCompletionResponse
-  const content = data.choices?.[0]?.message?.content ?? ''
-  return content
+function toModelMessage(message: ChatMessage): ModelMessage {
+  return message.role === 'assistant'
+    ? { role: 'assistant', content: [{ type: 'text', text: message.content }] }
+    : message
 }
 
 function createSystemMessage(input: AiPortInput): string {
@@ -128,6 +101,19 @@ export function mapToChatMessages(input: AiPortInput | Command): ChatMessage[] {
   ]
 }
 
+async function chatCompletion(systemMessage: string, chatMessages: ChatMessage[]): Promise<string> {
+  const messages: ModelMessage[] = [
+    { role: 'system', content: systemMessage },
+    ...chatMessages.map(toModelMessage),
+  ]
+  const result = await generateText({
+    ...agentSettings,
+    messages,
+    output: Output.json(),
+  })
+  return result.text
+}
+
 export function parseOutput(content: string): z.infer<typeof AiResponseSchema> {
   let parsed: unknown
   try {
@@ -150,11 +136,36 @@ export function getFullNewText(input: AiPortInput, newText: string): string {
   return input.text.substring(0, input.selection_start) + newText + input.text.substring(input.selection_end)
 }
 
-function logRequest(body: unknown) {
+async function loggingFetch(resource: string | URL | Request, init: RequestInit | undefined): Promise<Response> {
+  const requestStartTime = Date.now()
+  logRequest(init)
+  const response = await fetch(resource, init)
+  void logResponse(response, requestStartTime)
+  return response
+}
+
+function logRequest(init: RequestInit | undefined) {
   if (!config.AI.LOG_REQUEST_RESPONSE) return
-  const bodyString = JSON.stringify(body)
-  logger.debug(`LLM request of size ${bodyString.length.toString()} bytes started`)
+  const bodyString = init?.body ? String(init.body) : ''// eslint-disable-line @typescript-eslint/no-base-to-string
+  const requestSize = bodyString.length
+  logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
   console.log(bodyString)
+}
+
+async function logResponse(res: Response, requestStartTime: number) {
+  if (!res.ok) {
+    logger.warn(`LLM API request failed with status ${res.status.toString()} ${res.statusText}`)
+    return
+  }
+  const cloned = res.clone()
+  const text = await cloned.text()
+  if (config.AI.LOG_REQUEST_RESPONSE) {
+    const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
+    logger.debug(`LLM  response of size ${text.length.toString()} bytes received in ${timeToFirstTokenInS}s`)
+    console.log(text)
+  }
+  const timeInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
+  logger.debug(`LLM response of size ${text.length.toString()} bytes completed in ${timeInS}s`)
 }
 
 const commands: Record<PredefinedCommandType, string> = {

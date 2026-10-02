@@ -19,7 +19,7 @@ vi.mock('@/app/shared/auth/auth', async () => {
 // Mock AI
 vi.mock('../_external/AiPort', () => {
   return {
-    aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title', durationMs: 100 }),
+    aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title' }),
   }
 })
 

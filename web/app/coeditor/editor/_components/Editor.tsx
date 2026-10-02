@@ -2,7 +2,7 @@
 
 import { useCallback, useReducer, useState } from 'react'
 import { editorStateReducer, initialState } from '../_helper/Editor.state'
-import { PredefinedCommandType, predefinedCommandLabel } from '../../_data/Command'
+import { PredefinedCommandType } from '../../_data/Command'
 import { Discussion } from '../../_data/Discussion'
 import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
 import { Template } from '../../_data/Template'
@@ -132,4 +132,15 @@ export function Editor({ discussion, templates }: EditorProps) {
       {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
     </>
   )
+}
+
+export function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
+  switch (command) {
+    case 'INITIALIZE': return 'Initialize'
+    case 'IMPROVE': return 'Improve'
+    case 'REFORMULATE': return 'Reformulate'
+    case 'SUMMARIZE': return 'Summarize'
+    case 'EXTEND': return 'Extend'
+    default: return undefined
+  }
 }
