@@ -20,6 +20,17 @@ export type Command = Entity<CommandInput>
 export const PREDEFINED_COMMAND_TYPES = ['INITIALIZE', 'IMPROVE', 'REFORMULATE', 'SUMMARIZE', 'EXTEND'] as const
 export type PredefinedCommandType = typeof PREDEFINED_COMMAND_TYPES[number]
 
+export function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
+  switch (command) {
+    case 'INITIALIZE': return 'Initialize'
+    case 'IMPROVE': return 'Improve'
+    case 'REFORMULATE': return 'Reformulate'
+    case 'SUMMARIZE': return 'Summarize'
+    case 'EXTEND': return 'Extend'
+    default: return undefined
+  }
+}
+
 export interface CommandResult {
   text: string
   title: string
@@ -35,7 +46,7 @@ export function findNumberOfCommands(client: Queryable, since?: string): Promise
 
 export async function findCommandsByDiscussion(client: Queryable, discussionId: string): Promise<Command[]> {
   const result = await client.query<Command>(
-    'SELECT * FROM command WHERE discussion_id = $1 ORDER BY created_at ASC',
+    'SELECT * FROM command WHERE discussion_id = $1',
     [discussionId],
   )
   logger.debug(`Found ${result.rows.length.toString()} existing commands for discussion ${discussionId}`)

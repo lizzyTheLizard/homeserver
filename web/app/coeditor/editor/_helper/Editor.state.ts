@@ -1,6 +1,5 @@
 import { Discussion } from '../../_data/Discussion'
 import { Template } from '../../_data/Template'
-import { PredefinedCommandType } from '../../_data/Command'
 
 export interface EditorState {
   text: string
@@ -101,17 +100,6 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         redoStack: state.redoStack.slice(0, state.redoStack.length - 1),
       }
     }
-  }
-}
-
-export function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
-  switch (command) {
-    case 'INITIALIZE': return 'Initialize'
-    case 'IMPROVE': return 'Improve'
-    case 'REFORMULATE': return 'Reformulate'
-    case 'SUMMARIZE': return 'Summarize'
-    case 'EXTEND': return 'Extend'
-    default: return undefined
   }
 }
 

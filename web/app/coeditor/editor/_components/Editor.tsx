@@ -1,14 +1,15 @@
 'use client'
 
 import { useCallback, useReducer, useState } from 'react'
-import { editorStateReducer, initialState, predefinedCommandLabel } from '../_helper/Editor.state'
-import { PredefinedCommandType } from '../../_data/Command'
+import { editorStateReducer, initialState } from '../_helper/Editor.state'
+import { PredefinedCommandType, predefinedCommandLabel } from '../../_data/Command'
 import { Discussion } from '../../_data/Discussion'
 import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
 import { Template } from '../../_data/Template'
 import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { Icon } from '@/app/shared/_components/Icon'
 import { EditorContext } from './EditorContext'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Button } from '@/app/shared/_components/form/Button'
@@ -36,7 +37,7 @@ export function Editor({ discussion, templates }: EditorProps) {
       id: randomUUID(),
       discussion_id: restart ? randomUUID() : discussion?.id ?? randomUUID(),
       template_id: state.template.id,
-      text: restart ? '' : state.text,
+      text: state.text,
       parameters: state.parameters,
       selection_start: selection?.start,
       selection_end: selection?.end,
@@ -95,9 +96,9 @@ export function Editor({ discussion, templates }: EditorProps) {
         onParametersChange={useCallback((name: string, value: string | undefined) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
       />
       <div className={style.toolbar}>
-        <button className={style.iconButton} onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length} title="Undo"><UndoIcon /></button>
-        <button className={style.iconButton} onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length} title="Redo"><RedoIcon /></button>
-        <button className={style.iconButton} onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id} title="New"><NewIcon /></button>
+        <button className={style.iconButton} onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length} title="Undo"><Icon name="undo" style={{ width: 14, height: 14 }} /></button>
+        <button className={style.iconButton} onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length} title="Redo"><Icon name="redo" style={{ width: 14, height: 14 }} /></button>
+        <button className={style.iconButton} onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id} title="New"><Icon name="new" style={{ width: 14, height: 14 }} /></button>
       </div>
       <Textarea
         className={style.textarea}
@@ -130,31 +131,5 @@ export function Editor({ discussion, templates }: EditorProps) {
       </div>
       {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
     </>
-  )
-}
-
-function UndoIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-      <path fillRule="evenodd" d="M6.5 3.5a5 5 0 1 1-4.545 2.914.5.5 0 0 0 .909-.417A4 4 0 1 0 6.5 4.5v1z" />
-      <path d="M6.5 4.466V.534a.25.25 0 0 0-.41-.192L3.73 2.308a.25.25 0 0 0 0 .384l2.36 1.966a.25.25 0 0 0 .41-.192z" />
-    </svg>
-  )
-}
-
-function RedoIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style={{ transform: 'scaleX(-1)' }}>
-      <path fillRule="evenodd" d="M6.5 3.5a5 5 0 1 1-4.545 2.914.5.5 0 0 0 .909-.417A4 4 0 1 0 6.5 4.5v1z" />
-      <path d="M6.5 4.466V.534a.25.25 0 0 0-.41-.192L3.73 2.308a.25.25 0 0 0 0 .384l2.36 1.966a.25.25 0 0 0 .41-.192z" />
-    </svg>
-  )
-}
-
-function NewIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8 3a.75.75 0 0 1 .75.75v3.5h3.5a.75.75 0 0 1 0 1.5h-3.5v3.5a.75.75 0 0 1-1.5 0v-3.5h-3.5a.75.75 0 0 1 0-1.5h3.5v-3.5A.75.75 0 0 1 8 3z" />
-    </svg>
   )
 }
