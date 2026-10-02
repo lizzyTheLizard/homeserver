@@ -76,7 +76,7 @@ export function Editor({ discussion, templates }: EditorProps) {
   }
 
   return (
-    <>
+    <div className={style.editorPage}>
       {executePending && <LoadingSpinner text="Executing command..." />}
       <EditorContext
         templates={templates}
@@ -111,7 +111,7 @@ export function Editor({ discussion, templates }: EditorProps) {
         actions={PROPOSED_ACTIONS.map(action => ({ label: predefinedCommandLabel(action) ?? '', onSelect: () => { execute(action) } }))}
       />
       {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
-    </>
+    </div>
   )
 }
 

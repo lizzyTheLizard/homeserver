@@ -40,14 +40,16 @@
     color: var(--danger-background-color);
 }
 
+.editorPage {
+    display:flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
 @media (max-width: 600px) {
     .editorPage {
-        /* Clear the sticky header (2.75rem) and the mobile app nav (2.5rem) so the
-           editor context does not sit under them. */
-        min-height: calc(100vh - 5.25rem);
-        min-height: calc(100dvh - 5.25rem);
+        height: calc(100vh - 13rem);
         padding-top: 1rem;
-        padding-bottom: 7rem;
         box-sizing: border-box;
     }
 }

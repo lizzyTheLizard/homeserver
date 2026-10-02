@@ -2,7 +2,6 @@ import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Editor } from './_components/Editor'
 import { loadEditorData } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import style from './_components/Editor.module.css'
 
 export const metadata = {
   title: 'CoEditor',
@@ -13,7 +12,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     const discussionId = (await searchParams).id as string | undefined
     const editorData = await loadEditorData(discussionId)
     return (
-      <main className={style.editorPage}>
+      <main>
         <ActionTitle>
           <h1>CoEditor</h1>
         </ActionTitle>
