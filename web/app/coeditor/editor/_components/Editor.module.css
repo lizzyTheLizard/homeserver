@@ -39,3 +39,14 @@
 .error {
     color: var(--danger-background-color);
 }
+
+@media (max-width: 600px) {
+    .editorPage {
+        /* Clear the sticky header (2.75rem) and the mobile app nav (2.5rem) so the
+           editor context does not sit under them. */
+        min-height: calc(100vh - 5.25rem);
+        min-height: calc(100dvh - 5.25rem);
+        padding-top: 1rem;
+        box-sizing: border-box;
+    }
+}
