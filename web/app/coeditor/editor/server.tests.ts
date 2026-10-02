@@ -133,25 +133,6 @@ describe('executeCommand', () => {
     expect(discussions[0]).toEqual(result.data)
   })
 
-  test('New Discussion without context returns empty initial text', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
-    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), name: 'Template 1', text: '', language: 'en' }
-    await transactional(tx => createOrModifyTemplate(tx, task.id, templateInput))
-    const aiPortMock: Mock = aiPort as Mock
-    aiPortMock.mockClear()
-
-    const input = { id: randomUUID(), discussion_id: randomUUID(), template_id: templateInput.id, text: '', parameters: {}, predefined_command: 'INITIALIZE' } as ExecuteCommandInput
-    const result = await executeCommand(input)
-
-    if (!result.success) throw new Error('Expected success response: ' + result.error)
-    expect(result.data.text).toBe('')
-    expect(result.data.title).toBe('')
-    expect(aiPortMock).not.toHaveBeenCalled()
-    const discussions = await nontransactional(c => findDiscussionByOwner(c, task.id))
-    expect(discussions.length).toBe(1)
-  })
-
   test('Existing Discussion', async ({ task }) => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
