@@ -116,6 +116,27 @@ export const ShiftEnterInsertsNewline: Story = {
   },
 }
 
+export const CtrlEnterScrollsToCaret: Story = {
+  play: async ({ canvasElement }) => {
+    const input = getInput(canvasElement)
+    const manyLines = Array.from({ length: 15 }, (_, index) => `line ${String(index)}`).join('\n')
+    await fireEvent.change(input, { target: { value: manyLines } })
+    await waitFor(async () => {
+      await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight)
+    })
+    input.scrollTop = 0
+    input.selectionStart = input.value.length
+    input.selectionEnd = input.value.length
+    await fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
+    await waitFor(async () => {
+      await expect(input.value).toBe(`${manyLines}\n`)
+    })
+    await waitFor(async () => {
+      await expect(input.scrollTop).toBeGreaterThan(0)
+    })
+  },
+}
+
 export const EmptyInputDoesNotSend: Story = {
   play: async ({ canvasElement, args }) => {
     const input = getInput(canvasElement)

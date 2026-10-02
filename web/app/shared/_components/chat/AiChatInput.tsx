@@ -53,6 +53,7 @@ export function AiChatInput({
     if (caret !== null) {
       pendingCaretRef.current = null
       el.setSelectionRange(caret, caret)
+      scrollCaretIntoView(el)
     }
   }, [value, textareaRef])
 
@@ -180,4 +181,34 @@ export function AiChatInput({
       </form>
     </div>
   )
+}
+
+function scrollCaretIntoView(el: HTMLTextAreaElement): void {
+  if (el.scrollHeight <= el.clientHeight) return
+  const caret = el.selectionStart
+  const style = getComputedStyle(el)
+  const mirror = document.createElement('div')
+  mirror.textContent = el.value.slice(0, caret) || ' '
+  mirror.style.cssText = [
+    'position: absolute',
+    'visibility: hidden',
+    'white-space: pre-wrap',
+    'word-wrap: break-word',
+    'overflow: hidden',
+    `width: ${String(el.clientWidth)}px`,
+    `font: ${style.font}`,
+    `line-height: ${style.lineHeight}`,
+    `letter-spacing: ${style.letterSpacing}`,
+    `padding: ${style.padding}`,
+    `border: ${style.border}`,
+    'box-sizing: border-box',
+  ].join(';')
+  document.body.appendChild(mirror)
+  const paddingBottom = parseFloat(style.paddingBottom) || 0
+  const lineHeight = parseFloat(style.lineHeight) || 16
+  const caretBottom = mirror.clientHeight - paddingBottom
+  document.body.removeChild(mirror)
+  const maxScroll = el.scrollHeight - el.clientHeight
+  const target = caretBottom - el.clientHeight + lineHeight
+  el.scrollTop = Math.min(maxScroll, Math.max(0, target))
 }
