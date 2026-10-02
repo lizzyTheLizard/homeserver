@@ -25,7 +25,7 @@ Issue [#42](https://github.com/lizzyTheLizard/homeserver/issues/42): the CoEdito
 ## Impact
 
 - **Code**: `web/app/coeditor/` — `editor/_components/Editor.tsx`, `editor/_components/EditorContext.tsx`, `history/_components/History.tsx`, `settings/_components/*` and their CSS modules; page shells `editor/page.tsx`, `history/page.tsx`, `settings/page.tsx` only if needed for layout alignment.
-- **Shared components**: `web/app/shared/_components/chat/` — new `AiChatInput.*` and moved `AiChatState.ts` + `AiConnectionStatusIndicator.*`; the start-page `AiChatWindow` drops its inline input form and `AiActionsList`; the shared `Icon` library gains the `restart` and `send` icons.
+- **Shared components**: `web/app/shared/_components/chat/` — new `AiChatInput.*`, `AiActionList.*` and moved `AiChatState.ts`, `AiConnectionStatusIndicator.*`, `AiMessageBubble.*`, `EditableBlock.*`; the start-page `AiChatWindow` drops its inline input form and `AiActionsList`; the shared `Icon` library gains the `restart` and `send` icons.
 - **Editor AI**: `editor/_external/AiPort.ts` (Groq-backed `aiPort`, implemented locally, not shared with the assistant) and `shared/config.ts` (new `AI` section reading `AI_API_KEY`).
 - **Shared design tokens**: may add to `web/public/global.css` (e.g. a navy text token) if the new design language requires it; reused rather than duplicated where possible.
 - **No impact**: no database schema changes; no assistant-service / WebSocket / AI-port changes; no changes to history or settings behavior.

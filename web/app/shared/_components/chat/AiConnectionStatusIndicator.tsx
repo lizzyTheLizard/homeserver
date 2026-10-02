@@ -6,21 +6,17 @@ import { ChatState } from './AiChatState'
 
 export interface AiConnectionStatusIndicatorProps {
   state: ChatState
-  onRetry: () => void
-  onRestart: () => void
 }
 
-export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorProps) {
+export function AiConnectionStatusIndicator({ state }: AiConnectionStatusIndicatorProps) {
   let iconName: 'error' | 'fatal' | 'reconnect'
   let textContent: string
-  let retryLabel: string | undefined
   let warn = false
 
-  switch (props.state.type) {
+  switch (state.type) {
     case 'wait-for-reconnecting':
       iconName = 'reconnect'
-      textContent = `Connection lost. Reconnecting in ${String(props.state.inSeconds)}s — attempt ${String(props.state.nextAttempt)} of ${String(props.state.maxAttempts)}.`
-      retryLabel = 'Retry now'
+      textContent = `Connection lost. Reconnecting in ${String(state.inSeconds)}s — attempt ${String(state.nextAttempt)} of ${String(state.maxAttempts)}.`
       warn = true
       break
     case 'reconnecting':
@@ -30,8 +26,7 @@ export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorPr
       break
     case 'automatic-reconnecting-exhausted':
       iconName = 'fatal'
-      textContent = `Connection lost, could not reconnect after ${String(props.state.maxAttempts)} attempts. The server could not be reached.`
-      retryLabel = 'Retry again'
+      textContent = `Connection lost, could not reconnect after ${String(state.maxAttempts)} attempts. The server could not be reached.`
       break
     case 'reconnect-impossible':
       iconName = 'fatal'
@@ -54,10 +49,6 @@ export function AiConnectionStatusIndicator(props: AiConnectionStatusIndicatorPr
           </div>
           <span className={textClass}>{textContent}</span>
         </div>
-      </div>
-      <div className={styles.buttons}>
-        {retryLabel && <button className={styles.actionButton} onClick={props.onRetry}>{retryLabel}</button>}
-        <button className={styles.actionButton} onClick={props.onRestart}>Restart the session</button>
       </div>
     </div>
   )

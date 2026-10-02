@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
+import { AiActionList } from './AiActionList'
 import { Icon } from '../Icon'
 import { ChatState } from './AiChatState'
 import styles from './AiChatInput.module.css'
@@ -11,12 +12,6 @@ export interface AiChatInputAction {
   onSelect?: () => void
 }
 
-export interface AiChatInputStatus {
-  state: ChatState
-  onRetry: () => void
-  onRestart: () => void
-}
-
 export interface AiChatInputProps {
   value: string
   onChange: (value: string) => void
@@ -24,7 +19,7 @@ export interface AiChatInputProps {
   disabled?: boolean
   placeholder?: string
   actions?: AiChatInputAction[]
-  status?: AiChatInputStatus
+  status?: ChatState
 }
 
 export function AiChatInput({
@@ -98,7 +93,9 @@ export function AiChatInput({
 
     const el = textareaRef.current
     if (e.key === 'ArrowUp') {
-      if (el?.selectionStart !== 0 || el.selectionEnd !== 0) return
+      // Entering history mode requires the caret at the start; once navigating the history,
+      // further presses keep navigating so scrolling through entries needs no extra presses.
+      if (historyIndex === -1 && (el?.selectionStart !== 0 || el.selectionEnd !== 0)) return
       e.preventDefault()
       const history = sentMessagesRef.current
       if (history.length === 0) return
@@ -107,21 +104,25 @@ export function AiChatInput({
       }
       const nextIndex = Math.min(historyIndex + 1, history.length - 1)
       setHistoryIndex(nextIndex)
+      pendingCaretRef.current = 0
       onChange(history[history.length - 1 - nextIndex])
     }
     else if (e.key === 'ArrowDown') {
-      if (el?.selectionStart !== value.length || el.selectionEnd !== value.length) return
+      if (historyIndex === -1 && (el?.selectionStart !== value.length || el.selectionEnd !== value.length)) return
       e.preventDefault()
       if (historyIndex === -1) return
       if (historyIndex === 0) {
         setHistoryIndex(-1)
+        pendingCaretRef.current = 0
         onChange(editedHistoryRef.current ?? '')
         editedHistoryRef.current = null
       }
       else {
         const nextIndex = historyIndex - 1
         setHistoryIndex(nextIndex)
-        onChange(sentMessagesRef.current[sentMessagesRef.current.length - 1 - nextIndex])
+        const recalled = sentMessagesRef.current[sentMessagesRef.current.length - 1 - nextIndex]
+        pendingCaretRef.current = recalled.length
+        onChange(recalled)
       }
     }
   }
@@ -135,34 +136,15 @@ export function AiChatInput({
     }
   }
 
-  const chips = actions && actions.length > 0
-    ? (
-        <div className={styles.chips}>
-          {actions.map((action, index) => (
-            <button
-              key={`action_${String(index)}`}
-              type="button"
-              className={styles.chip}
-              disabled={disabled}
-              onClick={() => { selectAction(action) }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      )
-    : null
-
   return (
     <div className={styles.container}>
-      {status && (
-        <AiConnectionStatusIndicator
-          state={status.state}
-          onRetry={status.onRetry}
-          onRestart={status.onRestart}
+      {status && <AiConnectionStatusIndicator state={status} />}
+      {actions && actions.length > 0 && (
+        <AiActionList
+          actions={actions.map(action => ({ label: action.label, onSelect: () => { selectAction(action) } }))}
+          disabled={disabled}
         />
       )}
-      {chips}
       <form onSubmit={handleFormSubmit} className={styles.inputRow}>
         <textarea
           ref={textareaRef}

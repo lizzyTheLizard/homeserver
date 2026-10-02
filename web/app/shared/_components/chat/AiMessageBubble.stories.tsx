@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { AiMessageBubble } from './AiMessageBubble'
 
 const meta = {
-  title: 'Startpage/AiMessageBubble',
+  title: 'Shared/Chat/AiMessageBubble',
   component: AiMessageBubble,
   tags: ['autodocs'],
   argTypes: {

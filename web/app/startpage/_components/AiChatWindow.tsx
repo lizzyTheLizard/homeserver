@@ -17,13 +17,11 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
 
   const canInput = state.type === 'ready'
-  const status = loading
-    ? undefined
-    : {
-        state,
-        onRetry: () => { webSocketRef.current?.forceReconnect() },
-        onRestart: handleRestart,
-      }
+  const retryLabel = state.type === 'wait-for-reconnecting'
+    ? 'Retry now'
+    : state.type === 'automatic-reconnecting-exhausted'
+      ? 'Retry again'
+      : undefined
 
   useEffect(() => {
     const websocket = connectWebSocket()
@@ -69,9 +67,19 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
     webSocketRef.current = websocket
   }
 
+  function handleRetry() {
+    webSocketRef.current?.forceReconnect()
+  }
+
   return (
     <div className={styles.window}>
       <div className={styles.header}>
+        {retryLabel && (
+          <button className={styles.restartButton} onClick={handleRetry} title="Retry connection">
+            <Icon name="reconnect" style={{ width: 14, height: 14 }} />
+            {retryLabel}
+          </button>
+        )}
         <button className={styles.restartButton} onClick={handleRestart} title="Restart conversation">
           <Icon name="restart" style={{ width: 14, height: 14 }} />
           Restart
@@ -90,7 +98,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
         onSubmit={send}
         disabled={!canInput}
         placeholder="Ask me anything…"
-        status={status}
+        status={loading ? undefined : state}
         actions={state.type === 'ready' ? actions.map(action => ({ label: action })) : undefined}
       />
     </div>

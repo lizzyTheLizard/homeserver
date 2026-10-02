@@ -12,7 +12,7 @@ function getInput(canvas: HTMLElement): HTMLTextAreaElement {
 }
 
 const meta = {
-  title: 'Shared/AiChatInput',
+  title: 'Shared/Chat/AiChatInput',
   component: AiChatInput,
   tags: ['autodocs'],
   args: {
@@ -170,6 +170,33 @@ export const ArrowKeysNavigateHistory: Story = {
   },
 }
 
+export const ArrowKeysScrollThroughHistory: Story = {
+  play: async ({ canvasElement }) => {
+    const input = getInput(canvasElement)
+    await fireEvent.change(input, { target: { value: 'first' } })
+    await fireEvent.keyDown(input, { key: 'Enter' })
+    await fireEvent.change(input, { target: { value: 'second' } })
+    await fireEvent.keyDown(input, { key: 'Enter' })
+    await fireEvent.change(input, { target: { value: 'third' } })
+    await fireEvent.keyDown(input, { key: 'Enter' })
+
+    input.selectionStart = 0
+    input.selectionEnd = 0
+    await fireEvent.keyDown(input, { key: 'ArrowUp' })
+    await waitFor(async () => { await expect(input.value).toBe('third') })
+    await fireEvent.keyDown(input, { key: 'ArrowUp' })
+    await waitFor(async () => { await expect(input.value).toBe('second') })
+    await fireEvent.keyDown(input, { key: 'ArrowUp' })
+    await waitFor(async () => { await expect(input.value).toBe('first') })
+    await fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await waitFor(async () => { await expect(input.value).toBe('second') })
+    await fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await waitFor(async () => { await expect(input.value).toBe('third') })
+    await fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await waitFor(async () => { await expect(input.value).toBe('') })
+  },
+}
+
 export const AutoGrowsAndScrolls: Story = {
   play: async ({ canvasElement }) => {
     const input = getInput(canvasElement)
@@ -221,46 +248,31 @@ export const ActionsWithCustomOnSelect: Story = {
 
 export const ShowsReconnectingStatus: Story = {
   args: {
-    status: {
-      state: { type: 'wait-for-reconnecting', nextAttempt: 2, maxAttempts: 10, inSeconds: 8 },
-      onRetry: fn(),
-      onRestart: fn(),
-    },
+    status: { type: 'wait-for-reconnecting', nextAttempt: 2, maxAttempts: 10, inSeconds: 8 },
   },
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     await within(canvasElement).findByText(/Connection lost\. Reconnecting in 8s/)
-    await fireEvent.click(within(canvasElement).getByRole('button', { name: 'Retry now' }))
-    await expect(args.status?.onRetry).toHaveBeenCalled()
+    await expect(within(canvasElement).queryByRole('button', { name: 'Retry now' })).toBeNull()
   },
 }
 
 export const ShowsFatalStatus: Story = {
   args: {
-    status: {
-      state: { type: 'reconnect-impossible' },
-      onRetry: fn(),
-      onRestart: fn(),
-    },
+    status: { type: 'reconnect-impossible' },
   },
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     await within(canvasElement).findByText(/Connection failed, reconnection is not possible/)
-    await fireEvent.click(within(canvasElement).getByRole('button', { name: 'Restart the session' }))
-    await expect(args.status?.onRestart).toHaveBeenCalled()
+    await expect(within(canvasElement).queryByRole('button', { name: 'Restart the session' })).toBeNull()
   },
 }
 
 export const NoStatusIndicatorWhenReady: Story = {
   args: {
-    status: {
-      state: { type: 'ready' },
-      onRetry: fn(),
-      onRestart: fn(),
-    },
+    status: { type: 'ready' },
     actions: [{ label: 'Improve' }],
   },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole('button', { name: 'Improve' })
     await expect(within(canvasElement).queryByText(/Connection/)).toBeNull()
-    await expect(within(canvasElement).queryByRole('button', { name: 'Restart the session' })).toBeNull()
   },
 }
