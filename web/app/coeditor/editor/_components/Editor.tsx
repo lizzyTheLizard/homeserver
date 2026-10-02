@@ -36,7 +36,7 @@ export function Editor({ discussion, templates }: EditorProps) {
       id: randomUUID(),
       discussion_id: restart ? randomUUID() : discussion?.id ?? randomUUID(),
       template_id: state.template.id,
-      text: state.text,
+      text: restart ? '' : state.text,
       parameters: state.parameters,
       selection_start: selection?.start,
       selection_end: selection?.end,
