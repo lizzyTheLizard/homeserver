@@ -126,6 +126,18 @@ export function toTimestamp(date: string): number {
   return Date.parse(`${date}T00:00:00Z`)
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Maps a numeric x-axis tick value back to the label of the point it belongs
+ * to (ticks are pinned to the data points' timestamps, ±half a day).
+ */
+export function labelFor(value: unknown, data: BalancePoint[]): string {
+  if (typeof value !== 'number') return ''
+  const point = data.find(p => Math.abs(p.x - value) < DAY_MS / 2)
+  return point?.label ?? ''
+}
+
 /**
  * Computes evenly spaced, "nice" tick values covering `[min, max]` (which
  * must already include 0) with a 1/2/5×10ⁿ step size, like recharts' own nice

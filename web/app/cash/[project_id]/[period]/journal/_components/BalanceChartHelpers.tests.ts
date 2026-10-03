@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildBalancePoints, chartKindForAccount, prepareBalancePoints, prepareBalanceDeltas, formatDateLabel, formatGranularityLabel, granularityForPeriod, niceTicks, toTimestamp } from './BalanceChartData'
+import { buildBalancePoints, chartKindForAccount, labelFor, prepareBalancePoints, prepareBalanceDeltas, formatDateLabel, formatGranularityLabel, granularityForPeriod, niceTicks, toTimestamp } from './BalanceChartHelpers'
 import { Period } from '@/app/cash/_helper/Period'
 
 const monthPeriod: Period = { current: false, year: 2026, month: 4 }
@@ -214,6 +214,26 @@ describe('toTimestamp', () => {
   it('converts an ISO date to UTC midnight epoch milliseconds', () => {
     expect(toTimestamp('1970-01-01')).toBe(0)
     expect(toTimestamp('1970-01-02')).toBe(24 * 60 * 60 * 1000)
+  })
+})
+
+describe('labelFor', () => {
+  const data = buildBalancePoints([{ date: '2026-04-05', total_balance: 1200 }], undefined, monthPeriod)
+
+  it('finds the label of the point whose timestamp matches the tick value', () => {
+    expect(labelFor(toTimestamp('2026-04-05'), data)).toBe('05.04.26')
+  })
+
+  it('tolerates ticks within half a day of a point', () => {
+    expect(labelFor(toTimestamp('2026-04-05') + 60 * 60 * 1000, data)).toBe('05.04.26')
+  })
+
+  it('returns an empty string for a tick that matches no point', () => {
+    expect(labelFor(toTimestamp('2026-04-01'), data)).toBe('')
+  })
+
+  it('returns an empty string for non-numeric input', () => {
+    expect(labelFor('2026-04-05', data)).toBe('')
   })
 })
 

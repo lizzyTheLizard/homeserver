@@ -4,14 +4,13 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, Responsiv
 import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import { AccountType } from '@/app/cash/_data/AccountType'
 import { Period } from '@/app/cash/_helper/Period'
-import { BalancePoint, chartKindForAccount, formatBalance, niceTicks, prepareBalanceDeltas, prepareBalancePoints } from './BalanceChartData'
+import { BalancePoint, chartKindForAccount, formatBalance, labelFor, niceTicks, prepareBalanceDeltas, prepareBalancePoints } from './BalanceChartHelpers'
 import style from './BalanceChart.module.css'
 
 const LINE_COLOR = 'rgba(0, 0, 220, 1)'
 const GRID_COLOR = 'rgba(200, 200, 200, 1)'
 const AXIS_COLOR = 'rgba(0, 0, 0, 0.55)'
 const ZERO_LINE_COLOR = 'rgba(0, 0, 0, 0.75)'
-const DAY_MS = 24 * 60 * 60 * 1000
 
 export interface BalanceChartProps {
   transactions: AccountTransaction[]
@@ -103,10 +102,4 @@ export function BalanceChart({ transactions, lastBalance, accountType, period }:
       </ResponsiveContainer>
     </div>
   )
-}
-
-function labelFor(value: unknown, data: BalancePoint[]): string {
-  if (typeof value !== 'number') return ''
-  const point = data.find(p => Math.abs(p.x - value) < DAY_MS / 2)
-  return point?.label ?? ''
 }
