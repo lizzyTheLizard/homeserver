@@ -10,7 +10,7 @@ Issue [#106](https://github.com/lizzyTheLizard/homeserver/issues/106): when a us
 - The chart renders as a Client Component (`"use client"`) using `recharts` (new dependency of `@homeserver/web`).
 - Chart data comes from the existing `findAllAccountTransactionsInPeriod()` result (`AccountTransaction` carries `total_balance` and `date` — no new DB queries) plus the existing opening-balance logic already used in `AccountJournal.tsx`.
 - The chart is hidden when the selected period has no transactions to display.
-- **Note on design**: decided with the issue owner — the chart's visual design (style, colors, axis labeling, tooltip) is iterated directly on the component during implementation review, not as a separate approved `design/` mockup.
+- **Note on design**: decided with the issue owner — the chart's visual design (style, colors, axis labeling) is iterated directly on the component during implementation review, not as a separate approved `design/` mockup; the chart is a static, non-interactive visualisation (no tooltip or hover/focus effects).
 - **Out of scope** (per the issue): charts on the general journal (all accounts combined), cross-period or multi-period trend views, and other chart types (bar, pie, etc.).
 
 ## Capabilities

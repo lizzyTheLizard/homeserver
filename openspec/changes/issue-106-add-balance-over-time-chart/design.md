@@ -10,7 +10,7 @@ Current state (observed):
 - `AccountJournal.tsx` already computes the opening-balance row for summation accounts (`isSummationAccount(account.type) && lastTransaction`) via `getOpeningBalanceTransaction(lastTransaction)`, returning `{ id: '0', total_balance: last.total_balance, description: 'Opening Balance' }`. This is the logic to reuse as the chart's first point.
 - `AccountJournal` is a Client Component (`'use client'`) rendering a shared `DataTable`; the page shell (`page.tsx`) wraps it in `<main>`.
 - The app's design tokens (`--gap`, `--gap-small`, `--border-radius`) are defined in `web/public/global.css`.
-- Decided with the issue owner: there is no separate `design/` mockup for the chart — the visual design (style, colors, axis labeling, tooltip) is worked out directly on the component during implementation review.
+- Decided with the issue owner: there is no separate `design/` mockup for the chart — the visual design (style, colors, axis labeling) is worked out directly on the component during implementation review.
 
 ## Goals / Non-Goals
 
@@ -18,7 +18,7 @@ Current state (observed):
 - Render a `recharts` line chart above the transaction table on the account journal page when an account is selected.
 - Reuse the existing data flow and opening-balance logic — no DB queries, no server action changes.
 - Hide the chart when there are no transactions, and keep it responsive at desktop and mobile widths.
-- Decide the chart's visual design (colors, axis labels, tooltip) directly on the component during implementation review.
+- Decide the chart's visual design (colors, axis labels) directly on the component during implementation review.
 
 **Non-Goals:**
 - No chart on the general journal (`Journal.tsx`), no cross-period/multi-period trends, no other chart types — all explicitly out of scope in the issue.
@@ -45,8 +45,8 @@ The chart's first point is produced by the same `getOpeningBalanceTransaction(la
 
 A new `BalanceChart` component (`web/app/cash/[project_id]/[period]/journal/_components/BalanceChart.tsx` + `BalanceChart.module.css`) renders a `recharts` `<LineChart>` inside a `ResponsiveContainer`, with the transaction table's currency/sign presentation preserved (credit accounts show adjusted totals as the table does — the component accepts the already-adjusted display value or applies the same `totalCell`-style adjustment, mirroring `AccountJournal`'s existing presentation). `recharts` is added to `web/package.json`.
 
-- **Rationale**: `recharts` was chosen in the issue's technical notes; its `ResponsiveContainer` gives responsive desktop/mobile behavior with minimal code, and `Tooltip` covers the hover/tooltip behavior.
-- **Alternative considered**: hand-rolled SVG. Rejected: more code, worse tooltip/responsive behavior, and the issue already preselects `recharts`.
+- **Rationale**: `recharts` was chosen in the issue's technical notes; its `ResponsiveContainer` gives responsive desktop/mobile behavior with minimal code.
+- **Alternative considered**: hand-rolled SVG. Rejected: more code, worse responsive behavior, and the issue already preselects `recharts`.
 
 ### D4: Rendering and placement in `AccountJournal.tsx`
 
@@ -57,7 +57,7 @@ A new `BalanceChart` component (`web/app/cash/[project_id]/[period]/journal/_com
 
 ### D5: Visual design is set during implementation review
 
-The chart's styling (line style and colors, axis labeling, tooltip formatting) is decided when the component is built, reusing the app's existing tokens and the journal page's currency/sign presentation, and is confirmed with the user in the implementation review.
+The chart's styling (line style and colors, axis labeling) is decided when the component is built, reusing the app's existing tokens and the journal page's currency/sign presentation, and is confirmed with the user in the implementation review. The chart is a static, non-interactive visualisation: no hover tooltip, no hover/focus effects, and no focusable element (`accessibilityLayer={false}`, no `tabIndex`/`role`; the CSS disables pointer events, focus outlines and text selection) — decided by the issue owner during implementation review.
 
 - **Rationale**: the issue owner asked to skip a separate `design/` mockup and iterate on the component directly; per the proposal, this deviates from the issue's acceptance-criterion #1 by decision.
 - **Alternative considered**: a `design/cash/` mockup first. Rejected by the issue owner — no `design/` files are to be updated in this change.
@@ -66,7 +66,7 @@ The chart's styling (line style and colors, axis labeling, tooltip formatting) i
 
 - [recharts version / React 19 compatibility] → Mitigation: pin the current stable `recharts` release; it renders inside `ResponsiveContainer` only, so any compatibility issue is isolated to the chart component.
 - [Chart/table total mismatch for credit or non-summation accounts] → Mitigation: D2/D3 reuse the same total adjustment and opening-balance helper as `AccountJournal`, so line and table stay consistent.
-- [Storybook interaction tests with `recharts`] → Mitigation: add a Storybook story + interaction tests for `BalanceChart` per the repo's storybook test project, verifying tooltip and rendering behavior.
+- [Storybook interaction tests with `recharts`] → Mitigation: add a Storybook story + interaction tests for `BalanceChart` per the repo's storybook test project, verifying rendering behavior.
 - [Opening-balance point has no date] → Mitigation: D2 assigns the period start date as its x in the component; the chart shows the opening point as the leftmost data point.
 - [No pre-approved visual reference for the chart] → Mitigation: D5 iterates the styling on the component and confirms it with the user in the implementation review before the task is committed.
 
@@ -76,4 +76,4 @@ No data migration, no environment changes: `recharts` is a new runtime dependenc
 
 ## Open Questions
 
-- None that affect the specs, approach, or tasks — the remaining unknowns (exact colors, axis formatting, tooltip content) are settled on the component during implementation review (D5).
+- None that affect the specs, approach, or tasks — the remaining unknowns (exact colors, axis formatting) are settled on the component during implementation review (D5).
