@@ -1,0 +1,11 @@
+# Tasks
+
+## 1. Chart Implementation
+
+- [x] 1.1 Add `recharts` to `@homeserver/web` dependencies (`web/package.json`) and install it. Verify: `pnpm install` succeeds and `pnpm --filter @homeserver/web build` still passes
+- [x] 1.2 Create the `BalanceChart` Client Component (`web/app/cash/[project_id]/[period]/journal/_components/BalanceChart.tsx` + `BalanceChart.module.css`) using `recharts`: a line chart of the running balance for summation accounts (one point per period group — per day for a month period, per month for a year period, per year for all history) and a bar chart for expense/income/profit accounts where each bar shows only that group's net balance change; includes the opening balance as the first line point; is hidden when there are no transactions, scales via `ResponsiveContainer`, and is a static non-interactive visualisation (no tooltip, hover/focus effects or focusable element). Verify: a Storybook story with interaction tests covers rendering, the opening-balance first point, the period-granularity grouping, both chart kinds (line and per-group-difference bars), responsive container, the empty state, and the absence of any interactivity (no tooltip, no `tabindex`/`role`)
+- [x] 1.3 Render `<BalanceChart>` in `AccountJournal.tsx` above the `DataTable`, passing the existing `transactions`, `lastTransaction`, `account`, and `period` props (chart reads `lastTransaction.total_balance` as the carried-in balance). Verify: `journal/server.tests.ts` still passes, the chart appears above the table at `/cash/<project>/<period>/journal?accountId=…` — a line starting at the opening balance for summation accounts, per-group difference bars for expense/income accounts — and is absent on the general journal and when the period has no transactions
+
+## 2. Integration Verification
+
+- [x] 2.1 Run the full web validation and whole-repo checks: `pnpm --filter @homeserver/web test` (unit, integration, storybook) and `pnpm lint:ci` from the repo root, plus a manual browser check of the account journal at desktop and mobile widths (chart visible, responsive, hidden when empty). Verify: all test projects and lint pass with no failures

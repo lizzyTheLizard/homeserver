@@ -22,6 +22,7 @@ import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Journal.module.css'
 import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
 import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
+import { BalanceChart } from './BalanceChart'
 
 export interface AccountJournalProps {
   account: Account
@@ -135,6 +136,7 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
 
   return (
     <>
+      <BalanceChart transactions={transactionsIn} lastBalance={lastTransaction?.total_balance} accountType={account.type} period={period} />
       <DataTable
         columns={columns}
         data={transactions}

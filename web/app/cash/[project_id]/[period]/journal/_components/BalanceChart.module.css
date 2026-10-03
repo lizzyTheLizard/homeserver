@@ -1,0 +1,25 @@
+.chart {
+  width: 100%;
+  height: 16rem;
+  margin-bottom: var(--gap);
+  /* Static, non-interactive visualisation: no focus outline, cursor or selection. */
+  pointer-events: none;
+  user-select: none;
+  outline: none;
+}
+
+.chart *:focus {
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  .chart {
+    height: 12rem;
+  }
+}
+
+@media print {
+  .chart {
+    display: none;
+  }
+}
