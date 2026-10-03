@@ -8,4 +8,4 @@
 
 ## 2. Integration Verification
 
-- [ ] 2.1 Run the full web validation and whole-repo checks: `pnpm --filter @homeserver/web test` (unit, integration, storybook) and `pnpm lint:ci` from the repo root, plus a manual browser check of the account journal at desktop and mobile widths (chart visible, responsive, hidden when empty). Verify: all test projects and lint pass with no failures
+- [x] 2.1 Run the full web validation and whole-repo checks: `pnpm --filter @homeserver/web test` (unit, integration, storybook) and `pnpm lint:ci` from the repo root, plus a manual browser check of the account journal at desktop and mobile widths (chart visible, responsive, hidden when empty). Verify: all test projects and lint pass with no failures
