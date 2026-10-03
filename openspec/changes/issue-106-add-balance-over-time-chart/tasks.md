@@ -2,7 +2,7 @@
 
 ## 1. Chart Implementation
 
-- [ ] 1.1 Add `recharts` to `@homeserver/web` dependencies (`web/package.json`) and install it. Verify: `pnpm install` succeeds and `pnpm --filter @homeserver/web build` still passes
+- [x] 1.1 Add `recharts` to `@homeserver/web` dependencies (`web/package.json`) and install it. Verify: `pnpm install` succeeds and `pnpm --filter @homeserver/web build` still passes
 - [ ] 1.2 Create the `BalanceChart` Client Component (`web/app/cash/[project_id]/[period]/journal/_components/BalanceChart.tsx` + `BalanceChart.module.css`) using `recharts`: plots `total_balance` (y-axis) against `date` (x-axis) for every transaction in ascending period order, includes the opening balance as the first point (x = period start), is hidden when there are no transactions, and scales via `ResponsiveContainer`. Verify: a Storybook story with interaction tests covers rendering, the opening-balance first point, tooltip, responsive container, and the empty state
 - [ ] 1.3 Render `<BalanceChart>` in `AccountJournal.tsx` above the `DataTable`, passing the existing `transactions`, `lastTransaction`, `account`, and `period` props and reusing the existing opening-balance logic (`getOpeningBalanceTransaction` / summation-account condition). Verify: `journal/server.tests.ts` still passes, the chart appears above the table at `/cash/<project>/<period>/journal?accountId=…` with an opening-balance first point, and is absent on the general journal and when the period has no transactions
 
