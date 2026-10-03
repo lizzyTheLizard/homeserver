@@ -20,23 +20,33 @@ When an account is selected on the account journal page, the page SHALL display 
 - **WHEN** a user opens the general journal without selecting a single account
 - **THEN** no balance chart is displayed
 
-### Requirement: Chart plots running balance against transaction date
+### Requirement: Chart presentation matches the account's balance
 
-The chart SHALL plot each transaction's running balance (`total_balance`) on the y-axis against the transaction's `date` on the x-axis, covering every transaction in the selected period.
+The chart SHALL present the account's balance in the same way as the transaction table's Total column. For summation accounts (Cash, Asset, Equity, Liability) the chart is a line chart of the absolute running balance, starting at the opening balance carried into the period (matching the table's opening-balance row). For expense, income and profit accounts the chart is a bar chart: each bar shows only that group's net balance change (the difference for its day, month or year), never the accumulated sum, matching the table's period-relative totals. Credit accounts invert the sign, like the table.
 
-#### Scenario: Each transaction becomes a data point
+#### Scenario: Summation account shows a running-balance line
+
+- **WHEN** the account journal page shows an opening balance row in the transaction table (a summation account)
+- **THEN** the chart is a line whose first data point is that opening balance, before the first transaction of the period
+
+#### Scenario: Expense or income account shows bars of per-group differences
+
+- **WHEN** the selected account is an expense, income or profit account
+- **THEN** the chart is a bar chart with one bar per day (month period), month (year period), or year (all history), each bar showing only that group's net balance change
+
+### Requirement: Chart plots one point per period group
+
+The chart SHALL show at most one point (or bar) per group, with the grouping matching the selected period: a single-month period groups by day, a single-year period by month, and the whole history by year. For bars, each group shows its net balance change (the difference between consecutive group-ending balances, or from the carried-in balance for the first group).
+
+#### Scenario: Each period group contributes one point
 
 - **WHEN** the chart renders the transactions of the selected period
-- **THEN** every transaction contributes a point at (date, total_balance) in period order
+- **THEN** each day (month period), month (year period), or year (all history) contributes a single point or bar, in period order
 
-### Requirement: Opening balance is the first data point
+#### Scenario: Several transactions in one group collapse
 
-The chart SHALL start with the account's opening balance as its first data point, reusing the existing opening-balance logic from `AccountJournal.tsx` so chart and table agree: when the transaction table shows an opening balance row, that balance is the first point of the chart.
-
-#### Scenario: Chart starts at the opening balance
-
-- **WHEN** the account journal page shows an opening balance row in the transaction table
-- **THEN** the chart's first data point is that opening balance, before the first transaction of the period
+- **WHEN** multiple transactions of the selected period fall within the same day, month, or year group
+- **THEN** the chart shows a single point for that group (the last transaction's running balance) or a single bar (the group's net change)
 
 ### Requirement: Responsive chart layout
 

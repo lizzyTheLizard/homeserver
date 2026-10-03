@@ -6,7 +6,7 @@ Issue [#106](https://github.com/lizzyTheLizard/homeserver/issues/106): when a us
 
 ## What Changes
 
-- A line chart is displayed above the transaction table on the account journal page (`web/app/cash/[project_id]/[period]/journal/`) when an account is selected. The chart plots each transaction's running balance (`total_balance`, y-axis) against its `date` (x-axis), with the opening balance as the first data point.
+- A chart is displayed above the transaction table on the account journal page (`web/app/cash/[project_id]/[period]/journal/`) when an account is selected. For summation accounts a line chart plots the running balance (`total_balance`, y-axis) against `date` (x-axis) with the opening balance as the first data point; for expense, income and profit accounts a bar chart shows each period group's net balance change.
 - The chart renders as a Client Component (`"use client"`) using `recharts` (new dependency of `@homeserver/web`).
 - Chart data comes from the existing `findAllAccountTransactionsInPeriod()` result (`AccountTransaction` carries `total_balance` and `date` — no new DB queries) plus the existing opening-balance logic already used in `AccountJournal.tsx`.
 - The chart is hidden when the selected period has no transactions to display.
