@@ -24,6 +24,7 @@ COPY --from=deps /app/pnpm* ./
 COPY ./web ./web
 COPY ./assistant/microsoft/types.ts ./assistant/microsoft/types.ts
 COPY ./assistant/whatsapp/types.ts ./assistant/whatsapp/types.ts
+COPY ./db ./db
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/web build
 
