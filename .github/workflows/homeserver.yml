@@ -139,7 +139,7 @@ jobs:
               push: false
               tags: whatsapp-bridge:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/whatsapp-bridge.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
@@ -166,7 +166,7 @@ jobs:
               push: false
               tags: homeserver-assistant:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/homeserver-assistant.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
