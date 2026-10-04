@@ -216,8 +216,6 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   dev-machine:
-    build:
-      context: ./dev
     image: homeserver-dev-machine:latest
     pull_policy: never
     container_name: DEV-Machine

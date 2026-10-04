@@ -48,13 +48,17 @@ only affects how fast and how cacheable the application image build is.
 
 - `.github/workflows/homeserver.yml` — `build-app`, `build-assistant`, and `build-whatsapp` job cache
   inputs changed (`cache-to` set to `mode=min`); `integration-smoke` job gains buildx setup and
-  third-party image caching.
+  third-party image caching; new `build-dev-machine` job; `integration-smoke` and `deploy` load the
+  dev-machine artifact.
 - `web/Dockerfile` — runner stage copies the standalone output instead of full `node_modules` /
   `web/.next`; `CMD` adjusted for the standalone layout.
 - `web/next.config.ts` — `output: "standalone"` added.
 - `web/package.json` — `build` script switched to the Turbopack build invocation.
 - `assistant/Dockerfile` — `prod-deps` stage added; runner copies production `node_modules` only.
-- `infrastructure/docker-compose.yml`, `integration-test/docker-compose.ci.yml` — build cache
-  (`cache_from`/`cache_to`) added to `dev-machine`, `backup`, and `mock-oidc-server` builds.
+- `dev-machine/` — moved out of `infrastructure/dev/` to a top-level package; Dockerfile `COPY`
+  paths made repo-root-relative; built as a first-class image artifact.
+- `infrastructure/docker-compose.yml` — `dev-machine` service is image-only (`homeserver-dev-machine:latest`
+  + `pull_policy: never`); `backup`/`mock-oidc-server` retain build-cache entries.
+- `integration-test/docker-compose.ci.yml` — `mock-oidc-server` build-cache entries.
 - Behavior: the produced images remain valid and deployable; no change to the smoke suite's
   test assertions or the deploy job.

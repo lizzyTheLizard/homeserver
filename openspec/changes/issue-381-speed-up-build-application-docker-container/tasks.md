@@ -26,3 +26,10 @@
 - [x] 5.1 Cache the third-party Docker image pulls in the `integration-smoke` job (`actions/cache` on `docker save` tarballs, loaded before `up`, saved after) so cold runners skip re-downloading nginx/postgres/pgweb/dozzle/caddy/bind9/certbot and the base images.
 - [x] 5.2 Build `dev-machine`, `backup`, and `mock-oidc-server` explicitly with `docker/build-push-action` (`cache-from`/`cache-to: type=gha`, `load: true`) and run `docker compose up --no-build`, so their apt-get/bootstrap layers are restored from the GHA cache instead of rebuilt.
 - [x] 5.3 Verify the smoke suite still passes (9/9) and the `Start smoke stack` step is faster on a second consecutive push with warmed caches.
+
+## 6. Move dev-machine into its own image build
+
+- [ ] 6.1 Move `infrastructure/dev/` to a top-level `dev-machine/` folder (like `whatsapp-bridge`), prefix its Dockerfile `COPY` paths (`dev-machine/supervisord.conf`, `dev-machine/entrypoint.sh`), and remove the `build:` section from the `dev-machine` compose service (image-only + `pull_policy: never`).
+- [ ] 6.2 Add a `build-dev-machine` CI job that builds `dev-machine/Dockerfile` (context `.`) into `homeserver-dev-machine:latest`, exports a `.tar`, and uploads it as an artifact, mirroring `build-whatsapp`.
+- [ ] 6.3 Wire the artifact into `integration-smoke` (download + `docker load`, drop the inline dev-machine build) and the `deploy` job (download + rsync + `docker load`), and add `build-dev-machine` to `all-build-checks` needs.
+- [ ] 6.4 Update docs (`AGENTS.md`, `infrastructure/README.md`) for the new `dev-machine/` location and image-based deploy, and verify the full CI pipeline (build → smoke → deploy) is green.

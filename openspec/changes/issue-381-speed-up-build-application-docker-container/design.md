@@ -102,6 +102,23 @@ that repeated work — the 9 smoke tests themselves already run in ~35s.
 - Trim which services the smoke stack starts (option 2) — deferred; the tests only exercise a subset, but removing services risks weakening coverage and is a separate scope decision.
 - Cache via buildx `mode=max` for the third-party pulls — buildx gha cache only covers `build`, not `image:` pulls, so the `docker save`/`load` cache is still needed for third-party images.
 
+### 6. Move dev-machine into its own image build
+
+**Decision**: Move `infrastructure/dev/` to a top-level `dev-machine/` (mirroring `whatsapp-bridge/`),
+give its Dockerfile repo-root-relative `COPY` paths, remove the compose `build:` section (image-only +
+`pull_policy: never`), and build it in a dedicated `build-dev-machine` CI job that exports
+`homeserver-dev-machine:latest` as an artifact. The artifact is loaded in both `integration-smoke`
+and `deploy`, replacing the inline dev-machine build.
+
+**Rationale**: The `dev-machine` image is the heaviest in the stack (apt bootstrap + code-server +
+OpenCode + Playwright deps + wacli) and was being rebuilt inline in the smoke job. Building it once
+as a first-class artifact (like the app/assistant/whatsapp-bridge images) lets both the smoke job
+and the production deploy reuse the same image, and keeps its gha layer cache in its own scope.
+
+**Alternatives considered**:
+- Keep `dev-machine` under `infrastructure/dev` and build inline — rejected: it rebuilds on every smoke run and diverges from the artifact pattern the other three images already follow.
+- Keep a compose `build:` section pointing at `../dev-machine` — rejected: the deploy's `docker compose up --build` would rebuild it on the server, defeating the shared artifact.
+
 ## Risks / Trade-offs
 
 - **`mode=min` lowers cache-hit rate for non-final layers** → Mitigation: separate scopes isolate the `deps` stage (the expensive install) so it still hits cache on source-only changes; rebuilds re-populate the cache on later pushes.
@@ -109,6 +126,7 @@ that repeated work — the 9 smoke tests themselves already run in ~35s.
 - **Turbopack behavior differences** → Mitigation: the smoke suite and storybook/unit/integration tests run in CI and will catch regressions; if a specific Turbopack incompatibility surfaces, scope the build change to a follow-up.
 - **Assistant `--prod` install could omit a runtime dependency** → Mitigation: the `--prod` set is the same one the whatsapp-bridge image already uses successfully, and the smoke suite boots the assistant container, which exercises its runtime requires.
 - **Smoke-stack cache invalidation** → Mitigation: the third-party image cache key is tied to the compose files, and the buildx `type=gha` layer cache self-invalidates on layer changes, so a changed image or build input forces a fresh pull/build.
+- **dev-machine image drift from source** → Mitigation: the `build-dev-machine` job runs on every push (like the other three images) and is a gate via `all-build-checks`, so the loaded image always matches the branch's `dev-machine/` source.
 - **First build after switch is not faster** → Mitigation: the benefit is for subsequent cache-hit builds; the change is still correct because the acceptance criteria target the steady-state cache-hit path.
 
 ## Migration Plan

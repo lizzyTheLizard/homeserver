@@ -72,7 +72,7 @@ Vitest runs three projects in parallel:
 - `integration` — Each `erver.ts` has an integration test `server.tests.ts` which hits an in-memory PGlite DB seeded with all migrations from `db/`
 - `storybook` — runs Story interaction tests via Playwright/Chromium
 
-The `dev` container has the Playwright **OS dependencies** preinstalled (see `infrastructure/dev/Dockerfile`), but the **browser binaries are not**. Before running the storybook test project, make sure the browsers are installed: if Playwright's browsers are not present, the agent must execute `pnpm exec playwright install --with-deps` from the repo root inside the dev container — this downloads the Chromium binaries (and any remaining OS deps).
+The `dev` container has the Playwright **OS dependencies** preinstalled (see `dev-machine/Dockerfile`), but the **browser binaries are not**. Before running the storybook test project, make sure the browsers are installed: if Playwright's browsers are not present, the agent must execute `pnpm exec playwright install --with-deps` from the repo root inside the dev container — this downloads the Chromium binaries (and any remaining OS deps).
 
 ## Design
 
