@@ -193,7 +193,7 @@ jobs:
               push: false
               tags: homeserver-dev-machine:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/homeserver-dev-machine.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
