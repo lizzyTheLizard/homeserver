@@ -116,10 +116,8 @@ services:
   backup:
     build:
       context: ./db-backup
-      cache_from:
-        - type=gha,scope=smoke-backup
-      cache_to:
-        - type=gha,mode=max,scope=smoke-backup
+    image: homeserver-backup:latest
+    pull_policy: never
     container_name: Backup
     restart: unless-stopped
     env_file:
@@ -220,10 +218,8 @@ services:
   dev-machine:
     build:
       context: ./dev
-      cache_from:
-        - type=gha,scope=smoke-dev-machine
-      cache_to:
-        - type=gha,mode=max,scope=smoke-dev-machine
+    image: homeserver-dev-machine:latest
+    pull_policy: never
     container_name: DEV-Machine
     environment:
       REPO_URL: "${REPO_URL}"
