@@ -23,6 +23,6 @@
 
 ## 5. Speed up the integration smoke stack
 
-- [ ] 5.1 Cache the third-party Docker image pulls in the `integration-smoke` job (`actions/cache` on `docker save` tarballs, loaded before `up`, saved after) so cold runners skip re-downloading nginx/postgres/pgweb/dozzle/caddy/bind9/certbot and the base images.
-- [ ] 5.2 Build `dev-machine`, `backup`, and `mock-oidc-server` explicitly with `docker/build-push-action` (`cache-from`/`cache-to: type=gha`, `load: true`) and run `docker compose up --no-build`, so their apt-get/bootstrap layers are restored from the GHA cache instead of rebuilt.
-- [ ] 5.3 Verify the smoke suite still passes (9/9) and the `Start smoke stack` step is faster on a second consecutive push with warmed caches.
+- [x] 5.1 Cache the third-party Docker image pulls in the `integration-smoke` job (`actions/cache` on `docker save` tarballs, loaded before `up`, saved after) so cold runners skip re-downloading nginx/postgres/pgweb/dozzle/caddy/bind9/certbot and the base images.
+- [x] 5.2 Build `dev-machine`, `backup`, and `mock-oidc-server` explicitly with `docker/build-push-action` (`cache-from`/`cache-to: type=gha`, `load: true`) and run `docker compose up --no-build`, so their apt-get/bootstrap layers are restored from the GHA cache instead of rebuilt.
+- [x] 5.3 Verify the smoke suite still passes (9/9) and the `Start smoke stack` step is faster on a second consecutive push with warmed caches.
