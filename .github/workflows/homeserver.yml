@@ -107,7 +107,7 @@ jobs:
               push: false
               tags: homeserver:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max 
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}
@@ -139,7 +139,7 @@ jobs:
               push: false
               tags: whatsapp-bridge:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/whatsapp-bridge.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
@@ -166,7 +166,7 @@ jobs:
               push: false
               tags: homeserver-assistant:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/homeserver-assistant.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
@@ -176,10 +176,37 @@ jobs:
               name: homeserver-assistant
               path: ${{ runner.temp }}/homeserver-assistant.tar
               retention-days: 1
+    build-dev-machine:
+        name: Build Dev Machine Docker Container
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v4
+          - name: Build Docker
+            uses: docker/build-push-action@v7
+            with:
+              context: .
+              file: dev-machine/Dockerfile
+              platforms: linux/amd64
+              push: false
+              tags: homeserver-dev-machine:latest
+              cache-from: type=gha
+              cache-to: type=gha,mode=min
+              outputs: type=docker,dest=${{ runner.temp }}/homeserver-dev-machine.tar
+            env:
+              DOCKER_BUILD_RECORD_UPLOAD: false
+          - name: Upload artifact
+            uses: actions/upload-artifact@v7
+            with:
+              name: homeserver-dev-machine
+              path: ${{ runner.temp }}/homeserver-dev-machine.tar
+              retention-days: 1
     integration-smoke:
         name: Integration Smoke (docker-compose stack)
         runs-on: ubuntu-latest
-        needs: [build-app, build-whatsapp, build-assistant]
+        needs: [build-app, build-whatsapp, build-assistant, build-dev-machine]
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -200,11 +227,29 @@ jobs:
             with:
               name: homeserver-assistant
               path: ${{ runner.temp }}
+          - name: Download dev-machine artifact
+            uses: actions/download-artifact@v8
+            with:
+              name: homeserver-dev-machine
+              path: ${{ runner.temp }}
           - name: Load Docker images
             run: |
               docker load --input ${{ runner.temp }}/homeserver.tar
               docker load --input ${{ runner.temp }}/whatsapp-bridge.tar
               docker load --input ${{ runner.temp }}/homeserver-assistant.tar
+              docker load --input ${{ runner.temp }}/homeserver-dev-machine.tar
+          - name: Cache third-party Docker images
+            uses: actions/cache@v6
+            id: third-party-images
+            with:
+              path: ${{ runner.temp }}/third-party-images
+              key: third-party-images-${{ hashFiles('infrastructure/docker-compose.yml', 'integration-test/docker-compose.ci.yml') }}
+          - name: Load cached third-party Docker images
+            if: ${{ steps.third-party-images.outputs.cache-hit == 'true' }}
+            run: |
+              for f in ${{ runner.temp }}/third-party-images/*.tar; do
+                [ -f "$f" ] && docker load --input "$f" || true
+              done
           - name: Cache Playwright Browsers
             uses: actions/cache@v6
             id: playwright-cache
@@ -233,6 +278,15 @@ jobs:
             run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml up -d --wait --wait-timeout 300 --remove-orphans
             env:
               AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          - name: Save third-party Docker images for cache
+            if: ${{ steps.third-party-images.outputs.cache-hit != 'true' }}
+            run: |
+              mkdir -p "${{ runner.temp }}/third-party-images"
+              for img in nginx:alpine postgres:16-alpine sosedoff/pgweb amir20/dozzle:latest caddy:2-alpine ubuntu/bind9:latest certbot/certbot:latest node:24-alpine; do
+                if docker image inspect "$img" >/dev/null 2>&1; then
+                  docker save "$img" --output "${{ runner.temp }}/third-party-images/$(echo "$img" | tr '/:' '__').tar"
+                fi
+              done
           - name: Run smoke checks
             run: pnpm --filter @homeserver/integration-test test
           - name: Dump smoke stack logs
@@ -244,7 +298,7 @@ jobs:
     all-build-checks:
         name: All Build Check Success
         runs-on: ubuntu-latest
-        needs: [lint, test-assistant, test-web-unit, test-web-integration, test-web-storybook, test-whatsapp, build-app, build-whatsapp, build-assistant, integration-smoke]
+        needs: [lint, test-assistant, test-web-unit, test-web-integration, test-web-storybook, test-whatsapp, build-app, build-whatsapp, build-assistant, build-dev-machine, integration-smoke]
         if: always()
         steps:
           - name: Fail if any required job failed or was cancelled
@@ -275,6 +329,11 @@ jobs:
             with:
               name: homeserver-assistant
               path: ${{ runner.temp }}
+          - name: Download dev-machine artifact
+            uses: actions/download-artifact@v8
+            with:
+              name: homeserver-dev-machine
+              path: ${{ runner.temp }}
           - name: Set up SSH key
             uses: webfactory/ssh-agent@v0.10.0
             with:
@@ -289,6 +348,7 @@ jobs:
               rsync -avz ${{ runner.temp }}/homeserver.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
               rsync -avz ${{ runner.temp }}/whatsapp-bridge.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
               rsync -avz ${{ runner.temp }}/homeserver-assistant.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+              rsync -avz ${{ runner.temp }}/homeserver-dev-machine.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
           - name: Load images and restart stack
             run: |
               ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
@@ -297,7 +357,8 @@ jobs:
                 docker load --input homeserver.tar
                 docker load --input whatsapp-bridge.tar
                 docker load --input homeserver-assistant.tar
-                rm -f homeserver.tar whatsapp-bridge.tar homeserver-assistant.tar
+                docker load --input homeserver-dev-machine.tar
+                rm -f homeserver.tar whatsapp-bridge.tar homeserver-assistant.tar homeserver-dev-machine.tar
                 docker compose up -d --build --force-recreate --remove-orphans
                 docker image prune -f
               EOF

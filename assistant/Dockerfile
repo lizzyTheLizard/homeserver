@@ -25,6 +25,15 @@ COPY assistant/ ./assistant
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
 
+# Production dependencies only, so the runtime image does not carry the full
+# dev tree. Mirrors the whatsapp-bridge image's prod-deps stage.
+FROM base AS prod-deps
+WORKDIR /app
+COPY package.json ./package.json
+COPY pnpm* ./
+COPY assistant/package.json ./assistant/package.json
+RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/assistant
+
 # Production image, copy all the files and run the assistant server
 FROM base AS runner
 WORKDIR /app
@@ -34,8 +43,8 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/assistant/node_modules ./assistant/node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/assistant/node_modules ./assistant/node_modules
 COPY --from=builder /app/assistant/dist ./assistant/dist
 
 USER nodejs

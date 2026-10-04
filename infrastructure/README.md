@@ -34,7 +34,7 @@ see [§6.8](#68-deploying--upgrading-the-application)).
 | Backups            | `backup` (`Backup`)              | built from `db-backup/`    |
 | Logs UI            | `dozzle` (`Dozzle`)              | `amir20/dozzle:latest`     |
 | DB UI (prod)       | `pgwebprod` (`Prod-Pgweb`)       | `sosedoff/pgweb`           |
-| Development        | `dev-machine` (`Dev`)            | built from `dev/`          |
+| Development        | `dev-machine` (`Dev`)            | built from `../dev-machine/` |
 
 ### How things are reachable
 
@@ -154,7 +154,7 @@ docker compose pull                      # pull newer images for prebuilt servic
 docker compose up -d                     # apply changed config / recreate changed services
 docker compose up -d --force-recreate    # force recreate even if nothing "changed"
 docker compose up -d --build             # rebuild the locally-built images
-                                        # (backup, dev-machine)
+                                        # (backup; dev-machine is built in CI and loaded from an artifact)
 docker compose config                    # dry-run: validate the rendered compose file
 ```
 
@@ -273,7 +273,7 @@ docker compose up -d --force-recreate backup
 
 ### 5.7 Bootstrap / re-bootstrap the dev-machine
 
-On first start the `dev-machine` entrypoint (`dev/entrypoint.sh`):
+On first start the `dev-machine` entrypoint (`../dev-machine/entrypoint.sh`):
 
 1. Sets the git identity from `GIT_NAME` / `GIT_MAIL`.
 2. Appends every key in `DEV_SSH_KEY_PUB` to `/home/dev/.ssh/authorized_keys`.
@@ -403,7 +403,7 @@ docker compose -f infrastructure/docker-compose.yml \
 * **Repo:** https://github.com/lizzyTheLizard/homeserver
 * **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
 * **CI deploy pipeline:** `.github/workflows/homeserver.yml` builds the
-  `homeserver:latest`, `whatsapp-bridge:latest` and `homeserver-assistant:latest`
-  images and deploys them to the server; the compose stack is then started/updated
-  with `docker compose up -d`.
+  `homeserver:latest`, `whatsapp-bridge:latest`, `homeserver-assistant:latest`
+  and `homeserver-dev-machine:latest` images and deploys them to the server; the
+  compose stack is then started/updated with `docker compose up -d`.
 

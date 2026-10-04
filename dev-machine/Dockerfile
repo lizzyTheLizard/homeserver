@@ -80,8 +80,8 @@ RUN mkdir -p /var/run/sshd \
     && echo "AllowUsers dev" >> /etc/ssh/sshd_config
 
 # 9. Copy configuration files & entrypoint script
-COPY supervisord.conf /etc/supervisor/supervisord.conf
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY dev-machine/supervisord.conf /etc/supervisor/supervisord.conf
+COPY dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 USER dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
