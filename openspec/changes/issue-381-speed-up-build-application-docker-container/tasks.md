@@ -18,7 +18,7 @@
 
 ## 4. Turbopack build
 
-- [ ] 4.1 Switch the `web` build to Turbopack in `web/package.json` and verify `pnpm --filter @homeserver/web build` completes successfully and the produced `.next` output passes the web unit/integration/storybook test jobs in CI.
+- [x] 4.1 Switch the `web` build to Turbopack in `web/package.json` and verify `pnpm --filter @homeserver/web build` completes successfully and the produced `.next` output passes the web unit/integration/storybook test jobs in CI.
 - [ ] 4.2 Verify the Turbopack build produces a deployable image: the full `build-app` → `integration-smoke` → `deploy` path succeeds in CI on the branch.
 
 ## 5. Speed up the integration smoke stack
