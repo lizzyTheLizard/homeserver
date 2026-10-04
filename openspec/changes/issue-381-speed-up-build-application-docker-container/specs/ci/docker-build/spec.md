@@ -8,7 +8,7 @@ Defines the caching and performance behavior of the application Docker image bui
 
 ### Requirement: Cached application image build
 
-The CI application image build SHALL use per-stage cache scopes so that a push with no change to the web application's dependency manifests reuses previously installed dependencies instead of re-installing them, and no change to the web sources reuses the previously built output instead of rebuilding it.
+The CI application image build SHALL cache each build stage's output so that a push with no change to the web application's dependency manifests reuses previously installed dependencies instead of re-installing them, and no change to the web sources reuses the previously built output instead of rebuilding it.
 
 #### Scenario: No source change reuses cached build
 - **WHEN** a push reaches the application image build with no change to the web sources or dependency manifests since the last build that populated the cache

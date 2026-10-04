@@ -10,10 +10,9 @@ every push before the smoke suite and deploy can run.
 
 ## What Changes
 
-- **Scoped cache export** — Replace the single `cache-from: type=gha` / `cache-to: type=gha,mode=max`
-  pair in the `build-app` job with per-stage `scope=` caches (`deps`, `builder`, `runner`) using
-  `mode=min`, so only the layers that actually change are re-exported instead of every intermediate
-  stage.
+- **Cache export mode** — Replace `cache-to: type=gha,mode=max` with `cache-to: type=gha,mode=min`
+  in the `build-app` job so only the final layer of each build stage is exported instead of every
+  intermediate layer (the measured ~110s bottleneck).
 - **Turbopack build** — Switch the `@homeserver/web` build from webpack to Turbopack (Next 16.3.6
   already supports it) so `next build` shortens.
 - **Standalone output** — Set `output: "standalone"` for `web` so the runner image copies the
@@ -39,8 +38,7 @@ only affects how fast and how cacheable the application image build is.
 
 ## Impact
 
-- `.github/workflows/homeserver.yml` — `build-app` job cache inputs changed (scoped `cache-from`
-  / `cache-to` with `mode=min`).
+- `.github/workflows/homeserver.yml` — `build-app` job cache inputs changed (`cache-to` set to `mode=min`).
 - `web/Dockerfile` — runner stage copies the standalone output instead of full `node_modules` /
   `web/.next`; `CMD` adjusted for the standalone layout.
 - `web/next.config.ts` — `output: "standalone"` added.

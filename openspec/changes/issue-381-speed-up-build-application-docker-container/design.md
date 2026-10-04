@@ -26,20 +26,21 @@ for motivation. `web` is Next 16.3.6 with `reactCompiler: true`, built via plain
 
 ## Decisions
 
-### 1. Scoped GHA cache with `mode=min`
+### 1. `mode=min` GHA cache
 
-**Decision**: Replace the single `cache-from: type=gha` / `cache-to: type=gha,mode=max` with three
-per-stage cache scopes — `deps`, `builder`, `runner` — each with `cache-from: type=gha,scope=<s>`
-and `cache-to: type=gha,mode=min,scope=<s>`.
+**Decision**: Replace `cache-to: type=gha,mode=max` with `cache-to: type=gha,mode=min`, leaving
+`cache-from: type=gha` unchanged.
 
 **Rationale**: `mode=max` exports every intermediate layer of every stage (the measured 110s);
-`mode=min` exports only the final layer of each stage, and separate scopes let an unchanged `deps`
-stage hit cache independently of `builder`/`runner` without one giant cache entry invalidating the
-others.
+`mode=min` exports only the final layer of each stage, and BuildKit already keys each Dockerfile
+stage's cache independently within the single GHA scope, so an unchanged `deps` stage still hits
+cache without re-installing. Separate `scope=` namespaces were considered but rejected: at the
+action level they would re-export the whole build into each namespace rather than isolate stages.
 
 **Alternatives considered**:
-- Keep `mode=max` but add scopes — still exports intermediate layers, so the cache export stays large.
-- Drop `cache-to` entirely (image-only build) — eliminates the 110s export but loses cross-run caching, so every push re-installs and re-builds; rejected.
+- Per-stage `scope=deps/builder/runner` — requires three targeted `docker build --target` invocations to actually isolate stage caches; more moving parts for no measured extra win beyond `mode=min`. Rejected.
+- Keep `mode=max` — still exports intermediate layers, so the cache export stays ~110s.
+- Drop `cache-to` entirely (image-only build) — eliminates the export but loses cross-run caching, so every push re-installs and re-builds; rejected.
 
 ### 2. Turbopack for `next build`
 

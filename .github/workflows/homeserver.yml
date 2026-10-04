@@ -107,7 +107,7 @@ jobs:
               push: false
               tags: homeserver:latest
               cache-from: type=gha
-              cache-to: type=gha,mode=max 
+              cache-to: type=gha,mode=min
               outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}

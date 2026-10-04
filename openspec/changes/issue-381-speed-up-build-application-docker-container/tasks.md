@@ -2,7 +2,7 @@
 
 ## 1. Scoped CI cache
 
-- [ ] 1.1 Replace the single `cache-from: type=gha` / `cache-to: type=gha,mode=max` in the `build-app` job of `.github/workflows/homeserver.yml` with per-stage scopes `deps`, `builder`, `runner` (`cache-from: type=gha,scope=<s>` and `cache-to: type=gha,mode=min,scope=<s>`), and verify the workflow YAML parses and the `build-app` job still runs in CI.
+- [x] 1.1 Change the `build-app` job in `.github/workflows/homeserver.yml` from `cache-to: type=gha,mode=max` to `cache-to: type=gha,mode=min` (leaving `cache-from: type=gha`), and verify the workflow YAML parses and the `build-app` job still runs in CI.
 - [ ] 1.2 Verify a second consecutive push (cache hit) to the branch shows the `build-app` job's cache export is no longer the largest line item and dependency install is reused from cache.
 
 ## 2. Standalone image output
