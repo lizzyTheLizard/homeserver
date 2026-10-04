@@ -85,19 +85,21 @@ have pure-JS fallbacks, so `pnpm i --prod` completes without a native build step
 
 ### 5. Cache the smoke stack's images
 
-**Decision**: In the `integration-smoke` job, (a) cache third-party image pulls with
-`actions/cache` on `docker save` tarballs (load before `up`, save after), and (b) build the three
-auxiliary images (`dev-machine`, `backup`, `mock-oidc-server`) explicitly with
-`docker/build-push-action` using `cache-from`/`cache-to: type=gha` and `load: true`, then run
-`docker compose up --no-build`. The compose services get explicit `image:` + `pull_policy: never`
-so `up --no-build` uses the pre-built images.
+**Decision**: In the `integration-smoke` job, cache third-party image pulls with `actions/cache`
+on `docker save` tarballs (load before `up`, save after). The `dev-machine` image is built in its
+own `build-dev-machine` job (see decision 6) and loaded from artifact. The lighter `backup` and
+`mock-oidc-server` images build inline during `docker compose up` (their `build:` sections stay in
+compose); only `dev-machine` is a pre-built artifact.
 
 **Rationale**: The smoke job's ~3m19s `up -d --wait` is dominated by re-pulling third-party images
 (nginx, postgres×2, pgweb, dozzle, caddy, bind9, certbot) and rebuilding the heavy `dev-machine`
-image's apt/bootstrap layers on every cold runner. Caching the pulls and the build layers removes
-that repeated work — the 9 smoke tests themselves already run in ~35s.
+image's apt/bootstrap layers on every cold runner. Caching the pulls and moving the heavy image to
+its own artifact build removes that repeated work — the 9 smoke tests themselves already run in
+~35s. The `backup`/`mock-oidc-server` builds are small (a base image + a package install), so
+building them inline during `up` is cheaper than the overhead of separate artifact jobs.
 
 **Alternatives considered**:
+- Pre-build `backup`/`mock-oidc-server` via `build-push-action` + `up --no-build` — tried, but their builds are too small to justify the extra artifact round-trip, so this was reverted to inline compose builds.
 - Inline compose `build.cache_from`/`cache_to: type=gha` — tried first, but `docker compose up` does not wire the GHA cache backend into its inline build (the layers were rebuilt from scratch with no `importing/exporting cache` lines), so this was rejected in favor of explicit `build-push-action`.
 - Trim which services the smoke stack starts (option 2) — deferred; the tests only exercise a subset, but removing services risks weakening coverage and is a separate scope decision.
 - Cache via buildx `mode=max` for the third-party pulls — buildx gha cache only covers `build`, not `image:` pulls, so the `docker save`/`load` cache is still needed for third-party images.

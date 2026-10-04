@@ -58,7 +58,8 @@ only affects how fast and how cacheable the application image build is.
 - `dev-machine/` — moved out of `infrastructure/dev/` to a top-level package; Dockerfile `COPY`
   paths made repo-root-relative; built as a first-class image artifact.
 - `infrastructure/docker-compose.yml` — `dev-machine` service is image-only (`homeserver-dev-machine:latest`
-  + `pull_policy: never`); `backup`/`mock-oidc-server` retain build-cache entries.
-- `integration-test/docker-compose.ci.yml` — `mock-oidc-server` build-cache entries.
+  + `pull_policy: never`); `backup` and `mock-oidc-server` keep their inline `build:` sections and build
+  during `docker compose up`.
+- `integration-test/docker-compose.ci.yml` — `mock-oidc-server` keeps its inline `build:` section.
 - Behavior: the produced images remain valid and deployable; no change to the smoke suite's
   test assertions or the deploy job.

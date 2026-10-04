@@ -116,8 +116,6 @@ services:
   backup:
     build:
       context: ./db-backup
-    image: homeserver-backup:latest
-    pull_policy: never
     container_name: Backup
     restart: unless-stopped
     env_file:

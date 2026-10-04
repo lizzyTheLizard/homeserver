@@ -276,26 +276,8 @@ jobs:
               if [ ! -f infrastructure/.env ]; then
                 cp integration-test/env.test infrastructure/.env
               fi
-          - name: Build backup image
-            uses: docker/build-push-action@v7
-            with:
-              context: infrastructure/db-backup
-              file: infrastructure/db-backup/Dockerfile
-              load: true
-              tags: homeserver-backup:latest
-              cache-from: type=gha,scope=smoke-backup
-              cache-to: type=gha,mode=max,scope=smoke-backup
-          - name: Build mock-oidc-server image
-            uses: docker/build-push-action@v7
-            with:
-              context: integration-test/mock-oidc
-              file: integration-test/mock-oidc/Dockerfile
-              load: true
-              tags: homeserver-mock-oidc:latest
-              cache-from: type=gha,scope=smoke-mock-oidc
-              cache-to: type=gha,mode=max,scope=smoke-mock-oidc
           - name: Start smoke stack
-            run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml up -d --no-build --wait --wait-timeout 300 --remove-orphans
+            run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml up -d --wait --wait-timeout 300 --remove-orphans
             env:
               AI_API_KEY: ${{ secrets.AI_API_KEY }}
               BUILDKIT_INLINE_CACHE: "1"
@@ -303,7 +285,7 @@ jobs:
             if: ${{ steps.third-party-images.outputs.cache-hit != 'true' }}
             run: |
               mkdir -p "${{ runner.temp }}/third-party-images"
-              for img in nginx:alpine postgres:16-alpine sosedoff/pgweb amir20/dozzle:latest caddy:2-alpine ubuntu/bind9:latest certbot/certbot:latest node:24-alpine ubuntu:24.04; do
+              for img in nginx:alpine postgres:16-alpine sosedoff/pgweb amir20/dozzle:latest caddy:2-alpine ubuntu/bind9:latest certbot/certbot:latest node:24-alpine; do
                 if docker image inspect "$img" >/dev/null 2>&1; then
                   docker save "$img" --output "${{ runner.temp }}/third-party-images/$(echo "$img" | tr '/:' '__').tar"
                 fi

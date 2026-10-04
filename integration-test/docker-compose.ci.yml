@@ -19,8 +19,6 @@ services:
   mock-oidc-server:
     build:
       context: ../integration-test/mock-oidc
-    image: homeserver-mock-oidc:latest
-    pull_policy: never
     container_name: Mock-OIDC
     ports:
       - "8080:8080"
