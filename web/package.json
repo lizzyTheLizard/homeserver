@@ -11,8 +11,7 @@
     "test:watch": "vitest --watch",
     "clean": "rimraf .next storybook-static dist .eslintcache next-env.d.ts",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "chromatic": "chromatic"
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@ai-sdk/groq": "^4.0.47",
@@ -33,7 +32,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^5.3.1",
     "@electric-sql/pglite": "^0.5.8",
     "@eslint/js": "^10.0.1",
     "@storybook/addon-a11y": "^10.6.1",
@@ -54,7 +52,6 @@
     "@vitest/browser-playwright": "^5.0.3",
     "@vitest/coverage-v8": "^5.0.1",
     "babel-plugin-react-compiler": "1.0.0",
-    "chromatic": "^18.9.5",
     "dotenv": "^18.0.5",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
