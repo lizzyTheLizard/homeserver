@@ -2,14 +2,13 @@
 
 ## 1. Remove Chromatic from the web package
 
-- [ ] 1.1 Delete `web/chromatic.config.json`, remove the `chromatic` script and the
+- [x] 1.1 Delete `web/chromatic.config.json`, remove the `chromatic` script and the
       `chromatic` and `@chromatic-com/storybook` dev dependencies from `web/package.json`,
-      reinstall, and verify `pnpm --filter @homeserver/web build` and
-      `pnpm --filter @homeserver/web lint:ci` still pass and no `chromatic` reference remains
-      in `web/package.json`
-- [ ] 1.2 Remove the `@chromatic-com/storybook` addon from `web/.storybook/main.ts` and
-      verify `pnpm --filter @homeserver/web build-storybook` and the Storybook interaction
-      test project still pass
+      reinstall, and remove the `@chromatic-com/storybook` addon from `web/.storybook/main.ts`;
+      verify `pnpm --filter @homeserver/web build`, `pnpm --filter @homeserver/web lint:ci`,
+      `pnpm --filter @homeserver/web build-storybook` and the Storybook interaction test
+      project all pass, and no `chromatic` reference remains in `web/package.json` or the
+      lockfile
 
 ## 2. Remove Chromatic from CI
 
