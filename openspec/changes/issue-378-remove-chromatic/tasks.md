@@ -23,7 +23,7 @@
       row from `README.md` (line 71), update the `README.md` pipeline description (line 118)
       to drop Chromatic, and verify the docs no longer mention Chromatic or a `chromatic`
       command
-- [ ] 3.2 Sweep the repository (excluding `.git` and `openspec/`) for any remaining
+- [x] 3.2 Sweep the repository (excluding `.git` and `openspec/`) for any remaining
       `chromatic` / `CHROMATIC` reference and verify none remain in code, config, or docs
 
 ## 4. Integration verification
