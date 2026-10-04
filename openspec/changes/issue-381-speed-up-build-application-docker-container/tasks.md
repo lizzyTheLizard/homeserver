@@ -29,7 +29,7 @@
 
 ## 6. Move dev-machine into its own image build
 
-- [ ] 6.1 Move `infrastructure/dev/` to a top-level `dev-machine/` folder (like `whatsapp-bridge`), prefix its Dockerfile `COPY` paths (`dev-machine/supervisord.conf`, `dev-machine/entrypoint.sh`), and remove the `build:` section from the `dev-machine` compose service (image-only + `pull_policy: never`).
-- [ ] 6.2 Add a `build-dev-machine` CI job that builds `dev-machine/Dockerfile` (context `.`) into `homeserver-dev-machine:latest`, exports a `.tar`, and uploads it as an artifact, mirroring `build-whatsapp`.
-- [ ] 6.3 Wire the artifact into `integration-smoke` (download + `docker load`, drop the inline dev-machine build) and the `deploy` job (download + rsync + `docker load`), and add `build-dev-machine` to `all-build-checks` needs.
-- [ ] 6.4 Update docs (`AGENTS.md`, `infrastructure/README.md`) for the new `dev-machine/` location and image-based deploy, and verify the full CI pipeline (build → smoke → deploy) is green.
+- [x] 6.1 Move `infrastructure/dev/` to a top-level `dev-machine/` folder (like `whatsapp-bridge`), prefix its Dockerfile `COPY` paths (`dev-machine/supervisord.conf`, `dev-machine/entrypoint.sh`), and remove the `build:` section from the `dev-machine` compose service (image-only + `pull_policy: never`).
+- [x] 6.2 Add a `build-dev-machine` CI job that builds `dev-machine/Dockerfile` (context `.`) into `homeserver-dev-machine:latest`, exports a `.tar`, and uploads it as an artifact, mirroring `build-whatsapp`.
+- [x] 6.3 Wire the artifact into `integration-smoke` (download + `docker load`, drop the inline dev-machine build) and the `deploy` job (download + rsync + `docker load`), and add `build-dev-machine` to `all-build-checks` needs.
+- [x] 6.4 Update docs (`AGENTS.md`, `infrastructure/README.md`) for the new `dev-machine/` location and image-based deploy, and verify the full CI pipeline (build → smoke → deploy) is green.
