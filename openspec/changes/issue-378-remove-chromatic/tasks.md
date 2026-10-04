@@ -12,7 +12,7 @@
 
 ## 2. Remove Chromatic from CI
 
-- [ ] 2.1 Remove the `test-web-chromatic` job and its entry in the `all-build-checks` `needs`
+- [x] 2.1 Remove the `test-web-chromatic` job and its entry in the `all-build-checks` `needs`
       list from `.github/workflows/homeserver.yml` and verify the workflow contains no
       `chromatic` or `CHROMATIC_PROJECT_TOKEN` reference, the gate's `needs` list matches
       exactly the remaining live job ids, and the pushed PR run stays green
