@@ -27,7 +27,7 @@ COPY ./assistant/whatsapp/types.ts ./assistant/whatsapp/types.ts
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/web build
 
-# Production image, copy all the files and run next start
+# Production image, copy the standalone output and run the standalone server
 FROM base AS runner
 WORKDIR /app
 
@@ -36,11 +36,13 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/web/public ./web/public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/web/.next ./web/.next
-COPY --from=builder /app/web/node_modules ./web/node_modules
-COPY ./db ./db
+# The standalone output ships the server entrypoint, pruned node_modules and the
+# db migrations (at /app/db, one level above the /app/web working directory).
+COPY --from=builder --chown=nextjs:nodejs /app/web/.next/standalone/ ./
+# Next's standalone output does not relocate static assets or public/; copy them
+# into the standalone tree where the server expects them.
+COPY --from=builder --chown=nextjs:nodejs /app/web/.next/static ./web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/web/public ./web/public
 
 # Custom modifications: We want log files, db scripts and .env variables
 ARG GIT_COMMIT_HASH
@@ -59,5 +61,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 WORKDIR /app/web
-CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]
+CMD ["node", "server.js"]
 

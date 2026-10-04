@@ -8,7 +8,7 @@
 ## 2. Standalone image output
 
 - [x] 2.1 Add `output: "standalone"` to `web/next.config.ts` and verify `pnpm --filter @homeserver/web build` emits `web/.next/standalone/` with a runnable server entrypoint.
-- [ ] 2.2 Rewrite the `runner` stage of `web/Dockerfile` to copy the standalone output (plus `web/public` and `web/.next/static`) instead of the full `node_modules` and `web/.next`, updating `WORKDIR`/`CMD` to the standalone server, and verify a local `docker build` produces a valid image.
+- [x] 2.2 Rewrite the `runner` stage of `web/Dockerfile` to copy the standalone output (plus `web/public` and `web/.next/static`) instead of the full `node_modules` and `web/.next`, updating `WORKDIR`/`CMD` to the standalone server, and verify a local `docker build` produces a valid image.
 - [ ] 2.3 Verify the standalone-based `homeserver:latest` image loads and serves traffic in the CI smoke suite (integration-smoke job) without changes to the smoke or deploy jobs.
 
 ## 3. Turbopack build
