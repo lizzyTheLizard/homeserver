@@ -68,7 +68,6 @@ In production every required var must be set; the app fails fast on startup othe
 | `pnpm lint:ci`     | Lint all packages (no --fix, for CI) |
 | `pnpm clean`       | Remove build artefacts in all packages |
 | `pnpm --filter @homeserver/web storybook` | Storybook on port 6006 |
-| `pnpm --filter @homeserver/web chromatic` | Visual regression tests (web) |
 | `pnpm --filter @homeserver/web vitest run path/to/file.tests.ts` | Run a single test file |
 | `docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev\|prod> [--yes]` | Restore a database backup into the dev or prod DB (see [infrastructure/README.md](infrastructure/README.md)) |
 
@@ -115,7 +114,7 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 ├── integration-test/   Smoke tests for the full docker-compose stack (Vitest + Playwright)
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
-├── .github/workflows/  CI/CD (lint → test → Chromatic → Docker build → integration smoke → deploy)
+├── .github/workflows/  CI/CD (lint → test → Docker build → integration smoke → deploy)
 ├── .agents/skills/     Agent skills: OpenSpec workflow + GitHub orchestration (see Development workflow)
 ├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```

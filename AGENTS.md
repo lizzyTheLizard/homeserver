@@ -10,7 +10,6 @@ pnpm build                                    # Build all packages
 pnpm test                                     # Run all tests in all packages (incl. the integration smoke suite, which needs Docker)
 pnpm lint                                     # Lint all packages (with --fix)
 pnpm lint:ci                                  # Lint all packages (no --fix, for CI)
-pnpm --filter @homeserver/web chromatic       # Chromatic visual regression tests (web only)
 ```
 
 To run a single test file:

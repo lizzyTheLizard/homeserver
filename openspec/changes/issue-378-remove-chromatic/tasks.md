@@ -19,7 +19,7 @@
 
 ## 3. Update documentation
 
-- [ ] 3.1 Remove the Chromatic command line from `AGENTS.md` (line 13) and the command-table
+- [x] 3.1 Remove the Chromatic command line from `AGENTS.md` (line 13) and the command-table
       row from `README.md` (line 71), update the `README.md` pipeline description (line 118)
       to drop Chromatic, and verify the docs no longer mention Chromatic or a `chromatic`
       command
