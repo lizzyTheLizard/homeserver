@@ -17,10 +17,10 @@ for motivation. `web` is Next 16.3.6 with `reactCompiler: true`, built via plain
 - Make a cache-hit build skip dependency install, `next build`, and full cache/image re-export.
 - Shrink the time spent exporting cache and image layers.
 - Shorten `next build` itself.
-- Keep the produced image runnable and contract-compatible with the smoke suite and deploy.
+- Slim the assistant runtime image to production dependencies only.
+- Keep the produced images runnable and contract-compatible with the smoke suite and deploy.
 
 **Non-Goals:**
-- Changing the `whatsapp-bridge` or `assistant` builds.
 - Changing the smoke suite or deploy job logic.
 - Introducing new runtime dependencies or altering the application's runtime behavior.
 
@@ -28,8 +28,8 @@ for motivation. `web` is Next 16.3.6 with `reactCompiler: true`, built via plain
 
 ### 1. `mode=min` GHA cache
 
-**Decision**: Replace `cache-to: type=gha,mode=max` with `cache-to: type=gha,mode=min`, leaving
-`cache-from: type=gha` unchanged.
+**Decision**: Replace `cache-to: type=gha,mode=max` with `cache-to: type=gha,mode=min` in the
+`build-app`, `build-assistant`, and `build-whatsapp` jobs, leaving `cache-from: type=gha` unchanged.
 
 **Rationale**: `mode=max` exports every intermediate layer of every stage (the measured 110s);
 `mode=min` exports only the final layer of each stage, and BuildKit already keys each Dockerfile
@@ -68,11 +68,27 @@ the image layer export (~25s) and the cache export (~110s).
 - `pnpm --filter @homeserver/web deploy` / `--prod` prune — also reduces `node_modules` but leaves the general `.next` layout; standalone is the Next-idiomatic approach and pairs cleanly with the existing `CMD ["node", ...]` entrypoint pattern.
 - Keep `output: "standalone"` off and only prune — less layer reduction; rejected.
 
+### 4. Slim assistant runner with `prod-deps`
+
+**Decision**: Add a `prod-deps` stage to `assistant/Dockerfile` that runs
+`pnpm i --frozen-lockfile --prod --filter @homeserver/assistant`, and change the `runner` stage to
+copy `node_modules` from `prod-deps` instead of the full dev tree from `builder`.
+
+**Rationale**: The assistant runner currently copies the entire dev `node_modules` (including all
+`devDependencies` and tooling). A `--prod` install mirrors the existing whatsapp-bridge image's
+`prod-deps` stage, shrinking the runtime layer. The assistant's native-optional deps (`pg`, `ws`)
+have pure-JS fallbacks, so `pnpm i --prod` completes without a native build step.
+
+**Alternatives considered**:
+- Leave the assistant runner as-is — keeps dev `node_modules` in the runtime image (the current bloat); rejected since the same layer-export win the web image got applies here.
+- Move to a Next-style standalone output — not applicable: the assistant is a plain `tsc` build, not Next.js.
+
 ## Risks / Trade-offs
 
 - **`mode=min` lowers cache-hit rate for non-final layers** → Mitigation: separate scopes isolate the `deps` stage (the expensive install) so it still hits cache on source-only changes; rebuilds re-populate the cache on later pushes.
 - **Standalone output changes the runner layout and `CMD`** → Mitigation: update the Dockerfile `CMD`/`WORKDIR` to match Next's standalone server entrypoint, and rely on the existing smoke suite to prove the image still serves traffic before deploy.
 - **Turbopack behavior differences** → Mitigation: the smoke suite and storybook/unit/integration tests run in CI and will catch regressions; if a specific Turbopack incompatibility surfaces, scope the build change to a follow-up.
+- **Assistant `--prod` install could omit a runtime dependency** → Mitigation: the `--prod` set is the same one the whatsapp-bridge image already uses successfully, and the smoke suite boots the assistant container, which exercises its runtime requires.
 - **First build after switch is not faster** → Mitigation: the benefit is for subsequent cache-hit builds; the change is still correct because the acceptance criteria target the steady-state cache-hit path.
 
 ## Migration Plan
