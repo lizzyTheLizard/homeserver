@@ -185,6 +185,8 @@ jobs:
             uses: actions/checkout@v7
           - name: Setup
             uses: ./.github/actions/setup
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v4
           - name: Download application artifact
             uses: actions/download-artifact@v8
             with:
@@ -205,6 +207,18 @@ jobs:
               docker load --input ${{ runner.temp }}/homeserver.tar
               docker load --input ${{ runner.temp }}/whatsapp-bridge.tar
               docker load --input ${{ runner.temp }}/homeserver-assistant.tar
+          - name: Cache third-party Docker images
+            uses: actions/cache@v6
+            id: third-party-images
+            with:
+              path: ${{ runner.temp }}/third-party-images
+              key: third-party-images-${{ hashFiles('infrastructure/docker-compose.yml', 'integration-test/docker-compose.ci.yml') }}
+          - name: Load cached third-party Docker images
+            if: ${{ steps.third-party-images.outputs.cache-hit == 'true' }}
+            run: |
+              for f in ${{ runner.temp }}/third-party-images/*.tar; do
+                [ -f "$f" ] && docker load --input "$f" || true
+              done
           - name: Cache Playwright Browsers
             uses: actions/cache@v6
             id: playwright-cache
@@ -233,6 +247,16 @@ jobs:
             run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml up -d --wait --wait-timeout 300 --remove-orphans
             env:
               AI_API_KEY: ${{ secrets.AI_API_KEY }}
+              BUILDKIT_INLINE_CACHE: "1"
+          - name: Save third-party Docker images for cache
+            if: ${{ steps.third-party-images.outputs.cache-hit != 'true' }}
+            run: |
+              mkdir -p "${{ runner.temp }}/third-party-images"
+              for img in nginx:alpine postgres:16-alpine sosedoff/pgweb amir20/dozzle:latest caddy:2-alpine ubuntu/bind9:latest certbot/certbot:latest node:24-alpine ubuntu:24.04; do
+                if docker image inspect "$img" >/dev/null 2>&1; then
+                  docker save "$img" --output "${{ runner.temp }}/third-party-images/$(echo "$img" | tr '/:' '__').tar"
+                fi
+              done
           - name: Run smoke checks
             run: pnpm --filter @homeserver/integration-test test
           - name: Dump smoke stack logs

@@ -21,6 +21,10 @@ every push before the smoke suite and deploy can run.
 - **Slim assistant runner** — Add a `prod-deps` stage to the assistant image (mirroring the existing
   whatsapp-bridge image) so its runtime image installs only production dependencies instead of
   carrying the full dev `node_modules`.
+- **Cache the smoke stack's images** — In the `integration-smoke` job, cache third-party image pulls
+  (`actions/cache` on `docker save` tarballs) and add buildx GHA layer cache to the `dev-machine`,
+  `backup`, and `mock-oidc-server` compose builds, so the smoke stack's cold-start pull/build time is
+  reused across runs.
 - Make no change to the images' **contract**: the produced `homeserver:latest`,
   `homeserver-assistant:latest`, and `whatsapp-bridge:latest` must remain valid, production-runnable
   images that the smoke suite and deploy load and run exactly as today.
@@ -43,11 +47,14 @@ only affects how fast and how cacheable the application image build is.
 ## Impact
 
 - `.github/workflows/homeserver.yml` — `build-app`, `build-assistant`, and `build-whatsapp` job cache
-  inputs changed (`cache-to` set to `mode=min`).
+  inputs changed (`cache-to` set to `mode=min`); `integration-smoke` job gains buildx setup and
+  third-party image caching.
 - `web/Dockerfile` — runner stage copies the standalone output instead of full `node_modules` /
   `web/.next`; `CMD` adjusted for the standalone layout.
 - `web/next.config.ts` — `output: "standalone"` added.
 - `web/package.json` — `build` script switched to the Turbopack build invocation.
 - `assistant/Dockerfile` — `prod-deps` stage added; runner copies production `node_modules` only.
-- Behavior: the produced images remain valid and deployable; no change to the smoke suite or deploy
-  job.
+- `infrastructure/docker-compose.yml`, `integration-test/docker-compose.ci.yml` — build cache
+  (`cache_from`/`cache_to`) added to `dev-machine`, `backup`, and `mock-oidc-server` builds.
+- Behavior: the produced images remain valid and deployable; no change to the smoke suite's
+  test assertions or the deploy job.

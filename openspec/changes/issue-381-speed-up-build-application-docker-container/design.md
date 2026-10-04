@@ -83,12 +83,29 @@ have pure-JS fallbacks, so `pnpm i --prod` completes without a native build step
 - Leave the assistant runner as-is — keeps dev `node_modules` in the runtime image (the current bloat); rejected since the same layer-export win the web image got applies here.
 - Move to a Next-style standalone output — not applicable: the assistant is a plain `tsc` build, not Next.js.
 
+### 5. Cache the smoke stack's images
+
+**Decision**: In the `integration-smoke` job, (a) cache third-party image pulls with
+`actions/cache` on `docker save` tarballs (load before `up`, save after), and (b) add
+`cache_from`/`cache_to: type=gha` to the `dev-machine`, `backup`, and `mock-oidc-server` compose
+builds, with `docker/setup-buildx-action` enabling the required `docker-container` driver.
+
+**Rationale**: The smoke job's ~3m19s `up -d --wait` is dominated by re-pulling third-party images
+(nginx, postgres×2, pgweb, dozzle, caddy, bind9, certbot) and rebuilding the heavy `dev-machine`
+image's apt/bootstrap layers on every cold runner. Caching the pulls and the build layers removes
+that repeated work — the 9 smoke tests themselves already run in ~35s.
+
+**Alternatives considered**:
+- Trim which services the smoke stack starts (option 2) — deferred; the tests only exercise a subset, but removing services risks weakening coverage and is a separate scope decision.
+- Cache via buildx `mode=max` for the third-party pulls — buildx gha cache only covers `build`, not `image:` pulls, so the `docker save`/`load` cache is still needed for third-party images.
+
 ## Risks / Trade-offs
 
 - **`mode=min` lowers cache-hit rate for non-final layers** → Mitigation: separate scopes isolate the `deps` stage (the expensive install) so it still hits cache on source-only changes; rebuilds re-populate the cache on later pushes.
 - **Standalone output changes the runner layout and `CMD`** → Mitigation: update the Dockerfile `CMD`/`WORKDIR` to match Next's standalone server entrypoint, and rely on the existing smoke suite to prove the image still serves traffic before deploy.
 - **Turbopack behavior differences** → Mitigation: the smoke suite and storybook/unit/integration tests run in CI and will catch regressions; if a specific Turbopack incompatibility surfaces, scope the build change to a follow-up.
 - **Assistant `--prod` install could omit a runtime dependency** → Mitigation: the `--prod` set is the same one the whatsapp-bridge image already uses successfully, and the smoke suite boots the assistant container, which exercises its runtime requires.
+- **Smoke-stack cache invalidation** → Mitigation: the third-party image cache key is tied to the compose files, and the buildx `type=gha` layer cache self-invalidates on layer changes, so a changed image or build input forces a fresh pull/build.
 - **First build after switch is not faster** → Mitigation: the benefit is for subsequent cache-hit builds; the change is still correct because the acceptance criteria target the steady-state cache-hit path.
 
 ## Migration Plan

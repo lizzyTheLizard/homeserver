@@ -20,3 +20,9 @@
 
 - [ ] 4.1 Switch the `web` build to Turbopack in `web/package.json` and verify `pnpm --filter @homeserver/web build` completes successfully and the produced `.next` output passes the web unit/integration/storybook test jobs in CI.
 - [ ] 4.2 Verify the Turbopack build produces a deployable image: the full `build-app` → `integration-smoke` → `deploy` path succeeds in CI on the branch.
+
+## 5. Speed up the integration smoke stack
+
+- [ ] 5.1 Cache the third-party Docker image pulls in the `integration-smoke` job (`actions/cache` on `docker save` tarballs, loaded before `up`, saved after) so cold runners skip re-downloading nginx/postgres/pgweb/dozzle/caddy/bind9/certbot and the base images.
+- [ ] 5.2 Add buildx GHA layer cache (`cache_from`/`cache_to: type=gha`) to the `dev-machine`, `backup`, and `mock-oidc-server` compose build services (plus `docker/setup-buildx-action` in the smoke job) so their apt-get/bootstrap layers are reused instead of rebuilt.
+- [ ] 5.3 Verify the smoke suite still passes (9/9) and the `Start smoke stack` step is faster on a second consecutive push with warmed caches.

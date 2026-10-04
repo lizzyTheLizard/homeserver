@@ -19,6 +19,10 @@ services:
   mock-oidc-server:
     build:
       context: ../integration-test/mock-oidc
+      cache_from:
+        - type=gha,scope=smoke-mock-oidc
+      cache_to:
+        - type=gha,mode=max,scope=smoke-mock-oidc
     container_name: Mock-OIDC
     ports:
       - "8080:8080"
