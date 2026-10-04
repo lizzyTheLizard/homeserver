@@ -28,6 +28,6 @@
 
 ## 4. Integration verification
 
-- [ ] 4.1 Verify the full web suite stays green (`pnpm --filter @homeserver/web lint:ci`,
+- [x] 4.1 Verify the full web suite stays green (`pnpm --filter @homeserver/web lint:ci`,
       unit, integration, Storybook projects) and the workflow's `all-build-checks` gate lists
       exactly the live jobs without `test-web-chromatic`
