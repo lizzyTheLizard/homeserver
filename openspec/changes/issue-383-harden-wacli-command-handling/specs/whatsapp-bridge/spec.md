@@ -4,17 +4,17 @@
 
 ### Requirement: Short-lived wacli commands have a bounded default timeout
 
-The bridge SHALL abort a short-lived wacli command that does not finish within `WHATSAPP_CMD_TIMEOUT_MS`, which defaults to 5000 ms and remains configurable. The abort SHALL fail the command rather than leave it hanging.
+The bridge SHALL abort a short-lived wacli command that does not finish within `WHATSAPP_CMD_TIMEOUT_MS`, which defaults to 20000 ms and remains configurable. The abort SHALL fail the command rather than leave it hanging.
 
 #### Scenario: Hung short command is aborted at the default timeout
 
-- **WHEN** a short-lived wacli command does not finish within 5000 ms under the default configuration
+- **WHEN** a short-lived wacli command does not finish within 20000 ms under the default configuration
 - **THEN** the bridge kills the command and reports it as failed
 
 #### Scenario: Configured timeout overrides the default
 
 - **WHEN** `WHATSAPP_CMD_TIMEOUT_MS` is configured to a different value
-- **THEN** short-lived wacli commands are aborted after that value instead of 5000 ms
+- **THEN** short-lived wacli commands are aborted after that value instead of 20000 ms
 
 ### Requirement: At most one short-lived wacli command per store
 

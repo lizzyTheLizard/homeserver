@@ -97,7 +97,7 @@ Status `type` values are unchanged: `connecting`, `needAuth` (with `qr`),
 | `WACLI_BIN` | `wacli` | Path to the wacli binary. |
 | `WACLI_DEVICE_PLATFORM` | `desktop` | Device platform WhatsApp shows for the linked device. |
 | `WACLI_DEVICE_LABEL` | `Gutschi.site` (dev: `Gutschi.site (DEV)`) | Device label WhatsApp shows for the linked device. |
-| `WHATSAPP_CMD_TIMEOUT_MS` | `5000` | Timeout for short-lived wacli commands. |
+| `WHATSAPP_CMD_TIMEOUT_MS` | `20000` | Timeout for short-lived wacli commands. |
 | `WHATSAPP_CHATS_LIMIT` | `1000` | Max chats returned by `GET /chats`. |
 | `WHATSAPP_MESSAGES_LIMIT` | `5000` | Max messages returned by `GET /messages`. |
 | `WACLI_SYNC_MAX_MESSAGES` | unset | Cap on total messages stored locally (forwarded to wacli). |

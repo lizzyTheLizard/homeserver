@@ -7,10 +7,10 @@ describe('config', () => {
     vi.unstubAllEnvs()
   })
 
-  test('defaults the short command timeout to 5000ms', async () => {
+  test('defaults the short command timeout to 20000ms', async () => {
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv(TIMEOUT_ENV, '')
-    await expect(loadTimeout()).resolves.toBe(5000)
+    await expect(loadTimeout()).resolves.toBe(20000)
   })
 
   test('uses the configured short command timeout', async () => {

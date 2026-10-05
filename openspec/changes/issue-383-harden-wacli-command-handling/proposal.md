@@ -6,7 +6,7 @@ The bridge (`whatsapp-bridge/companion/`) drives one wacli process per user and 
 
 ## What Changes
 
-- Lower the default `WHATSAPP_CMD_TIMEOUT_MS` from 30000 to 5000 (code and README), keeping it configurable.
+- Lower the default `WHATSAPP_CMD_TIMEOUT_MS` from 30000 to 20000 (code and README), keeping it configurable.
 - `Supervisor.handleEvent` ignores an `error` event when the process is already gone (`this.child === null`), in addition to the existing `this.isStopping` guard.
 - Per-store command coordination in `wacli.ts`: while a short-lived `runWacli` command is in flight for a store, a long-running `spawnWacli` process waits for it to finish, and a second short-lived command for that store is rejected immediately instead of running concurrently. `Supervisor.fullSync`'s long `runWacli` participates in the same coordination.
 - `WacliEvent` gains a `warning` variant (`{ code?, message, name? }`), and `attachEventParser` logs warning events at warn level.

@@ -56,7 +56,7 @@ Per store, not global, because each user has an isolated SQLite store and a slow
 
 `Supervisor.fullSync` calls `runWacli` for its one-off `sync --once`, so it participates in the same coordination without extra code; its long timeout is unaffected.
 
-Reject-on-overlap rather than queue: a queue would let HTTP requests pile up behind a command that may run until the 5 s timeout, while an immediate error lets the existing error handler (`server.ts`) return at once. `Supervisor.getChats` and `getMessages` issue their `runWacli` calls sequentially, so they are unaffected by the stricter rule.
+Reject-on-overlap rather than queue: a queue would let HTTP requests pile up behind a command that may run until the command timeout, while an immediate error lets the existing error handler (`server.ts`) return at once. `Supervisor.getChats` and `getMessages` issue their `runWacli` calls sequentially, so they are unaffected by the stricter rule.
 
 ### `spawnWacli` returns a promise; `Supervisor.start()` awaits it
 
@@ -74,9 +74,9 @@ Events can only be delivered after the process is spawned, which is after the pr
 
 Alternative considered: keep `spawnWacli` synchronous and have the supervisor `await waitForShortCommands(storeDir)` before calling it. Rejected because it leaves `spawnWacli` itself unsafe for future callers and spreads store coordination outside `wacli.ts`.
 
-### Default short-command timeout of 5000 ms
+### Default short-command timeout of 20000 ms
 
-`WHATSAPP_CMD_TIMEOUT_MS` defaults to `5000` (config) and the README table is updated to match. 30 s allowed a stuck one-shot command to hold an HTTP request and, after this change, a starting long process. wacli's JSON reads answer from local SQLite and should not approach 5 s; the variable remains the escape hatch if a deployment needs longer.
+`WHATSAPP_CMD_TIMEOUT_MS` defaults to `20000` (config) and the README table is updated to match. The old 30 s let a stuck one-shot command hold an HTTP request and, after this change, hold back a starting long process too, so the bound is tightened — but not to the 5 s first tried here, which killed legitimate commands against large stores. 20 s keeps a hard ceiling with room for slow one-shot reads, and the variable remains the escape hatch if a deployment needs different timing.
 
 ### Tests
 
