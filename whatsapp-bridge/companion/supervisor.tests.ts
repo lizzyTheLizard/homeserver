@@ -71,9 +71,9 @@ function makeFakeChild(): FakeChild {
 function setupSupervisor(): Session {
   const child = makeFakeChild()
   const session: Session = { child, handleEvent: undefined }
-  mockSpawnWacli.mockImplementation((_store: string, _args: string[], onEvent: (event: WacliEvent) => void): ChildProcess => {
+  mockSpawnWacli.mockImplementation((_store: string, _args: string[], onEvent: (event: WacliEvent) => void): Promise<ChildProcess> => {
     session.handleEvent = onEvent
-    return child as unknown as ChildProcess
+    return Promise.resolve(child as unknown as ChildProcess)
   })
   return session
 }
@@ -151,6 +151,19 @@ describe('Supervisor', () => {
     expect(mockSpawnWacli).toHaveBeenCalledWith(storeDir, ['auth', '--events'], expect.any(Function))
   })
 
+  test('starts the session once the long process spawn resolved', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    const startPromise = supervisor.start()
+    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    session.handleEvent?.({ event: 'connected' })
+    await expect(startPromise).resolves.toEqual({ type: 'connected' })
+    const stopPromise = supervisor.stop()
+    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    session.child.emitEvent('close')
+    await stopPromise
+  })
+
   test('returns the current status when already started', async () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
@@ -160,14 +173,36 @@ describe('Supervisor', () => {
     expect(mockRunWacli).toHaveBeenCalledTimes(1)
   })
 
-  test('rejects when wacli reports an error during start', async () => {
+  test('rejects the start when wacli reports an error and keeps the session connecting', async () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
     await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
     session.handleEvent?.({ event: 'error', data: { message: 'boom' } })
     await expect(startPromise).rejects.toThrow()
-    expect(supervisor.getStatus()).toEqual({ type: 'closed', error: 'boom' })
+    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+  })
+
+  test('rejects the start on an LTHash mismatch and keeps the session connecting', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    const startPromise = supervisor.start()
+    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    const message = 'warning: app state regular_low hit an LTHash mismatch; requesting recovery snapshot'
+    session.handleEvent?.({ event: 'warning', data: { code: 'app_state_lthash_mismatch', message, name: 'regular_low' } })
+    await expect(startPromise).rejects.toThrow()
+    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+  })
+
+  test('keeps the session running on an unrelated warning', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    const startPromise = supervisor.start()
+    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    session.handleEvent?.({ event: 'warning', data: { code: 'something_else', message: 'just a warning' } })
+    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    session.handleEvent?.({ event: 'connected' })
+    await expect(startPromise).resolves.toEqual({ type: 'connected' })
   })
 
   test('rejects when wacli closes during start', async () => {
@@ -177,6 +212,15 @@ describe('Supervisor', () => {
     await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
     session.handleEvent?.({ event: 'closed' })
     await expect(startPromise).rejects.toThrow('status is now closed')
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
+  })
+
+  test('ignores an error reported after the process stopped', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    await startConnected(supervisor, session)
+    session.handleEvent?.({ event: 'closed' })
+    session.handleEvent?.({ event: 'error', data: { message: 'late failure' } })
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 

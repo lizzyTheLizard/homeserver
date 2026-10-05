@@ -11,7 +11,7 @@ import { join } from 'node:path'
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
 export type Status = { type: 'connecting' }
   | { type: 'needAuth', qr: string } | { type: 'connected' }
-  | { type: 'fullsync' } | { type: 'closed', error?: string }
+  | { type: 'fullsync' } | { type: 'closed' }
 
 export class Supervisor {
   private readonly storeDir: string
@@ -53,7 +53,7 @@ export class Supervisor {
       let gotResult = false
       logger.debug(`[${this.userId}] starting wacli sync`)
       return new Promise((res, rej) => {
-        this.child = spawnWacli(this.storeDir, args, (event) => {
+        void spawnWacli(this.storeDir, args, (event) => {
           const isResult = this.handleEvent(event)
           if (!isResult || gotResult) return
           gotResult = true
@@ -67,6 +67,8 @@ export class Supervisor {
           }
           else rej(new Error('Could not start wacli status is now ' + this.status.type))
         })
+          .then((child) => { this.child = child })
+          .catch((err: unknown) => { rej(err instanceof Error ? err : Error(String(err))) })
       })
     })
   }
@@ -79,9 +81,13 @@ export class Supervisor {
         this.child = null
         return true
       case 'error':
-        if (this.isStopping) return false
+        if (this.isStopping || this.child === null) return false
         logger.warn(`[${this.userId}] wacli session was closed with an error: ` + event.data.message)
-        this.status = { type: 'closed', error: event.data.message }
+        return true
+      case 'warning':
+        if (this.isStopping || this.child === null) return false
+        if (!event.data.message.includes('hit an LTHash mismatch')) return false
+        logger.warn(`[${this.userId}] wacli reported an app state mismatch: ` + event.data.message)
         return true
       case 'qr_code':
         logger.debug(`[${this.userId}] wacli session got qr code`)

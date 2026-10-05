@@ -16,6 +16,10 @@ type ReadonlyRequestCookies = Awaited<ReturnType<typeof cookies>>
 
 vi.mock('next/headers', () => ({ cookies: vi.fn() }))
 
+const { mockWarn } = vi.hoisted(() => ({ mockWarn: vi.fn<(message: string) => void>() }))
+
+vi.mock('@/app/shared/logger', () => ({ logger: { warn: mockWarn, error: vi.fn(), info: vi.fn(), debug: vi.fn() } }))
+
 const mockUserInfo = {
   id: 'user-123',
   userPrincipalName: 'user@example.com',
@@ -51,7 +55,23 @@ describe('loadMicrosoftStatus', () => {
     const result = await loadMicrosoftStatus()
 
     expect(result).toEqual(mockStatus)
-    expect(fetch).toHaveBeenCalledWith('http://localhost:8500/microsoft/status', { headers: { Cookie: 'homeserver-session=abc' } })
+    expect(fetch).toHaveBeenCalledWith('http://dev-machine:8500/microsoft/status', { headers: { Cookie: 'homeserver-session=abc' } })
+  })
+})
+
+describe('assistant call logging', () => {
+  test('logs the assistant URL when the assistant is unreachable', async ({ task }) => {
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
+    vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
+    const cause = new Error('connect ECONNREFUSED 127.0.0.1:8500')
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed', { cause }))
+
+    await expect(loadMicrosoftStatus()).rejects.toThrow('fetch failed')
+
+    expect(mockWarn).toHaveBeenCalledTimes(1)
+    expect(mockWarn.mock.calls[0][0]).toContain('http://dev-machine:8500/microsoft/status')
+    expect(mockWarn.mock.calls[0][0]).toContain('ECONNREFUSED')
   })
 })
 
@@ -80,7 +100,7 @@ describe('disconnectMicrosoft', () => {
     const result = await disconnectMicrosoft()
 
     expect(result.success).toBe(true)
-    expect(fetch).toHaveBeenCalledWith('http://localhost:8500/microsoft/disconnect', {
+    expect(fetch).toHaveBeenCalledWith('http://dev-machine:8500/microsoft/disconnect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cookie': 'homeserver-session=abc' },
       body: '{}',

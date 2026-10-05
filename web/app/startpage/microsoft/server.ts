@@ -3,6 +3,7 @@ import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { cookies } from 'next/headers'
 import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { config } from '@/app/shared/config'
+import { logger } from '@/app/shared/logger'
 import { MicrosoftConnectionStatus, MicrosoftStatus, SerializedMessageFull } from '@assistant/microsoft/types'
 
 const MICROSOFT_CALLBACK_PATH = '/startpage/microsoft/callback'
@@ -38,24 +39,32 @@ export async function disconnectMicrosoft(): Promise<ActionResponse<void>> {
 }
 
 async function assistantGet(path: string): Promise<unknown> {
-  const response = await fetch(`${config.ASSISTANT_INTERNAL_URL}${path}`, {
-    headers: { Cookie: await getCookieHeader() },
-  })
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Assistant API error ${response.status.toString()}: ${text}`)
-  }
-  return response.json()
+  return assistantFetch(path, { headers: { Cookie: await getCookieHeader() } })
 }
 
 async function assistantPost(path: string, body: Record<string, unknown>): Promise<unknown> {
-  const response = await fetch(`${config.ASSISTANT_INTERNAL_URL}${path}`, {
+  return assistantFetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Cookie': await getCookieHeader() },
     body: JSON.stringify(body),
   })
+}
+
+// Logs the target URL whenever an assistant call fails, so a refused
+// connection (ECONNREFUSED) is distinguishable from an assistant error.
+async function assistantFetch(path: string, init: RequestInit): Promise<unknown> {
+  const url = `${config.ASSISTANT_INTERNAL_URL}${path}`
+  let response: Response
+  try {
+    response = await fetch(url, init)
+  }
+  catch (error: unknown) {
+    logger.warn(`Could not reach the assistant at ${url}: ${describeError(error)}`)
+    throw error
+  }
   if (!response.ok) {
     const text = await response.text()
+    logger.warn(`Assistant API error ${response.status.toString()} from ${url}: ${text}`)
     throw new Error(`Assistant API error ${response.status.toString()}: ${text}`)
   }
   return response.json()
@@ -64,4 +73,12 @@ async function assistantPost(path: string, body: Record<string, unknown>): Promi
 async function getCookieHeader(): Promise<string> {
   const cookieStore = await cookies()
   return cookieStore.toString()
+}
+
+// Node reports a fetch connection failure as "fetch failed" and puts the
+// useful part (e.g. ECONNREFUSED) into `cause`.
+function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error)
+  const cause = error.cause
+  return cause instanceof Error ? `${error.message}: ${cause.message}` : error.message
 }
