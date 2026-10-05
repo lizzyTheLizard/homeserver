@@ -53,7 +53,7 @@ export class Supervisor {
       let gotResult = false
       logger.debug(`[${this.userId}] starting wacli sync`)
       return new Promise((res, rej) => {
-        this.child = spawnWacli(this.storeDir, args, (event) => {
+        void spawnWacli(this.storeDir, args, (event) => {
           const isResult = this.handleEvent(event)
           if (!isResult || gotResult) return
           gotResult = true
@@ -67,6 +67,8 @@ export class Supervisor {
           }
           else rej(new Error('Could not start wacli status is now ' + this.status.type))
         })
+          .then((child) => { this.child = child })
+          .catch((err: unknown) => { rej(err instanceof Error ? err : Error(String(err))) })
       })
     })
   }

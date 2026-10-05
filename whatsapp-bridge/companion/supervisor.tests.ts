@@ -71,9 +71,9 @@ function makeFakeChild(): FakeChild {
 function setupSupervisor(): Session {
   const child = makeFakeChild()
   const session: Session = { child, handleEvent: undefined }
-  mockSpawnWacli.mockImplementation((_store: string, _args: string[], onEvent: (event: WacliEvent) => void): ChildProcess => {
+  mockSpawnWacli.mockImplementation((_store: string, _args: string[], onEvent: (event: WacliEvent) => void): Promise<ChildProcess> => {
     session.handleEvent = onEvent
-    return child as unknown as ChildProcess
+    return Promise.resolve(child as unknown as ChildProcess)
   })
   return session
 }
@@ -149,6 +149,19 @@ describe('Supervisor', () => {
     session.handleEvent?.({ event: 'qr_code', data: { code: 'QRCODE123' } })
     await expect(startPromise).resolves.toEqual({ type: 'needAuth', qr: 'QRCODE123' })
     expect(mockSpawnWacli).toHaveBeenCalledWith(storeDir, ['auth', '--events'], expect.any(Function))
+  })
+
+  test('starts the session once the long process spawn resolved', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    const startPromise = supervisor.start()
+    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    session.handleEvent?.({ event: 'connected' })
+    await expect(startPromise).resolves.toEqual({ type: 'connected' })
+    const stopPromise = supervisor.stop()
+    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    session.child.emitEvent('close')
+    await stopPromise
   })
 
   test('returns the current status when already started', async () => {

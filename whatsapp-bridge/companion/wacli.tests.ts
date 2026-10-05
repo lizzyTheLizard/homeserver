@@ -1,7 +1,7 @@
 import { PassThrough, Readable } from 'node:stream'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { Mock } from 'vitest'
-import { attachEventParser, runWacli, type WacliEvent } from './wacli'
+import { attachEventParser, runWacli, spawnWacli, type WacliEvent } from './wacli'
 
 const { mockDebug, mockWarn, mockSpawn } = vi.hoisted(() => ({
   mockDebug: vi.fn<(message: string) => void>(),
@@ -94,6 +94,33 @@ describe('runWacli', () => {
     first.emit('close', 0)
     second.emit('close', 0)
     await expect(Promise.all([firstRun, secondRun])).resolves.toEqual([null, null])
+  })
+})
+
+describe('spawnWacli', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  test('waits for a running short command before spawning', async () => {
+    const short = makeFakeChild()
+    const long = makeFakeChild()
+    mockSpawn.mockReturnValueOnce(short).mockReturnValueOnce(long)
+    const shortRun = runWacli('/data/store-long-wait', ['chats', 'list'], true)
+    const spawnPromise = spawnWacli('/data/store-long-wait', ['sync', '--follow'], () => undefined)
+    await Promise.resolve()
+    expect(mockSpawn).toHaveBeenCalledTimes(1)
+    short.emit('close', 0)
+    await shortRun
+    await expect(spawnPromise).resolves.toBe(long)
+    expect(mockSpawn).toHaveBeenCalledTimes(2)
+  })
+
+  test('spawns immediately when the store is idle', async () => {
+    const long = makeFakeChild()
+    mockSpawn.mockReturnValue(long)
+    await expect(spawnWacli('/data/store-long-idle', ['sync', '--follow'], () => undefined)).resolves.toBe(long)
+    expect(mockSpawn).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -12,8 +12,10 @@ export type WacliEvent = { event: 'qr_code', data: { code: string } }
   | { event: 'disconnected' }
   | { event: 'logged_out' }
 
-// Spawns a long-running `wacli` process
-export function spawnWacli(storeDir: string, args: string[], handleEvent: (event: WacliEvent) => void): ChildProcess {
+// Spawns a long-running `wacli` process. If a short-lived command is running
+// for the store, this waits for it to finish before spawning.
+export async function spawnWacli(storeDir: string, args: string[], handleEvent: (event: WacliEvent) => void): Promise<ChildProcess> {
+  await waitForShortCommand(storeDir)
   const fullArgs = ['--store', storeDir, ...args]
   logger.debug(`Run ${config.WACLI_BIN} ${fullArgs.join(' ')}`)
   const child = spawn(config.WACLI_BIN, fullArgs, {
@@ -28,19 +30,26 @@ export function spawnWacli(storeDir: string, args: string[], handleEvent: (event
   return child
 }
 
-// Stores with a short-lived wacli command currently in flight. Commands against
-// one store are serialised: a second short command for the same store is
-// rejected instead of racing the first, while different stores stay independent.
-const runningCommands = new Set<string>()
+// Per-store command coordination. Commands against one store are serialised: a
+// short-lived command claims the store, a second short command for the same
+// store is rejected instead of racing it, and a long-running process waits for
+// the running short command to finish. Different stores stay independent.
+interface StoreCommands {
+  shortRunning: boolean
+  shortFinished: (() => void)[]
+}
+
+const commandsByStore = new Map<string, StoreCommands>()
 
 // Runs a short-lived wacli command and resolves with the parsed JSON envelope
 // (or a plain success envelope for commands that do not produce JSON). Rejects
 // with WacliError when the process exits non-zero.
 export function runWacli(storeDir: string, args: string[], hasResult: boolean, timeoutMs?: number): Promise<unknown> {
-  if (runningCommands.has(storeDir)) {
+  const commands = getStoreCommands(storeDir)
+  if (commands.shortRunning) {
     return Promise.reject(new Error(`A wacli command is already running for this store: ${args.join(' ')}`))
   }
-  runningCommands.add(storeDir)
+  commands.shortRunning = true
   let stdout = ''
   let firstResult = false
   timeoutMs = timeoutMs ?? config.WHATSAPP_CMD_TIMEOUT_MS
@@ -87,7 +96,10 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
         finish(err instanceof Error ? err : Error(String(err)))
       }
     })
-  }).finally(() => { runningCommands.delete(storeDir) })
+  }).finally(() => {
+    commands.shortRunning = false
+    for (const resolve of commands.shortFinished.splice(0)) resolve()
+  })
 }
 
 // Parses the event stream wacli writes to stderr when --events is set.
@@ -133,4 +145,21 @@ function wacliEnv(): NodeJS.ProcessEnv {
   if (config.WACLI_SYNC_MAX_MESSAGES) env.WACLI_SYNC_MAX_MESSAGES = config.WACLI_SYNC_MAX_MESSAGES
   if (config.WACLI_SYNC_MAX_DB_SIZE) env.WACLI_SYNC_MAX_DB_SIZE = config.WACLI_SYNC_MAX_DB_SIZE
   return env
+}
+
+// Resolves once no short-lived command is running for the store, so a
+// long-running process never starts while one is still holding the store.
+function waitForShortCommand(storeDir: string): Promise<void> {
+  const commands = getStoreCommands(storeDir)
+  if (!commands.shortRunning) return Promise.resolve()
+  return new Promise((resolve) => { commands.shortFinished.push(resolve) })
+}
+
+function getStoreCommands(storeDir: string): StoreCommands {
+  let commands = commandsByStore.get(storeDir)
+  if (!commands) {
+    commands = { shortRunning: false, shortFinished: [] }
+    commandsByStore.set(storeDir, commands)
+  }
+  return commands
 }
