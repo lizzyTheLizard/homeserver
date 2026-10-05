@@ -83,6 +83,12 @@ export class Supervisor {
         logger.warn(`[${this.userId}] wacli session was closed with an error: ` + event.data.message)
         this.status = { type: 'closed', error: event.data.message }
         return true
+      case 'warning':
+        if (this.isStopping || this.child === null) return false
+        if (!event.data.message.includes('hit an LTHash mismatch')) return false
+        logger.warn(`[${this.userId}] wacli reported an app state mismatch: ` + event.data.message)
+        this.status = { type: 'closed', error: event.data.message }
+        return true
       case 'qr_code':
         logger.debug(`[${this.userId}] wacli session got qr code`)
         this.status = { type: 'needAuth', qr: event.data.code }

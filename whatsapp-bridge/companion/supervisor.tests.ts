@@ -170,6 +170,28 @@ describe('Supervisor', () => {
     expect(supervisor.getStatus()).toEqual({ type: 'closed', error: 'boom' })
   })
 
+  test('rejects when wacli reports an LTHash mismatch during start', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    const startPromise = supervisor.start()
+    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    const message = 'warning: app state regular_low hit an LTHash mismatch; requesting recovery snapshot'
+    session.handleEvent?.({ event: 'warning', data: { code: 'app_state_lthash_mismatch', message, name: 'regular_low' } })
+    await expect(startPromise).rejects.toThrow()
+    expect(supervisor.getStatus()).toEqual({ type: 'closed', error: message })
+  })
+
+  test('keeps the session running on an unrelated warning', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    const startPromise = supervisor.start()
+    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    session.handleEvent?.({ event: 'warning', data: { code: 'something_else', message: 'just a warning' } })
+    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    session.handleEvent?.({ event: 'connected' })
+    await expect(startPromise).resolves.toEqual({ type: 'connected' })
+  })
+
   test('rejects when wacli closes during start', async () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)

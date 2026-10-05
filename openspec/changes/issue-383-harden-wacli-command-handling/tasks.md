@@ -7,7 +7,7 @@
 ## 2. Warning events from wacli
 
 - [x] 2.1 Add a `warning` variant (`{ code?, message, name? }`) to `WacliEvent` in `whatsapp-bridge/companion/wacli.ts`, log warning events at warn level (code and message) in `attachEventParser` while other events stay at debug, and export `attachEventParser` for testing; add `whatsapp-bridge/companion/wacli.tests.ts` asserting a warning line is logged at warn level with its message and a non-warning line is not; verify with `pnpm --filter @homeserver/whatsapp-bridge test`
-- [ ] 2.2 Handle the `warning` event in `Supervisor.handleEvent`: a message containing `hit an LTHash mismatch` closes the session with that message and returns `true`, any other warning is ignored (returns `false`); add `supervisor.tests.ts` cases that an LTHash warning rejects a pending `start()` with `{ type: 'closed', error: ... }` and that an unrelated warning leaves the status unchanged; verify with `pnpm --filter @homeserver/whatsapp-bridge test`
+- [x] 2.2 Handle the `warning` event in `Supervisor.handleEvent`: a message containing `hit an LTHash mismatch` closes the session with that message and returns `true`, any other warning is ignored (returns `false`); add `supervisor.tests.ts` cases that an LTHash warning rejects a pending `start()` with `{ type: 'closed', error: ... }` and that an unrelated warning leaves the status unchanged; verify with `pnpm --filter @homeserver/whatsapp-bridge test`
 
 ## 3. Errors from a stopped process
 
