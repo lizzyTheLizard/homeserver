@@ -1,4 +1,4 @@
-import { createServer, IncomingMessage } from 'http'
+import { createServer, IncomingMessage, ServerResponse, Server } from 'http'
 import type { Duplex } from 'stream'
 import { WebSocketServer, WebSocket } from 'ws'
 import { getUserSession, parseCookieHeader, UserSession } from './session'
@@ -28,6 +28,7 @@ catch (e: unknown) {
 
 function main() {
   const server = createServer((req, res) => {
+    requestTracing(req, res)
     if (req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
       return
@@ -59,8 +60,12 @@ function main() {
 
   const hostname = process.env.HOSTNAME ?? '0.0.0.0'
   const port = parseInt(process.env.PORT ?? '8500', 10)
+  server.on('error', (error: Error) => {
+    logger.error(`Assistant could not listen on ${hostname}:${port.toString()}`, error)
+    process.exit(1)
+  })
   server.listen(port, hostname, () => {
-    logger.info(`Assistant ready on http://${hostname}:${port.toString()}`)
+    logger.info(`Assistant ready on http://${describeBoundAddress(server, hostname)} (listen address from HOSTNAME=${process.env.HOSTNAME ?? 'unset'})`)
   })
 }
 
@@ -162,3 +167,23 @@ const inputSchema = z.union([
   z.object({ type: z.literal('reconnect'), uuid: z.string() }),
   z.object({ type: z.literal('message'), message: z.string() }),
 ])
+
+// Logs every served request with method, path, status and duration, so a call
+// that reaches the assistant is visible even when it then fails.
+function requestTracing(req: IncomingMessage, res: ServerResponse): void {
+  const startedAt = Date.now()
+  const method = req.method ?? 'GET'
+  const url = req.url ?? '/'
+  res.on('finish', () => {
+    logger.debug(`${method} ${url} ${res.statusCode.toString()} (${(Date.now() - startedAt).toString()}ms)`)
+  })
+}
+
+// The listen host may be a container hostname, so report the address the
+// socket actually bound to - that is what a client has to be able to reach.
+function describeBoundAddress(server: Server, fallback: string): string {
+  const address = server.address()
+  if (address === null || typeof address === 'string') return address ?? fallback
+  const port = address.port.toString()
+  return address.family === 'IPv6' ? `[${address.address}]:${port}` : `${address.address}:${port}`
+}
