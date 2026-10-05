@@ -48,7 +48,7 @@ export const config: Config = {
   WACLI_BIN: optional('WACLI_BIN', 'wacli'),
   WACLI_DEVICE_PLATFORM: optional('WACLI_DEVICE_PLATFORM', 'desktop'),
   WACLI_DEVICE_LABEL: optional('WACLI_DEVICE_LABEL', isDev ? 'Gutschi.site (DEV)' : 'Gutschi.site'),
-  WHATSAPP_CMD_TIMEOUT_MS: optionalNumber('WHATSAPP_CMD_TIMEOUT_MS', 30_000),
+  WHATSAPP_CMD_TIMEOUT_MS: optionalNumber('WHATSAPP_CMD_TIMEOUT_MS', 5_000),
   WHATSAPP_CHATS_LIMIT: optionalNumber('WHATSAPP_CHATS_LIMIT', 1000),
   WHATSAPP_MESSAGES_LIMIT: optionalNumber('WHATSAPP_MESSAGES_LIMIT', 5_000),
   WACLI_SYNC_MAX_MESSAGES: optional('WACLI_SYNC_MAX_MESSAGES', '10000'),

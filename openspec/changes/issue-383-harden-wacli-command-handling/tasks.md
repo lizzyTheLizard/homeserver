@@ -2,7 +2,7 @@
 
 ## 1. Short-command timeout default
 
-- [ ] 1.1 Lower the `WHATSAPP_CMD_TIMEOUT_MS` default from `30_000` to `5_000` in `whatsapp-bridge/companion/config.ts` and update the documented default in the env table in `whatsapp-bridge/README.md`; add a `whatsapp-bridge/companion/config.tests.ts` that asserts the default is 5000 and that the environment variable overrides it; verify with `pnpm --filter @homeserver/whatsapp-bridge test` and `pnpm --filter @homeserver/whatsapp-bridge build`
+- [x] 1.1 Lower the `WHATSAPP_CMD_TIMEOUT_MS` default from `30_000` to `5_000` in `whatsapp-bridge/companion/config.ts` and update the documented default in the env table in `whatsapp-bridge/README.md`; add a `whatsapp-bridge/companion/config.tests.ts` that asserts the default is 5000 and that the environment variable overrides it; verify with `pnpm --filter @homeserver/whatsapp-bridge test` and `pnpm --filter @homeserver/whatsapp-bridge build`
 
 ## 2. Warning events from wacli
 
