@@ -32,9 +32,9 @@ The same hardening pass covers the web → assistant hop, which surfaced while t
 
 ### Warn logging in the parser, error classification in the supervisor
 
-`attachEventParser` already decodes every NDJSON line. It gains `warning` to the `WacliEvent` union (`{ code?: string, message: string, name?: string }`) and logs warning events with `logger.warn` (code and message); all other events keep the existing `logger.debug`. `Supervisor.handleEvent` gets a `warning` case that treats a message containing `hit an LTHash mismatch` as fatal and otherwise returns `false`.
+`attachEventParser` already decodes every NDJSON line. It gains `warning` to the `WacliEvent` union (`{ code?: string, message: string, name?: string }`) and logs warning events with `logger.warn` (code and message); all other events keep the existing `logger.debug`. `Supervisor.handleEvent` gets a `warning` case that treats a message containing `hit an LTHash mismatch` as an error for the pending start and otherwise returns `false`.
 
-Returning `false` for a non-fatal warning is deliberate: `handleEvent`'s return value tells `Supervisor.start()` whether the event produced a terminal status, so a logged warning must not resolve or reject a pending start.
+Returning `false` for a non-fatal warning is deliberate: `handleEvent`'s return value tells `Supervisor.start()` whether the event should fail the pending start, so a logged warning must not resolve or reject one. The LTHash case returns `true`, which makes `start()` reject while the session status stays unchanged; an `error` event behaves the same way.
 
 Alternatives considered:
 
@@ -43,7 +43,7 @@ Alternatives considered:
 
 ### Ignore errors once the process handle is gone
 
-`handleEvent`'s `error` case returns early when `this.isStopping` **or** `this.child === null`. `closed` and `stop()` already set `this.child = null` before late events can be delivered, so a spawn `error` or a post-kill error can no longer flip an intentionally stopped session into `closed` with an error. The same guard is applied to the LTHash warning path so a mismatch arriving after shutdown is ignored.
+`handleEvent`'s `error` case returns early when `this.isStopping` **or** `this.child === null`. `closed` and `stop()` already set `this.child = null` before late events can be delivered, so a spawn `error` or a post-kill error can no longer mark an intentionally stopped session as failed. The same guard is applied to the LTHash warning path so a mismatch arriving after shutdown is ignored.
 
 ### Per-store coordinator in `wacli.ts`
 
@@ -82,7 +82,7 @@ Alternative considered: keep `spawnWacli` synchronous and have the supervisor `a
 
 - `wacli.tests.ts` (new) mocks `node:child_process` to drive command lifecycles deterministically: a hanging `runWacli` is rejected while it is in flight, a `spawnWacli` started during that window spawns only after the short command settles, and `attachEventParser` (exported for the test) logs a `warning` line at warn level through a `Readable`.
 - Each coordination test uses a distinct `storeDir` string so the module-level registry cannot leak state between tests.
-- `supervisor.tests.ts` gains cases for the late-error guard (error after `closed` does not change status), a warning logged without failing the session, and an LTHash warning rejecting a pending `start()` with `{ type: 'closed', error: ... }`.
+- `supervisor.tests.ts` gains cases for the late-error guard (error after `closed` does not change status), a warning logged without failing the session, and an LTHash warning rejecting a pending `start()` while the status stays `connecting`.
 
 ### Diagnostics for the web → assistant hop
 
@@ -102,8 +102,8 @@ Alternatives considered: binding the assistant to `0.0.0.0` (rejected — the co
 - **[A long process can wait forever if a short command never settles]** → `runWacli` always settles (timeout, exit or spawn error) and clears the flag in `finally`, so the wait is bounded by `WHATSAPP_CMD_TIMEOUT_MS` in practice.
 - **[Coordinator entries are never removed]** → One small object per store, bounded by the number of users; acceptable for a single bridge process.
 - **[Async `spawnWacli` changes a public helper's signature]** → Only `Supervisor.start()` calls it; the type change plus the updated mock keep this local and compiler-checked.
-- **[LTHash mismatch closes the session]** → The next request lazily starts a new sync (`ensureStarted`), which is the existing behavior for a closed session; wacli's recovery snapshot continues independently, and no retry loop is added.
-- **[Warning return value]** → A non-fatal warning returns `false`, so it can never resolve or reject an in-flight `start()`; only the LTHash mismatch returns `true` and closes the session.
+- **[An error event or LTHash mismatch no longer closes the session]** → `start()` rejects and the status stays `connecting`; because the process handle is still set, a retry keeps hitting the existing `this.child` guard until `stop()` runs. This is the pre-existing behaviour for a live process, wacli's recovery snapshot continues independently, and no retry loop is added.
+- **[Warning return value]** → A non-fatal warning returns `false`, so it can never resolve or reject an in-flight `start()`; only the LTHash mismatch returns `true`, and it fails the start without changing the status.
 - **[Assistant request tracing is debug level]** → Visible in development (`LOG_LEVEL=debug`), quiet in production (`info`), matching the bridge's request tracing; a failure is still logged at warn/error.
 - **[The dev assistant URL default is environment-specific]** → It applies only when `NODE_ENV` is development, test, build or storybook; production must (and does) set `ASSISTANT_INTERNAL_URL` explicitly, so the default cannot leak into a deployment.
 

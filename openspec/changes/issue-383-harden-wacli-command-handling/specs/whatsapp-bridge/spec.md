@@ -67,19 +67,19 @@ The bridge SHALL log every wacli warning event at warn level, including its code
 - **WHEN** a wacli warning event arrives on a running session
 - **THEN** the bridge logs it at warn level and the session remains in its current state
 
-### Requirement: LTHash mismatch warnings are surfaced as session errors
+### Requirement: LTHash mismatch warnings fail the pending start
 
-The bridge SHALL treat a wacli warning whose message contains `hit an LTHash mismatch` as a session error. The session SHALL become closed with that message so that a pending start request fails, and the bridge SHALL leave wacli's own recovery behaviour untouched.
+The bridge SHALL treat a wacli warning whose message contains `hit an LTHash mismatch` as an error for the pending start: it SHALL log the warning at warn level and SHALL fail the start request, without changing the session status. The bridge SHALL leave wacli's own recovery behaviour untouched.
 
 #### Scenario: LTHash mismatch fails the pending start request
 
 - **WHEN** a session is starting and a warning containing `hit an LTHash mismatch` arrives from its wacli process
-- **THEN** the session becomes closed with that message and the start request fails
+- **THEN** the bridge logs the warning at warn level, the start request fails, and the session status is unchanged
 
 #### Scenario: LTHash mismatch after shutdown is ignored
 
 - **WHEN** a session is being stopped or its wacli process has already stopped and a warning containing `hit an LTHash mismatch` arrives
-- **THEN** the session status does not change
+- **THEN** the session status does not change and no start request fails
 
 #### Scenario: Other warnings do not fail the session
 
