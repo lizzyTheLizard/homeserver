@@ -10,6 +10,8 @@ Constraints that shape the approach:
 - Short commands against a store must stay usable while the long-running `sync` process holds the store (that is how reads work today); only short-vs-long start ordering and short-vs-short overlap are being serialized.
 - The bridge is a single Node process with one supervisor per user; coordination can be in-memory and per store.
 
+The same hardening pass covers the web → assistant hop, which surfaced while testing the bridge. In the dev-machine container the assistant binds `process.env.HOSTNAME` (the container id, resolving to the container address `172.19.0.3`) because external callers reach it there; the web app defaulted to `http://localhost:8500`, so `ECONNREFUSED` came back and neither side logged anything usable — the assistant cannot log a connection that never arrives, and the web app threw a bare `fetch failed` without the URL. See proposal.md for the motivation.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -17,12 +19,14 @@ Constraints that shape the approach:
 - Make long-process start and short-command execution deterministic per store, without blocking other users.
 - Surface app-state LTHash mismatches as session errors without breaking wacli's own recovery.
 - Keep the failure modes bounded (a stuck command ends in ≤ `WHATSAPP_CMD_TIMEOUT_MS`).
+- Make a failed web → assistant call diagnosable from both services' logs, and make dev web reach the assistant where it actually listens.
 
 **Non-Goals:**
 
 - Serializing short commands against the running `sync` process (today's supported concurrency is kept).
 - Queueing or retrying rejected short commands.
 - Any change to wacli's recovery snapshot, or to how the bridge lazily restarts a closed session.
+- Changing the assistant's listen address: it must stay on the container address for external requests.
 
 ## Decisions
 
@@ -80,6 +84,18 @@ Alternative considered: keep `spawnWacli` synchronous and have the supervisor `a
 - Each coordination test uses a distinct `storeDir` string so the module-level registry cannot leak state between tests.
 - `supervisor.tests.ts` gains cases for the late-error guard (error after `closed` does not change status), a warning logged without failing the session, and an LTHash warning rejecting a pending `start()` with `{ type: 'closed', error: ... }`.
 
+### Diagnostics for the web → assistant hop
+
+- `assistant/server.ts` reports the address the socket actually bound (`server.address()`) together with the `HOSTNAME` it was derived from, so the container-address bind is visible instead of looking like loopback; it handles `server.on('error')`, logging host/port plus the errno and exiting non-zero; and it traces every served HTTP request with method, path, status and duration at debug, mirroring the bridge's `requestTracing`.
+- The duplicated `assistantGet`/`assistantPost` in `web/app/startpage/microsoft/server.ts` and `web/app/startpage/whatsapp/server.ts` delegate to a local `assistantFetch` that logs the full target URL and the unwrapped error cause (Node hides `ECONNREFUSED` in `error.cause` behind `fetch failed`) before rethrowing, and logs the URL for non-OK responses as well.
+- Alternatives considered: logging only on the assistant side (a refused connection never reaches it, so it cannot log anything) and relying on the generic `fetch failed` (which names neither URL nor cause).
+
+### Keep the assistant's container bind; point web at the dev-machine host
+
+The assistant stays bound to `process.env.HOSTNAME`, because external callers rely on the container address. In development the web default for `ASSISTANT_INTERNAL_URL` becomes `http://dev-machine:8500` — the compose service name resolves to the dev-machine container, where the local assistant process listens. Production is unchanged: it sets `ASSISTANT_INTERNAL_URL=http://assistant:8500` explicitly, and the default only applies when `NODE_ENV` is development, test, build or storybook.
+
+Alternatives considered: binding the assistant to `0.0.0.0` (rejected — the container address bind is required for external requests) and setting the host in the untracked local `.env` (rejected — nothing in the repository would make dev work out of the box).
+
 ## Risks / Trade-offs
 
 - **[Concurrent short commands now fail instead of waiting]** → The caller sees an immediate error rather than a delayed one; the assistant can retry. This is the behavior the issue asks for, and the existing 500 path reports it.
@@ -88,8 +104,11 @@ Alternative considered: keep `spawnWacli` synchronous and have the supervisor `a
 - **[Async `spawnWacli` changes a public helper's signature]** → Only `Supervisor.start()` calls it; the type change plus the updated mock keep this local and compiler-checked.
 - **[LTHash mismatch closes the session]** → The next request lazily starts a new sync (`ensureStarted`), which is the existing behavior for a closed session; wacli's recovery snapshot continues independently, and no retry loop is added.
 - **[Warning return value]** → A non-fatal warning returns `false`, so it can never resolve or reject an in-flight `start()`; only the LTHash mismatch returns `true` and closes the session.
+- **[Assistant request tracing is debug level]** → Visible in development (`LOG_LEVEL=debug`), quiet in production (`info`), matching the bridge's request tracing; a failure is still logged at warn/error.
+- **[The dev assistant URL default is environment-specific]** → It applies only when `NODE_ENV` is development, test, build or storybook; production must (and does) set `ASSISTANT_INTERNAL_URL` explicitly, so the default cannot leak into a deployment.
 
 ## Migration Plan
 
 - Rebuild and redeploy the `whatsapp-bridge` image (`tsc` build). No database, volume or REST-contract migration; all state is in-memory.
 - Rollback: redeploy the previous image. Deployments that need the old timing can also set `WHATSAPP_CMD_TIMEOUT_MS=30000` without a code change.
+- The assistant and web changes need no migration: the new logs are additive, and the dev URL applies on the next `pnpm dev` restart. Production keeps its explicit `ASSISTANT_INTERNAL_URL`.

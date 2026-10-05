@@ -69,7 +69,9 @@ export const config: Config = {
   NODE_PUBLIC_LOCALE: optional('NODE_PUBLIC_LOCALE', 'de-CH'),
   NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),
   WHATSAPP_BRIDGE_URL: required('WHATSAPP_BRIDGE_URL', 'http://localhost:8400'),
-  ASSISTANT_INTERNAL_URL: required('ASSISTANT_INTERNAL_URL', 'http://localhost:8500'),
+  // In the dev-machine container the assistant runs as a local process and binds
+  // the container's own address, so "localhost" (127.0.0.1) is not reachable.
+  ASSISTANT_INTERNAL_URL: required('ASSISTANT_INTERNAL_URL', 'http://dev-machine:8500'),
   GIT_BRANCH: required('GIT_BRANCH', 'DEVELOPMENT'),
   GIT_COMMIT_HASH: required('GIT_COMMIT_HASH', 'DEVELOPMENT'),
   GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // not required, no default
