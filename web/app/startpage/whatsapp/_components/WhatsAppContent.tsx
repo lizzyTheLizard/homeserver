@@ -22,7 +22,7 @@ const columns = [
 export function WhatsAppContent({ chats, status }: { chats: Chat[], status: SyncStatus }) {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [sidebarId, openSidebar] = useSidebar()
-  const [error, setError] = useState<string | undefined>(status.type === 'closed' ? (status.error ?? 'Unknown error') : undefined)
+  const [error, setError] = useState<string | undefined>(status.type === 'closed' ? 'The WhatsApp connection is closed' : undefined)
   const [liveStatus, setLiveStatus] = useState<SyncStatus>(status)
   const router = useRouter()
 

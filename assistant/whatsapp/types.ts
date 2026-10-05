@@ -1,4 +1,4 @@
-export type SyncStatus = { type: 'connecting' } | { type: 'needAuth', qr: string } | { type: 'connected' } | { type: 'fullsync' } | { type: 'closed', error?: string }
+export type SyncStatus = { type: 'connecting' } | { type: 'needAuth', qr: string } | { type: 'connected' } | { type: 'fullsync' } | { type: 'closed' }
 
 export interface Message {
   id: string
