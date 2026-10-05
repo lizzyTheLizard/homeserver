@@ -5,6 +5,7 @@ import { Readable } from 'node:stream'
 
 export type WacliEvent = { event: 'qr_code', data: { code: string } }
   | { event: 'error', data: { message: string } }
+  | { event: 'warning', data: { code?: string, message: string, name?: string } }
   | { event: 'closed' }
   | { event: 'auth_starting' }
   | { event: 'connected' }
@@ -82,7 +83,7 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
 
 // Parses the event stream wacli writes to stderr when --events is set.
 // Each line is `{"event":"...","data":{...},"ts":<millis>}`.
-function attachEventParser(stream: Readable | null, onEvent: (event: WacliEvent) => void, label?: string): void {
+export function attachEventParser(stream: Readable | null, onEvent: (event: WacliEvent) => void, label?: string): void {
   if (!stream) return
   const prefix = label ? `[${label}] ` : ''
   let buffer = ''
@@ -96,7 +97,12 @@ function attachEventParser(stream: Readable | null, onEvent: (event: WacliEvent)
       if (!line) continue
       try {
         const event = JSON.parse(line) as WacliEvent
-        logger.debug(`${prefix}wacli event: ${line}`)
+        if (event.event === 'warning') {
+          logger.warn(`${prefix}wacli warning [${event.data.code ?? 'unknown'}]: ${event.data.message}`)
+        }
+        else {
+          logger.debug(`${prefix}wacli event: ${line}`)
+        }
         onEvent(event)
       }
       catch {
