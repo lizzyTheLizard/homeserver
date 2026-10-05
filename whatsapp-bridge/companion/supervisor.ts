@@ -79,7 +79,7 @@ export class Supervisor {
         this.child = null
         return true
       case 'error':
-        if (this.isStopping) return false
+        if (this.isStopping || this.child === null) return false
         logger.warn(`[${this.userId}] wacli session was closed with an error: ` + event.data.message)
         this.status = { type: 'closed', error: event.data.message }
         return true

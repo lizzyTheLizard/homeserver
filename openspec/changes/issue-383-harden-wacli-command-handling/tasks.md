@@ -11,7 +11,7 @@
 
 ## 3. Errors from a stopped process
 
-- [ ] 3.1 Ignore `error` events in `Supervisor.handleEvent` when `this.child === null` in addition to `this.isStopping`; add a `supervisor.tests.ts` case that an error delivered after the process closed leaves the session status unchanged; verify with `pnpm --filter @homeserver/whatsapp-bridge test`
+- [x] 3.1 Ignore `error` events in `Supervisor.handleEvent` when `this.child === null` in addition to `this.isStopping`; add a `supervisor.tests.ts` case that an error delivered after the process closed leaves the session status unchanged; verify with `pnpm --filter @homeserver/whatsapp-bridge test`
 
 ## 4. One short command per store
 

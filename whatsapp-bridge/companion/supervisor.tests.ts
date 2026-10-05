@@ -202,6 +202,15 @@ describe('Supervisor', () => {
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 
+  test('ignores an error reported after the process stopped', async () => {
+    const session = setupSupervisor()
+    const supervisor = new Supervisor(userId)
+    await startConnected(supervisor, session)
+    session.handleEvent?.({ event: 'closed' })
+    session.handleEvent?.({ event: 'error', data: { message: 'late failure' } })
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
+  })
+
   test('stops the child with SIGTERM', async () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
