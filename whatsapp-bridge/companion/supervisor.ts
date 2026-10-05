@@ -11,7 +11,7 @@ import { join } from 'node:path'
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
 export type Status = { type: 'connecting' }
   | { type: 'needAuth', qr: string } | { type: 'connected' }
-  | { type: 'fullsync' } | { type: 'closed', error?: string }
+  | { type: 'fullsync' } | { type: 'closed' }
 
 export class Supervisor {
   private readonly storeDir: string
@@ -83,13 +83,11 @@ export class Supervisor {
       case 'error':
         if (this.isStopping || this.child === null) return false
         logger.warn(`[${this.userId}] wacli session was closed with an error: ` + event.data.message)
-        this.status = { type: 'closed', error: event.data.message }
         return true
       case 'warning':
         if (this.isStopping || this.child === null) return false
         if (!event.data.message.includes('hit an LTHash mismatch')) return false
         logger.warn(`[${this.userId}] wacli reported an app state mismatch: ` + event.data.message)
-        this.status = { type: 'closed', error: event.data.message }
         return true
       case 'qr_code':
         logger.debug(`[${this.userId}] wacli session got qr code`)
