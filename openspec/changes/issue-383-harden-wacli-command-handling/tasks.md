@@ -15,7 +15,7 @@
 
 ## 4. One short command per store
 
-- [ ] 4.1 Add a per-store coordinator in `whatsapp-bridge/companion/wacli.ts` that tracks an in-flight `runWacli` command and rejects a second `runWacli` for the same store immediately, clearing the flag in a `finally` so a timeout, error or exit always releases it; add `wacli.tests.ts` cases (overlapping command rejected without spawning, same-store flag released after settle, different stores unaffected) using `node:child_process` mocks and distinct store directories; verify with `pnpm --filter @homeserver/whatsapp-bridge test` and `pnpm --filter @homeserver/whatsapp-bridge build`
+- [x] 4.1 Add a per-store coordinator in `whatsapp-bridge/companion/wacli.ts` that tracks an in-flight `runWacli` command and rejects a second `runWacli` for the same store immediately, clearing the flag in a `finally` so a timeout, error or exit always releases it; add `wacli.tests.ts` cases (overlapping command rejected without spawning, same-store flag released after settle, different stores unaffected) using `node:child_process` mocks and distinct store directories; verify with `pnpm --filter @homeserver/whatsapp-bridge test` and `pnpm --filter @homeserver/whatsapp-bridge build`
 
 ## 5. Long process waits for the short command
 

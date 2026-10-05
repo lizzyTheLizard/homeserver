@@ -28,10 +28,19 @@ export function spawnWacli(storeDir: string, args: string[], handleEvent: (event
   return child
 }
 
+// Stores with a short-lived wacli command currently in flight. Commands against
+// one store are serialised: a second short command for the same store is
+// rejected instead of racing the first, while different stores stay independent.
+const runningCommands = new Set<string>()
+
 // Runs a short-lived wacli command and resolves with the parsed JSON envelope
 // (or a plain success envelope for commands that do not produce JSON). Rejects
 // with WacliError when the process exits non-zero.
 export function runWacli(storeDir: string, args: string[], hasResult: boolean, timeoutMs?: number): Promise<unknown> {
+  if (runningCommands.has(storeDir)) {
+    return Promise.reject(new Error(`A wacli command is already running for this store: ${args.join(' ')}`))
+  }
+  runningCommands.add(storeDir)
   let stdout = ''
   let firstResult = false
   timeoutMs = timeoutMs ?? config.WHATSAPP_CMD_TIMEOUT_MS
@@ -78,7 +87,7 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
         finish(err instanceof Error ? err : Error(String(err)))
       }
     })
-  })
+  }).finally(() => { runningCommands.delete(storeDir) })
 }
 
 // Parses the event stream wacli writes to stderr when --events is set.
