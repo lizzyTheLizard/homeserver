@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { config } from './config'
 import { logger } from './logger'
 import { Supervisor } from './supervisor'
+import { requestTracing, traceIdOf } from './tracing'
 import { parseWebhookPayload } from './webhook'
 
 type SessionRequest = Request<{ userId: string }>
@@ -111,22 +112,10 @@ async function shutdown(signal: string): Promise<void> {
   process.exit(0)
 }
 
-// Request tracing: logs every inbound request and its result at debug level so
-// a request can be followed end to end in the logs.
-function requestTracing(req: SessionRequest, res: Response, next: NextFunction) {
-  const startedAt = Date.now()
-  const label = req.params.userId ? `[${req.params.userId}] ` : ''
-  logger.debug(`${label}-> ${req.method} ${req.originalUrl}`)
-  res.on('finish', () => {
-    logger.debug(`${label}<- ${req.method} ${req.originalUrl} ${String(res.statusCode)} (${String(Date.now() - startedAt)}ms)`)
-  })
-  next()
-}
-
 // Express detects error middleware by its 4-argument signature, so `next`
 // must stay even though the handler writes the response itself.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function errorHandler(err: Error, _req: SessionRequest, res: Response, _next: NextFunction) {
-  logger.warn('Error while serving request', err)
+  logger.warn(`${traceIdOf(res)}Error while serving request`, err)
   res.status(500).json({ message: err.message })
 }

@@ -43,6 +43,21 @@ user id, so it is deterministic and filesystem-safe.
 - Commands that need the lock themselves (`archive-chat`, `mark-chat-read`,
   `full-sync`) briefly pause the follow sync, run, and resume it.
 
+### Request tracing
+
+Every inbound request and its generated result is logged at `info` level with a
+per-request id, so overlapping requests (for example a `GET /chats` racing a
+`GET /messages` on the same store) can be told apart:
+
+```text
+[user@example.com] #1a -> GET /sessions/user%40example.com/messages?chatId=123%40s.whatsapp.net
+[user@example.com] #1a <- GET /sessions/user%40example.com/messages?chatId=123%40s.whatsapp.net 500 (4ms) result={"message":"A wacli command is already running for this store: …"}
+```
+
+The request body is reported with the result (the body parser runs after the
+tracer), response bodies are truncated after 2000 characters, and the error
+handler logs under the same `#id`.
+
 ### Auto-unarchive on incoming message
 
 WhatsApp unarchives a chat by default when a new message arrives in it, and the
