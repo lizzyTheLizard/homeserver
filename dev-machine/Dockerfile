@@ -1,5 +1,5 @@
 # Syntax=docker/dockerfile:1
-FROM ubuntu:24.04
+FROM node:24-bookworm-slim
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,9 +9,6 @@ ENV LC_ALL=C.UTF-8
 # 1. Install base utilities, SSH server, supervisor, PostgreSQL client tools, and
 #    GitHub CLI repo dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    gnupg \
     git \
     vim \
     openssh-server \
@@ -25,9 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     rsync \
     net-tools \
-    build-essential \
-    python3 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
 
 # 2. Install GitHub CLI (gh)
 RUN mkdir -p -m 0755 /etc/apt/keyrings \
@@ -35,21 +30,19 @@ RUN mkdir -p -m 0755 /etc/apt/keyrings \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update \
-    && apt-get install -y gh \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
 
-# 3. Install Node.js & Corepack (pnpm)
-# Build Arguments
-ARG NODE_VERSION="24"
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y nodejs \
-    && corepack enable \
-    && corepack prepare pnpm@latest --activate \
-    && rm -rf /var/lib/apt/lists/*
+# 3. Enable Corepack (pnpm)
+RUN corepack enable \
+    && corepack prepare pnpm@latest --activate
 
 # 4. Install Playwright browser OS dependencies. The browser binaries themselves
 #    are fetched at runtime (see AGENTS.md) via `pnpm exec playwright install --with-deps`.
-RUN apt-get update && npx -y playwright@1.62.1 install-deps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && npx -y playwright@1.63.0 install-deps chromium \
+    && apt-get install -y --no-install-recommends fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
 
 
 # 5. Install wacli (WhatsApp CLI) — the WhatsApp bridge companion drives this
@@ -71,18 +64,12 @@ RUN npm install -g @fission-ai/openspec@latest
 # 7. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# 8. Configure OpenSSH Server (sshd on port 2222, key-only auth, disable root)
-RUN mkdir -p /var/run/sshd \
-    && echo "Port 2222" >> /etc/ssh/sshd_config \
-    && echo "PermitRootLogin no" >> /etc/ssh/sshd_config \
-    && echo "PasswordAuthentication no" >> /etc/ssh/sshd_config \
-    && echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config \
-    && echo "AllowUsers dev" >> /etc/ssh/sshd_config
-
-# 9. Copy configuration files & entrypoint script
+# 8. Copy configuration files & entrypoint script
 COPY dev-machine/supervisord.conf /etc/supervisor/supervisord.conf
+COPY dev-machine/sshd_config /etc/ssh/sshd_config
 COPY dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+    && mkdir -p /var/run/sshd
 USER dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
