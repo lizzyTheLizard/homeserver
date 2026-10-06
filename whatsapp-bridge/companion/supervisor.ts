@@ -113,7 +113,7 @@ export class Supervisor {
         rej(new Error('Could not start wacli'))
         break
       default:
-        logger.warn(`[${this.userId}] got an invalid event: ${JSON.stringify(event)}`)
+        logger.debug(`[${this.userId}] got an unexpected event: ${JSON.stringify(event)}`)
     }
   }
 
