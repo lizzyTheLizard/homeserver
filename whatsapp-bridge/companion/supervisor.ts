@@ -9,22 +9,17 @@ import { createHash, randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
-export type Status = { type: 'connecting' }
-  | { type: 'needAuth', qr: string } | { type: 'connected' }
+export type Status = { type: 'needAuth', qr: string } | { type: 'connected' }
   | { type: 'fullsync' } | { type: 'closed' }
 
 export class Supervisor {
   private readonly storeDir: string
   private readonly webhookSecret: string
   private readonly mutex: Mutex = new Mutex()
-  private status: Status = { type: 'connecting' }
+  private status: Status = { type: 'closed' }
   private child: ChildProcess | null = null
   private isStopping = false
-  // Chat JIDs currently being auto-unarchived, so concurrent webhook
-  // deliveries for the same chat coalesce into a single pause/unarchive.
-  private readonly inflightUnarchive = new Set<string>()
-
-  constructor(private readonly userId: string) {
+  constructor(public readonly userId: string) {
     const storeId = createHash('sha256').update(userId).digest('hex').slice(0, 32)
     this.storeDir = join(config.WHATSAPP_DATA_DIR, storeId)
     this.webhookSecret = randomBytes(32).toString('hex')
@@ -33,124 +28,139 @@ export class Supervisor {
 
   public async start(): Promise<Status> {
     return this.mutex.runExclusive(async () => {
-      if (this.status.type === 'needAuth' || this.status.type === 'connected' || this.status.type === 'fullsync') {
+      if (this.status.type !== 'closed') {
         logger.debug(`[${this.userId}] wacli is already in state ${this.status.type}, so no start needed`)
         return this.status
       }
       if (this.child) throw new Error(`A child process already exists but state is ${this.status.type}`)
-      logger.debug(`[${this.userId}] Current status is ${this.status.type}, check if authenticated`)
+      logger.debug(`[${this.userId}] Check if authenticated`)
       const result = await runWacli(this.storeDir, ['auth', 'status'], true)
       const isAuthenticated = mapAuthenticated(result)
-      if (isAuthenticated) logger.debug('[${this.userId}] Is already authenticated, start sync')
-      else logger.debug('[${this.userId}] Not authenticated, start login')
-      const args = isAuthenticated
-        ? [
-            'sync', '--follow', '--events',
-            '--webhook', `http://127.0.0.1:${String(config.PORT)}/sessions/${this.userId}/webhook`,
-            '--webhook-allow-private', '--webhook-secret', this.webhookSecret,
-          ]
-        : ['auth', '--events']
-      let gotResult = false
-      logger.debug(`[${this.userId}] starting wacli sync`)
-      return new Promise((res, rej) => {
-        void spawnWacli(this.storeDir, args, (event) => {
-          const isResult = this.handleEvent(event)
-          if (!isResult || gotResult) return
-          gotResult = true
-          if (this.status.type === 'connected') {
-            logger.info(`[${this.userId}] started wacli sync, now connected`)
-            res(this.status)
-          }
-          else if (this.status.type === 'needAuth') {
-            logger.info(`[${this.userId}] started wacli sync, but needs auth`)
-            res (this.status)
-          }
-          else rej(new Error('Could not start wacli status is now ' + this.status.type))
-        })
-          .then((child) => { this.child = child })
-          .catch((err: unknown) => { rej(err instanceof Error ? err : Error(String(err))) })
-      })
+      return isAuthenticated ? this.startSync() : this.startAuthentication()
     })
   }
 
-  private handleEvent(event: WacliEvent): boolean {
+  private startSync(): Promise<Status> {
+    logger.debug(`[${this.userId}] Is already authenticated, start sync`)
+    const args = [
+      'sync', '--follow', '--events',
+      '--webhook', `http://127.0.0.1:${String(config.PORT)}/sessions/${this.userId}/webhook`,
+      '--webhook-allow-private', '--webhook-secret', this.webhookSecret,
+    ]
+    logger.debug(`[${this.userId}] starting wacli sync`)
+    return new Promise((res, rej) => {
+      void spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
+        .then((child) => { this.child = child })
+        .catch((err: unknown) => {
+          void this.stop().catch(() => undefined)
+          rej(err instanceof Error ? err : Error(String(err)))
+        })
+    })
+  }
+
+  private startAuthentication(): Promise<Status> {
+    logger.debug(`[${this.userId}] Not authenticated, start login`)
+    const args = ['auth', '--events']
+    logger.debug(`[${this.userId}] starting wacli sync`)
+    return new Promise((res, rej) => {
+      void spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
+        .then((child) => { this.child = child })
+        .catch((err: unknown) => {
+          void this.stop().catch(() => undefined)
+          rej(err instanceof Error ? err : Error(String(err)))
+        })
+    })
+  }
+
+  private handleEvent(event: WacliEvent, res: (status: Status) => void, rej: (error: Error) => void): void {
     switch (event.event) {
       case 'closed':
         logger.info(`[${this.userId}] wacli session was closed`)
         this.status = { type: 'closed' }
         this.child = null
-        return true
+        rej(new Error('Could not start wacli'))
+        break
       case 'error':
-        if (this.isStopping || this.child === null) return false
-        logger.warn(`[${this.userId}] wacli session was closed with an error: ` + event.data.message)
-        return true
+        if (this.isStopping) break
+        logger.warn(`[${this.userId}] wacli session had an error: ` + event.data.message)
+        rej(new Error('Could not start wacli'))
+        break
       case 'warning':
-        if (this.isStopping || this.child === null) return false
-        if (!event.data.message.includes('hit an LTHash mismatch')) return false
-        logger.warn(`[${this.userId}] wacli reported an app state mismatch: ` + event.data.message)
-        return true
+        if (this.isStopping) break
+        logger.warn(`[${this.userId}] wacli warning: ` + event.data.message)
+        if (event.data.message.includes('hit an LTHash mismatch')) rej(new Error('Could not start wacli'))
+        break
       case 'qr_code':
-        logger.debug(`[${this.userId}] wacli session got qr code`)
         this.status = { type: 'needAuth', qr: event.data.code }
-        return true
+        logger.info(`[${this.userId}] started wacli sync, but needs auth`)
+        res(this.status)
+        break
       case 'connected':
-        logger.debug(`[${this.userId}] wacli session is connected`)
         this.status = { type: 'connected' }
-        return true
+        logger.info(`[${this.userId}] started wacli sync, now connected`)
+        res(this.status)
+        break
       case 'disconnected':
         logger.warn(`[${this.userId}] wacli session got disconnected, not sure why...`)
-        this.status = { type: 'connecting' }
-        return true
+        void this.stop().catch(() => undefined)
+        rej(new Error('Could not start wacli'))
+        break
       case 'logged_out':
         logger.warn(`[${this.userId}] wacli session was logged out (revoked)`)
-        this.status = { type: 'connecting' }
-        return true
+        void this.stop().catch(() => undefined)
+        rej(new Error('Could not start wacli'))
+        break
       default:
-        return false
+        logger.warn(`[${this.userId}] got an invalid event: ${JSON.stringify(event)}`)
     }
   }
 
   public async stop(): Promise<void> {
-    return this.mutex.runExclusive(async () => {
-      if ((this.status.type === 'connecting' || this.status.type === 'closed') && this.child === null) {
-        logger.debug(`[${this.userId}] wacli is already in state ${this.status.type}, so no start needed`)
+    return this.mutex.runExclusive(() => this._stop())
+  }
+
+  private async _stop(): Promise<void> {
+    if (this.status.type === 'closed') {
+      if (this.child === null) {
+        logger.debug(`[${this.userId}] wacli is already closed, nothing to stop`)
         return
       }
-      const child = this.child
-      this.child = null
-      if (!child) throw new Error('Cannot stop a process that has not been started')
-      // Check if process is already stopped
-      if (child.exitCode !== null || child.signalCode !== null) return
-      this.isStopping = true
-      logger.debug(`[${this.userId}] stop wacli sync`)
-      return new Promise<void>((res) => {
-        // Send a kill after 5s if child does not close, independant of the event loop
-        const killTimer = setTimeout(() => {
-          logger.warn(`[${this.userId}] wacli sync dit not terminate normally, kill it`)
-          child.kill('SIGKILL')
-          this.isStopping = false
-          res()
-        }, 5000)
-        killTimer.unref()
+      logger.warn(`[${this.userId}] wacli session is closed but a process is still running, stopping it`)
+    }
+    const child = this.child
+    if (!child) throw new Error('Cannot stop a process that has not been started')
+    if (child.exitCode !== null || child.signalCode !== null) throw new Error('The wacli process has already exited')
+    this.child = null
+    this.isStopping = true
+    logger.debug(`[${this.userId}] stop wacli sync`)
+    return new Promise<void>((res) => {
+      // Send a kill after 5s if child does not close, independant of the event loop
+      const killTimer = setTimeout(() => {
+        logger.warn(`[${this.userId}] wacli sync dit not terminate normally, kill it`)
+        child.kill('SIGKILL')
+        this.isStopping = false
+        this.status = { type: 'closed' }
+        res()
+      }, 5000)
+      killTimer.unref()
 
-        // Wait for the process to close
-        child.once('close', () => {
-          clearTimeout(killTimer)
-          this.status = { type: 'closed' }
-          this.isStopping = false
-          logger.info(`[${this.userId}] wacli sync has been stopped normally using sigterm`)
-          res()
-        })
-
-        // Send a terminate signal
-        child.kill('SIGTERM')
+      // Wait for the process to close
+      child.once('close', () => {
+        clearTimeout(killTimer)
+        this.status = { type: 'closed' }
+        this.isStopping = false
+        logger.info(`[${this.userId}] wacli sync has been stopped normally using sigterm`)
+        res()
       })
+
+      // Send a terminate signal
+      child.kill('SIGTERM')
     })
   }
 
   public async disconnect(): Promise<void> {
-    await this.stop()
     return this.mutex.runExclusive(async () => {
+      await this._stop()
       logger.info(`[${this.userId}] disconnect wacli session`)
       // ignore errors if already logged out
       await runWacli(this.storeDir, ['auth', 'logout'], false)
@@ -159,7 +169,7 @@ export class Supervisor {
           logger.warn(`[${this.userId}] Could not log out`, error)
         })
       await fs.rm(this.storeDir, { recursive: true, force: true })
-      this.status = { type: 'connecting' }
+      this.status = { type: 'closed' }
     })
   }
 
@@ -196,41 +206,26 @@ export class Supervisor {
   }
 
   public async archiveChat(chatId: string, archived: boolean): Promise<void> {
-    await this.stop()
-    logger.info(`[${this.userId}] archive chat`)
-    await runWacli(this.storeDir, ['chats', archived ? 'archive' : 'unarchive', '--chat', chatId], false)
+    return this.mutex.runExclusive(async () => {
+      await this._stop()
+      logger.info(`[${this.userId}] archive chat`)
+      await runWacli(this.storeDir, ['chats', archived ? 'archive' : 'unarchive', '--chat', chatId], false)
+    })
   }
 
-  // Reacts to a wacli `sync --webhook` message delivery: unarchives the chat
-  // when a new incoming (fromMe: false) message lands in an archived chat.
-  public async handleMessageWebhook(payload: unknown): Promise<void> {
-    const message = (typeof payload === 'object' && payload !== null ? payload : {}) as Record<string, unknown>
-    if (message.FromMe === true || message.FromMe === 1) return
-    const chatId = typeof message.Chat === 'string' ? message.Chat : ''
-    if (!chatId || this.inflightUnarchive.has(chatId)) return
-    this.inflightUnarchive.add(chatId)
-    try {
-      logger.debug(`[${this.userId}] check archive state of ${chatId}`)
-      const result = await runWacli(this.storeDir, ['chats', 'show', '--jid', chatId], true)
-      if (!mapChatArchived(result)) return
-      logger.info(`[${this.userId}] auto-unarchive ${chatId} on incoming message`)
-      await this.archiveChat(chatId, false)
-    }
-    catch (err: unknown) {
-      logger.warn(`[${this.userId}] could not auto-unarchive ${chatId}`, err)
-    }
-    finally {
-      this.inflightUnarchive.delete(chatId)
-    }
+  public async isArchived(chatId: string): Promise<boolean> {
+    logger.debug(`[${this.userId}] check archive state of ${chatId}`)
+    const result = await runWacli(this.storeDir, ['chats', 'show', '--jid', chatId], true)
+    return mapChatArchived(result)
   }
 
   public async fullSync(): Promise<void> {
-    if (this.status.type === 'fullsync') {
-      logger.debug(`[${this.userId}] fullsync alredy running`)
-      return
-    }
-    await this.stop()
-    return this.mutex.runExclusive(() => {
+    return this.mutex.runExclusive(async () => {
+      if (this.status.type === 'fullsync') {
+        logger.debug(`[${this.userId}] fullsync alredy running`)
+        return
+      }
+      await this._stop()
       logger.info(`[${this.userId}] run full sync`)
       this.status = { type: 'fullsync' }
       runWacli(this.storeDir, ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'], false, 5 * 60 * 1000)
@@ -239,7 +234,7 @@ export class Supervisor {
           const error = err instanceof Error ? err : Error(String(err))
           logger.warn(`[${this.userId}] Full sync failed`, error)
         })
-        .finally(() => { this.status = { type: 'connecting' } })
+        .finally(() => { this.status = { type: 'closed' } })
     })
   }
 

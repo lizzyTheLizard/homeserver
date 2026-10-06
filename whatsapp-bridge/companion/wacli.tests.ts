@@ -17,7 +17,7 @@ describe('attachEventParser', () => {
     vi.resetAllMocks()
   })
 
-  test('logs a warning event at warn level with its code and message', async () => {
+  test('parses a warning event without logging it', async () => {
     const warning = {
       event: 'warning',
       data: {
@@ -28,17 +28,15 @@ describe('attachEventParser', () => {
       ts: 1791178646317,
     }
     const events = await parseEvents([JSON.stringify(warning)])
-    expect(mockWarn).toHaveBeenCalledTimes(1)
-    expect(mockWarn.mock.calls[0][0]).toContain('app_state_lthash_mismatch')
-    expect(mockWarn.mock.calls[0][0]).toContain('hit an LTHash mismatch')
+    expect(mockWarn).not.toHaveBeenCalled()
     expect(mockDebug).not.toHaveBeenCalled()
     expect(events).toEqual([warning])
   })
 
-  test('logs a non-warning event at debug level and not as a warning', async () => {
+  test('parses a non-warning event without logging it', async () => {
     const events = await parseEvents([JSON.stringify({ event: 'connected' })])
     expect(mockWarn).not.toHaveBeenCalled()
-    expect(mockDebug).toHaveBeenCalledTimes(1)
+    expect(mockDebug).not.toHaveBeenCalled()
     expect(events).toEqual([{ event: 'connected' }])
   })
 })

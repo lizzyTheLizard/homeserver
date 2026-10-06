@@ -175,7 +175,6 @@ async function getMicrosoft(user: UserSession): Promise<PartResult> {
 async function getWhatsapp(user: UserSession): Promise<PartResult> {
   await ensureWhatsappStarted(user.email)
   const status = await getWhatsappStatus(user.email)
-  if (status.type === 'connecting') return { text: 'WhatsApp is still connecting. ', actions: [] }
   if (status.type !== 'connected') return { text: 'WhatsApp is not connected. ', actions: [] }
   const chats = await getWhatsappChats(user.email)
   const unarchived = chats.filter(c => !c.isArchived).length

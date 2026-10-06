@@ -118,12 +118,6 @@ export function attachEventParser(stream: Readable | null, onEvent: (event: Wacl
       if (!line) continue
       try {
         const event = JSON.parse(line) as WacliEvent
-        if (event.event === 'warning') {
-          logger.warn(`${prefix}wacli warning [${event.data.code ?? 'unknown'}]: ${event.data.message}`)
-        }
-        else {
-          logger.debug(`${prefix}wacli event: ${line}`)
-        }
         onEvent(event)
       }
       catch {

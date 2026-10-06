@@ -45,18 +45,14 @@ user id, so it is deterministic and filesystem-safe.
 
 ### Request tracing
 
-Every inbound request and its generated result is logged at `info` level with a
-per-request id, so overlapping requests (for example a `GET /chats` racing a
-`GET /messages` on the same store) can be told apart:
+Every inbound request and its response status is logged at `info` level, so
+overlapping requests (for example a `GET /chats` racing a `GET /messages` on the
+same store) can be told apart:
 
 ```text
-[user@example.com] #1a -> GET /sessions/user%40example.com/messages?chatId=123%40s.whatsapp.net
-[user@example.com] #1a <- GET /sessions/user%40example.com/messages?chatId=123%40s.whatsapp.net 500 (4ms) result={"message":"A wacli command is already running for this store: …"}
+-> GET /sessions/user%40example.com/messages?chatId=123%40s.whatsapp.net
+<- GET /sessions/user%40example.com/messages?chatId=123%40s.whatsapp.net 500
 ```
-
-The request body is reported with the result (the body parser runs after the
-tracer), response bodies are truncated after 2000 characters, and the error
-handler logs under the same `#id`.
 
 ### Auto-unarchive on incoming message
 
@@ -88,8 +84,8 @@ unarchive, and an already-unarchived chat is left unchanged.
 | `GET` | `/sessions/{userId}/chats` | — | `200` `Chat[]` |
 | `GET` | `/sessions/{userId}/messages?chatId=...` | — | `200` `Message[]` |
 
-Status `type` values are unchanged: `connecting`, `needAuth` (with `qr`),
-`connected`, `fullsync`, `closed` (with optional `error`).
+Status `type` values are `needAuth` (with `qr`), `connected`, `fullsync` and
+`closed`.
 
 ```jsonc
 // Chat

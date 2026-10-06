@@ -109,9 +109,9 @@ afterAll(async () => {
 })
 
 describe('Supervisor', () => {
-  test('starts in connecting state', () => {
+  test('starts in closed state', () => {
     const supervisor = new Supervisor(userId)
-    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 
   test('starts a sync process when already authenticated', async () => {
@@ -173,17 +173,17 @@ describe('Supervisor', () => {
     expect(mockRunWacli).toHaveBeenCalledTimes(1)
   })
 
-  test('rejects the start when wacli reports an error and keeps the session connecting', async () => {
+  test('rejects the start when wacli reports an error and keeps the session closed', async () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
     await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
     session.handleEvent?.({ event: 'error', data: { message: 'boom' } })
     await expect(startPromise).rejects.toThrow()
-    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 
-  test('rejects the start on an LTHash mismatch and keeps the session connecting', async () => {
+  test('rejects the start on an LTHash mismatch and keeps the session closed', async () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
@@ -191,7 +191,7 @@ describe('Supervisor', () => {
     const message = 'warning: app state regular_low hit an LTHash mismatch; requesting recovery snapshot'
     session.handleEvent?.({ event: 'warning', data: { code: 'app_state_lthash_mismatch', message, name: 'regular_low' } })
     await expect(startPromise).rejects.toThrow()
-    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 
   test('keeps the session running on an unrelated warning', async () => {
@@ -200,7 +200,7 @@ describe('Supervisor', () => {
     const startPromise = supervisor.start()
     await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
     session.handleEvent?.({ event: 'warning', data: { code: 'something_else', message: 'just a warning' } })
-    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
     session.handleEvent?.({ event: 'connected' })
     await expect(startPromise).resolves.toEqual({ type: 'connected' })
   })
@@ -211,7 +211,7 @@ describe('Supervisor', () => {
     const startPromise = supervisor.start()
     await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
     session.handleEvent?.({ event: 'closed' })
-    await expect(startPromise).rejects.toThrow('status is now closed')
+    await expect(startPromise).rejects.toThrow('Could not start wacli')
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 
@@ -343,84 +343,29 @@ describe('Supervisor', () => {
     expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['chats', 'unarchive', '--chat', '456@s.whatsapp.net'], false)
   })
 
-  test('handleMessageWebhook ignores fromMe messages', async () => {
-    const session = setupSupervisor()
-    const supervisor = new Supervisor(userId)
-    await startConnected(supervisor, session)
-    await supervisor.handleMessageWebhook({ FromMe: true, Chat: '123@s.whatsapp.net' })
-    expect(mockRunWacli).not.toHaveBeenCalledWith(storeDir, ['chats', 'show', '--jid', '123@s.whatsapp.net'], true)
-    expect(mockRunWacli).not.toHaveBeenCalledWith(storeDir, ['chats', 'unarchive', '--chat', '123@s.whatsapp.net'], false)
-    expect(session.child.kill).not.toHaveBeenCalled()
-  })
-
-  test('handleMessageWebhook unarchives an archived chat', async () => {
+  test('isArchived reports whether the store has the chat archived', async () => {
     mockRunWacli.mockImplementation((_store: string, args: string[]) => {
-      if (args[0] === 'chats' && args[1] === 'show') return { jid: '123@s.whatsapp.net', archived: true }
-      if (args[0] === 'auth') return { authenticated: true }
-      return null
+      if (args[0] === 'chats' && args[1] === 'show') return Promise.resolve({ jid: '123@s.whatsapp.net', archived: true })
+      return Promise.resolve(null)
     })
-    const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
-    await startConnected(supervisor, session)
-    const unarchivePromise = supervisor.handleMessageWebhook({ FromMe: false, Chat: '123@s.whatsapp.net' })
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
-    session.child.emitEvent('close')
-    await unarchivePromise
+
+    await expect(supervisor.isArchived('123@s.whatsapp.net')).resolves.toBe(true)
     expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['chats', 'show', '--jid', '123@s.whatsapp.net'], true)
-    expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['chats', 'unarchive', '--chat', '123@s.whatsapp.net'], false)
   })
 
-  test('handleMessageWebhook does nothing for an unarchived chat', async () => {
+  test('isArchived is false for an unarchived or unknown chat', async () => {
     mockRunWacli.mockImplementation((_store: string, args: string[]) => {
-      if (args[0] === 'chats' && args[1] === 'show') return { jid: '123@s.whatsapp.net', archived: false }
-      if (args[0] === 'auth') return { authenticated: true }
-      return null
+      if (args[0] === 'chats' && args[1] === 'show') return Promise.resolve({ jid: '123@s.whatsapp.net', archived: false })
+      return Promise.resolve(null)
     })
-    const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
-    await startConnected(supervisor, session)
-    await supervisor.handleMessageWebhook({ FromMe: false, Chat: '123@s.whatsapp.net' })
-    expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['chats', 'show', '--jid', '123@s.whatsapp.net'], true)
-    expect(mockRunWacli).not.toHaveBeenCalledWith(storeDir, ['chats', 'unarchive', '--chat', '123@s.whatsapp.net'], false)
-    expect(session.child.kill).not.toHaveBeenCalled()
+
+    await expect(supervisor.isArchived('123@s.whatsapp.net')).resolves.toBe(false)
+    await expect(supervisor.isArchived('456@s.whatsapp.net')).resolves.toBe(false)
   })
 
-  test('handleMessageWebhook coalesces concurrent deliveries for the same chat', async () => {
-    let resolveShow: ((value: unknown) => void) | undefined
-    mockRunWacli.mockImplementation((_store: string, args: string[]) => {
-      if (args[0] === 'chats' && args[1] === 'show') return new Promise((resolve) => { resolveShow = resolve })
-      if (args[0] === 'auth') return { authenticated: true }
-      return null
-    })
-    const session = setupSupervisor()
-    const supervisor = new Supervisor(userId)
-    await startConnected(supervisor, session)
-
-    const first = supervisor.handleMessageWebhook({ FromMe: false, Chat: '123@s.whatsapp.net' })
-    await vi.waitFor(() => { expect(resolveShow).toBeDefined() })
-    await supervisor.handleMessageWebhook({ FromMe: false, Chat: '123@s.whatsapp.net' })
-
-    resolveShow?.({ jid: '123@s.whatsapp.net', archived: true })
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
-    session.child.emitEvent('close')
-    await first
-
-    const showCalls = mockRunWacli.mock.calls.filter(call => (call as unknown[][])[1][1] === 'show')
-    const unarchiveCalls = mockRunWacli.mock.calls.filter(call => (call as unknown[][])[1][1] === 'unarchive')
-    expect(showCalls).toHaveLength(1)
-    expect(unarchiveCalls).toHaveLength(1)
-  })
-
-  test('handleMessageWebhook ignores a payload without a chat', async () => {
-    const session = setupSupervisor()
-    const supervisor = new Supervisor(userId)
-    await startConnected(supervisor, session)
-    await supervisor.handleMessageWebhook({ FromMe: false })
-    expect(mockRunWacli).not.toHaveBeenCalledWith(storeDir, ['chats', 'show', expect.anything(), '--jid', ''], true)
-    expect(mockRunWacli).not.toHaveBeenCalledWith(storeDir, expect.arrayContaining(['unarchive']), false)
-  })
-
-  test('fullSync runs a one-off sync and returns to connecting', async () => {
+  test('fullSync runs a one-off sync and returns to closed', async () => {
     let resolveSync: ((value: unknown) => void) | undefined
     mockRunWacli.mockImplementation((_store: string, args: string[]) => {
       if (args[0] === 'sync') return new Promise((resolve) => { resolveSync = resolve })
@@ -436,7 +381,7 @@ describe('Supervisor', () => {
     expect(supervisor.getStatus()).toEqual({ type: 'fullsync' })
     expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'], false, 5 * 60 * 1000)
     resolveSync?.(null)
-    await vi.waitFor(() => { expect(supervisor.getStatus()).toEqual({ type: 'connecting' }) })
+    await vi.waitFor(() => { expect(supervisor.getStatus()).toEqual({ type: 'closed' }) })
   })
 
   test('fullSync ignores concurrent calls while syncing', async () => {
@@ -463,22 +408,36 @@ describe('Supervisor', () => {
     testConfig.WHATSAPP_DATA_DIR = dataDir
     const storeDirForUser = join(dataDir, createHash('sha256').update(userId).digest('hex').slice(0, 32))
     await fs.mkdir(storeDirForUser, { recursive: true })
+    const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
-    await supervisor.disconnect()
+    await startConnected(supervisor, session)
+    const disconnectPromise = supervisor.disconnect()
+    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    session.child.emitEvent('close')
+    await disconnectPromise
     expect(mockRunWacli).toHaveBeenCalledWith(storeDirForUser, ['auth', 'logout'], false)
     await expect(fs.access(storeDirForUser)).rejects.toThrow()
-    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
 
   test('disconnect tolerates a failing logout', async () => {
-    mockRunWacli.mockRejectedValue(new Error('logout failed'))
+    mockRunWacli.mockImplementation((_store: string, args: string[]) => {
+      if (args[0] === 'auth' && args[1] === 'logout') return Promise.reject(new Error('logout failed'))
+      if (args[0] === 'auth' && args[1] === 'status') return Promise.resolve({ authenticated: true })
+      return Promise.resolve(null)
+    })
     const dataDir = join(tempDir, 'data-fail')
     testConfig.WHATSAPP_DATA_DIR = dataDir
     const storeDirForUser = join(dataDir, createHash('sha256').update(userId).digest('hex').slice(0, 32))
     await fs.mkdir(storeDirForUser, { recursive: true })
+    const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
-    await expect(supervisor.disconnect()).resolves.toBeUndefined()
-    expect(supervisor.getStatus()).toEqual({ type: 'connecting' })
+    await startConnected(supervisor, session)
+    const disconnectPromise = supervisor.disconnect()
+    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    session.child.emitEvent('close')
+    await expect(disconnectPromise).resolves.toBeUndefined()
+    expect(supervisor.getStatus()).toEqual({ type: 'closed' })
     await expect(fs.access(storeDirForUser)).rejects.toThrow()
   })
 })

@@ -67,7 +67,6 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
     return () => { clearInterval(interval) }
   }, [liveStatus.type, router])
 
-  if (liveStatus.type === 'connecting') return <LoadingSpinner text="Syncing chats..."></LoadingSpinner>
   if (liveStatus.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
   if (liveStatus.type === 'needAuth') {
     return (
