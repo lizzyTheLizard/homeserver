@@ -1,9 +1,70 @@
-# assistant/whatsapp-skill Specification
+# assistant Specification
 
 ## Purpose
-Defines how the homeserver assistant drafts and sends WhatsApp replies: drafts are grounded in the chat's recent messages, written in the chat's language, presented for approval, and never sent without the user's explicit approval of the final, unchanged draft.
+
+Defines the assistant service: the chat it runs with the user, the greeting and context it opens with, the skills it can use, and the internal Microsoft and WhatsApp APIs the web application calls.
 
 ## Requirements
+
+### Requirement: The assistant runs as its own service with internal APIs
+
+The assistant SHALL run as a standalone service exposing its chat endpoint and a health endpoint, together with internal APIs for Microsoft and WhatsApp that the application calls server-to-server and that SHALL NOT be published by the reverse proxy.
+
+#### Scenario: Health endpoint answers
+- **WHEN** the service is healthy and its health endpoint is requested
+- **THEN** it answers successfully
+
+#### Scenario: Internal APIs serve the application
+- **WHEN** the web application calls the assistant's Microsoft or WhatsApp API with the user's session cookie
+- **THEN** the assistant answers for that user
+
+#### Scenario: Internal APIs are not publicly reachable
+- **WHEN** a client tries to reach the Microsoft or WhatsApp internal APIs from outside the stack
+- **THEN** they are not available
+
+### Requirement: The assistant opens with a greeting and a context summary
+
+The assistant's first message of a session SHALL greet the user according to the time of day and summarize the context it has gathered, and SHALL offer the actions that follow from that context.
+
+#### Scenario: Opening message greets and summarizes
+- **WHEN** a chat session starts
+- **THEN** the assistant greets the user and summarizes the available context
+
+#### Scenario: Actions are offered
+- **WHEN** the assistant's opening message is complete
+- **THEN** the actions that follow from it are offered as selectable controls
+
+### Requirement: The assistant uses the user's services as skills
+
+The assistant SHALL be able to read the user's Microsoft mail, tasks and calendar events, report the weather for the user's location, and work with WhatsApp chats, and SHALL answer using those skills rather than inventing information.
+
+#### Scenario: Microsoft skill answers a question
+- **WHEN** the user asks about their mail, tasks or calendar
+- **THEN** the assistant reads the user's Microsoft data and answers from it
+
+#### Scenario: Weather skill answers a question
+- **WHEN** the user asks about the weather
+- **THEN** the assistant answers for the user's location
+
+#### Scenario: WhatsApp skill answers a question
+- **WHEN** the user asks about their WhatsApp chats
+- **THEN** the assistant answers from the user's chats and messages
+
+#### Scenario: Missing information is not invented
+- **WHEN** a skill cannot provide the information needed for an answer
+- **THEN** the assistant says so instead of inventing it
+
+### Requirement: The assistant only sends plain text and never rewrites WhatsApp messages
+
+When working with WhatsApp, the assistant SHALL only send plain-text messages and SHALL NOT modify or delete existing messages or mark chats as read on its own.
+
+#### Scenario: Only plain text is sent
+- **WHEN** the assistant sends a WhatsApp message
+- **THEN** the message is plain text
+
+#### Scenario: Existing messages are left alone
+- **WHEN** the assistant works with a chat
+- **THEN** it does not modify or delete existing messages and does not mark chats as read on its own
 
 ### Requirement: Drafts are grounded in the chat's recent messages
 
