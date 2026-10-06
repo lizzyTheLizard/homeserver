@@ -49,12 +49,13 @@ export class Supervisor {
     ]
     logger.debug(`[${this.userId}] starting wacli sync`)
     return new Promise((res, rej) => {
-      void spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
-        .then((child) => { this.child = child })
-        .catch((err: unknown) => {
-          void this.stop().catch(() => undefined)
-          rej(err instanceof Error ? err : Error(String(err)))
-        })
+      try {
+        this.child = spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
+      }
+      catch (err: unknown) {
+        void this.stop().catch(() => undefined)
+        rej(err instanceof Error ? err : Error(String(err)))
+      }
     })
   }
 
@@ -63,12 +64,13 @@ export class Supervisor {
     const args = ['auth', '--events']
     logger.debug(`[${this.userId}] starting wacli sync`)
     return new Promise((res, rej) => {
-      void spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
-        .then((child) => { this.child = child })
-        .catch((err: unknown) => {
-          void this.stop().catch(() => undefined)
-          rej(err instanceof Error ? err : Error(String(err)))
-        })
+      try {
+        this.child = spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
+      }
+      catch (err: unknown) {
+        void this.stop().catch(() => undefined)
+        rej(err instanceof Error ? err : Error(String(err)))
+      }
     })
   }
 

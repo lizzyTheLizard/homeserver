@@ -71,9 +71,9 @@ function makeFakeChild(): FakeChild {
 function setupSupervisor(): Session {
   const child = makeFakeChild()
   const session: Session = { child, handleEvent: undefined }
-  mockSpawnWacli.mockImplementation((_store: string, _args: string[], onEvent: (event: WacliEvent) => void): Promise<ChildProcess> => {
+  mockSpawnWacli.mockImplementation((_store: string, _args: string[], onEvent: (event: WacliEvent) => void): ChildProcess => {
     session.handleEvent = onEvent
-    return Promise.resolve(child as unknown as ChildProcess)
+    return child as unknown as ChildProcess
   })
   return session
 }

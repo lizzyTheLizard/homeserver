@@ -46,17 +46,19 @@ describe('runWacli', () => {
     vi.resetAllMocks()
   })
 
-  test('rejects a second command for the same store without spawning it', async () => {
-    const child = makeFakeChild()
-    mockSpawn.mockReturnValue(child)
-    const first = runWacli('/data/store-shared', ['chats', 'list'], true)
-    await expect(runWacli('/data/store-shared', ['messages', 'list'], true)).rejects.toThrow('already running')
-    expect(mockSpawn).toHaveBeenCalledTimes(1)
-    child.emit('close', 0)
-    await expect(first).resolves.toBeNull()
+  test('runs concurrent commands for the same store in parallel', async () => {
+    const first = makeFakeChild()
+    const second = makeFakeChild()
+    mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
+    const firstRun = runWacli('/data/store-shared', ['chats', 'list'], true)
+    const secondRun = runWacli('/data/store-shared', ['messages', 'list'], true)
+    expect(mockSpawn).toHaveBeenCalledTimes(2)
+    first.emit('close', 0)
+    second.emit('close', 0)
+    await expect(Promise.all([firstRun, secondRun])).resolves.toEqual([null, null])
   })
 
-  test('releases the store after a successful command', async () => {
+  test('accepts a command after a previous one succeeded', async () => {
     const first = makeFakeChild()
     const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
@@ -69,7 +71,7 @@ describe('runWacli', () => {
     await expect(secondRun).resolves.toBeNull()
   })
 
-  test('releases the store after a failed command', async () => {
+  test('accepts a command after a previous one failed', async () => {
     const first = makeFakeChild()
     const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
@@ -82,7 +84,7 @@ describe('runWacli', () => {
     await expect(secondRun).resolves.toBeNull()
   })
 
-  test('accepts concurrent commands for different stores', async () => {
+  test('accepts concurrent commands', async () => {
     const first = makeFakeChild()
     const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
@@ -100,25 +102,23 @@ describe('spawnWacli', () => {
     vi.resetAllMocks()
   })
 
-  test('waits for a running short command before spawning', async () => {
+  test('spawns the long-running process', () => {
+    const long = makeFakeChild()
+    mockSpawn.mockReturnValue(long)
+    expect(spawnWacli('/data/store-long', ['sync', '--follow'], () => undefined)).toBe(long)
+    expect(mockSpawn).toHaveBeenCalledTimes(1)
+  })
+
+  test('spawns in parallel with a running short command', async () => {
     const short = makeFakeChild()
     const long = makeFakeChild()
     mockSpawn.mockReturnValueOnce(short).mockReturnValueOnce(long)
-    const shortRun = runWacli('/data/store-long-wait', ['chats', 'list'], true)
-    const spawnPromise = spawnWacli('/data/store-long-wait', ['sync', '--follow'], () => undefined)
-    await Promise.resolve()
-    expect(mockSpawn).toHaveBeenCalledTimes(1)
-    short.emit('close', 0)
-    await shortRun
-    await expect(spawnPromise).resolves.toBe(long)
+    const shortRun = runWacli('/data/store-parallel', ['chats', 'list'], true)
+    const longRun = spawnWacli('/data/store-parallel', ['sync', '--follow'], () => undefined)
     expect(mockSpawn).toHaveBeenCalledTimes(2)
-  })
-
-  test('spawns immediately when the store is idle', async () => {
-    const long = makeFakeChild()
-    mockSpawn.mockReturnValue(long)
-    await expect(spawnWacli('/data/store-long-idle', ['sync', '--follow'], () => undefined)).resolves.toBe(long)
-    expect(mockSpawn).toHaveBeenCalledTimes(1)
+    expect(longRun).toBe(long)
+    short.emit('close', 0)
+    await expect(shortRun).resolves.toBeNull()
   })
 })
 
