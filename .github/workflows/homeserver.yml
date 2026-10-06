@@ -106,8 +106,8 @@ jobs:
               platforms: linux/amd64
               push: false
               tags: homeserver:latest
-              cache-from: type=gha
-              cache-to: type=gha,mode=min
+              cache-from: type=gha,scope=homeserver
+              cache-to: type=gha,mode=min,scope=homeserver
               outputs: type=docker,dest=${{ runner.temp }}/homeserver.tar
               build-args: |
                 GIT_COMMIT_HASH=${{ github.sha }}
@@ -138,8 +138,8 @@ jobs:
               platforms: linux/amd64
               push: false
               tags: whatsapp-bridge:latest
-              cache-from: type=gha
-              cache-to: type=gha,mode=min
+              cache-from: type=gha,scope=whatsapp-bridge
+              cache-to: type=gha,mode=min,scope=whatsapp-bridge
               outputs: type=docker,dest=${{ runner.temp }}/whatsapp-bridge.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
@@ -165,8 +165,8 @@ jobs:
               platforms: linux/amd64
               push: false
               tags: homeserver-assistant:latest
-              cache-from: type=gha
-              cache-to: type=gha,mode=min
+              cache-from: type=gha,scope=homeserver-assistant
+              cache-to: type=gha,mode=min,scope=homeserver-assistant
               outputs: type=docker,dest=${{ runner.temp }}/homeserver-assistant.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
@@ -192,8 +192,8 @@ jobs:
               platforms: linux/amd64
               push: false
               tags: homeserver-dev-machine:latest
-              cache-from: type=gha
-              cache-to: type=gha,mode=min
+              cache-from: type=gha,scope=homeserver-dev-machine
+              cache-to: type=gha,mode=min,scope=homeserver-dev-machine
               outputs: type=docker,dest=${{ runner.temp }}/homeserver-dev-machine.tar
             env:
               DOCKER_BUILD_RECORD_UPLOAD: false
