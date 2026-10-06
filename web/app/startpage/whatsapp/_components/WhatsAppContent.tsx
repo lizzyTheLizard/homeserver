@@ -19,12 +19,15 @@ const columns = [
   dateColumn('lastMessageTimestamp', { header: 'Last Message', style: { width: '15%' } }),
 ]
 
-export function WhatsAppContent({ chats, status }: { chats: Chat[], status: SyncStatus }) {
+export function WhatsAppContent({ chats, status, error: loadError }: { chats: Chat[], status: SyncStatus, error?: string }) {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [sidebarId, openSidebar] = useSidebar()
-  const [error, setError] = useState<string | undefined>(status.type === 'closed' ? 'The WhatsApp connection is closed' : undefined)
+  const [actionError, setActionError] = useState<string | undefined>(undefined)
   const [liveStatus, setLiveStatus] = useState<SyncStatus>(status)
   const router = useRouter()
+
+  const statusError = liveStatus.type === 'closed' ? 'The WhatsApp connection is closed' : undefined
+  const error = actionError ?? loadError ?? statusError
 
   function showMessages(chat: Chat) {
     setSelectedChat(chat)
@@ -32,14 +35,16 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   }
 
   async function handleFullSync() {
+    setActionError(undefined)
     const result = await fullSync()
-    if (!result.success) setError(result.error)
+    if (!result.success) setActionError(result.error)
     else router.refresh()
   }
 
   async function handleDisconnect() {
+    setActionError(undefined)
     const result = await disconnectAccount()
-    if (!result.success) setError(result.error)
+    if (!result.success) setActionError(result.error)
     else router.refresh()
   }
 
@@ -48,20 +53,20 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
     const interval = setInterval(() => {
       getStatus().then((r) => {
         if (!r.success) {
-          setError(r.error)
+          setActionError(r.error)
           return
         }
         const next = r.data
+        setActionError(undefined)
         setLiveStatus(next)
         if (next.type !== liveStatus.type) router.refresh()
       }).catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : new String(err).toString())
+        setActionError(err instanceof Error ? err.message : new String(err).toString())
       })
     }, 1000)
     return () => { clearInterval(interval) }
   }, [liveStatus.type, router])
 
-  if (error) return (<div className={styles.errorBox}>{error}</div>)
   if (liveStatus.type === 'connecting') return <LoadingSpinner text="Syncing chats..."></LoadingSpinner>
   if (liveStatus.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
   if (liveStatus.type === 'needAuth') {
@@ -77,19 +82,19 @@ export function WhatsAppContent({ chats, status }: { chats: Chat[], status: Sync
   }
   return (
     <>
-      {liveStatus.type === 'connected' && (
-        <>
-          <ActionButton onClick={() => { void handleFullSync() }}>Full Sync</ActionButton>
-          <ActionButton onClick={() => { void handleDisconnect() }}>Disconnect</ActionButton>
-        </>
-      )}
-      <DataTable
-        data={chats}
-        columns={columns}
-        onRowClick={showMessages}
-        initialSortingOrder={[{ key: 'lastMessageTimestamp', direction: 'DESC' }, { key: 'isArchived', direction: 'DESC' }]}
-        searchLabel="Search chats…"
-      />
+      <ActionButton onClick={() => { void handleFullSync() }}>Full Sync</ActionButton>
+      <ActionButton onClick={() => { void handleDisconnect() }}>Disconnect</ActionButton>
+      {error !== undefined
+        ? <div className={styles.errorBox}>{error}</div>
+        : (
+            <DataTable
+              data={chats}
+              columns={columns}
+              onRowClick={showMessages}
+              initialSortingOrder={[{ key: 'lastMessageTimestamp', direction: 'DESC' }, { key: 'isArchived', direction: 'DESC' }]}
+              searchLabel="Search chats…"
+            />
+          )}
       <WhatsAppSidebar key={selectedChat?.id} selectedChat={selectedChat} sidebarId={sidebarId} />
     </>
   )

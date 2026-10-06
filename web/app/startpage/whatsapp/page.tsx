@@ -9,13 +9,13 @@ export const metadata = {
 
 export default function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const { chats, status } = await loadData()
+    const { chats, status, error } = await loadData()
     return (
       <main>
         <ActionTitle>
           <h1>WhatsApp</h1>
         </ActionTitle>
-        <WhatsAppContent chats={chats} status={status} />
+        <WhatsAppContent chats={chats} status={status} error={error} />
       </main>
     )
   })

@@ -6,12 +6,22 @@ import { logger } from '@/app/shared/logger'
 import { cookies } from 'next/headers'
 import type { Chat, Message, SyncStatus } from '@assistant/whatsapp/types'
 
-export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus }> {
+export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, error?: string }> {
   await getAuthenticatedUserSession('startpage')
-  const status = await assistantGet('/whatsapp/start') as SyncStatus
+  let status: SyncStatus
+  try {
+    status = await assistantGet('/whatsapp/start') as SyncStatus
+  }
+  catch (error: unknown) {
+    return { chats: [], status: { type: 'closed' }, error: errorMessage(error) }
+  }
   if (status.type !== 'connected') return { chats: [], status }
-  const chats = await assistantGet('/whatsapp/chats') as Chat[]
-  return { chats, status }
+  try {
+    return { chats: await assistantGet('/whatsapp/chats') as Chat[], status }
+  }
+  catch (error: unknown) {
+    return { chats: [], status, error: errorMessage(error) }
+  }
 }
 
 export async function loadMessages(chatId: string): Promise<Message[]> {
@@ -82,4 +92,18 @@ function describeError(error: unknown): string {
   if (!(error instanceof Error)) return String(error)
   const cause = error.cause
   return cause instanceof Error ? `${error.message}: ${cause.message}` : error.message
+}
+
+function errorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+  const match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
+  if (!match) return message
+  try {
+    const body = JSON.parse(match[1]) as { error?: unknown }
+    if (typeof body.error === 'string' && body.error.length > 0) return body.error
+  }
+  catch {
+    // The assistant did not answer with a JSON error body, keep the raw message.
+  }
+  return message
 }
