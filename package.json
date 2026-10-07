@@ -10,7 +10,8 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "lint:ci": "pnpm -r lint:ci",
-    "test": "pnpm -r test",
+    "test": "pnpm --filter !@homeserver/integration-test test",
+    "integration-test": "pnpm --filter @homeserver/integration-test test",
     "test:watch": "pnpm -r test:watch",
     "clean": "pnpm -r clean && rimraf node_modules dist .eslintcache",
     "build-storybook": "pnpm --filter @homeserver/web build-storybook"
