@@ -14,7 +14,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^4.0.47",
+    "@ai-sdk/groq": "^4.0.57",
     "@js-temporal/polyfill": "^0.5.1",
     "ai": "^7.0.123",
     "iron-session": "^9.0.1",
