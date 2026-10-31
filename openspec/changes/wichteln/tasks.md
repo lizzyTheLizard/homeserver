@@ -2,12 +2,12 @@
 
 ## 1. Package scaffold
 
-- [ ] 1.1 Create `wichteln/` from `wichteln.zip` (keep `app/`, `lib/`, `next.config.ts`, `tsconfig.json`, `README.md` and the app `.gitignore`; drop the nested `pnpm-lock.yaml`, `data/` and `.env.local.example`), rename the package to `@homeserver/wichteln`, add `wichteln` to `pnpm-workspace.yaml`, add a root `dev:wichteln` script, and regenerate `pnpm-lock.yaml`. Verify: `pnpm install --frozen-lockfile` succeeds and `pnpm --filter @homeserver/wichteln build` produces the Next.js build.
+- [x] 1.1 Create `wichteln/` from `wichteln.zip` (keep `app/`, `lib/`, `next.config.ts`, `tsconfig.json`, `README.md` and the app `.gitignore`; drop the nested `pnpm-lock.yaml`, `data/` and `.env.local.example`), rename the package to `@homeserver/wichteln`, add `wichteln` to `pnpm-workspace.yaml`, add a root `dev:wichteln` script, and regenerate `pnpm-lock.yaml`. Verify: `pnpm install --frozen-lockfile` succeeds and `pnpm --filter @homeserver/wichteln build` produces the Next.js build.
 
 ## 2. Linting and unit tests
 
 - [ ] 2.1 Add `wichteln/eslint.config.mjs` (a trimmed copy of `web/eslint.config.mjs` without the Storybook plugins), the `lint`, `lint:ci` and `clean` scripts and their dev dependencies, and fix the findings without changing behavior. Verify: `pnpm --filter @homeserver/wichteln lint:ci` exits 0 and `pnpm lint:ci` still covers the package.
-- [ ] 2.2 Add `wichteln/vitest.config.mts` (Node environment, `**/*.tests.ts`) and `wichteln/lib/matching.tests.ts` covering the own-wish exclusion, taken-wish exclusion, unsafe-choice exclusion and a complete assignment. Verify: `pnpm --filter @homeserver/wichteln test` passes and the root `pnpm test` includes it.
+- [ ] 2.2 Add `wichteln/vitest.config.mts` (Node environment, `**/*.tests.ts`) and `wichteln/lib/matching.tests.ts` covering the own-wish exclusion, taken-wish exclusion, unsafe-choice exclusion and a complete assignment. Verify: `pnpm --filter @homeserver/wichteln test` passes and `pnpm --filter '!@homeserver/integration-test' test` picks the package up (the root `pnpm test` on `main` also runs the stack-dependent integration suite).
 
 ## 3. PostgreSQL persistence
 
@@ -33,9 +33,10 @@
 
 ## 8. Integration verification
 
-- [ ] 8.1 Run the full local gate: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm lint:ci`, `pnpm test`, build all five images, generate the smoke certificates, add `wichteln.gutschi.site` to `/etc/hosts`, boot the smoke stack with `integration-test/docker-compose.ci.yml`, run `pnpm --filter @homeserver/integration-test test`, and tear the stack down. Verify: every command exits 0, the Wichteln container is healthy, and `https://wichteln.gutschi.site/` answers through nginx.
+- [ ] 8.1 Run the full local gate: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm lint:ci`, `pnpm --filter '!@homeserver/integration-test' test`, build all five images, generate the smoke certificates, add `wichteln.gutschi.site` to `/etc/hosts`, boot the smoke stack with `integration-test/docker-compose.ci.yml`, run `pnpm --filter @homeserver/integration-test test`, and tear the stack down. Verify: every command exits 0, the Wichteln container is healthy, and `https://wichteln.gutschi.site/` answers through nginx.
 
 ## Workflow follow-up
 
 - No GitHub issue exists; change and branch are `wichteln` by explicit user instruction. If the repo's issue-first rule must be honoured before merge, file the issue and rename both.
+- The branch is intentionally based on `origin/main`, which does not yet contain the #380 spec restructure. The `infrastructure` and `pipeline` deltas can only be archived after #380 merges and this branch is rebased onto the new `main`; rebase and re-run `openspec validate --strict` before shipping.
 - Open a follow-up issue to extend the backup and restore service to `postgreswichteln`; this change deliberately leaves the new database without a backup.
