@@ -1,12 +1,16 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
-import { findUser, getDb } from '@/lib/store'
+import { findUser } from '@/lib/store'
+import { getDb } from '@/lib/db'
 import { LoginForm } from './components'
 
 export default async function LoginPage() {
   const s = await getSession()
   if (s?.role === 'admin') redirect('/admin')
-  if (s?.role === 'user' && findUser(await getDb(), s.groupId, s.userId)) redirect('/wunsch')
+  if (s?.role === 'user') {
+    const found = await findUser(await getDb(), s.groupId, s.userId)
+    if (found) redirect('/wunsch')
+  }
 
   return (
     <div className="card login">

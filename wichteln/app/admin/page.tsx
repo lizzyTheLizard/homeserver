@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/session'
-import { getDb } from '@/lib/store'
+import { listGroups } from '@/lib/store'
+import { getDb } from '@/lib/db'
 import { logout } from '../actions'
 import { CreateGroupForm } from '../components'
 
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
   await requireAdmin()
-  const { groups } = await getDb()
+  const groups = await listGroups(await getDb())
 
   return (
     <>

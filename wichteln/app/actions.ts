@@ -3,8 +3,8 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { adminCredentials, clearSession, getSession, setSession } from '@/lib/session'
-import { findUser, getDb, updateDb } from '@/lib/store'
-import { selectableWishOwners } from '@/lib/matching'
+import * as store from '@/lib/store'
+import { getDb, withTransaction } from '@/lib/db'
 import { formString } from '@/lib/form'
 
 export type FormState = { error?: string, ok?: string } | undefined
@@ -20,15 +20,10 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
     redirect('/admin')
   }
 
-  const db = await getDb()
-  for (const group of db.groups) {
-    const user = group.users.find(
-      u => u.name.toLowerCase() === username.toLowerCase() && u.password === password,
-    )
-    if (user) {
-      await setSession({ role: 'user', groupId: group.id, userId: user.id })
-      redirect('/wunsch')
-    }
+  const found = await store.authenticateParticipant(await getDb(), username, password)
+  if (found) {
+    await setSession({ role: 'user', groupId: found.group.id, userId: found.user.id })
+    redirect('/wunsch')
   }
   return { error: 'Benutzername oder Passwort ist falsch.' }
 }
@@ -36,12 +31,6 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
 export async function logout() {
   await clearSession()
   redirect('/')
-}
-
-async function currentUserSession() {
-  const s = await getSession()
-  if (s?.role !== 'user') redirect('/')
-  return s
 }
 
 export async function saveWish(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -52,31 +41,22 @@ export async function saveWish(_prev: FormState, formData: FormData): Promise<Fo
   if (title.length > 120) return { error: 'Der Titel ist zu lang (max. 120 Zeichen).' }
   if (description.length > 2000) return { error: 'Die Beschreibung ist zu lang (max. 2000 Zeichen).' }
 
-  const result = await updateDb((db): FormState => {
-    const found = findUser(db, s.groupId, s.userId)
-    if (!found) return { error: 'Benutzer nicht gefunden.' }
-    if (found.group.phase !== 'wishes') return { error: 'Wünsche können nicht mehr geändert werden.' }
-    found.user.wish = { title, description }
-    return { ok: 'Dein Wunsch wurde gespeichert.' }
-  })
+  const result = await withTransaction(db => store.saveWish(db, s.groupId, s.userId, { title, description }))
   revalidatePath('/', 'layout')
-  return result
+  return result.ok ? { ok: 'Dein Wunsch wurde gespeichert.' } : { error: result.error }
 }
 
 export async function selectWish(_prev: FormState, formData: FormData): Promise<FormState> {
   const s = await currentUserSession()
   const ownerId = formString(formData, 'ownerId')
 
-  const result = await updateDb((db): FormState => {
-    const found = findUser(db, s.groupId, s.userId)
-    if (!found) return { error: 'Benutzer nicht gefunden.' }
-    if (found.user.selectedWishOf) return { error: 'Du hast bereits einen Wunsch gewählt.' }
-    if (!selectableWishOwners(found.group, s.userId).includes(ownerId)) {
-      return { error: 'Dieser Wunsch ist nicht mehr verfügbar. Bitte wähle einen anderen.' }
-    }
-    found.user.selectedWishOf = ownerId
-    return { ok: 'Wunsch gewählt.' }
-  })
+  const result = await withTransaction(db => store.selectWish(db, s.groupId, s.userId, ownerId))
   revalidatePath('/', 'layout')
-  return result
+  return result.ok ? { ok: 'Wunsch gewählt.' } : { error: result.error }
+}
+
+async function currentUserSession() {
+  const s = await getSession()
+  if (s?.role !== 'user') redirect('/')
+  return s
 }

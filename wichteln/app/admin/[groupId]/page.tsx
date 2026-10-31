@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
-import { getDb } from '@/lib/store'
+import { getGroup } from '@/lib/store'
+import { getDb } from '@/lib/db'
 import { AddParticipantsForm, CopyCredentials, SubmitButton } from '../../components'
 import { addParticipants, deleteGroup, removeParticipant, startSelection } from '../actions'
 
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
   await requireAdmin()
   const { groupId } = await params
-  const group = (await getDb()).groups.find(g => g.id === groupId)
+  const group = await getGroup(await getDb(), groupId)
   if (!group) notFound()
 
   const inWishes = group.phase === 'wishes'

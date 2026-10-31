@@ -1,15 +1,37 @@
 # Wichteln
 
-Kleine Next.js-App zum anonymen Wichteln. Daten werden in `data/db.json` gespeichert.
+Kleine Next.js-App zum anonymen Wichteln. Alle Daten liegen in PostgreSQL; die Tabellen
+werden beim Start automatisch aus den Migrationen in [`db/`](db) angelegt.
+
+## Konfiguration
+
+Die App liest ihre gesamte Konfiguration aus der Umgebung und startet nicht ohne sie:
+
+| Variable | Beschreibung |
+| --- | --- |
+| `DB_CONNECTION_STRING` | PostgreSQL-Verbindung, z. B. `postgres://homeserver:homeserver@postgresdev:5432/wichteln?sslmode=disable` |
+| `SESSION_SECRET` | Geheimnis zum Signieren der Session-Cookies (mindestens 32 Zeichen) |
+| `ADMIN_USER` | Benutzername des Admin-Bereichs |
+| `ADMIN_PASSWORD` | Passwort des Admin-Bereichs |
 
 ## Start
 
 ```bash
 pnpm install
-cp .env.local.example .env.local   # Admin-Zugang anpassen
-pnpm dev                           # Entwicklung: http://localhost:3000
-pnpm build && pnpm start           # Produktion
+
+export DB_CONNECTION_STRING="postgres://homeserver:homeserver@postgresdev:5432/wichteln?sslmode=disable"
+export SESSION_SECRET="$(openssl rand -hex 32)"
+export ADMIN_USER=admin
+export ADMIN_PASSWORD="bitte-aendern"
+
+pnpm --filter @homeserver/wichteln dev    # Entwicklung: http://localhost:3000
+pnpm --filter @homeserver/wichteln build  # Produktion bauen
+pnpm --filter @homeserver/wichteln start  # Produktion starten
+pnpm --filter @homeserver/wichteln test   # Unit- und Datenbanktests
 ```
+
+Die Migrationen laufen beim ersten Datenbankzugriff. Es gibt keine Datei mehr, in der
+Anwendungsdaten oder Secrets abgelegt werden.
 
 ## Ablauf
 
