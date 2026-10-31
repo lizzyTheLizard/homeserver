@@ -1,29 +1,36 @@
-import { requireUser } from "@/lib/session";
-import { selectableWishOwners } from "@/lib/matching";
-import type { Group, User, Wish } from "@/lib/store";
-import { logout } from "../actions";
-import { WishForm, WishPicker } from "../components";
+import { requireUser } from '@/lib/session'
+import { selectableWishOwners } from '@/lib/matching'
+import type { Group, User, Wish } from '@/lib/store'
+import { logout } from '../actions'
+import { WishForm, WishPicker } from '../components'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 export default async function WishPage() {
-  const { group, user } = await requireUser();
+  const { group, user } = await requireUser()
 
   return (
     <>
       <div className="row">
         <div>
-          <h1>Hallo {user.name}!</h1>
-          <span className="muted">Gruppe: {group.name}</span>
+          <h1>
+            Hallo
+            {user.name}
+            !
+          </h1>
+          <span className="muted">
+            Gruppe:
+            {group.name}
+          </span>
         </div>
         <form action={logout}>
           <button className="secondary">Abmelden</button>
         </form>
       </div>
 
-      {group.phase === "wishes" ? <WishPhase wish={user.wish} /> : <SelectionPhase group={group} user={user} />}
+      {group.phase === 'wishes' ? <WishPhase wish={user.wish} /> : <SelectionPhase group={group} user={user} />}
     </>
-  );
+  )
 }
 
 function WishPhase({ wish }: { wish: Wish | null }) {
@@ -35,16 +42,16 @@ function WishPhase({ wish }: { wish: Wish | null }) {
       </div>
       <p className="muted">
         {wish
-          ? "Du kannst deinen Wunsch noch ändern, bis die Auswahlphase startet."
-          : "Trage hier deinen Wunsch ein. Andere sehen später nur Titel und Beschreibung – nicht, von wem er stammt."}
+          ? 'Du kannst deinen Wunsch noch ändern, bis die Auswahlphase startet.'
+          : 'Trage hier deinen Wunsch ein. Andere sehen später nur Titel und Beschreibung – nicht, von wem er stammt.'}
       </p>
       <WishForm title={wish?.title} description={wish?.description} />
     </section>
-  );
+  )
 }
 
-function SelectionPhase({ group, user }: { group: Group; user: User }) {
-  const chosen = user.selectedWishOf ? group.users.find((u) => u.id === user.selectedWishOf)?.wish : null;
+function SelectionPhase({ group, user }: { group: Group, user: User }) {
+  const chosen = user.selectedWishOf ? group.users.find(u => u.id === user.selectedWishOf)?.wish : null
 
   if (chosen) {
     return (
@@ -56,13 +63,14 @@ function SelectionPhase({ group, user }: { group: Group; user: User }) {
           <p>{chosen.description}</p>
         </div>
       </section>
-    );
+    )
   }
 
-  const wishes = selectableWishOwners(group, user.id).map((ownerId) => {
-    const w = group.users.find((u) => u.id === ownerId)!.wish!;
-    return { ownerId, title: w.title, description: w.description };
-  });
+  const wishes = selectableWishOwners(group, user.id).flatMap((ownerId) => {
+    const w = group.users.find(u => u.id === ownerId)?.wish
+    if (!w) return []
+    return [{ ownerId, title: w.title, description: w.description }]
+  })
 
   return (
     <section className="card">
@@ -76,11 +84,13 @@ function SelectionPhase({ group, user }: { group: Group; user: User }) {
         Wähle einen Wunsch, den du erfüllen möchtest. Sobald du ihn gewählt hast, ist er für die anderen nicht mehr
         sichtbar.
       </p>
-      {wishes.length > 0 ? (
-        <WishPicker wishes={wishes} />
-      ) : (
-        <div className="alert error">Momentan ist kein Wunsch verfügbar. Bitte melde dich beim Admin.</div>
-      )}
+      {wishes.length > 0
+        ? (
+            <WishPicker wishes={wishes} />
+          )
+        : (
+            <div className="alert error">Momentan ist kein Wunsch verfügbar. Bitte melde dich beim Admin.</div>
+          )}
     </section>
-  );
+  )
 }

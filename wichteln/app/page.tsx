@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
-import { findUser, getDb } from "@/lib/store";
-import { LoginForm } from "./components";
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/session'
+import { findUser, getDb } from '@/lib/store'
+import { LoginForm } from './components'
 
 export default async function LoginPage() {
-  const s = await getSession();
-  if (s?.role === "admin") redirect("/admin");
-  if (s?.role === "user" && findUser(await getDb(), s.groupId, s.userId)) redirect("/wunsch");
+  const s = await getSession()
+  if (s?.role === 'admin') redirect('/admin')
+  if (s?.role === 'user' && findUser(await getDb(), s.groupId, s.userId)) redirect('/wunsch')
 
   return (
     <div className="card login">
@@ -14,5 +14,5 @@ export default async function LoginPage() {
       <p className="muted">Melde dich mit den Zugangsdaten an, die du erhalten hast.</p>
       <LoginForm />
     </div>
-  );
+  )
 }

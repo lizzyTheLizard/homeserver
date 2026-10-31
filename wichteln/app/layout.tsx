@@ -1,16 +1,16 @@
-import type { Metadata, Viewport } from "next";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "Wichteln",
-  description: "Wünsche sammeln und anonym verteilen",
-};
+  title: 'Wichteln',
+  description: 'Wünsche sammeln und anonym verteilen',
+}
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
-  themeColor: "#b3261e",
-};
+  themeColor: '#b3261e',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,5 +22,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="container">{children}</main>
       </body>
     </html>
-  );
+  )
 }
