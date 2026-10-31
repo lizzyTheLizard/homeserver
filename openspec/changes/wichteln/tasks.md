@@ -7,7 +7,7 @@
 ## 2. Linting and unit tests
 
 - [x] 2.1 Add `wichteln/eslint.config.mjs` (a trimmed copy of `web/eslint.config.mjs` without the Storybook plugins), the `lint`, `lint:ci` and `clean` scripts and their dev dependencies, and fix the findings without changing behavior. Verify: `pnpm --filter @homeserver/wichteln lint:ci` exits 0 and `pnpm lint:ci` still covers the package.
-- [ ] 2.2 Add `wichteln/vitest.config.mts` (Node environment, `**/*.tests.ts`) and `wichteln/lib/matching.tests.ts` covering the own-wish exclusion, taken-wish exclusion, unsafe-choice exclusion and a complete assignment. Verify: `pnpm --filter @homeserver/wichteln test` passes and `pnpm --filter '!@homeserver/integration-test' test` picks the package up (the root `pnpm test` on `main` also runs the stack-dependent integration suite).
+- [x] 2.2 Add `wichteln/vitest.config.mts` (Node environment, `**/*.tests.ts`) and `wichteln/lib/matching.tests.ts` covering the own-wish exclusion, taken-wish exclusion, unsafe-choice exclusion and a complete assignment. Verify: `pnpm --filter @homeserver/wichteln test` passes and `pnpm --filter '!@homeserver/integration-test' test` picks the package up (the root `pnpm test` on `main` also runs the stack-dependent integration suite).
 
 ## 3. PostgreSQL persistence
 
