@@ -33,6 +33,21 @@ pnpm --filter @homeserver/wichteln test   # Unit- und Datenbanktests
 Die Migrationen laufen beim ersten Datenbankzugriff. Es gibt keine Datei mehr, in der
 Anwendungsdaten oder Secrets abgelegt werden.
 
+## Container
+
+```bash
+docker build -f wichteln/Dockerfile -t homeserver-wichteln:test .
+docker run --rm -p 3000:3000 \
+  -e DB_CONNECTION_STRING="postgres://…" \
+  -e SESSION_SECRET="…" \
+  -e ADMIN_USER=admin \
+  -e ADMIN_PASSWORD="…" \
+  homeserver-wichteln:test
+```
+
+Der Container meldet sich über `GET /api/health`: `200`, wenn die Konfiguration vollständig
+ist und die Datenbank antwortet, sonst `503`.
+
 ## Ablauf
 
 1. **Admin** meldet sich auf der Startseite mit `ADMIN_USER` / `ADMIN_PASSWORD` an,

@@ -16,7 +16,7 @@
 
 ## 4. Container image
 
-- [ ] 4.1 Set `output: "standalone"` in `wichteln/next.config.ts`, add `wichteln/app/api/health/route.ts` (200 only when configuration validates and `SELECT 1` succeeds, 503 otherwise) and add `wichteln/Dockerfile` modelled on `web/Dockerfile` (deps, builder, standalone runner as a non-root user, migrations copied to `/app/wichteln/db`, port 3000). Verify: `docker build -f wichteln/Dockerfile -t homeserver-wichteln:test .` succeeds, and the container reports healthy against a temporary PostgreSQL when given the four required variables and unhealthy when one is missing.
+- [x] 4.1 Set `output: "standalone"` in `wichteln/next.config.ts`, add `wichteln/app/api/health/route.ts` (200 only when configuration validates and `SELECT 1` succeeds, 503 otherwise) and add `wichteln/Dockerfile` modelled on `web/Dockerfile` (deps, builder, standalone runner as a non-root user, migrations copied to `/app/wichteln/db`, port 3000). Verify: `docker build -f wichteln/Dockerfile -t homeserver-wichteln:test .` succeeds, and the container reports healthy against a temporary PostgreSQL when given the four required variables and unhealthy when one is missing.
 
 ## 5. Infrastructure services and configuration
 
