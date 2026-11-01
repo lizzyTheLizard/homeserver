@@ -29,7 +29,7 @@
 
 ## 7. Pipeline
 
-- [ ] 7.1 Add the `test-wichteln` job (`pnpm test` in `wichteln/`) and the `build-wichteln` job (`wichteln/Dockerfile`, tag `homeserver-wichteln:latest`, GHA cache scope `homeserver-wichteln`, artifact `homeserver-wichteln`), add `build-wichteln` to `integration-smoke`'s `needs`, artifact download and `docker load`, add `wichteln.gutschi.site` to the smoke `/etc/hosts`, add the image download/load and `rsync` to `deploy`, and add both jobs to `all-build-checks`' `needs`. Verify: the workflow YAML parses, every new `needs`/artifact name matches its producer, and a dry read of the deploy steps loads and removes the new tar like the existing images.
+- [x] 7.1 Add the `test-wichteln` job (`pnpm test` in `wichteln/`) and the `build-wichteln` job (`wichteln/Dockerfile`, tag `homeserver-wichteln:latest`, GHA cache scope `homeserver-wichteln`, artifact `homeserver-wichteln`), add `build-wichteln` to `integration-smoke`'s `needs`, artifact download and `docker load`, add `wichteln.gutschi.site` to the smoke `/etc/hosts`, add the image download/load and `rsync` to `deploy`, and add both jobs to `all-build-checks`' `needs`. Verify: the workflow YAML parses, every new `needs`/artifact name matches its producer, and a dry read of the deploy steps loads and removes the new tar like the existing images.
 
 ## 8. Integration verification
 
