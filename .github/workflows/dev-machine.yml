@@ -1,16 +1,25 @@
 name: "Dev Machine"
 on:
-  push:
+  pull_request:
     paths:
       - 'services/dev-machine/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'services/dev-machine/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'infrastructure/**'
   workflow_dispatch:
 jobs:
   build:
     name: Build and publish Dev Machine image
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -26,7 +35,7 @@ jobs:
     name: Deploy Dev Machine
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
