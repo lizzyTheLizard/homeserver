@@ -31,65 +31,35 @@ jobs:
           fetch-depth: 0
       - name: Fetch base branch
         run: git fetch --no-tags origin "${{ github.base_ref }}"
-      - name: Detect changed services
-        id: detect
-        run: |
-          changed="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD || true)"
-          infra="false"
-          if echo "$changed" | grep -qE '^infrastructure/'; then
-            infra="true"
-          fi
-          for svc in web assistant whatsapp wichteln dev-machine; do
-            out="${svc//-/_}"
-            if [ "$infra" = "true" ] || echo "$changed" | grep -qE "^services/$svc/"; then
-              echo "$out=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "$out=false" >> "$GITHUB_OUTPUT"
-            fi
-          done
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Build web (if changed)
-        if: steps.detect.outputs.web == 'true'
-        uses: ./.github/actions/build-publish
-        with:
-          image: homeserver-web
-          dockerfile: services/web/Dockerfile
-          load: 'true'
-      - name: Build assistant (if changed)
-        if: steps.detect.outputs.assistant == 'true'
-        uses: ./.github/actions/build-publish
-        with:
-          image: homeserver-assistant
-          dockerfile: services/assistant/Dockerfile
-          load: 'true'
-      - name: Build whatsapp (if changed)
-        if: steps.detect.outputs.whatsapp == 'true'
-        uses: ./.github/actions/build-publish
-        with:
-          image: homeserver-whatsapp
-          dockerfile: services/whatsapp/Dockerfile
-          load: 'true'
-      - name: Build wichteln (if changed)
-        if: steps.detect.outputs.wichteln == 'true'
-        uses: ./.github/actions/build-publish
-        with:
-          image: homeserver-wichteln
-          dockerfile: services/wichteln/Dockerfile
-          load: 'true'
-      - name: Build dev-machine (if changed)
-        if: steps.detect.outputs.dev_machine == 'true'
-        uses: ./.github/actions/build-publish
-        with:
-          image: homeserver-dev-machine
-          dockerfile: services/dev-machine/Dockerfile
-          load: 'true'
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull changed service images
+        run: |
+          branch="$(echo "${{ github.head_ref }}" | tr '/' '-')"
+          changed="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD || true)"
+          infra="false"
+          if echo "$changed" | grep -qE '^infrastructure/'; then
+            infra="true"
+          fi
+          for svc in web assistant whatsapp wichteln dev-machine; do
+            if [ "$infra" = "true" ] || echo "$changed" | grep -qE "^services/$svc/"; then
+              img="ghcr.io/lizzythelizard/homeserver-$svc"
+              for i in $(seq 1 30); do
+                if docker pull "$img:$branch" 2>/dev/null; then
+                  docker tag "$img:$branch" "$img:latest"
+                  echo "Using $img:$branch"
+                  break
+                fi
+                sleep 10
+              done
+            fi
+          done
       - name: Cache third-party Docker images
         uses: actions/cache@v6
         id: third-party-images
@@ -158,4 +128,4 @@ jobs:
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: exit 1
       - name: All checks passed
-        run: echo "All lint, build and integration smoke checks passed."
+        run: echo "All build and integration smoke checks passed."

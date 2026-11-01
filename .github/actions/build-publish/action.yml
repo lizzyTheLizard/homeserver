@@ -1,5 +1,5 @@
 name: Build and publish service image
-description: Build a service image and publish it to GHCR on main, or load it locally for smoke tests
+description: Build a service image and publish it to GHCR
 inputs:
   image:
     description: Image name without the ghcr.io/lizzythelizard/ prefix (e.g. homeserver-web)
@@ -11,10 +11,10 @@ inputs:
     description: Newline-separated build arguments
     required: false
     default: ''
-  load:
-    description: Load the image into the local docker daemon instead of pushing (for smoke tests)
+  tag:
+    description: Image tag (defaults to latest)
     required: false
-    default: 'false'
+    default: latest
 runs:
   using: "composite"
   steps:
@@ -32,9 +32,8 @@ runs:
         context: .
         file: ${{ inputs.dockerfile }}
         platforms: linux/amd64
-        push: ${{ inputs.load == 'false' && github.ref == 'refs/heads/main' }}
-        load: ${{ inputs.load == 'true' }}
-        tags: ghcr.io/lizzythelizard/${{ inputs.image }}:latest
+        push: true
+        tags: ghcr.io/lizzythelizard/${{ inputs.image }}:${{ inputs.tag }}
         cache-from: type=gha,scope=${{ inputs.image }}
         cache-to: type=gha,mode=min,scope=${{ inputs.image }}
         build-args: ${{ inputs.build-args }}
