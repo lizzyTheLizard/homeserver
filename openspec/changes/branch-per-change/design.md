@@ -42,7 +42,7 @@ There is no `propose` operation id to attach guidance to, so the rule rides on t
 
 ### The change name is the slug, and the slug is the branch
 
-The name is derived from the request: lowercase, non-alphanumerics collapsed to `-`, trimmed, with `#` and issue numbers stripped, then used verbatim as both `openspec/changes/<name>` and the branch. `rules.proposal` says a change starts from a request or an explicit name, never from an issue. The guard compares branch to folder name and never to a pattern, so pre-existing `issue-<n>-<slug>` changes keep working, and any future naming rule only has to change one config stanza.
+The name is derived from the request: lowercase, non-alphanumerics collapsed to `-`, trimmed, with `#` and issue numbers stripped, then used verbatim as both `openspec/changes/<name>` and the branch. `rules.proposal` says a change starts from a request or an explicit name. The guard compares branch to folder name and never to a pattern, so pre-existing `issue-<n>-<slug>` changes keep working, and any future naming rule only has to change one config stanza.
 
 ### Commit shape stays one task per commit
 
@@ -70,7 +70,7 @@ Git hooks were built first and then removed. A `pre-commit` hook repeated the br
 
 - [Config guidance is advisory; an agent can ignore it] → the CI guard is the deterministic part and fails loudly with the expected branch name.
 - [A commit on `main` is only caught at the PR gate, or not at all] → branch protection on `main` must stay enabled; the guard cannot prevent a local commit, only a merge from a wrongly named branch.
-- [`context` is injected into every operation, so it cannot be step-specific] → keep it to invariants that are true at every step (branch, no issues, commits stay on branch); step-specific text goes in `rules.proposal` or the operation guidance.
+- [`context` is injected into every operation, so it cannot be step-specific] → keep it to invariants that are true at every step (branch, commits stay on branch); step-specific text goes in `rules.proposal` or the operation guidance.
 - [PRs touching no change folder skip the guard] → accepted: blocking Dependabot and docs PRs would be worse than the gap, and the flow always creates the folder.
 - [Guard fails when a PR legitimately spans two changes] → intended: one branch, one change; split the work.
 - [Archived suffix match could collide with another change whose name ends in `-<name>`] → the guard requires exactly one match, so an ambiguity fails loudly instead of guessing.

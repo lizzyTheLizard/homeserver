@@ -12,7 +12,7 @@ The branch should be the unit of work, and it should exist before the change doe
 - The three hand-written glue skills — `gh-change-start`, `gh-change-ship`, `gh-issue-draft` — are deleted together with their rows in `AGENTS.md` and `README.md`. Nothing hand-written wraps the OpenSpec workflows any more.
 - The lifecycle moves into `openspec/config.yaml`, which the CLI already reads and injects into the stock workflows:
   - `context` carries the contract: create `<change>` from `origin/main` before the first artifact exists, never commit change artifacts on the default branch, keep plan, task and archive commits on the branch, and commit the reviewed plan before implementation starts.
-  - `rules.proposal` states that a change starts from a request or a name, never from an issue, and that the name is the branch.
+  - `rules.proposal` states that a change starts from a request or an explicit name, and that the name is the branch.
   - `operations.apply.guidance` keeps the one-task-one-commit rule and the trailer format, without the `(#<n>)` issue suffix.
   - `operations.archive.guidance` performs the last step: commit the archive isolated to `openspec/`, open the PR to `main` with an `OpenSpec-Change:` body linking the archived proposal, and arm squash auto-merge.
 - One enforcement point so the contract does not rely on an agent reading it: a CI guard fails a pull request whose head branch is not the change folder it adds. Direct pushes to the default branch are left to GitHub branch protection, not repository code.
