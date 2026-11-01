@@ -3,7 +3,7 @@
 ## Key Commands
 
 All packages are managed through pnpm workspaces. Target one package with
-`pnpm --filter @homeserver/<name>` (names: `web`, `assistant`, `whatsapp-bridge`, `integration-test`).
+`pnpm --filter @homeserver/<name>` (names: `web`, `assistant`, `whatsapp-bridge`, `wichteln`, `integration-test`).
 
 ```bash
 pnpm build                                    # Build all packages
@@ -86,7 +86,7 @@ The `backup` service in `infrastructure/docker-compose.yml` (image sources in `i
 
 ## Infrastructure
 
-The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the prod `assistant` container (`homeserver-assistant:latest`, built from `assistant/Dockerfile`), the prod `whatsapp-bridge` container (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container. In development neither the WhatsApp bridge nor the assistant is a separate container — `pnpm dev` starts both as local processes alongside the Next.js server and ties all lifecycles together.
+The full stack is self-hosted on a home server via `infrastructure/docker-compose.yml` (no cloud provider / Terraform). It runs the prod/dev Postgres databases, the `wichteln` app (`homeserver-wichteln:latest`, built from `wichteln/Dockerfile`) with its own `postgreswichteln` database, the `applicationprod` container (`homeserver:latest`, built from the repo `Dockerfile` on `node:24-alpine`), the prod `assistant` container (`homeserver-assistant:latest`, built from `assistant/Dockerfile`), the prod `whatsapp-bridge` container (`whatsapp-bridge:latest`, built from `whatsapp-bridge/Dockerfile`), the `nginx` + `caddy` reverse proxies, `bind9` DNS, `certbot`, `dozzle`/`pgwebprod` viewers, the `backup` service, and a `dev-machine` container. In development neither the WhatsApp bridge nor the assistant is a separate container — `pnpm dev` starts both as local processes alongside the Next.js server and ties all lifecycles together. Wichteln is not part of `pnpm dev`: create its dev database once with `docker compose exec postgresdev createdb -U homeserver wichteln` and start it with `pnpm dev:wichteln` plus the four required `WICHTELN_*`/`DB_CONNECTION_STRING` values.
 
 Development happens inside `dev-machine` (see `infrastructure/README.md`): it runs **code-server** (VS Code in the browser, `dev.gutschi.site:8443`), **OpenCode** (`opencode serve`, `dev.gutschi.site:8444`), and Storybook (`:8445`), plus an SSH server on port `2222` for VS Code Remote. The repo is cloned into `/home/dev/workspace`; OpenCode and `pnpm` are available there.
 

@@ -14,9 +14,9 @@
 
 The entire stack is **self-hosted on a single home server** (no cloud provider,
 no Terraform). A single `docker-compose.yml` brings up every component. There is
-no container registry: the `homeserver:latest`, `whatsapp-bridge:latest` and
-`homeserver-assistant:latest` images are built directly on the server (by CI,
-see [§6.8](#68-deploying--upgrading-the-application)).
+no container registry: the `homeserver:latest`, `whatsapp-bridge:latest`,
+`homeserver-assistant:latest` and `homeserver-wichteln:latest` images are built
+directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-application)).
 
 ### Components
 
@@ -25,6 +25,8 @@ see [§6.8](#68-deploying--upgrading-the-application)).
 | App (prod)         | `applicationprod` (`Prod-Application`) | `homeserver:latest`   |
 | Assistant          | `assistant` (`Prod-Assistant`)   | `homeserver-assistant:latest` |
 | WhatsApp bridge    | `whatsapp-bridge` (`Prod-WhatsApp-Bridge`) | `whatsapp-bridge:latest` |
+| Wichteln app       | `wichteln` (`Wichteln`)          | `homeserver-wichteln:latest` |
+| Wichteln database  | `postgreswichteln` (`Wichteln-Database`) | `postgres:16-alpine` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
 | Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
 | Front TLS proxy    | `nginx` (`Nginx`)                | `nginx:alpine`             |
@@ -86,6 +88,29 @@ cp infrastructure/env.example infrastructure/.env
 $EDITOR infrastructure/.env
 ```
 
+The Wichteln app has its own database and its own secrets. All four
+`WICHTELN_*` values in `env.example` are mandatory:
+
+* `WICHTELN_DB_PASSWORD` — password of the `wichteln` database user.
+* `WICHTELN_SESSION_SECRET` — at least 32 random characters, e.g.
+  `openssl rand -hex 32`.
+* `WICHTELN_ADMIN_USER` / `WICHTELN_ADMIN_PASSWORD` — credentials for the
+  admin area.
+
+Without them the `wichteln` container reports unhealthy and returns `503`.
+
+For local development against `postgresdev`, create the app database once and
+point the dev server at it:
+
+```bash
+docker compose exec postgresdev createdb -U homeserver wichteln
+
+DB_CONNECTION_STRING="postgres://homeserver:homeserver@postgresdev:5432/wichteln?sslmode=disable" \
+SESSION_SECRET="$(openssl rand -hex 32)" \
+ADMIN_USER=admin ADMIN_PASSWORD=dev \
+pnpm dev:wichteln
+```
+
 Before first start you also need
 
 1. **DNS** — `bind9` must resolve `*.gutschi.site` to this host. Set `HOST_IP`
@@ -105,6 +130,7 @@ data.
 | Volume | Holds |
 |--------|-------|
 | `postgres_prod_data` | Prod Postgres data directory (`/var/lib/postgresql/data`) |
+| `postgres_wichteln_data` | Wichteln Postgres data directory — not yet included in the nightly backup |
 | `postgres_dev_data` | Dev Postgres data directory |
 | `dev_home` | The `dev` user's home (`/home/dev`) — git checkout, SSH keys, editor state |
 
