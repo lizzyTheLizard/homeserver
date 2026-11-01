@@ -9,16 +9,16 @@ WORKDIR /app
 
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/wichteln/package.json ./wichteln/package.json
+COPY services/wichteln/package.json ./services/wichteln/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/wichteln/node_modules ./wichteln/node_modules
+COPY --from=deps /app/services/wichteln/node_modules ./services/wichteln/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY ./services/wichteln ./wichteln
+COPY ./services/wichteln ./services/wichteln
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/wichteln build
 
@@ -33,9 +33,9 @@ RUN adduser --system --uid 1001 nextjs
 # The standalone output ships the server entrypoint and the traced runtime
 # dependencies; the migrations live next to the server because the app reads
 # them relative to its working directory.
-COPY --from=builder --chown=nextjs:nodejs /app/wichteln/.next/standalone/ ./
-COPY --from=builder --chown=nextjs:nodejs /app/wichteln/.next/static ./wichteln/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/wichteln/db ./wichteln/db
+COPY --from=builder --chown=nextjs:nodejs /app/services/wichteln/.next/standalone/ ./
+COPY --from=builder --chown=nextjs:nodejs /app/services/wichteln/.next/static ./services/wichteln/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/services/wichteln/db ./services/wichteln/db
 
 USER nextjs
 
@@ -43,5 +43,5 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-WORKDIR /app/wichteln
+WORKDIR /app/services/wichteln
 CMD ["node", "server.js"]

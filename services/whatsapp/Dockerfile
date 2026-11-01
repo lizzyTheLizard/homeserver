@@ -39,17 +39,17 @@ WORKDIR /app
 # package.json is copied here.
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/whatsapp/package.json ./whatsapp/package.json
+COPY services/whatsapp/package.json ./services/whatsapp/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # ---- Stage 3: build -----------------------------------------------------
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/whatsapp/node_modules ./whatsapp/node_modules
+COPY --from=deps /app/services/whatsapp/node_modules ./services/whatsapp/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY services/whatsapp/ ./whatsapp
+COPY services/whatsapp/ ./services/whatsapp
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/whatsapp build
 
@@ -61,7 +61,7 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/whatsapp/package.json ./whatsapp/package.json
+COPY services/whatsapp/package.json ./services/whatsapp/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp
 
 # ---- Stage 5: runtime ---------------------------------------------------
@@ -73,8 +73,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 COPY --from=wacli /usr/local/bin/wacli /usr/local/bin/wacli
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/whatsapp/node_modules ./whatsapp/node_modules
-COPY --from=builder /app/whatsapp/dist ./whatsapp/dist
+COPY --from=prod-deps /app/services/whatsapp/node_modules ./services/whatsapp/node_modules
+COPY --from=builder /app/services/whatsapp/dist ./services/whatsapp/dist
 
 ENV NODE_ENV=production
 ENV PORT=8400
@@ -90,7 +90,7 @@ RUN groupadd -g 10001 wabridge \
  && chown -R wabridge:wabridge /data
 USER wabridge
 
-WORKDIR /app/whatsapp
+WORKDIR /app/services/whatsapp
 
 EXPOSE 8400
 

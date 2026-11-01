@@ -11,17 +11,17 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/assistant/package.json ./assistant/package.json
+COPY services/assistant/package.json ./services/assistant/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/assistant/node_modules ./assistant/node_modules
+COPY --from=deps /app/services/assistant/node_modules ./services/assistant/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY services/assistant/ ./assistant
+COPY services/assistant/ ./services/assistant
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
 
@@ -31,7 +31,7 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/assistant/package.json ./assistant/package.json
+COPY services/assistant/package.json ./services/assistant/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/assistant
 
 # Production image, copy all the files and run the assistant server
@@ -44,11 +44,11 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/assistant/node_modules ./assistant/node_modules
-COPY --from=builder /app/assistant/dist ./assistant/dist
+COPY --from=prod-deps /app/services/assistant/node_modules ./services/assistant/node_modules
+COPY --from=builder /app/services/assistant/dist ./services/assistant/dist
 # The migrations are read at runtime (process.cwd()/db), so copy them beside the
 # compiled server entrypoint.
-COPY --from=builder --chown=nodejs:nodejs /app/assistant/db ./assistant/db
+COPY --from=builder --chown=nodejs:nodejs /app/services/assistant/db ./services/assistant/db
 
 USER nodejs
 
@@ -56,6 +56,5 @@ EXPOSE 8500
 
 ENV PORT=8500
 ENV HOSTNAME="0.0.0.0"
-WORKDIR /app/assistant
+WORKDIR /app/services/assistant
 CMD ["node", "dist/server.js"]
-
