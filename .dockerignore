@@ -8,8 +8,6 @@ node_modules
 dist
 .env
 .next
-services/wichteln/.next
-services/wichteln/node_modules
 .ms-playwright
 .eslintcache
 *.tsbuildinfo
