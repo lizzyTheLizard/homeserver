@@ -62,7 +62,7 @@ In production every required var must be set; the app fails fast on startup othe
 |--------------------|-------------|
 | `pnpm dev`         | Run web + assistant + whatsapp together (dev server on :3000) |
 | `pnpm build`       | Build all packages |
-| `pnpm test`        | Run all tests in all packages (includes the integration smoke suite, which needs Docker) |
+| `pnpm test`        | Run all tests in all packages |
 | `pnpm test:watch`  | Tests in watch mode (all packages) |
 | `pnpm lint`        | Lint all packages (with --fix) |
 | `pnpm lint:ci`     | Lint all packages (no --fix, for CI) |
@@ -84,7 +84,7 @@ The stock OpenSpec workflows drive the lifecycle end to end:
 | Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
 | Ship | `openspec-archive-change` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
 
-The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`. The `Change guard` job in `homeserver.yml` enforces on every pull request that the change is archived, named after the branch, and its specs are synced.
+The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`. The `Change guard` job in `change-guard.yml` enforces on every pull request that the change is archived, named after the branch, and its specs are synced.
 
 The `openspec-*` skills are auto-generated and must not be edited by hand.
 
@@ -111,9 +111,8 @@ Per-row ownership is keyed on the user's email (`owner_email`). There is no `use
 │   ├── whatsapp/       WhatsApp bridge container (wacli + companion)
 │   ├── wichteln/       Wichteln app (own migrations in web-style db/ folder)
 │   └── dev-machine/    Development container (code-server, OpenCode, SSH)
-├── integration-test/   Smoke tests for the full docker-compose stack (Vitest + Playwright)
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
-├── .github/workflows/  CI/CD (per-service build/deploy + shared lint/smoke)
+├── .github/workflows/  CI/CD (per-service build/deploy + change guard)
 ├── .agents/skills/     Agent skills: the OpenSpec workflows (see Development workflow)
 ├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```
@@ -129,69 +128,6 @@ Three vitest projects run in parallel:
 - `storybook` — Story interaction tests via Playwright/Chromium
 
 `pnpm test` is configured with `--no-file-parallelism` because the integration tests share the PGlite instance.
-
-### Smoke tests (docker-compose stack)
-
-The `integration-test/` package verifies the **full** docker-compose stack
-(`infrastructure/docker-compose.yml` plus the
-`integration-test/docker-compose.ci.yml` test-mode override) end to end:
-
-- SSH on port 2222 (dev-machine) and bind9 DNS answering `gutschi.site`
-- Dozzle and Pgweb UIs over HTTPS with HTTP basic auth
-- application healthy, `/shared/ping` and the root page reachable through nginx
-- authenticated pages in headless Chromium: the assistant greeting (WebSocket,
-  requires `AI_API_KEY`) and the WhatsApp bridge pairing QR code
-
-The suite can be run manually using
-
-```bash
-# 1. self-signed certificates for the smoke domains
-pnpm --filter @homeserver/integration-test certs
-
-# 2. smoke hosts must resolve to 127.0.0.1
-#    (CI adds them with `sudo tee -a /etc/hosts`; add them once locally)
-
-# 3. compose project .env for ${VAR} interpolation
-#    (mirrors env.test when missing; never touches the real .env)
-[ -f infrastructure/.env ] || cp integration-test/env.test infrastructure/.env
-
-# 4. boot the stack (AI_API_KEY is the only real secret)
-docker compose -f infrastructure/docker-compose.yml \
-  -f integration-test/docker-compose.ci.yml \
-  up -d --wait --wait-timeout 300 --remove-orphans
-
-# 5. run all checks (Vitest: infra checks + headless-browser checks)
-pnpm --filter @homeserver/integration-test test
-
-# 6. tear down (also on failure)
-docker compose -f infrastructure/docker-compose.yml \
-  -f integration-test/docker-compose.ci.yml \
-  down --remove-orphans -v
-```
-
-Requirements and behaviour:
-
-- **Docker** with the compose plugin is required. `docker compose up --wait`
-  covers the healthchecked services; the checks poll the rest (bind9, dozzle,
-  pgwebprod, dev-machine) themselves, so each service failing reports its own
-  name.
-- **No Entra credentials needed** — the test stack uses a mock OIDC provider
-  (`integration-test/mock-oidc/`, built on the maintained `oidc-provider`
-  library; HTTPS with a self-signed cert, login auto-approved), fixed
-  non-secret values from `integration-test/env.test`, and an ephemeral WhatsApp
-  data directory (`down -v` removes it, so the bridge is unpaired on every run).
-- The only secret used is **`AI_API_KEY`** for the assistant greeting check; CI
-  passes it to the `docker compose up` step as the `AI_API_KEY` secret. Locally,
-  add it to `infrastructure/.env` or export it before step 4 (the checks
-  themselves need no secret).
-- Self-signed certificates are generated into
-  `infrastructure/certbot/conf/live/<domain>/` (git-ignored) before every run
-  (`pnpm certs`), and the hosts `dev/www/logs.gutschi.site` +
-  `mock-oidc-server` must resolve to `127.0.0.1` — CI adds the entries with
-  `sudo` before the suite; local users add them once by hand.
-- The stack never touches the real `.env` or the real stack: the project name
-  is `homeserver-smoke` and `env_file` values from `env.test` win over any
-  `infrastructure/.env`.
 
 ## License
 

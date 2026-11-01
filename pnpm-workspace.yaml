@@ -3,7 +3,6 @@ packages:
   - 'services/assistant'
   - 'services/whatsapp'
   - 'services/wichteln'
-  - 'integration-test'
 allowBuilds:
   '@whiskeysockets/baileys': true
   esbuild: true

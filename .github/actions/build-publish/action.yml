@@ -1,5 +1,5 @@
 name: Build and publish service image
-description: Build a service image and publish it to GHCR
+description: Build a service image and publish it to GHCR on main
 inputs:
   image:
     description: Image name without the ghcr.io/lizzythelizard/ prefix (e.g. homeserver-web)
@@ -11,10 +11,6 @@ inputs:
     description: Newline-separated build arguments
     required: false
     default: ''
-  tag:
-    description: Image tag (defaults to latest)
-    required: false
-    default: latest
 runs:
   using: "composite"
   steps:
@@ -32,8 +28,8 @@ runs:
         context: .
         file: ${{ inputs.dockerfile }}
         platforms: linux/amd64
-        push: true
-        tags: ghcr.io/lizzythelizard/${{ inputs.image }}:${{ inputs.tag }}
+        push: ${{ github.ref == 'refs/heads/main' }}
+        tags: ghcr.io/lizzythelizard/${{ inputs.image }}:latest
         cache-from: type=gha,scope=${{ inputs.image }}
         cache-to: type=gha,mode=min,scope=${{ inputs.image }}
         build-args: ${{ inputs.build-args }}
