@@ -39,7 +39,7 @@ jobs:
     name: Deploy Dev Machine
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
