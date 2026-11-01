@@ -11,7 +11,7 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY assistant/package.json ./assistant/package.json
+COPY services/assistant/package.json ./assistant/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -21,7 +21,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/assistant/node_modules ./assistant/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY assistant/ ./assistant
+COPY services/assistant/ ./assistant
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
 
@@ -31,7 +31,7 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY assistant/package.json ./assistant/package.json
+COPY services/assistant/package.json ./assistant/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/assistant
 
 # Production image, copy all the files and run the assistant server

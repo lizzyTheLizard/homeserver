@@ -2,8 +2,8 @@
 
 ## 1. Create the services folder and move the services
 
-- [ ] 1.1 Create `services/` and move `web`, `assistant`, `whatsapp-bridge`, `wichteln` and `dev-machine` into it, updating `pnpm-workspace.yaml` globs and the root `package.json` `dev:*`/`build`/`test` script package paths so `pnpm install` and `pnpm build` still resolve every `@homeserver/*` package; verify with `pnpm install && pnpm build` succeeding from the new layout.
-- [ ] 1.2 Update every Dockerfile `COPY` and `--filter`/context path that referenced the old top-level folders (`web/Dockerfile`'s `COPY ./db`, `COPY ./assistant/...`, `wichteln/Dockerfile`, `assistant/Dockerfile`, `whatsapp-bridge/Dockerfile`, `dev-machine/Dockerfile`) to the `services/<name>/` paths; verify each image builds with `docker build` against the new context.
+- [x] 1.1 Create `services/` and move `web`, `assistant`, `whatsapp-bridge`, `wichteln` and `dev-machine` into it, updating `pnpm-workspace.yaml` globs and the root `package.json` `dev:*`/`build`/`test` script package paths so `pnpm install` and `pnpm build` still resolve every `@homeserver/*` package; verify with `pnpm install && pnpm build` succeeding from the new layout.
+- [x] 1.2 Update every Dockerfile `COPY` and `--filter`/context path that referenced the old top-level folders (`web/Dockerfile`'s `COPY ./db`, `COPY ./assistant/...`, `wichteln/Dockerfile`, `assistant/Dockerfile`, `whatsapp-bridge/Dockerfile`, `dev-machine/Dockerfile`) to the `services/<name>/` paths; verify each image builds with `docker build` against the new context.
 
 ## 2. Rename the WhatsApp bridge to whatsapp
 

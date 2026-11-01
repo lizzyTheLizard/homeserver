@@ -67,9 +67,9 @@ RUN npm install -g @fission-ai/openspec@latest
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # 8. Copy configuration files & entrypoint script
-COPY dev-machine/supervisord.conf /etc/supervisor/supervisord.conf
-COPY dev-machine/sshd_config /etc/ssh/sshd_config
-COPY dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY services/dev-machine/supervisord.conf /etc/supervisor/supervisord.conf
+COPY services/dev-machine/sshd_config /etc/ssh/sshd_config
+COPY services/dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p /var/run/sshd
 USER dev

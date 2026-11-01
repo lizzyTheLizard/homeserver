@@ -39,7 +39,7 @@ WORKDIR /app
 # package.json is copied here.
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY whatsapp-bridge/package.json ./whatsapp-bridge/package.json
+COPY services/whatsapp-bridge/package.json ./whatsapp-bridge/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # ---- Stage 3: build -----------------------------------------------------
@@ -49,7 +49,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/whatsapp-bridge/node_modules ./whatsapp-bridge/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY whatsapp-bridge/ ./whatsapp-bridge
+COPY services/whatsapp-bridge/ ./whatsapp-bridge
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/whatsapp-bridge build
 
@@ -61,7 +61,7 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY whatsapp-bridge/package.json ./whatsapp-bridge/package.json
+COPY services/whatsapp-bridge/package.json ./whatsapp-bridge/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp-bridge
 
 # ---- Stage 5: runtime ---------------------------------------------------

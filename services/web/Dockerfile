@@ -11,7 +11,7 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY web/package.json ./web/package.json
+COPY services/web/package.json ./web/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -21,9 +21,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/web/node_modules ./web/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY ./web ./web
-COPY ./assistant/microsoft/types.ts ./assistant/microsoft/types.ts
-COPY ./assistant/whatsapp/types.ts ./assistant/whatsapp/types.ts
+COPY ./services/web ./web
+COPY ./services/assistant/microsoft/types.ts ./assistant/microsoft/types.ts
+COPY ./services/assistant/whatsapp/types.ts ./assistant/whatsapp/types.ts
 COPY ./db ./db
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/web build

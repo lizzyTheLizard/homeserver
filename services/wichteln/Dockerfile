@@ -9,7 +9,7 @@ WORKDIR /app
 
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY wichteln/package.json ./wichteln/package.json
+COPY services/wichteln/package.json ./wichteln/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 FROM base AS builder
@@ -18,7 +18,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/wichteln/node_modules ./wichteln/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY ./wichteln ./wichteln
+COPY ./services/wichteln ./wichteln
 
 RUN corepack enable pnpm && pnpm --filter @homeserver/wichteln build
 
