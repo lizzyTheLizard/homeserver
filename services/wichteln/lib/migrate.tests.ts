@@ -31,10 +31,10 @@ describe('database migrations', () => {
       'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' ORDER BY table_name',
     )
     expect(tables.map(row => row.table_name)).toEqual(
-      expect.arrayContaining(['migrations', 'wichteln_groups', 'wichteln_users']),
+      expect.arrayContaining(['wichteln_migrations', 'wichteln_groups', 'wichteln_users']),
     )
 
-    const applied = await queryable.query<{ name: string }>('SELECT name FROM migrations')
+    const applied = await queryable.query<{ name: string }>('SELECT name FROM wichteln_migrations')
     expect(applied).toEqual([{ name: '001_init.sql' }])
   })
 
@@ -45,7 +45,7 @@ describe('database migrations', () => {
     await applyMigrations(queryable)
     await applyMigrations(queryable)
 
-    const applied = await queryable.query<{ name: string }>('SELECT name FROM migrations')
+    const applied = await queryable.query<{ name: string }>('SELECT name FROM wichteln_migrations')
     expect(applied).toHaveLength(1)
   })
 

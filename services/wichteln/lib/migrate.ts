@@ -22,12 +22,12 @@ interface AppliedMigration {
 
 /**
  * Applies every pending migration to the given database and records it in the
- * `migrations` table. The caller is responsible for the surrounding
+ * `wichteln_migrations` table. The caller is responsible for the surrounding
  * transaction and the advisory lock.
  */
 export async function applyMigrations(db: Queryable): Promise<void> {
   await db.query(`
-    CREATE TABLE IF NOT EXISTS migrations (
+    CREATE TABLE IF NOT EXISTS wichteln_migrations (
       name TEXT PRIMARY KEY,
       hash TEXT,
       run_on TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -36,7 +36,7 @@ export async function applyMigrations(db: Queryable): Promise<void> {
 
   const planned = await readPlannedMigrations()
   const applied = new Map(
-    (await db.query<AppliedMigration>('SELECT name, hash FROM migrations')).map(m => [m.name, m.hash]),
+    (await db.query<AppliedMigration>('SELECT name, hash FROM wichteln_migrations')).map(m => [m.name, m.hash]),
   )
   let seenUnapplied = false
 
@@ -57,7 +57,7 @@ export async function applyMigrations(db: Queryable): Promise<void> {
     for (const statement of splitSql(migration.content)) {
       await db.query(statement)
     }
-    await db.query('INSERT INTO migrations (name, hash) VALUES ($1, $2)', [migration.name, migration.hash])
+    await db.query('INSERT INTO wichteln_migrations (name, hash) VALUES ($1, $2)', [migration.name, migration.hash])
   }
 }
 

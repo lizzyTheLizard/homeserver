@@ -48,7 +48,7 @@ export async function runMigrations(pool: Pool): Promise<void> {
 
 async function applyMigrations(client: PoolClient): Promise<void> {
   await client.query(`
-    CREATE TABLE IF NOT EXISTS migrations (
+    CREATE TABLE IF NOT EXISTS assistant_migrations (
       name TEXT PRIMARY KEY,
       hash TEXT,
       run_on TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -57,7 +57,7 @@ async function applyMigrations(client: PoolClient): Promise<void> {
 
   const planned = await readPlannedMigrations()
   const applied = new Map(
-    (await client.query<AppliedMigration>('SELECT name, hash FROM migrations')).rows.map(m => [m.name, m.hash]),
+    (await client.query<AppliedMigration>('SELECT name, hash FROM assistant_migrations')).rows.map(m => [m.name, m.hash]),
   )
   let seenUnapplied = false
 
@@ -78,7 +78,7 @@ async function applyMigrations(client: PoolClient): Promise<void> {
     for (const statement of splitSql(migration.content)) {
       await client.query(statement)
     }
-    await client.query('INSERT INTO migrations (name, hash) VALUES ($1, $2)', [migration.name, migration.hash])
+    await client.query('INSERT INTO assistant_migrations (name, hash) VALUES ($1, $2)', [migration.name, migration.hash])
   }
 }
 
