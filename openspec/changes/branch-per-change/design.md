@@ -19,7 +19,8 @@ See `proposal.md` for motivation. The constraints that shape the approach:
 - Plan, per-task and archive commits all land on that branch; the PR opens from it after archive.
 - No GitHub issue is required anywhere in the flow, and no step reads or writes one.
 - Rejection is deterministic at the pull request gate, from one tested implementation.
-- The guard tolerates archived folders and legacy `issue-<n>-<slug>` names.
+- A pull request carries only the archived change, with its delta specs already synced.
+- The guard tolerates legacy `issue-<n>-<slug>` names and changes that opt out of specs.
 
 **Non-Goals:**
 
@@ -52,19 +53,23 @@ The name is derived from the request: lowercase, non-alphanumerics collapsed to 
 
 The archive workflow is the last step, and `openspec instructions archive` is where the CLI hands back `operations.archive.guidance`. So the guidance there ends the flow: commit the archive isolated to `openspec/`, push, open the PR to `main` with a `## Summary` body, an `OpenSpec-Change: <change>` line and a link to the archived proposal, then `gh pr merge --auto --squash`. Guidance is advisory — the CI guard is what makes a missing or wrongly-branched PR visible.
 
-### CI is the single enforcement point
+### The guard runs inside the normal CI workflow, on pull requests only
 
-`.github/workflows/change-guard.yml` runs on `pull_request`, checks out with `fetch-depth: 0`, diffs `origin/<base>...HEAD`, and passes the changed paths to `scripts/change-guard.mjs`. The job is in scope only when paths under `openspec/changes/` appear, so dependency and documentation PRs are unaffected.
+`.github/workflows/homeserver.yml` gains a `change-guard` job and a `pull_request` trigger. Every existing job is gated with `if: github.event_name != 'pull_request'`, so pushes and manual runs behave exactly as before and a pull request runs only the guard. The job checks out with `fetch-depth: 0` and runs `node scripts/change-guard.mjs` with `HEAD_REF=${{ github.head_ref }}` and `BASE_REF=origin/${{ github.base_ref }}`.
 
-Git hooks were built first and then removed. A `pre-commit` hook repeated the branch-matching rule and a `pre-push` hook blocked `refs/heads/main`, but they are not the same check as the guard: the hook sees staged paths on a local branch, the guard sees a PR diff against a base. Keeping both meant two implementations of one rule, the hook's being untestable from CI, needing installation before it exists at all, and bypassable with `--no-verify`. The trade-off is accepted: direct pushes to the default branch are guarded by GitHub branch protection rather than repository code, and a wrong-branch commit is caught when the pull request check runs.
+Two reasons for a pull request trigger rather than the existing push trigger: the rule is about what a pull request may contain, and a push-time check would turn every implementation push red between the plan commit and the archive. A separate workflow file was rejected — the repository already has one CI workflow, and a second one is a second place to notice when checks go green. Also rejected: keeping the push trigger and skipping the check while an unarchived change exists, which inverts the rule and cannot see the pull request's base.
+
+### A pull request carries only the archived change
+
+The guard's rule is "archived, synced, and named after the branch", not "names the change": any path under `openspec/changes/<name>/` fails the pull request, because archiving is the last step of the flow and a PR that still shows a live change folder has skipped it. Exactly one archived folder is required, its name must equal the head branch, and when it carries `specs/` deltas the pull request must also touch `openspec/specs/` — the sync proves the archive step actually ran and did not just move the folder.
 
 ### Guard logic is a tested pure module
 
-`scripts/change-guard.mjs` exports `resolveChangeForBranch(branch, paths)` returning `{ ok, change, reason }`, and a CLI entrypoint that reads `HEAD_REF`/`BASE_REF` for the workflow. `scripts/change-guard.test.mjs` runs with `node --test` (no dependency, Node 24). Rejected: inline bash in the workflow — it cannot be tested locally, and the archived-folder rule is exactly the kind of logic that needs fixtures.
+`scripts/change-guard.mjs` exports `resolveChangeForBranch(branch, paths)` returning `{ ok, change, reason }`, and a CLI entrypoint that reads `HEAD_REF`/`BASE_REF` for the workflow. `scripts/change-guard.test.mjs` runs with `node --test` (no dependency, Node 24) and covers the unarchived case, the archived case, the sync check, the out-of-scope pull request and multi-change ambiguity. Rejected: inline bash in the workflow — it cannot be tested locally, and these rules are exactly what needs fixtures.
 
 ### Archive retains the name
 
-`openspec archive` moves the folder to `openspec/changes/archive/<date>-<name>`. The guard accepts either `changes/<name>` or `changes/archive/<date>-<name>` by comparing the suffix, which is why the archive must happen before the PR opens: a shipped PR contains only the archived path.
+`openspec archive` moves the folder to `openspec/changes/archive/<date>-<name>`. The guard compares the archived folder's suffix to the head branch, which is why the archive must happen before the PR opens: a shipped PR contains only the archived path.
 
 ## Risks / Trade-offs
 
@@ -74,6 +79,8 @@ Git hooks were built first and then removed. A `pre-commit` hook repeated the br
 - [PRs touching no change folder skip the guard] → accepted: blocking Dependabot and docs PRs would be worse than the gap, and the flow always creates the folder.
 - [Guard fails when a PR legitimately spans two changes] → intended: one branch, one change; split the work.
 - [Archived suffix match could collide with another change whose name ends in `-<name>`] → the guard requires exactly one match, so an ambiguity fails loudly instead of guessing.
+- [The sync check is a heuristic: it compares presence of delta specs and touched main specs, not their content] → an archive whose deltas are textually identical to the main spec would fail; the fix is to touch the spec file, and in practice archiving rewrites it.
+- [The guard only runs on pull requests] → an unarchived branch stays unflagged until a PR opens, which is exactly when the rule applies.
 - [CI needs history for the merge-base diff] → `fetch-depth: 0` is explicit in the workflow; without it the job fails rather than silently passing.
 - [Renaming convention breaks in-flight `issue-<n>-<slug>` PRs] → the guard never checks the old pattern, only branch == folder, so they pass unchanged.
 
@@ -81,5 +88,5 @@ Git hooks were built first and then removed. A `pre-commit` hook repeated the br
 
 1. Delete `.agents/skills/gh-issue-draft/`, `gh-change-start/`, `gh-change-ship/` and their rows in `AGENTS.md`/`README.md` first, so no entry point still advertises issues or wraps the workflows.
 2. Write the contract into `openspec/config.yaml` (`context`, `rules.proposal`, `operations.apply.guidance`, `operations.archive.guidance`), then confirm with `openspec instructions proposal|apply|archive --change <name> --json` that each consumer receives it.
-3. The CI guard activates on the next PR touching `openspec/changes/`. Existing open issue-named branches are unaffected.
-4. Rollback is independent per layer: remove the workflow to disable enforcement; restore the previous `config.yaml` to get the issue-first text back.
+3. The `change-guard` job activates on the next pull request. Existing open issue-named branches are unaffected.
+4. Rollback is independent per layer: drop the `change-guard` job and the `pull_request` trigger to disable enforcement; restore the previous `config.yaml` to get the issue-first text back.
