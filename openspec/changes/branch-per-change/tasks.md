@@ -12,7 +12,7 @@
 
 ## 3. Local enforcement
 
-- [ ] 3.1 Add `.githooks/pre-commit` (executable): reject staging `openspec/changes/**` or `openspec/specs/**` on `main`/`master`, and on another branch reject staging `openspec/changes/<other>/` when `<other>` is not the branch name (`archive/` exempt). Verify on a scratch branch: staging `openspec/changes/other-change/proposal.md` exits non-zero, staging `openspec/changes/branch-per-change/tasks.md` exits zero, and staging it on `main` exits non-zero.
+- [x] 3.1 Add `.githooks/pre-commit` (executable): reject staging `openspec/changes/**` or `openspec/specs/**` on `main`/`master`, and on another branch reject staging `openspec/changes/<other>/` when `<other>` is not the branch name (`archive/` exempt). Verify on a scratch branch: staging `openspec/changes/other-change/proposal.md` exits non-zero, staging `openspec/changes/branch-per-change/tasks.md` exits zero, and staging it on `main` exits non-zero.
 - [ ] 3.2 Add `.githooks/pre-push` (executable) that rejects any refspec targeting `refs/heads/main`. Verify `git push --dry-run origin main:main` from a scratch clone is rejected and `git push --dry-run origin HEAD:refs/heads/branch-per-change` is allowed.
 - [ ] 3.3 Add `"prepare": "git config core.hooksPath .githooks"` to the root `package.json` scripts. Verify `pnpm install` completes and `git config core.hooksPath` prints `.githooks`.
 

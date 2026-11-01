@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Reject change artifacts that do not belong on the checked-out branch.
+set -euo pipefail
+
+default_branch="main"
+branch="$(git symbolic-ref --quiet --short HEAD || true)"
+
+# Detached HEAD: there is no branch to own the artifacts.
+if [ -z "$branch" ]; then
+  exit 0
+fi
+
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
+if [ -z "$staged" ]; then
+  exit 0
+fi
+
+change_paths="$(printf '%s\n' "$staged" | grep -E '^openspec/changes/' | grep -vE '^openspec/changes/archive/' || true)"
+spec_paths="$(printf '%s\n' "$staged" | grep -E '^openspec/specs/' || true)"
+
+if [ "$branch" = "$default_branch" ] || [ "$branch" = "master" ]; then
+  if [ -n "$change_paths" ] || [ -n "$spec_paths" ]; then
+    echo "pre-commit: change artifacts cannot be committed on '$branch'." >&2
+    echo "Create the change branch first: git fetch origin && git switch -c <change> origin/main" >&2
+    exit 1
+  fi
+  exit 0
+fi
+
+while IFS= read -r path; do
+  if [ -z "$path" ]; then
+    continue
+  fi
+  change="${path#openspec/changes/}"
+  change="${change%%/*}"
+  if [ "$change" != "$branch" ]; then
+    echo "pre-commit: '$path' belongs to change '$change', but the branch is '$branch'." >&2
+    echo "Switch to branch '$change' and commit there: git switch '$change'" >&2
+    exit 1
+  fi
+done <<< "$change_paths"
+
+exit 0
