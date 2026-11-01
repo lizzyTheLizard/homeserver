@@ -32,24 +32,196 @@ jobs:
         uses: ./.github/actions/setup
       - name: Lint
         run: pnpm run lint:ci
+  build-web:
+    name: Build Web Docker Container
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Get Datetime
+        id: get-datetime
+        run: echo "datetime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+      - name: Build Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/web/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ghcr.io/lizzythelizard/homeserver-web:latest
+          cache-from: type=gha,scope=homeserver-web
+          cache-to: type=gha,mode=min,scope=homeserver-web
+          outputs: type=docker,dest=${{ runner.temp }}/homeserver-web.tar
+          build-args: |
+            GIT_COMMIT_HASH=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
+            GITHUB_RUN_ID=${{ github.run_id }}
+            BUILD_TIME=${{ steps.get-datetime.outputs.datetime }}
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: homeserver-web
+          path: ${{ runner.temp }}/homeserver-web.tar
+          retention-days: 1
+  build-assistant:
+    name: Build Assistant Docker Container
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/assistant/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ghcr.io/lizzythelizard/homeserver-assistant:latest
+          cache-from: type=gha,scope=homeserver-assistant
+          cache-to: type=gha,mode=min,scope=homeserver-assistant
+          outputs: type=docker,dest=${{ runner.temp }}/homeserver-assistant.tar
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: homeserver-assistant
+          path: ${{ runner.temp }}/homeserver-assistant.tar
+          retention-days: 1
+  build-whatsapp:
+    name: Build WhatsApp Docker Container
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/whatsapp/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ghcr.io/lizzythelizard/homeserver-whatsapp:latest
+          cache-from: type=gha,scope=homeserver-whatsapp
+          cache-to: type=gha,mode=min,scope=homeserver-whatsapp
+          outputs: type=docker,dest=${{ runner.temp }}/homeserver-whatsapp.tar
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: homeserver-whatsapp
+          path: ${{ runner.temp }}/homeserver-whatsapp.tar
+          retention-days: 1
+  build-wichteln:
+    name: Build Wichteln Docker Container
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/wichteln/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ghcr.io/lizzythelizard/homeserver-wichteln:latest
+          cache-from: type=gha,scope=homeserver-wichteln
+          cache-to: type=gha,mode=min,scope=homeserver-wichteln
+          outputs: type=docker,dest=${{ runner.temp }}/homeserver-wichteln.tar
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: homeserver-wichteln
+          path: ${{ runner.temp }}/homeserver-wichteln.tar
+          retention-days: 1
+  build-dev-machine:
+    name: Build Dev Machine Docker Container
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/dev-machine/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ghcr.io/lizzythelizard/homeserver-dev-machine:latest
+          cache-from: type=gha,scope=homeserver-dev-machine
+          cache-to: type=gha,mode=min,scope=homeserver-dev-machine
+          outputs: type=docker,dest=${{ runner.temp }}/homeserver-dev-machine.tar
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: homeserver-dev-machine
+          path: ${{ runner.temp }}/homeserver-dev-machine.tar
+          retention-days: 1
   integration-smoke:
     name: Integration Smoke (docker-compose stack)
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      packages: read
+    needs: [build-web, build-assistant, build-whatsapp, build-wichteln, build-dev-machine]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Download web artifact
+        uses: actions/download-artifact@v8
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          name: homeserver-web
+          path: ${{ runner.temp }}
+      - name: Download assistant artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: homeserver-assistant
+          path: ${{ runner.temp }}
+      - name: Download WhatsApp artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: homeserver-whatsapp
+          path: ${{ runner.temp }}
+      - name: Download Wichteln artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: homeserver-wichteln
+          path: ${{ runner.temp }}
+      - name: Download dev-machine artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: homeserver-dev-machine
+          path: ${{ runner.temp }}
+      - name: Load Docker images
+        run: |
+          docker load --input ${{ runner.temp }}/homeserver-web.tar
+          docker load --input ${{ runner.temp }}/homeserver-assistant.tar
+          docker load --input ${{ runner.temp }}/homeserver-whatsapp.tar
+          docker load --input ${{ runner.temp }}/homeserver-wichteln.tar
+          docker load --input ${{ runner.temp }}/homeserver-dev-machine.tar
       - name: Cache third-party Docker images
         uses: actions/cache@v6
         id: third-party-images
@@ -109,13 +281,13 @@ jobs:
         if: always()
         run: docker compose -f infrastructure/docker-compose.yml -f integration-test/docker-compose.ci.yml down --remove-orphans -v
   all-checks:
-    name: All Checks Success
+    name: All Build Check Success
     runs-on: ubuntu-latest
-    needs: [lint, integration-smoke]
+    needs: [lint, build-web, build-assistant, build-whatsapp, build-wichteln, build-dev-machine, integration-smoke]
     if: github.event_name != 'pull_request' && always()
     steps:
       - name: Fail if any required job failed or was cancelled
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: exit 1
       - name: All checks passed
-        run: echo "All lint and integration smoke checks passed."
+        run: echo "All lint, build and integration smoke checks passed."
