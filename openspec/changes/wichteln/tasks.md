@@ -33,7 +33,7 @@
 
 ## 8. Integration verification
 
-- [ ] 8.1 Run the full local gate: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm lint:ci`, `pnpm --filter '!@homeserver/integration-test' test`, build all five images, generate the smoke certificates, add `wichteln.gutschi.site` to `/etc/hosts`, boot the smoke stack with `integration-test/docker-compose.ci.yml`, run `pnpm --filter @homeserver/integration-test test`, and tear the stack down. Verify: every command exits 0, the Wichteln container is healthy, and `https://wichteln.gutschi.site/` answers through nginx.
+- [x] 8.1 Run the full local gate: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm lint:ci`, `pnpm --filter '!@homeserver/integration-test' test`, build all five images, generate the smoke certificates, add `wichteln.gutschi.site` to `/etc/hosts`, boot the smoke stack with `integration-test/docker-compose.ci.yml`, run `pnpm --filter @homeserver/integration-test test`, and tear the stack down. Verify: every command exits 0, the Wichteln container is healthy, and `https://wichteln.gutschi.site/` answers through nginx.
 
 ## Workflow follow-up
 
