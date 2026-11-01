@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Generates self-signed TLS certificates for the smoke-test stack.
 #
-# Writes fullchain.pem + privkey.pem for dev.gutschi.site, www.gutschi.site and
-# logs.gutschi.site under infrastructure/certbot/conf/live/<domain>/ — exactly
-# where nginx mounts /etc/letsencrypt (./certbot/conf -> /etc/letsencrypt).
+# Writes fullchain.pem + privkey.pem for dev.gutschi.site, www.gutschi.site,
+# logs.gutschi.site and wichteln.gutschi.site under
+# infrastructure/certbot/conf/live/<domain>/ — exactly where nginx mounts
+# /etc/letsencrypt (./certbot/conf -> /etc/letsencrypt).
 # The certbot/ directory is git-ignored (infrastructure/.gitignore), so these
 # certs are never committed; regenerate them before every `docker compose up`.
 #
@@ -16,10 +17,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 CONF_ROOT="${REPO_ROOT}/infrastructure/certbot/conf/live"
 
-# Every cert carries the full SAN list so any of the three names works on any
+# Every cert carries the full SAN list so any of the four names works on any
 # listener (nginx terminates TLS for all of them in the smoke stack).
-ALL_DOMAINS="DNS:dev.gutschi.site,DNS:www.gutschi.site,DNS:logs.gutschi.site"
-DOMAINS=("dev.gutschi.site" "www.gutschi.site" "logs.gutschi.site")
+ALL_DOMAINS="DNS:dev.gutschi.site,DNS:www.gutschi.site,DNS:logs.gutschi.site,DNS:wichteln.gutschi.site"
+DOMAINS=("dev.gutschi.site" "www.gutschi.site" "logs.gutschi.site" "wichteln.gutschi.site")
 
 for domain in "${DOMAINS[@]}"; do
   dir="${CONF_ROOT}/${domain}"

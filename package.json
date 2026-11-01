@@ -7,6 +7,7 @@
     "dev:app": "pnpm --filter @homeserver/web dev",
     "dev:bridge": "pnpm --filter @homeserver/whatsapp-bridge dev",
     "dev:assistant": "pnpm --filter @homeserver/assistant dev",
+    "dev:wichteln": "pnpm --filter @homeserver/wichteln dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "lint:ci": "pnpm -r lint:ci",
