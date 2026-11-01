@@ -84,7 +84,7 @@ The stock OpenSpec workflows drive the lifecycle end to end:
 | Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
 | Ship | `openspec-archive-change` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
 
-The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`. The `Change guard` job in `change-guard.yml` enforces on every pull request that the change is archived, named after the branch, and its specs are synced.
+The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`.
 
 The `openspec-*` skills are auto-generated and must not be edited by hand.
 
@@ -112,7 +112,7 @@ Per-row ownership is keyed on the user's email (`owner_email`). There is no `use
 │   ├── wichteln/       Wichteln app (own migrations in web-style db/ folder)
 │   └── dev-machine/    Development container (code-server, OpenCode, SSH)
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
-├── .github/workflows/  CI/CD (per-service build/deploy + change guard)
+├── .github/workflows/  CI/CD (per-service build/deploy)
 ├── .agents/skills/     Agent skills: the OpenSpec workflows (see Development workflow)
 ├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```

@@ -1,0 +1,26 @@
+name: Deploy infrastructure
+description: Sync infrastructure files and recreate the whole compose stack on the host (only on a push to main)
+runs:
+  using: "composite"
+  steps:
+    - name: Set up SSH key
+      if: ${{ github.event_name == 'push' }}
+      uses: webfactory/ssh-agent@v0.10.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Add host key to known hosts
+      if: ${{ github.event_name == 'push' }}
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+    - name: Sync infrastructure files
+      if: ${{ github.event_name == 'push' }}
+      shell: bash
+      run: |
+        rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
+    - name: Pull and recreate the whole stack
+      if: ${{ github.event_name == 'push' }}
+      shell: bash
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "set -e; cd /opt/homeserver; docker compose pull; docker compose up -d --force-recreate --remove-orphans; docker image prune -f"

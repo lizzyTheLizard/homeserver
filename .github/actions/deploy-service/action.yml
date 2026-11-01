@@ -1,5 +1,5 @@
 name: Deploy service
-description: Pull a service's GHCR image and recreate its container on the host
+description: Pull a service's GHCR image and recreate its container on the host (only on a push to main)
 inputs:
   service:
     description: The compose service name (applicationprod, assistant, whatsapp, wichteln, dev-machine)
@@ -8,19 +8,23 @@ runs:
   using: "composite"
   steps:
     - name: Set up SSH key
+      if: ${{ github.event_name == 'push' }}
       uses: webfactory/ssh-agent@v0.10.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Add host key to known hosts
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     - name: Sync infrastructure files
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         rsync -avz ./infrastructure/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/homeserver/
     - name: Pull image and recreate the service
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "set -e; cd /opt/homeserver; docker compose pull ${{ inputs.service }}; docker compose up -d --force-recreate --remove-orphans ${{ inputs.service }}; docker image prune -f"

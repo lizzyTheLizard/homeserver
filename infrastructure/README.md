@@ -395,7 +395,6 @@ only do this if you have a reason to.
   `wichteln.yml`, `dev-machine.yml`) that, when its `services/<name>/` folder
   changes, builds and publishes the image to GHCR
   (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and then pulls it on the
-  server; a separate `change-guard.yml` enforces the OpenSpec change-first
-  rules on every pull request. The compose stack is then started/updated with
+  server. The compose stack is then started/updated with
   `docker compose up -d`.
 
