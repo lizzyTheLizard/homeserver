@@ -27,19 +27,19 @@ Move `web`, `assistant`, `whatsapp-bridge` (→ `whatsapp`), `wichteln` and `dev
 - **Rationale:** a deployable service is now distinguishable at a glance from shared tooling, and each service's Dockerfile, migrations and package sit together.
 - **Alternatives:** a `packages/` monorepo layout, or keeping flat folders — rejected because the request explicitly wants a `services/` folder and a clear service boundary.
 
-### 2. Standardise images on `homeserver:<name>`
+### 2. Standardise images on one name per service, published to GHCR
 
-Replace `homeserver` (web), `homeserver-assistant`, `whatsapp-bridge`, `homeserver-wichteln` and `homeserver-dev-machine` with `homeserver:web`, `homeserver:assistant`, `homeserver:whatsapp`, `homeserver:wichteln` and `homeserver:dev-machine`. The `services/<name>/` folder, the `@homeserver/<name>` package and the `homeserver:<name>` image all share the same `<name>`.
+Replace `homeserver` (web), `homeserver-assistant`, `whatsapp-bridge`, `homeserver-wichteln` and `homeserver-dev-machine` with one flat image name per service — `homeserver-web`, `homeserver-assistant`, `homeserver-whatsapp`, `homeserver-wichteln`, `homeserver-dev-machine` — published to GitHub Container Registry as `ghcr.io/<owner>/<name>:latest`. The `services/<name>/` folder, the `@homeserver/<name>` package and the `<name>` image all share the same `<name>`.
 
-- **Rationale:** one name per service across folder, package and image, removing the current ad-hoc mix.
-- **Alternatives:** keep `whatsapp-bridge` as the image name — rejected because the service is renamed to `whatsapp`.
+- **Rationale:** one name per service across folder, package and image, removing the current ad-hoc mix; GHCR gives a single source of truth so an unchanged service reuses its latest published image instead of being rebuilt.
+- **Alternatives:** keep the no-registry "built and loaded, never pulled" model — rejected in favour of GHCR so that the smoke suite and deploy can always obtain all five images even when only one service changed.
 
 ### 3. Split the pipeline into per-service workflows plus a shared workflow
 
-Replace the single `homeserver.yml` with one path-filtered workflow per service (`services/<name>/**`) that builds and deploys only that service's image, and a shared workflow for the cross-cutting jobs (change guard, lint, the stack smoke suite, the aggregated check). Each per-service workflow carries the same deploy-to-host mechanics that today live in the monolithic `deploy` job, but restricted to its own image.
+Replace the single `homeserver.yml` with one path-filtered workflow per service (`services/<name>/**`) that builds, publishes to GHCR and deploys only that service's image, and a shared workflow for the cross-cutting jobs (change guard, lint, the stack smoke suite, the aggregated check). Each per-service workflow publishes its image to GHCR and then triggers/refreshes its own container on the host; unchanged services keep their latest GHCR image. The shared smoke suite pulls the latest images from GHCR, so it can run on every push without rebuilding unchanged services.
 
-- **Rationale:** a change to one service must not rebuild or redeploy the others, and a service's pipeline is reviewable in isolation.
-- **Alternatives:** a single workflow with per-job `paths:` filters — rejected (the user asked for separate pipelines per service).
+- **Rationale:** a change to one service must not rebuild or redeploy the others, a service's pipeline is reviewable in isolation, and GHCR removes the need to rebuild all images for the smoke suite.
+- **Alternatives:** a single workflow with per-job `paths:` filters, or having the smoke suite rebuild all images itself — rejected because the user asked for separate pipelines per service and a registry to reuse the latest image.
 
 ### 4. The web application keeps the repository's migrations (minus the token)
 
@@ -65,7 +65,8 @@ Wichteln's tables are already named `wichteln_*`, so no table rename is needed. 
 ## Risks / Trade-offs
 
 - [The in-flight `wichteln` change's specs still say "own database"] → Mitigation: this change supersedes that detail; when `wichteln` is eventually archived it must be reconciled with this change (or archived first, then this change updates the already-synced infrastructure/pipeline specs). Note this dependency in the PR.
-- [The monolithic deploy job is being de-duplicated across five workflows] → Mitigation: extract the shared deploy mechanics into a reusable `actions/setup`-style helper or a composite action so the five workflows do not drift.
+- [The monolithic deploy job is being de-duplicated across five workflows] → Mitigation: extract the shared deploy mechanics into a reusable composite action so the five workflows do not drift.
+- [GHCR introduces a registry and auth token] → Mitigation: the repository already has the `GITHUB_TOKEN` available in Actions; images are published under the repository's own GHCR namespace so the default token suffices, and the host authenticates to GHCR once (a read-only token in the deploy environment).
 - [Data loss from dropping `microsoft_token` and Wichteln data] → Mitigation: this is intentional and stated in the specs; no migration script is written, and the old tables/volumes are simply no longer referenced.
 - [Renaming `whatsapp-bridge` to `whatsapp` touches many references] → Mitigation: do the rename as one atomic task that updates the folder, package name, workspace globs, image name, compose service, nginx/Caddy references and every `@homeserver/whatsapp-bridge` import in one commit, and run the full test suite before moving on.
 - [Cross-service build-path changes in Dockerfiles (`COPY ./db`, `COPY ./assistant/...`)] → Mitigation: the smoke suite rebuilds the images from the new layout, catching any missed path before deploy.
@@ -74,9 +75,10 @@ Wichteln's tables are already named `wichteln_*`, so no table rename is needed. 
 
 1. Land the folder restructure and image-name standardisation in one merge (pure moves + name changes; no behaviour change). The full test suite and smoke suite must stay green.
 2. Land the database reorganisation (web keeps migrations minus the token, assistant gains its prefixed token table, wichteln moves into the shared database) as a follow-up set of tasks in the same change.
-3. On deploy, the compose stack recreates the services against the shared database; the old `postgreswichteln` volume and any leftover `microsoft_token` rows are no longer used and may be removed by hand.
+3. Switch image delivery to GHCR: per-service workflows publish `ghcr.io/<owner>/homeserver-<name>:latest`, and the stack pulls those images at deploy time.
+4. On deploy, the compose stack recreates the services against the shared database; the old `postgreswichteln` volume and any leftover `microsoft_token` rows are no longer used and may be removed by hand.
 
-**Rollback:** because no data is migrated, rolling back a task is a straight revert of that task's commit; the shared database's new prefixed tables simply become unused if the service reverts.
+**Rollback:** because no data is migrated, rolling back a task is a straight revert of that task's commit; the shared database's new prefixed tables simply become unused if the service reverts. Image delivery can roll back by restoring the old "build and load" compose configuration and workflow.
 
 ## Open Questions
 

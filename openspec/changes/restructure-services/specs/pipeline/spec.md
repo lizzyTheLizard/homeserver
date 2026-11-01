@@ -28,11 +28,11 @@ Each service SHALL have its own pipeline that runs when its `services/<name>/` f
 
 ### Requirement: Four images are built on every push
 
-The pipeline SHALL build the web application, the assistant, the WhatsApp bridge and the development machine as `linux/amd64` images named `homeserver:web`, `homeserver:assistant`, `homeserver:whatsapp` and `homeserver:dev-machine`, SHALL build each image only from its own service's workflow and folder, SHALL tag the web application image with the deployed revision's commit, branch, pipeline run and build time, and SHALL upload each image as a build artifact.
+The pipeline SHALL build the web application, the assistant, the WhatsApp bridge and the development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-web:latest`, `ghcr.io/<owner>/homeserver-assistant:latest`, `ghcr.io/<owner>/homeserver-whatsapp:latest` and `ghcr.io/<owner>/homeserver-dev-machine:latest`, SHALL build each image only from its own service's workflow and folder, SHALL tag the web application image with the deployed revision's commit, branch, pipeline run and build time, and SHALL publish each image to GitHub Container Registry.
 
 #### Scenario: All four images are built
 - **WHEN** a push reaches the pipeline
-- **THEN** all four images are built under their `homeserver:<name>` names and uploaded as artifacts
+- **THEN** all four images are built under their `ghcr.io/<owner>/homeserver-<name>:latest` names and published to GitHub Container Registry
 
 #### Scenario: A service's image is built only from its own folder
 - **WHEN** a service's image is built
@@ -46,8 +46,8 @@ The pipeline SHALL build the web application, the assistant, the WhatsApp bridge
 
 ### Requirement: Wichteln is built as its own image
 
-The pipeline SHALL build the Wichteln app as a `linux/amd64` image named `homeserver:wichteln` from its own service's workflow and folder, and SHALL upload it as a build artifact.
+The pipeline SHALL build the Wichteln app as a `linux/amd64` image named `ghcr.io/<owner>/homeserver-wichteln:latest` from its own service's workflow and folder, and SHALL publish it to GitHub Container Registry.
 
 #### Scenario: The Wichteln image is built
 - **WHEN** a push changes the Wichteln service's folder
-- **THEN** the `homeserver:wichteln` image is built from that folder and uploaded as an artifact
+- **THEN** the `ghcr.io/<owner>/homeserver-wichteln:latest` image is built from that folder and published to GitHub Container Registry

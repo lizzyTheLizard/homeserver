@@ -1,18 +1,13 @@
 # Spec Delta
 
-## MODIFIED Requirements
+## REMOVED Requirements
 
 ### Requirement: Application images are supplied, never pulled
 
-The web application, assistant, WhatsApp bridge, Wichteln and development-machine images SHALL be built by the pipeline and loaded onto the host under the `homeserver:<name>` names, and the stack SHALL NOT pull them from a registry. The backup service's image SHALL be built on the host instead, and the remaining services SHALL use published images.
+**Reason**: Application images are now published to GitHub Container Registry and pulled from there, instead of being built by the pipeline and loaded onto the host.
+**Migration**: Publish each service's image to GHCR and pull it at deploy time; remove the `pull_policy: never` entries from the compose stack.
 
-#### Scenario: Stack uses the supplied images
-- **WHEN** the stack starts the application services
-- **THEN** it runs the locally loaded `homeserver:<name>` images of the deployed revision
-
-#### Scenario: A missing image is not substituted
-- **WHEN** one of the built images is missing on the host
-- **THEN** the stack fails to start that service instead of pulling a published image
+## MODIFIED Requirements
 
 ### Requirement: The stack keeps its data in named volumes
 
@@ -27,6 +22,18 @@ The production database, the development database, the development home and the 
 - **THEN** the data is written to the shared production database and no dedicated database or volume exists for them
 
 ## ADDED Requirements
+
+### Requirement: Application images are pulled from GHCR
+
+The web application, assistant, WhatsApp bridge, Wichteln and development-machine images SHALL be published to GitHub Container Registry as `ghcr.io/<owner>/homeserver-<name>:latest` and the stack SHALL pull them from the registry. The backup service's image SHALL be built on the host instead, and the remaining services SHALL use published images.
+
+#### Scenario: Stack pulls the application images from GHCR
+- **WHEN** the stack starts the application services
+- **THEN** it pulls the `ghcr.io/<owner>/homeserver-<name>:latest` image for each service from GitHub Container Registry
+
+#### Scenario: An unchanged service reuses its latest image
+- **WHEN** a service's folder has not changed since its last publish
+- **THEN** the stack pulls and runs that service's existing latest image rather than a freshly built one
 
 ### Requirement: Wichteln stores its data in the shared database under a prefix
 

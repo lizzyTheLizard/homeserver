@@ -9,13 +9,13 @@
 
 - [x] 2.1 Rename the `services/whatsapp-bridge` folder, workspace package `@homeserver/whatsapp-bridge` and every import/reference to `@homeserver/whatsapp-bridge`, `whatsapp-bridge`, the compose service and the `homeserver-wichteln`-style image reference to `whatsapp`; verify `pnpm --filter @homeserver/whatsapp build && pnpm --filter @homeserver/whatsapp test && pnpm lint:ci` all pass with no remaining `whatsapp-bridge` references.
 
-## 3. Standardise image names on homeserver:<name>
+## 3. Standardise image names on GHCR
 
-- [x] 3.1 Change the compose stack's image names to `homeserver:web`, `homeserver:assistant`, `homeserver:whatsapp`, `homeserver:wichteln` and `homeserver:dev-machine`, and update the `integration-test/docker-compose.ci.yml` artifact names and the smoke suite's image references accordingly; verify the integration smoke stack boots and the smoke checks pass.
+- [ ] 3.1 Change the compose stack's image names to the GHCR names `ghcr.io/<owner>/homeserver-web:latest`, `ghcr.io/<owner>/homeserver-assistant:latest`, `ghcr.io/<owner>/homeserver-whatsapp:latest`, `ghcr.io/<owner>/homeserver-wichteln:latest` and `ghcr.io/<owner>/homeserver-dev-machine:latest`, and switch them from `pull_policy: never` to pulling from the registry; verify the compose file references only the GHCR names.
 
 ## 4. Split the pipeline into per-service workflows
 
-- [ ] 4.1 Replace `homeserver.yml` with one path-filtered workflow per service (`services/web/**`, `services/assistant/**`, `services/whatsapp/**`, `services/wichteln/**`, `services/dev-machine/**`) that builds and deploys only its own `homeserver:<name>` image, plus a shared workflow for the change guard, lint and the stack smoke suite; verify the workflow YAML is valid (`actionlint` or equivalent) and that a push touching only `services/web/` triggers only the web workflow.
+- [ ] 4.1 Replace `homeserver.yml` with one path-filtered workflow per service (`services/web/**`, `services/assistant/**`, `services/whatsapp/**`, `services/wichteln/**`, `services/dev-machine/**`) that builds, publishes to GHCR and deploys only its own image, plus a shared workflow for the change guard, lint and the stack smoke suite (which pulls the latest images from GHCR); verify the workflow YAML is valid and that a push touching only `services/web/` triggers only the web workflow.
 
 ## 5. Reorganise the database
 
@@ -25,7 +25,7 @@
 
 ## 6. Documentation and integration verification
 
-- [ ] 6.1 Update `README.md`, `AGENTS.md`, `infrastructure/README.md` and the compose `env.example` to reflect the `services/` layout, the `homeserver:<name>` images, the `whatsapp` name and the shared-database prefixes; verify the documented commands run as written.
+- [ ] 6.1 Update `README.md`, `AGENTS.md`, `infrastructure/README.md` and the compose `env.example` to reflect the `services/` layout, the GHCR image names, the `whatsapp` name and the shared-database prefixes; verify the documented commands run as written.
 - [ ] 6.2 Run the full `pnpm lint:ci && pnpm build && pnpm test` and the integration smoke suite from a clean checkout to confirm the branch is green end to end.
 
 ## Workflow follow-up
