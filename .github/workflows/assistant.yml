@@ -1,0 +1,63 @@
+name: "Assistant"
+on:
+  push:
+    paths:
+      - 'services/assistant/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  workflow_dispatch:
+jobs:
+  test:
+    name: Test Assistant
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./services/assistant
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Tests
+        run: pnpm test
+  build:
+    name: Build and publish Assistant image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/assistant/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/lizzylizard/homeserver-assistant:latest
+          cache-from: type=gha,scope=homeserver-assistant
+          cache-to: type=gha,mode=min,scope=homeserver-assistant
+  deploy:
+    name: Deploy Assistant
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Deploy service
+        uses: ./.github/actions/deploy-service
+        with:
+          service: assistant

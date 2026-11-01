@@ -1,0 +1,49 @@
+name: "Dev Machine"
+on:
+  push:
+    paths:
+      - 'services/dev-machine/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build and publish Dev Machine image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/dev-machine/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/lizzylizard/homeserver-dev-machine:latest
+          cache-from: type=gha,scope=homeserver-dev-machine
+          cache-to: type=gha,mode=min,scope=homeserver-dev-machine
+  deploy:
+    name: Deploy Dev Machine
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Deploy service
+        uses: ./.github/actions/deploy-service
+        with:
+          service: dev-machine

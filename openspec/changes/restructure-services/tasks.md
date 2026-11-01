@@ -15,7 +15,7 @@
 
 ## 4. Split the pipeline into per-service workflows
 
-- [ ] 4.1 Replace `homeserver.yml` with one path-filtered workflow per service (`services/web/**`, `services/assistant/**`, `services/whatsapp/**`, `services/wichteln/**`, `services/dev-machine/**`) that builds, publishes to GHCR and deploys only its own image, plus a shared workflow for the change guard, lint and the stack smoke suite (which pulls the latest images from GHCR); verify the workflow YAML is valid and that a push touching only `services/web/` triggers only the web workflow.
+- [x] 4.1 Replace `homeserver.yml` with one path-filtered workflow per service (`services/web/**`, `services/assistant/**`, `services/whatsapp/**`, `services/wichteln/**`, `services/dev-machine/**`) that builds, publishes to GHCR and deploys only its own image, plus a shared workflow for the change guard, lint and the stack smoke suite (which pulls the latest images from GHCR); verify the workflow YAML is valid and that a push touching only `services/web/` triggers only the web workflow.
 
 ## 5. Reorganise the database
 

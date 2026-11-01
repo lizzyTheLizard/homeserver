@@ -1,0 +1,84 @@
+name: "Web"
+on:
+  push:
+    paths:
+      - 'services/web/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  workflow_dispatch:
+jobs:
+  test:
+    name: Test Web (unit + integration + storybook)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./services/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v6
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+      - name: Unit tests
+        run: pnpm run test --project unit
+      - name: Integration tests
+        run: pnpm run test --project integration
+      - name: Storybook tests
+        run: pnpm run test --project storybook
+  build:
+    name: Build and publish Web image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Datetime
+        id: get-datetime
+        run: echo "datetime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/web/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/lizzylizard/homeserver-web:latest
+          cache-from: type=gha,scope=homeserver-web
+          cache-to: type=gha,mode=min,scope=homeserver-web
+          build-args: |
+            GIT_COMMIT_HASH=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
+            GITHUB_RUN_ID=${{ github.run_id }}
+            BUILD_TIME=${{ steps.get-datetime.outputs.datetime }}
+  deploy:
+    name: Deploy Web
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Deploy service
+        uses: ./.github/actions/deploy-service
+        with:
+          service: applicationprod
