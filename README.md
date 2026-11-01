@@ -101,10 +101,6 @@ Postgres is accessed through one connection pool created lazily on first use. Tw
 
 Per-row ownership is keyed on the user's email (`owner_email`). There is no `users` table — the email comes from the OIDC `email` claim and is denormalised onto every domain row.
 
-## Design
-
-All design files live in [design/](design/) and can be edited with [OpenDesign](https://open-design.ai/). The folder contains component designs, screen mockups, and exported artifacts for the various apps.
-
 ## Repository layout
 
 ```
@@ -116,7 +112,7 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
 ├── .github/workflows/  CI/CD (lint → test → Docker build → integration smoke → deploy)
-├── .agents/skills/     Agent skills: OpenSpec workflow + GitHub orchestration (see Development workflow)
+├── .agents/skills/     Agent skills: the OpenSpec workflows (see Development workflow)
 ├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```
 

@@ -74,10 +74,6 @@ Vitest runs three projects in parallel:
 
 The `dev` container has the Playwright **OS dependencies** preinstalled (see `dev-machine/Dockerfile`), but the **browser binaries are not**. Before running the storybook test project, make sure the browsers are installed: if Playwright's browsers are not present, the agent must execute `pnpm exec playwright install --with-deps` from the repo root inside the dev container — this downloads the Chromium binaries (and any remaining OS deps).
 
-## Design
-
-All design files are in the `design/` folder — component designs, screen mockups, and exported artifacts. Edit them with OpenDesign.
-
 ## Database Backup
 
 The `backup` service in `infrastructure/docker-compose.yml` (image sources in `infrastructure/db-backup/`) takes a full `pg_dump` (custom format) of the PROD database every night (cron schedule via `BACKUP_SCHEDULE`, default `0 3 * * *`), stores it in `/opt/homeserver/backup` on the host, deletes local files older than `RETENTION_DAYS` (default 31), and uploads each dump to a **personal** OneDrive account via Microsoft Graph (no npm deps, plain fetch). Auth uses a delegated `ONEDRIVE_REFRESH_TOKEN` (obtained once with `get-onedrive-token.mjs` via device-code login) exchanged for an access token on every run; uploads target `/me/drive`.
