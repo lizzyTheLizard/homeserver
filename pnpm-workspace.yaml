@@ -1,8 +1,8 @@
 packages:
-  - 'web'
-  - 'assistant'
-  - 'whatsapp-bridge'
-  - 'wichteln'
+  - 'services/web'
+  - 'services/assistant'
+  - 'services/whatsapp-bridge'
+  - 'services/wichteln'
   - 'integration-test'
 allowBuilds:
   '@whiskeysockets/baileys': true
