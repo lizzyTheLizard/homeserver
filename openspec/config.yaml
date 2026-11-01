@@ -1,17 +1,28 @@
 schema: spec-driven
 context: |
-  Every change starts from a GitHub issue.
-  The change name, the branch name and the issue are one triple:
-  change set `issue-<number>-<slug>` lives on branch `issue-<number>-<slug>`
-  and closes issue #<number>. Never work on a change whose name does not
-  match the current branch.
-  
+  The change name, the branch name and the change folder are the same value:
+  a kebab-case slug `<change>` used verbatim as `openspec/changes/<change>`
+  and as branch `<change>`. Never work on a change while a different branch
+  is checked out.
+
+  Before the first artifact exists: the working tree is clean
+  (`git status --porcelain` empty), `git fetch origin`, then
+  `git switch -c <change> origin/main`. Change artifacts are never committed
+  on `main`. The reviewed plan is committed to the branch as soon as the
+  artifacts are complete; implementation starts on a new user request, and
+  every later commit (one per task, plus the archive) stays on that branch.
+
 rules:
   proposal:
-    - Derive scope from the linked GitHub issue; do not widen it silently.
-      If the issue is too thin to propose from, say so instead of inventing scope.
-    - State the issue number in the proposal and keep the proposal's framing
-      consistent with the issue title.
+    - A change starts from a user request or an explicit change name.
+      Derive the name as a kebab-case slug (lowercase,
+      non-alphanumerics collapsed to `-`, no `#`).
+    - The branch must already be `<change>` before the proposal is written.
+      If the current branch differs, stop and create it from `origin/main`
+      first.
+    - Keep the proposal consistent with the request it came from; do not widen
+      scope silently. If the request is too thin to propose from, say so
+      instead of inventing scope.
 
   tasks:
     - Every task must be independently implementable, reviewable and committable.
@@ -23,5 +34,10 @@ operations:
   apply:
     guidance:
       - "Work one task at a time. After finishing a task and ticking its checkbox, stop and show the user the diff for review. Do not begin the next task before they have responded."
-      - "Once the user approves a task's diff, commit and push it. The commit message must follow the standard format: `<short imperative message> (#<NUMBER>)` and include the `OpenSpec-Change: <change>` and `Agent: <agent>` trailer."
-      - "After the last task, do not archive yourself. Ask the user to run the gh-change-ship skill instead"
+      - "Once the user approves a task's diff, commit and push it. The commit message must follow the standard format: `<short imperative message>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Do not add an issue number."
+      - "After the last task, do not archive yourself. Ask the user to run the openspec-archive-change workflow instead."
+  archive:
+    guidance:
+      - "Commit the archive isolated to `openspec/`: stage `-A openspec`, make sure nothing else is staged, and commit as `Archive <change>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Then push the branch."
+      - "Open the pull request from the change branch to `main` with `gh pr create --body-file`: a `## Summary` heading, 2-4 bullets, an `OpenSpec-Change: <change>` line and a link to the archived proposal at `openspec/changes/archive/<date>-<change>/proposal.md`. Do not add a `Closes` line or an issue number."
+      - "Arm auto-merge with `gh pr merge --auto --squash`, report the PR URL, and watch the checks until they are green."

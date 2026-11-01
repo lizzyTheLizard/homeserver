@@ -14,6 +14,7 @@ function get(key: string): string {
 
 export const stack = {
   appUrl: get('APP_URL') || 'https://www.gutschi.site',
+  wichtelnUrl: 'https://wichteln.gutschi.site',
   logsUrl: get('LOG_URL') || 'https://logs.gutschi.site',
   mockIssuer: get('LOGIN_ISSUER') || 'https://mock-oidc-server:8080',
   adminUsername: get('ADMIN_USERNAME') || 'admin',

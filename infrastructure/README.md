@@ -14,9 +14,9 @@
 
 The entire stack is **self-hosted on a single home server** (no cloud provider,
 no Terraform). A single `docker-compose.yml` brings up every component. There is
-no container registry: the `homeserver:latest`, `whatsapp-bridge:latest` and
-`homeserver-assistant:latest` images are built directly on the server (by CI,
-see [§6.8](#68-deploying--upgrading-the-application)).
+no container registry: the `homeserver:latest`, `whatsapp-bridge:latest`,
+`homeserver-assistant:latest` and `homeserver-wichteln:latest` images are built
+directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-application)).
 
 ### Components
 
@@ -25,6 +25,8 @@ see [§6.8](#68-deploying--upgrading-the-application)).
 | App (prod)         | `applicationprod` (`Prod-Application`) | `homeserver:latest`   |
 | Assistant          | `assistant` (`Prod-Assistant`)   | `homeserver-assistant:latest` |
 | WhatsApp bridge    | `whatsapp-bridge` (`Prod-WhatsApp-Bridge`) | `whatsapp-bridge:latest` |
+| Wichteln app       | `wichteln` (`Wichteln`)          | `homeserver-wichteln:latest` |
+| Wichteln database  | `postgreswichteln` (`Wichteln-Database`) | `postgres:16-alpine` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
 | Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
 | Front TLS proxy    | `nginx` (`Nginx`)                | `nginx:alpine`             |
@@ -46,6 +48,7 @@ see [§6.8](#68-deploying--upgrading-the-application)).
   | Public URL / port        | Basic auth | Backend              | Purpose              |
   |--------------------------|------------|----------------------|----------------------|
   | `www.gutschi.site:443`   | —          | `applicationprod:3000` | The application    |
+  | `wichteln.gutschi.site:443` | —       | `wichteln:3000`      | Wichteln app         |
   | `dev.gutschi.site:443`   | —          | `dev-machine:3000`   | Dev app (when running) |
   | `dev.gutschi.site:8443`  | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server) |
   | `dev.gutschi.site:8444`  | dev        | `caddy` → `dev-machine:4096` | OpenCode         |
@@ -54,7 +57,7 @@ see [§6.8](#68-deploying--upgrading-the-application)).
   | `www.gutschi.site:8443`  | admin      | `caddy` → `pgwebprod:8081` | Prod DB web UI |
 
 * **`bind9`** is the authoritative DNS for `gutschi.site`, so the subdomains
-  (`www`, `dev`, `logs`) resolve to the home server. Its zone template
+  (`www`, `dev`, `logs`, `wichteln`) resolve to the home server. Its zone template
   (`bind9/db.gutschi.site`) is rendered with `HOST_IP` substituted at start.
 * **`certbot`** issues and auto-renews Let's Encrypt certificates into
   `./certbot/conf`; nginx reloads every 6h to pick up renewed certs.
@@ -86,6 +89,29 @@ cp infrastructure/env.example infrastructure/.env
 $EDITOR infrastructure/.env
 ```
 
+The Wichteln app has its own database and its own secrets. All four
+`WICHTELN_*` values in `env.example` are mandatory:
+
+* `WICHTELN_DB_PASSWORD` — password of the `wichteln` database user.
+* `WICHTELN_SESSION_SECRET` — at least 32 random characters, e.g.
+  `openssl rand -hex 32`.
+* `WICHTELN_ADMIN_USER` / `WICHTELN_ADMIN_PASSWORD` — credentials for the
+  admin area.
+
+Without them the `wichteln` container reports unhealthy and returns `503`.
+
+For local development against `postgresdev`, create the app database once and
+point the dev server at it:
+
+```bash
+docker compose exec postgresdev createdb -U homeserver wichteln
+
+DB_CONNECTION_STRING="postgres://homeserver:homeserver@postgresdev:5432/wichteln?sslmode=disable" \
+SESSION_SECRET="$(openssl rand -hex 32)" \
+ADMIN_USER=admin ADMIN_PASSWORD=dev \
+pnpm dev:wichteln
+```
+
 Before first start you also need
 
 1. **DNS** — `bind9` must resolve `*.gutschi.site` to this host. Set `HOST_IP`
@@ -105,6 +131,7 @@ data.
 | Volume | Holds |
 |--------|-------|
 | `postgres_prod_data` | Prod Postgres data directory (`/var/lib/postgresql/data`) |
+| `postgres_wichteln_data` | Wichteln Postgres data directory — not yet included in the nightly backup |
 | `postgres_dev_data` | Dev Postgres data directory |
 | `dev_home` | The `dev` user's home (`/home/dev`) — git checkout, SSH keys, editor state |
 
@@ -183,7 +210,23 @@ docker run --rm \
   -p 80:80 \
   certbot/certbot certonly --standalone \
     -d dev.gutschi.site -d logs.gutschi.site -d www.gutschi.site
+# Wichteln has its own certificate lineage:
+docker run --rm \
+  -v "$PWD/certbot/conf:/etc/letsencrypt" \
+  -v "$PWD/certbot/www:/var/www/certbot" \
+  -p 80:80 \
+  certbot/certbot certonly --standalone -d wichteln.gutschi.site
 docker compose up -d           # now nginx has certs and can start
+```
+
+Wichteln's nginx block reads `live/wichteln.gutschi.site/`, so that certificate
+must exist **before** the config that references it is deployed; otherwise nginx
+refuses to start. When the stack is already running, issue it through the
+running webroot instead of stopping everything:
+
+```bash
+docker compose run --rm --entrypoint certbot certbot certonly \
+  --webroot -w /var/www/certbot -d wichteln.gutschi.site
 ```
 
 The certs land in `./certbot/conf/live/<domain>/` and are picked up by nginx.

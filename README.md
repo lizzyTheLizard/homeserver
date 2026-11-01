@@ -73,19 +73,20 @@ In production every required var must be set; the app fails fast on startup othe
 
 ## Development workflow
 
-Changes are spec-driven via [OpenSpec](https://github.com/Fission-AI/OpenSpec) and anchored to a GitHub issue. The change name, the branch name, and the issue number are one triple: change `issue-<n>-<slug>` on branch `issue-<n>-<slug>` closing `#<n>`.
+Changes are spec-driven via [OpenSpec](https://github.com/Fission-AI/OpenSpec) and change-first: there is no GitHub issue, and the change name is the branch name.
 
-Agent skills in `.agents/skills/` drive the lifecycle end to end:
+The stock OpenSpec workflows drive the lifecycle end to end:
 
-| Phase | Skill | What happens |
+| Phase | Workflow | What happens |
 |---|---|---|
 | Explore | `openspec-explore` | Understand the problem — nothing is written |
-| File issue | `gh-issue-draft` | Create a GitHub issue from the exploration (issue template) |
-| Start change | `gh-change-start` | Create the `issue-<n>-<slug>` branch and commit the reviewed plan |
+| Propose | `openspec-propose` | Create the `<change>` branch, then the plan; commit it to that branch |
 | Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
-| Ship | `gh-change-ship` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
+| Ship | `openspec-archive-change` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
 
-The `openspec-*` skills are auto-generated and must not be edited by hand; the `gh-*` skills are hand-written glue between OpenSpec and GitHub.
+The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`. The `Change guard` job in `homeserver.yml` enforces on every pull request that the change is archived, named after the branch, and its specs are synced.
+
+The `openspec-*` skills are auto-generated and must not be edited by hand.
 
 ## Architecture
 
@@ -100,10 +101,6 @@ Postgres is accessed through one connection pool created lazily on first use. Tw
 
 Per-row ownership is keyed on the user's email (`owner_email`). There is no `users` table — the email comes from the OIDC `email` claim and is denormalised onto every domain row.
 
-## Design
-
-All design files live in [design/](design/) and can be edited with [OpenDesign](https://open-design.ai/). The folder contains component designs, screen mockups, and exported artifacts for the various apps.
-
 ## Repository layout
 
 ```
@@ -115,7 +112,7 @@ All design files live in [design/](design/) and can be edited with [OpenDesign](
 ├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
 ├── .github/workflows/  CI/CD (lint → test → Docker build → integration smoke → deploy)
-├── .agents/skills/     Agent skills: OpenSpec workflow + GitHub orchestration (see Development workflow)
+├── .agents/skills/     Agent skills: the OpenSpec workflows (see Development workflow)
 ├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```
 
