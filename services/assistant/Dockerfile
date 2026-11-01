@@ -26,7 +26,7 @@ COPY services/assistant/ ./assistant
 RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
 
 # Production dependencies only, so the runtime image does not carry the full
-# dev tree. Mirrors the whatsapp-bridge image's prod-deps stage.
+# dev tree. Mirrors the whatsapp image's prod-deps stage.
 FROM base AS prod-deps
 WORKDIR /app
 COPY package.json ./package.json

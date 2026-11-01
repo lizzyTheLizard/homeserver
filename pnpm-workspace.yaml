@@ -1,7 +1,7 @@
 packages:
   - 'services/web'
   - 'services/assistant'
-  - 'services/whatsapp-bridge'
+  - 'services/whatsapp'
   - 'services/wichteln'
   - 'integration-test'
 allowBuilds:

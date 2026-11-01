@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently -k -n web,bridge,assistant -c blue,green,yellow \"pnpm dev:app\" \"pnpm dev:bridge\" \"pnpm dev:assistant\"",
     "dev:app": "pnpm --filter @homeserver/web dev",
-    "dev:bridge": "pnpm --filter @homeserver/whatsapp-bridge dev",
+    "dev:bridge": "pnpm --filter @homeserver/whatsapp dev",
     "dev:assistant": "pnpm --filter @homeserver/assistant dev",
     "dev:wichteln": "pnpm --filter @homeserver/wichteln dev",
     "build": "pnpm -r build",

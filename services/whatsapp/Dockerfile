@@ -39,19 +39,19 @@ WORKDIR /app
 # package.json is copied here.
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/whatsapp-bridge/package.json ./whatsapp-bridge/package.json
+COPY services/whatsapp/package.json ./whatsapp/package.json
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # ---- Stage 3: build -----------------------------------------------------
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/whatsapp-bridge/node_modules ./whatsapp-bridge/node_modules
+COPY --from=deps /app/whatsapp/node_modules ./whatsapp/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
-COPY services/whatsapp-bridge/ ./whatsapp-bridge
+COPY services/whatsapp/ ./whatsapp
 
-RUN corepack enable pnpm && pnpm --filter @homeserver/whatsapp-bridge build
+RUN corepack enable pnpm && pnpm --filter @homeserver/whatsapp build
 
 # ---- Stage 4: production dependencies only ------------------------------
 # Express, winston and async-mutex (and their transitive deps) are pure
@@ -61,8 +61,8 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
-COPY services/whatsapp-bridge/package.json ./whatsapp-bridge/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp-bridge
+COPY services/whatsapp/package.json ./whatsapp/package.json
+RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp
 
 # ---- Stage 5: runtime ---------------------------------------------------
 # We need slim here as wacli needs glibc
@@ -73,8 +73,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 COPY --from=wacli /usr/local/bin/wacli /usr/local/bin/wacli
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/whatsapp-bridge/node_modules ./whatsapp-bridge/node_modules
-COPY --from=builder /app/whatsapp-bridge/dist ./whatsapp-bridge/dist
+COPY --from=prod-deps /app/whatsapp/node_modules ./whatsapp/node_modules
+COPY --from=builder /app/whatsapp/dist ./whatsapp/dist
 
 ENV NODE_ENV=production
 ENV PORT=8400
@@ -90,7 +90,7 @@ RUN groupadd -g 10001 wabridge \
  && chown -R wabridge:wabridge /data
 USER wabridge
 
-WORKDIR /app/whatsapp-bridge
+WORKDIR /app/whatsapp
 
 EXPOSE 8400
 

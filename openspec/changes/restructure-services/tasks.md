@@ -7,7 +7,7 @@
 
 ## 2. Rename the WhatsApp bridge to whatsapp
 
-- [ ] 2.1 Rename the `services/whatsapp-bridge` folder, workspace package `@homeserver/whatsapp-bridge` and every import/reference to `@homeserver/whatsapp-bridge`, `whatsapp-bridge`, the compose service and the `homeserver-wichteln`-style image reference to `whatsapp`; verify `pnpm --filter @homeserver/whatsapp build && pnpm --filter @homeserver/whatsapp test && pnpm lint:ci` all pass with no remaining `whatsapp-bridge` references.
+- [x] 2.1 Rename the `services/whatsapp-bridge` folder, workspace package `@homeserver/whatsapp-bridge` and every import/reference to `@homeserver/whatsapp-bridge`, `whatsapp-bridge`, the compose service and the `homeserver-wichteln`-style image reference to `whatsapp`; verify `pnpm --filter @homeserver/whatsapp build && pnpm --filter @homeserver/whatsapp test && pnpm lint:ci` all pass with no remaining `whatsapp-bridge` references.
 
 ## 3. Standardise image names on homeserver:<name>
 
