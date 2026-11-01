@@ -1,6 +1,7 @@
 import { Pool, PoolClient } from 'pg'
 import { logger } from '../../logger'
 import { promises as fs } from 'fs'
+import path from 'path'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
 import { splitSql } from './splitSql'
@@ -45,7 +46,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 }
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
-  const migrationsDir = '../db'
+  const migrationsDir = path.join(process.cwd(), 'db')
   const names = (await fs.readdir(migrationsDir))
     .filter(n => n.endsWith('.sql'))
     .sort()
