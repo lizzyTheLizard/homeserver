@@ -31,16 +31,15 @@ read in.
      - [web/cash/reports](web/cash/reports/spec.md) — the cash reports.
      - [web/cash/closing](web/cash/closing/spec.md) — closing and the monthly closing workflow.
    - **[web/admin](web/admin/spec.md)** — metrics, current configuration and cash administration.
-3. **[dev-machine](dev-machine/spec.md)** — the development container: SSH, the browser-based
+3. **[wichteln](wichteln/spec.md)** — the standalone Wichteln app: groups and participant
+   credentials, wishes, the anonymous fair selection, and its PostgreSQL state.
+4. **[dev-machine](dev-machine/spec.md)** — the development container: SSH, the browser-based
    development interfaces, the repository bootstrap and the toolchain.
-4. **[infrastructure](infrastructure/spec.md)** — the deployed stack: the docker-compose services,
+5. **[infrastructure](infrastructure/spec.md)** — the deployed stack: the docker-compose services,
    the reverse proxies and TLS, DNS, and backup and restore.
-5. **[pipeline](pipeline/spec.md)** — the GitHub pipelines, the test suites, linting, the Docker
+6. **[pipeline](pipeline/spec.md)** — the GitHub pipelines, the test suites, linting, the Docker
    image builds and the stack smoke suite.
-6. **[ci/change-guard](ci/change-guard/spec.md)** — the pull-request guard that rejects a change
+7. **[ci/change-guard](ci/change-guard/spec.md)** — the pull-request guard that rejects a change
    which is not archived, not named after its branch, or whose spec deltas were not synced.
-7. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
+8. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
    isolated stores, REST API and health endpoint.
-
-The `wichteln` application's capability is added by its in-flight change in
-[`openspec/changes/wichteln`](../changes/wichteln/proposal.md).
