@@ -37,7 +37,7 @@ The full stack (prod database, application, reverse proxies, DNS, backups, and t
 `dev-machine` container with VS Code + OpenCode) is described in
 [infrastructure/README.md](infrastructure/README.md).
 
-The dev server is at `http://localhost:3000`. All routes are protected by OpenID Connect (Microsoft Azure AD by default). Migrations in [db/](db/) run automatically on first DB connection.
+The dev server is at `http://localhost:3000`. All routes are protected by OpenID Connect (Microsoft Azure AD by default). Migrations in [services/web/db/](services/web/db/) run automatically on first DB connection.
 
 ## Environment
 
@@ -60,7 +60,7 @@ In production every required var must be set; the app fails fast on startup othe
 
 | Command            | Description |
 |--------------------|-------------|
-| `pnpm dev`         | Run web + assistant + whatsapp-bridge together (dev server on :3000) |
+| `pnpm dev`         | Run web + assistant + whatsapp together (dev server on :3000) |
 | `pnpm build`       | Build all packages |
 | `pnpm test`        | Run all tests in all packages (includes the integration smoke suite, which needs Docker) |
 | `pnpm test:watch`  | Tests in watch mode (all packages) |
@@ -105,13 +105,15 @@ Per-row ownership is keyed on the user's email (`owner_email`). There is no `use
 
 ```
 /
-├── web/                Next.js application
-├── assistant/          Standalone assistant service (port 8500, WebSocket)
-├── whatsapp-bridge/    WhatsApp bridge container (wacli + companion)
+├── services/           Deployable services, one folder per container image
+│   ├── web/            Next.js application
+│   ├── assistant/      Standalone assistant service (port 8500, WebSocket)
+│   ├── whatsapp/       WhatsApp bridge container (wacli + companion)
+│   ├── wichteln/       Wichteln app (own migrations in web-style db/ folder)
+│   └── dev-machine/    Development container (code-server, OpenCode, SSH)
 ├── integration-test/   Smoke tests for the full docker-compose stack (Vitest + Playwright)
-├── db/                 SQL migration scripts (see [db/README.md](db/README.md))
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
-├── .github/workflows/  CI/CD (lint → test → Docker build → integration smoke → deploy)
+├── .github/workflows/  CI/CD (per-service build/deploy + shared lint/smoke)
 ├── .agents/skills/     Agent skills: the OpenSpec workflows (see Development workflow)
 ├── openspec/           Spec-driven change sets and main specs (see Development workflow)
 ```
@@ -123,7 +125,7 @@ Inside `app/`, folders that are not Next.js routes are prefixed with `_` (e.g. `
 Three vitest projects run in parallel:
 
 - `unit` — `**/*.tests.ts` (excluding server tests), no DB
-- `integration` — `**/server.tests.ts`, runs against an in-memory PGlite DB seeded with all migrations from `db/`
+- `integration` — `**/server.tests.ts`, runs against an in-memory PGlite DB seeded with all migrations from `services/web/db/`
 - `storybook` — Story interaction tests via Playwright/Chromium
 
 `pnpm test` is configured with `--no-file-parallelism` because the integration tests share the PGlite instance.

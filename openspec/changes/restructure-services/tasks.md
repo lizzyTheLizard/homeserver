@@ -25,7 +25,7 @@
 
 ## 6. Documentation and integration verification
 
-- [ ] 6.1 Update `README.md`, `AGENTS.md`, `infrastructure/README.md` and the compose `env.example` to reflect the `services/` layout, the GHCR image names, the `whatsapp` name and the shared-database prefixes; verify the documented commands run as written.
+- [x] 6.1 Update `README.md`, `AGENTS.md`, `infrastructure/README.md` and the compose `env.example` to reflect the `services/` layout, the GHCR image names, the `whatsapp` name and the shared-database prefixes; verify the documented commands run as written.
 - [ ] 6.2 Run the full `pnpm lint:ci && pnpm build && pnpm test` and the integration smoke suite from a clean checkout to confirm the branch is green end to end.
 
 ## Workflow follow-up
