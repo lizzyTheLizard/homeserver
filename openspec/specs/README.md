@@ -37,5 +37,10 @@ read in.
    the reverse proxies and TLS, DNS, and backup and restore.
 5. **[pipeline](pipeline/spec.md)** — the GitHub pipelines, the test suites, linting, the Docker
    image builds and the stack smoke suite.
-6. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
+6. **[ci/change-guard](ci/change-guard/spec.md)** — the pull-request guard that rejects a change
+   which is not archived, not named after its branch, or whose spec deltas were not synced.
+7. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
    isolated stores, REST API and health endpoint.
+
+The `wichteln` application's capability is added by its in-flight change in
+[`openspec/changes/wichteln`](../changes/wichteln/proposal.md).
