@@ -23,5 +23,5 @@
 
 ## 5. Integration verification
 
-- [ ] 5.1 Prove the guard rejects a mismatch end to end: run `HEAD_REF=wrong-branch BASE_REF=origin/main node scripts/change-guard.mjs` (must exit non-zero and name `branch-per-change`) and run `openspec validate branch-per-change --strict` (must pass).
+- [x] 5.1 Prove the guard rejects a mismatch end to end: run `HEAD_REF=wrong-branch BASE_REF=origin/main node scripts/change-guard.mjs` (must exit non-zero and name `branch-per-change`) and run `openspec validate branch-per-change --strict` (must pass).
 - [ ] 5.2 Prove the config contract is the only description left: run `openspec instructions proposal|apply|archive --change branch-per-change --json` and confirm branch, no-issue, commit and PR rules appear exactly once each, with no reference to a deleted skill.
