@@ -46,7 +46,7 @@ jobs:
           file: services/whatsapp/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/lizzylizard/homeserver-whatsapp:latest
+          tags: ghcr.io/lizzythelizard/homeserver-whatsapp:latest
           cache-from: type=gha,scope=homeserver-whatsapp
           cache-to: type=gha,mode=min,scope=homeserver-whatsapp
   deploy:

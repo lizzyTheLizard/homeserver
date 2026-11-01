@@ -16,17 +16,17 @@ The entire stack is **self-hosted on a single home server** (no cloud provider,
 no Terraform). A single `docker-compose.yml` brings up every component. The five
 service images (`homeserver-web`, `homeserver-assistant`, `homeserver-whatsapp`,
 `homeserver-wichteln` and `homeserver-dev-machine`) are published to GitHub
-Container Registry as `ghcr.io/lizzylizard/<name>:latest` by the per-service CI
+Container Registry as `ghcr.io/lizzythelizard/<name>:latest` by the per-service CI
 workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--upgrading-the-application)).
 
 ### Components
 
 | Concern            | Container (`container_name`)     | Image                       |
 |--------------------|---------------------------------|-----------------------------|
-| App (prod)         | `applicationprod` (`Prod-Application`) | `ghcr.io/lizzylizard/homeserver-web:latest` |
-| Assistant          | `assistant` (`Prod-Assistant`)   | `ghcr.io/lizzylizard/homeserver-assistant:latest` |
-| WhatsApp bridge    | `whatsapp` (`WhatsApp`)          | `ghcr.io/lizzylizard/homeserver-whatsapp:latest` |
-| Wichteln app       | `wichteln` (`Wichteln`)          | `ghcr.io/lizzylizard/homeserver-wichteln:latest` |
+| App (prod)         | `applicationprod` (`Prod-Application`) | `ghcr.io/lizzythelizard/homeserver-web:latest` |
+| Assistant          | `assistant` (`Prod-Assistant`)   | `ghcr.io/lizzythelizard/homeserver-assistant:latest` |
+| WhatsApp bridge    | `whatsapp` (`WhatsApp`)          | `ghcr.io/lizzythelizard/homeserver-whatsapp:latest` |
+| Wichteln app       | `wichteln` (`Wichteln`)          | `ghcr.io/lizzythelizard/homeserver-wichteln:latest` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
 | Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
 | Front TLS proxy    | `nginx` (`Nginx`)                | `nginx:alpine`             |
@@ -36,7 +36,7 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 | Backups            | `backup` (`Backup`)              | built from `db-backup/`    |
 | Logs UI            | `dozzle` (`Dozzle`)              | `amir20/dozzle:latest`     |
 | DB UI (prod)       | `pgwebprod` (`Prod-Pgweb`)       | `sosedoff/pgweb`           |
-| Development        | `dev-machine` (`Dev`)            | `ghcr.io/lizzylizard/homeserver-dev-machine:latest` |
+| Development        | `dev-machine` (`Dev`)            | `ghcr.io/lizzythelizard/homeserver-dev-machine:latest` |
 
 ### How things are reachable
 
@@ -448,7 +448,7 @@ docker compose -f infrastructure/docker-compose.yml \
   `.github/workflows/` (`web.yml`, `assistant.yml`, `whatsapp.yml`,
   `wichteln.yml`, `dev-machine.yml`) that, when its `services/<name>/` folder
   changes, builds and publishes the image to GHCR
-  (`ghcr.io/lizzylizard/homeserver-<name>:latest`) and then pulls it on the
+  (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and then pulls it on the
   server; a shared `homeserver.yml` runs the change guard, lint and the
   integration smoke suite. The compose stack is then started/updated with
   `docker compose up -d`.

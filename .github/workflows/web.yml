@@ -62,7 +62,7 @@ jobs:
           file: services/web/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/lizzylizard/homeserver-web:latest
+          tags: ghcr.io/lizzythelizard/homeserver-web:latest
           cache-from: type=gha,scope=homeserver-web
           cache-to: type=gha,mode=min,scope=homeserver-web
           build-args: |

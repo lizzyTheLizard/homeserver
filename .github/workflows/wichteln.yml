@@ -46,7 +46,7 @@ jobs:
           file: services/wichteln/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/lizzylizard/homeserver-wichteln:latest
+          tags: ghcr.io/lizzythelizard/homeserver-wichteln:latest
           cache-from: type=gha,scope=homeserver-wichteln
           cache-to: type=gha,mode=min,scope=homeserver-wichteln
   deploy:

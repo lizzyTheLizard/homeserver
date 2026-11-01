@@ -46,7 +46,7 @@ jobs:
           file: services/assistant/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/lizzylizard/homeserver-assistant:latest
+          tags: ghcr.io/lizzythelizard/homeserver-assistant:latest
           cache-from: type=gha,scope=homeserver-assistant
           cache-to: type=gha,mode=min,scope=homeserver-assistant
   deploy:
