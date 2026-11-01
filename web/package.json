@@ -14,11 +14,11 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^4.0.74",
+    "@ai-sdk/groq": "^4.0.47",
     "@js-temporal/polyfill": "^0.5.1",
     "ai": "^7.0.123",
     "iron-session": "^9.0.1",
-    "next": "^16.4.3",
+    "next": "^16.3.6",
     "openid-client": "^6.8.8",
     "papaparse": "^5.7.0",
     "pg": "^8.23.1",
@@ -49,7 +49,7 @@
     "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/browser-playwright": "^5.0.3",
+    "@vitest/browser-playwright": "^5.0.5",
     "@vitest/coverage-v8": "^5.0.1",
     "babel-plugin-react-compiler": "1.0.0",
     "dotenv": "^18.0.9",
