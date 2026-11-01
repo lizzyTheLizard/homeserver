@@ -45,7 +45,7 @@ jobs:
           context: .
           file: services/wichteln/Dockerfile
           platforms: linux/amd64
-          push: true
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: ghcr.io/lizzythelizard/homeserver-wichteln:latest
           cache-from: type=gha,scope=homeserver-wichteln
           cache-to: type=gha,mode=min,scope=homeserver-wichteln

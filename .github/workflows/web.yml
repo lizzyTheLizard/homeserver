@@ -61,7 +61,7 @@ jobs:
           context: .
           file: services/web/Dockerfile
           platforms: linux/amd64
-          push: true
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: ghcr.io/lizzythelizard/homeserver-web:latest
           cache-from: type=gha,scope=homeserver-web
           cache-to: type=gha,mode=min,scope=homeserver-web
