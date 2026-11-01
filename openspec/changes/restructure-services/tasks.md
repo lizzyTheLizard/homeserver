@@ -20,7 +20,7 @@
 ## 5. Reorganise the database
 
 - [x] 5.1 Move `db/` into `services/web/db/`, delete `110_microsoft.sql`, and update `app/shared/_external/db/migrate.ts` (and any test/PGlite seeding) to resolve migrations from the new location; verify `pnpm --filter @homeserver/web test` passes and the integration tests seed from `services/web/db/`.
-- [ ] 5.2 Add `services/assistant/db/` with a migration creating `assistant_microsoft_token`, add a migration runner to the assistant's startup, and update `assistant/microsoft/data.ts` to use `assistant_microsoft_token`; verify `pnpm --filter @homeserver/assistant test` passes against a fresh PGlite/in-memory DB.
+- [x] 5.2 Add `services/assistant/db/` with a migration creating `assistant_microsoft_token`, add a migration runner to the assistant's startup, and update `assistant/microsoft/data.ts` to use `assistant_microsoft_token`; verify `pnpm --filter @homeserver/assistant test` passes against a fresh PGlite/in-memory DB.
 - [ ] 5.3 Point `wichteln`'s `DB_CONNECTION_STRING` at the shared homeserver database, remove the `postgreswichteln` service/database and its named volume from `docker-compose.yml`, and update the `wichteln` dev-database bootstrap notes; verify the compose stack comes up with `wichteln` healthy against the shared database and `pnpm --filter @homeserver/wichteln test` passes.
 
 ## 6. Documentation and integration verification

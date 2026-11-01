@@ -7,6 +7,7 @@ import { createAssistantInstance } from './assistant'
 import { Assistant, AssistantEvent, InitialContext } from './types'
 import { handleMicrosoftApi } from './microsoft/route'
 import { handleWhatsappApi } from './whatsapp/route'
+import { initializeDatabase } from './db'
 import z from 'zod'
 
 interface ActiveAssistant {
@@ -19,14 +20,11 @@ interface ActiveAssistant {
 const activeAssistants = new Map<string, ActiveAssistant>()
 const ASSISTANT_TTL_MS = 5 * 60 * 1000
 
-try {
-  main()
-}
-catch (e: unknown) {
+main().catch((e: unknown) => {
   console.error('Error starting assistant', e)
-}
+})
 
-function main() {
+async function main() {
   const server = createServer((req, res) => {
     requestTracing(req, res)
     if (req.url === '/health') {
@@ -64,6 +62,7 @@ function main() {
     logger.error(`Assistant could not listen on ${hostname}:${port.toString()}`, error)
     process.exit(1)
   })
+  await initializeDatabase()
   server.listen(port, hostname, () => {
     logger.info(`Assistant ready on http://${describeBoundAddress(server, hostname)} (listen address from HOSTNAME=${process.env.HOSTNAME ?? 'unset'})`)
   })

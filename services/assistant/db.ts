@@ -1,7 +1,16 @@
 import { Pool, PoolClient } from 'pg'
 import { config } from './config'
+import { runMigrations } from './migrate'
 
 const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING, max: 100 })
+
+/**
+ * Applies the assistant's database migrations. Called once on startup before
+ * the server begins serving requests.
+ */
+export async function initializeDatabase(): Promise<void> {
+  await runMigrations(pool)
+}
 
 /**
  * Executes a function within a transaction. In case of error, the transaction is rolled back.

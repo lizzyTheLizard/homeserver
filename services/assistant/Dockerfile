@@ -46,6 +46,9 @@ RUN adduser --system --uid 1001 nodejs
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/assistant/node_modules ./assistant/node_modules
 COPY --from=builder /app/assistant/dist ./assistant/dist
+# The migrations are read at runtime (process.cwd()/db), so copy them beside the
+# compiled server entrypoint.
+COPY --from=builder --chown=nodejs:nodejs /app/assistant/db ./assistant/db
 
 USER nodejs
 
