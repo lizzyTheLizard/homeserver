@@ -11,7 +11,7 @@
 
 ## 3. Standardise image names on GHCR
 
-- [ ] 3.1 Change the compose stack's image names to the GHCR names `ghcr.io/<owner>/homeserver-web:latest`, `ghcr.io/<owner>/homeserver-assistant:latest`, `ghcr.io/<owner>/homeserver-whatsapp:latest`, `ghcr.io/<owner>/homeserver-wichteln:latest` and `ghcr.io/<owner>/homeserver-dev-machine:latest`, and switch them from `pull_policy: never` to pulling from the registry; verify the compose file references only the GHCR names.
+- [x] 3.1 Change the compose stack's image names to the GHCR names `ghcr.io/<owner>/homeserver-web:latest`, `ghcr.io/<owner>/homeserver-assistant:latest`, `ghcr.io/<owner>/homeserver-whatsapp:latest`, `ghcr.io/<owner>/homeserver-wichteln:latest` and `ghcr.io/<owner>/homeserver-dev-machine:latest`, and switch them from `pull_policy: never` to pulling from the registry; verify the compose file references only the GHCR names.
 
 ## 4. Split the pipeline into per-service workflows
 

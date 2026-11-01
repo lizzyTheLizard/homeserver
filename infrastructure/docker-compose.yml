@@ -33,8 +33,7 @@ services:
 
   whatsapp:
     container_name: WhatsApp
-    image: homeserver:whatsapp
-    pull_policy: never
+    image: ghcr.io/lizzylizard/homeserver-whatsapp:latest
     restart: unless-stopped
     environment:
       WHATSAPP_DATA_DIR: /data
@@ -49,8 +48,7 @@ services:
 
   applicationprod:
     container_name: Application
-    image: homeserver:web
-    pull_policy: never
+    image: ghcr.io/lizzylizard/homeserver-web:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -76,8 +74,7 @@ services:
 
   wichteln:
     container_name: Wichteln
-    image: homeserver:wichteln
-    pull_policy: never
+    image: ghcr.io/lizzylizard/homeserver-wichteln:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -98,8 +95,7 @@ services:
 
   assistant:
     container_name: Assistant
-    image: homeserver:assistant
-    pull_policy: never
+    image: ghcr.io/lizzylizard/homeserver-assistant:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -255,8 +251,7 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   dev-machine:
-    image: homeserver:dev-machine
-    pull_policy: never
+    image: ghcr.io/lizzylizard/homeserver-dev-machine:latest
     container_name: DEV-Machine
     environment:
       REPO_URL: "${REPO_URL}"
