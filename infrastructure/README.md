@@ -48,6 +48,7 @@ directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-applicat
   | Public URL / port        | Basic auth | Backend              | Purpose              |
   |--------------------------|------------|----------------------|----------------------|
   | `www.gutschi.site:443`   | —          | `applicationprod:3000` | The application    |
+  | `wichteln.gutschi.site:443` | —       | `wichteln:3000`      | Wichteln app         |
   | `dev.gutschi.site:443`   | —          | `dev-machine:3000`   | Dev app (when running) |
   | `dev.gutschi.site:8443`  | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server) |
   | `dev.gutschi.site:8444`  | dev        | `caddy` → `dev-machine:4096` | OpenCode         |
@@ -56,7 +57,7 @@ directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-applicat
   | `www.gutschi.site:8443`  | admin      | `caddy` → `pgwebprod:8081` | Prod DB web UI |
 
 * **`bind9`** is the authoritative DNS for `gutschi.site`, so the subdomains
-  (`www`, `dev`, `logs`) resolve to the home server. Its zone template
+  (`www`, `dev`, `logs`, `wichteln`) resolve to the home server. Its zone template
   (`bind9/db.gutschi.site`) is rendered with `HOST_IP` substituted at start.
 * **`certbot`** issues and auto-renews Let's Encrypt certificates into
   `./certbot/conf`; nginx reloads every 6h to pick up renewed certs.
@@ -209,7 +210,23 @@ docker run --rm \
   -p 80:80 \
   certbot/certbot certonly --standalone \
     -d dev.gutschi.site -d logs.gutschi.site -d www.gutschi.site
+# Wichteln has its own certificate lineage:
+docker run --rm \
+  -v "$PWD/certbot/conf:/etc/letsencrypt" \
+  -v "$PWD/certbot/www:/var/www/certbot" \
+  -p 80:80 \
+  certbot/certbot certonly --standalone -d wichteln.gutschi.site
 docker compose up -d           # now nginx has certs and can start
+```
+
+Wichteln's nginx block reads `live/wichteln.gutschi.site/`, so that certificate
+must exist **before** the config that references it is deployed; otherwise nginx
+refuses to start. When the stack is already running, issue it through the
+running webroot instead of stopping everything:
+
+```bash
+docker compose run --rm --entrypoint certbot certbot certonly \
+  --webroot -w /var/www/certbot -d wichteln.gutschi.site
 ```
 
 The certs land in `./certbot/conf/live/<domain>/` and are picked up by nginx.
