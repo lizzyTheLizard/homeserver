@@ -73,19 +73,18 @@ In production every required var must be set; the app fails fast on startup othe
 
 ## Development workflow
 
-Changes are spec-driven via [OpenSpec](https://github.com/Fission-AI/OpenSpec) and anchored to a GitHub issue. The change name, the branch name, and the issue number are one triple: change `issue-<n>-<slug>` on branch `issue-<n>-<slug>` closing `#<n>`.
+Changes are spec-driven via [OpenSpec](https://github.com/Fission-AI/OpenSpec) and change-first: there is no GitHub issue, and the change name is the branch name.
 
-Agent skills in `.agents/skills/` drive the lifecycle end to end:
+The stock OpenSpec workflows drive the lifecycle end to end:
 
-| Phase | Skill | What happens |
+| Phase | Workflow | What happens |
 |---|---|---|
 | Explore | `openspec-explore` | Understand the problem — nothing is written |
-| File issue | `gh-issue-draft` | Create a GitHub issue from the exploration (issue template) |
-| Start change | `gh-change-start` | Create the `issue-<n>-<slug>` branch and commit the reviewed plan |
+| Propose | `openspec-propose` | Create the `<change>` branch, then the plan; commit it to that branch |
 | Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
-| Ship | `gh-change-ship` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
+| Ship | `openspec-archive-change` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
 
-The `openspec-*` skills are auto-generated and must not be edited by hand; the `gh-*` skills are hand-written glue between OpenSpec and GitHub.
+The `openspec-*` skills are auto-generated and must not be edited by hand.
 
 ## Architecture
 

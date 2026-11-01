@@ -2,7 +2,7 @@
 
 ## 1. Remove the skill layer
 
-- [ ] 1.1 Delete `.agents/skills/gh-change-start/`, `.agents/skills/gh-change-ship/` and `.agents/skills/gh-issue-draft/` (including its `issue-template.md`), and remove their rows and flow references from `AGENTS.md` and `README.md`. Verify `ls .agents/skills` lists only `openspec-*` folders and `grep -rn "gh-change-start\|gh-change-ship\|gh-issue-draft" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=openspec .` returns nothing.
+- [x] 1.1 Delete `.agents/skills/gh-change-start/`, `.agents/skills/gh-change-ship/` and `.agents/skills/gh-issue-draft/` (including its `issue-template.md`), and remove their rows and flow references from `AGENTS.md` and `README.md`. Verify `ls .agents/skills` lists only `openspec-*` folders and `grep -rn "gh-change-start\|gh-change-ship\|gh-issue-draft" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=openspec .` returns nothing.
 
 ## 2. Encode the lifecycle in openspec/config.yaml
 
