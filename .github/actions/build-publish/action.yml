@@ -11,6 +11,9 @@ inputs:
     description: Newline-separated build arguments
     required: false
     default: ''
+  token:
+    description: GitHub token for GHCR login
+    required: true
 runs:
   using: "composite"
   steps:
@@ -21,7 +24,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.token }}
     - name: Build and push
       uses: docker/build-push-action@v7
       with:

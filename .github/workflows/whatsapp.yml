@@ -80,6 +80,7 @@ jobs:
         with:
           image: homeserver-whatsapp
           dockerfile: services/whatsapp/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     name: Deploy WhatsApp
     needs: build
@@ -91,6 +92,9 @@ jobs:
         uses: ./.github/actions/deploy-service
         with:
           service: whatsapp
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
   gate:
     name: Gate WhatsApp
     runs-on: ubuntu-latest

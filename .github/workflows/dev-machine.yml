@@ -50,6 +50,7 @@ jobs:
         with:
           image: homeserver-dev-machine
           dockerfile: services/dev-machine/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     name: Deploy Dev Machine
     needs: build
@@ -61,6 +62,9 @@ jobs:
         uses: ./.github/actions/deploy-service
         with:
           service: dev-machine
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
   gate:
     name: Gate Dev Machine
     runs-on: ubuntu-latest

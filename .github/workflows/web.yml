@@ -96,6 +96,7 @@ jobs:
         with:
           image: homeserver-web
           dockerfile: services/web/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             GIT_COMMIT_HASH=${{ github.sha }}
             GIT_BRANCH=${{ github.ref_name }}
@@ -112,6 +113,9 @@ jobs:
         uses: ./.github/actions/deploy-service
         with:
           service: applicationprod
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
   gate:
     name: Gate Web
     runs-on: ubuntu-latest

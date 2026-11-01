@@ -80,6 +80,7 @@ jobs:
         with:
           image: homeserver-wichteln
           dockerfile: services/wichteln/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     name: Deploy Wichteln
     needs: build
@@ -91,6 +92,9 @@ jobs:
         uses: ./.github/actions/deploy-service
         with:
           service: wichteln
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
   gate:
     name: Gate Wichteln
     runs-on: ubuntu-latest
