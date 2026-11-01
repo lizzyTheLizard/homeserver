@@ -9,7 +9,8 @@ export async function GET() {
     await query('SELECT 1')
     return Response.json({ status: 'ok' })
   }
-  catch {
+  catch (error) {
+    console.error('Wichteln health check failed:', error)
     return Response.json({ status: 'unhealthy' }, { status: 503 })
   }
 }
