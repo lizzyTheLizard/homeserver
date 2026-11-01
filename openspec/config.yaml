@@ -37,5 +37,10 @@ operations:
   apply:
     guidance:
       - "Work one task at a time. After finishing a task and ticking its checkbox, stop and show the user the diff for review. Do not begin the next task before they have responded."
-      - "Once the user approves a task's diff, commit and push it. The commit message must follow the standard format: `<short imperative message> (#<NUMBER>)` and include the `OpenSpec-Change: <change>` and `Agent: <agent>` trailer."
-      - "After the last task, do not archive yourself. Ask the user to run the gh-change-ship skill instead"
+      - "Once the user approves a task's diff, commit and push it. The commit message must follow the standard format: `<short imperative message>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Do not add an issue number."
+      - "After the last task, do not archive yourself. Ask the user to run the openspec-archive-change workflow instead."
+  archive:
+    guidance:
+      - "Commit the archive isolated to `openspec/`: stage `-A openspec`, make sure nothing else is staged, and commit as `Archive <change>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Then push the branch."
+      - "Open the pull request from the change branch to `main` with `gh pr create --body-file`: a `## Summary` heading, 2-4 bullets, an `OpenSpec-Change: <change>` line and a link to the archived proposal at `openspec/changes/archive/<date>-<change>/proposal.md`. Do not add a `Closes` line or an issue number."
+      - "Arm auto-merge with `gh pr merge --auto --squash`, report the PR URL, and watch the checks until they are green."
