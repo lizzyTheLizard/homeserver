@@ -2,37 +2,57 @@
 
 ## Purpose
 
-Defines the continuous-integration and test work: the GitHub pipelines that lint, test, build and deploy the stack, the test suites that run locally and in CI, and the Docker image builds that feed the smoke suite and the deployment.
+Defines the continuous-integration and test work: the GitHub pipeline that lints, tests, builds and deploys the stack, the test suites that run locally and in CI, and the Docker image builds that feed the smoke suite and the deployment.
 
 ## Requirements
 
-### Requirement: The pipeline runs the checks in order on every push
+### Requirement: The pipeline runs on every push and on demand
 
-The pipeline SHALL run linting, the test suites and the Docker image builds for the application, the assistant, the WhatsApp bridge and the development machine, and SHALL run the deploy only after those checks and the stack smoke suite have passed.
+The pipeline SHALL run on every push to any branch and on manual dispatch, and SHALL NOT run on pull requests, so the required merge check is the aggregate the pipeline publishes for a push.
 
-#### Scenario: Checks run before deploy
+#### Scenario: A push runs the pipeline
+- **WHEN** a commit is pushed to any branch
+- **THEN** the linting, test and build jobs run
+
+#### Scenario: A manual run is possible
+- **WHEN** the pipeline is dispatched by hand
+- **THEN** the same jobs run as for a push
+
+### Requirement: Every package is linted and tested
+
+The pipeline SHALL lint every package and SHALL run the assistant's tests, the web application's three test projects and the WhatsApp bridge's tests, and SHALL run the stack smoke suite in addition. A failing job SHALL stop the jobs that depend on it.
+
+#### Scenario: All checks run
 - **WHEN** a push reaches the pipeline
-- **THEN** linting, the test suites and the image builds run, and the deploy does not start before they and the smoke suite pass
+- **THEN** the lint job, the five test jobs and the four image builds run
 
-#### Scenario: A failing check stops the run
-- **WHEN** linting, testing, an image build or the smoke suite fails
-- **THEN** the dependent jobs, including the deploy, do not run
+#### Scenario: A failing check stops its dependants
+- **WHEN** any lint, test or build job fails
+- **THEN** the smoke suite and the deploy do not run
 
-#### Scenario: Deploy publishes the stack
-- **WHEN** the pipeline runs on the main branch with every check and the smoke suite green
-- **THEN** the deploy synchronises the stack and the built images to the server, recreates the services and waits for them to report running or healthy
+### Requirement: Linting can fix locally and only reports in CI
 
-### Requirement: The test suites run as parallel projects
+The linting task SHALL apply fixes when run locally and SHALL only report problems without changing files when run for CI.
 
-The test suite SHALL consist of three projects that run in parallel: a unit project for the fast tests, an integration project for the server actions and a Storybook project for the component interaction tests.
+#### Scenario: Local lint fixes files
+- **WHEN** the linting task runs locally
+- **THEN** it applies the available fixes
+
+#### Scenario: CI lint does not change files
+- **WHEN** the linting task runs for CI
+- **THEN** it reports problems without modifying files
+
+### Requirement: The web application's tests run as three parallel projects
+
+The web application's test suite SHALL consist of three projects that run in parallel: a unit project for the fast tests, an integration project for the server actions and a Storybook project for the component interaction tests.
 
 #### Scenario: Unit project runs the fast tests
 - **WHEN** the unit project runs
 - **THEN** it executes the unit test files and excludes the server tests
 
-#### Scenario: Integration project runs the server tests
+#### Scenario: Integration project runs the server tests that exist
 - **WHEN** the integration project runs
-- **THEN** it executes the integration test file that sits beside each server action
+- **THEN** it executes every `server.tests.ts` file that sits beside a server action, and an action without such a file is simply not covered
 
 #### Scenario: Storybook project runs the interaction tests
 - **WHEN** the Storybook project runs
@@ -48,95 +68,43 @@ The integration tests SHALL run against an in-memory database that has been seed
 
 ### Requirement: Storybook interaction tests need a browser
 
-The Storybook project SHALL run its interaction tests in a Chromium browser, and a machine that is to run it SHALL have that browser's binary installed.
+The Storybook project SHALL run its interaction tests in a Chromium browser, and the pipeline SHALL install that browser before running the project.
+
+#### Scenario: The pipeline installs the browser
+- **WHEN** the Storybook job runs in the pipeline
+- **THEN** it installs Chromium before running the interaction tests
 
 #### Scenario: Missing browser blocks the Storybook project
 - **WHEN** the Storybook project runs on a machine without the browser binary
 - **THEN** the interaction tests cannot run until the browser is installed
 
-### Requirement: Linting can fix locally and only reports in CI
+### Requirement: Four images are built on every push
 
-The linting task SHALL apply fixes when run locally and SHALL only report problems without changing files when run for CI.
+The pipeline SHALL build the application, the assistant, the WhatsApp bridge and the development machine as `linux/amd64` images named `homeserver`, `homeserver-assistant`, `whatsapp-bridge` and `homeserver-dev-machine`, SHALL tag the application image with the deployed revision's commit, branch, pipeline run and build time, and SHALL upload each image as a build artifact.
 
-#### Scenario: Local lint fixes files
-- **WHEN** the linting task runs locally
-- **THEN** it applies the available fixes
+#### Scenario: All four images are built
+- **WHEN** a push reaches the pipeline
+- **THEN** all four images are built and uploaded as artifacts
 
-#### Scenario: CI lint does not change files
-- **WHEN** the linting task runs for CI
-- **THEN** it reports problems without modifying files
+#### Scenario: The application image carries its revision
+- **WHEN** the application image is built
+- **THEN** it records the commit, branch, pipeline run and build time that produced it
 
-### Requirement: Cached image builds
+### Requirement: The stack smoke suite runs against the built images
 
-The CI image builds SHALL cache each build stage's output so that a push with no change to a service's dependency manifests reuses previously installed dependencies instead of re-installing them, and no change to the sources reuses the previously built output instead of rebuilding it.
-
-#### Scenario: No source change reuses cached build
-- **WHEN** a push reaches an image build with no change to that service's sources or dependency manifests since the last build that populated the cache
-- **THEN** the build reuses the cached dependency install and cached build output without re-running them
-
-#### Scenario: Source change rebuilds only what changed
-- **WHEN** a push changes a service's sources but not its dependency manifests
-- **THEN** the dependency install is reused from cache and only the build of the changed sources runs
-
-### Requirement: Cache export does not dominate the build
-
-The CI image builds SHALL export only the cache layers needed for the next build rather than every intermediate stage, so the cache export is not the largest line item in each build job.
-
-#### Scenario: Cache export is bounded
-- **WHEN** an image build runs
-- **THEN** the time spent exporting cache is below the time spent performing the actual dependency install and build
-
-### Requirement: Production-runnable images are preserved
-
-The CI image builds SHALL continue to produce valid, production-runnable `homeserver:latest`, `homeserver-assistant:latest`, and `whatsapp-bridge:latest` images that the smoke suite and deploy jobs load and run exactly as before.
-
-#### Scenario: Images load and run unchanged
-- **WHEN** the image builds complete
-- **THEN** the exported images start their services and serve traffic, and the smoke suite and deploy jobs function identically to before the caching and output changes
-
-### Requirement: Smoke suite runs before deploy on every push
-
-The pipeline SHALL build the application, WhatsApp bridge, assistant, and development-machine images on every push. The pipeline SHALL run a stack smoke suite that depends on those four build jobs, and the deploy job SHALL depend on the smoke suite, so the suite passes before the deploy step starts.
-
-#### Scenario: Broken build blocked before deploy
-- **WHEN** a push builds all images but the stack smoke suite fails
-- **THEN** the deploy job does not start and the workflow run reports failure
-
-#### Scenario: Green run deploys
-- **WHEN** all build jobs and the stack smoke suite pass on the main branch
-- **THEN** the deploy job runs
+The pipeline SHALL run a stack smoke suite that depends on all four image builds, SHALL bootstrap the stack from the uploaded artifacts so that the four built images are loaded rather than rebuilt, SHALL remove the stack and its volumes afterwards even when a check fails, and SHALL expose the service logs when a check fails.
 
 #### Scenario: Smoke suite tests the built images
 - **WHEN** the smoke suite job starts
-- **THEN** it downloads and loads the image artifacts produced by the build jobs and boots the stack with exactly those images, without rebuilding them
-
-### Requirement: Single required merge check
-
-The workflow SHALL expose one aggregated job, "All Build Check Success", that depends on every testing, linting, and building job in the pipeline, including the stack smoke suite. This aggregated job SHALL be the only status check required to merge a pull request.
-
-#### Scenario: Aggregated check passes when all jobs pass
-- **WHEN** every testing, linting, and building job (including the smoke suite) passes
-- **THEN** "All Build Check Success" passes and the pull request is mergeable
-
-#### Scenario: Aggregated check blocks merge on any failure
-- **WHEN** any testing, linting, or building job (including the smoke suite) fails
-- **THEN** "All Build Check Success" fails and the pull request is not mergeable
-
-### Requirement: Documented local run
-
-The suite SHALL run locally through the documented step sequence and require only the optional `AI_API_KEY` — no Entra credentials and no other secrets. The stack images are built locally first, certificates are generated, the stack is brought up, the checks run, and the stack is torn down.
-
-#### Scenario: Local run with only AI_API_KEY
-- **WHEN** a developer follows the documented steps (certs, hosts entries, `infrastructure/.env`, compose up, `pnpm test`, compose down) with only `AI_API_KEY` available
-- **THEN** the full stack boots, all checks run, and pass or fail is reported
-
-### Requirement: Pipeline lifecycle
-
-The CI pipeline SHALL bring the stack up (`docker compose up --wait`, covering healthchecked services), then run the checks — which poll the services without healthchecks themselves — and SHALL tear the stack down after the run, including when checks fail, leaving no orphan containers.
+- **THEN** it downloads and loads the image artifacts produced by the build jobs and boots the stack with them
 
 #### Scenario: Clean teardown on failure
 - **WHEN** one or more checks fail
 - **THEN** the stack is still torn down and no orphan containers remain
+
+#### Scenario: Logs are surfaced on failure
+- **WHEN** a check fails
+- **THEN** the stack's logs are printed to the run
 
 ### Requirement: Infrastructure service checks
 
@@ -148,7 +116,7 @@ The suite SHALL assert that SSH on port 2222 accepts TCP connections, bind9 answ
 
 ### Requirement: Authenticated page checks via headless browser
 
-The suite SHALL use a headless browser that accepts the self-signed certificates to authenticate through the mock OIDC flow and verify client-rendered content: the main page shows the assistant greeting with the assistant exercised using `AI_API_KEY`, and the WhatsApp page renders a QR code region.
+The suite SHALL use a headless browser that accepts the self-signed certificates to authenticate through the mock OIDC flow and verify client-rendered content: the main page shows the assistant greeting, and the WhatsApp page renders a QR code region.
 
 #### Scenario: Assistant greeting is rendered
 - **WHEN** the browser is authenticated and opens the main page
@@ -160,8 +128,48 @@ The suite SHALL use a headless browser that accepts the self-signed certificates
 
 ### Requirement: Test-mode stack configuration
 
-The test stack SHALL run with self-signed certificates generated by a committed helper, a mock OIDC server as the identity provider, and fixed non-secret test values (`ADMIN_EMAIL`, the database password, `SESSION_PASSWORD`, `APP_URL`, `CLIENT_ID` and `CLIENT_SECRET`, and `LOGIN_ISSUER` pointing at the mock server). The only real secret is `AI_API_KEY`, which is passed to the assistant service.
+The test stack SHALL run with self-signed certificates generated by a committed helper, a mock OIDC server as the identity provider on a remapped port, its own compose project name, and fixed non-secret test values (`ADMIN_EMAIL`, the database password, `SESSION_PASSWORD`, `APP_URL`, `CLIENT_ID`, `CLIENT_SECRET` and `LOGIN_ISSUER` pointing at the mock server). The only real secret is `AI_API_KEY`, which the application and the assistant both require at start-up.
 
 #### Scenario: Authentication works without Entra
 - **WHEN** a browser completes the OIDC flow against the mock server
 - **THEN** the application establishes an authenticated session without contacting the real Entra identity provider
+
+#### Scenario: The suite does not touch the deployment
+- **WHEN** the smoke suite runs
+- **THEN** it uses its own compose project name and remapped ports, so it does not collide with a running deployment
+
+### Requirement: One aggregated merge check
+
+The pipeline SHALL publish one aggregated job, "All Build Check Success", that depends on every lint, test, build and smoke job, and that job SHALL be the check required to merge a pull request.
+
+#### Scenario: Aggregated check passes when all jobs pass
+- **WHEN** every lint, test, build and smoke job passes
+- **THEN** "All Build Check Success" passes and the pull request is mergeable
+
+#### Scenario: Aggregated check blocks merge on any failure
+- **WHEN** any lint, test, build or smoke job fails
+- **THEN** "All Build Check Success" fails and the pull request is not mergeable
+
+### Requirement: Deploy runs only on the main branch
+
+The deploy job SHALL depend on the aggregated check, SHALL run only for a push to the main branch, SHALL be skipped for a Dependabot push, and SHALL synchronise the stack definition and the four images to the server, load the images, recreate the services and wait until they report running or healthy before pruning the previous images.
+
+#### Scenario: Deploy publishes the stack
+- **WHEN** the pipeline runs on the main branch with every check and the smoke suite green
+- **THEN** the deploy synchronises the stack and the built images to the server, recreates the services and waits for them to report running or healthy
+
+#### Scenario: A failing check blocks the deploy
+- **WHEN** any check or the smoke suite fails on the main branch
+- **THEN** the deploy does not run
+
+#### Scenario: A dependabot push does not deploy
+- **WHEN** the push was made by the dependency bot
+- **THEN** the deploy job is skipped
+
+### Requirement: The smoke suite runs locally against a locally built stack
+
+The suite SHALL be runnable locally through the integration-test package against a stack the developer has built and brought up, using the committed test configuration and project name.
+
+#### Scenario: Local run of the smoke suite
+- **WHEN** a developer builds the images, brings the test stack up and runs the integration-test package
+- **THEN** the suite runs its checks against that stack and reports pass or fail

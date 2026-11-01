@@ -20,7 +20,7 @@ The reports page SHALL present the project's accounts grouped into the five summ
 
 ### Requirement: Report values follow the account's classification
 
-A report SHALL show a summation account's balance and an Expense, Income or Profit account's change within the selected period, SHALL sign-invert credit accounts, and SHALL present a value whose magnitude is negligible as zero.
+A report SHALL show a summation account's balance and an Expense, Income or Profit account's change within the selected period, SHALL sign-invert credit accounts, and SHALL present a value whose magnitude is below 0.005 as zero.
 
 #### Scenario: Summation account shows its balance
 - **WHEN** a summation account is listed in a report
@@ -31,7 +31,7 @@ A report SHALL show a summation account's balance and an Expense, Income or Prof
 - **THEN** only its change within the selected period is shown
 
 #### Scenario: Negligible values show as zero
-- **WHEN** an account's report value is negligibly small
+- **WHEN** an account's report value is below 0.005 in magnitude
 - **THEN** the report shows zero
 
 ### Requirement: Archived accounts without a value are hidden
@@ -48,7 +48,7 @@ A report SHALL hide an account that is archived and has no value, and SHALL show
 
 ### Requirement: Reports expose the period's close or reopen action
 
-The reports page SHALL offer to reopen the period when the project's latest closing reaches the end of the selected period, and SHALL otherwise offer to close the period.
+The reports page SHALL offer to reopen the period when the project's latest closing reaches the end of the selected period, and SHALL otherwise offer to close the period. Both actions SHALL only be offered for a period that can be closed or reopened, that is a single month or a single year, and the chosen capital and profit accounts SHALL be pre-filled from the latest closing.
 
 #### Scenario: Closed period offers reopening
 - **WHEN** the latest closing date is on or after the period's last day
@@ -57,3 +57,7 @@ The reports page SHALL offer to reopen the period when the project's latest clos
 #### Scenario: Open period offers closing
 - **WHEN** the latest closing date is before the period's last day
 - **THEN** the reports page offers to close the period
+
+#### Scenario: A period that cannot be closed offers no action
+- **WHEN** the selected period is all history, open-ended or a single day
+- **THEN** neither action is offered, because it could never succeed

@@ -28,7 +28,7 @@ Each history entry SHALL show the discussion's title, its last-update time, its 
 
 ### Requirement: History search filters across all columns
 
-The history page SHALL provide a search field that filters the listed discussions, matching the entered text case-insensitively against any of the displayed columns and keeping the rows that match any of them.
+The history page SHALL provide a search field that filters the listed discussions: text columns SHALL match case-insensitively anywhere in their value, date and number columns SHALL match at the start of their value, and a discussion SHALL remain listed when any column matches.
 
 #### Scenario: Search matches any column
 - **WHEN** the user enters text that appears in a discussion's title, context or text
@@ -40,11 +40,19 @@ The history page SHALL provide a search field that filters the listed discussion
 
 ### Requirement: History can be sorted by its columns
 
-The history page SHALL let the user sort the list by clicking a column header, toggling that column between ascending and descending order and starting from the most recently updated first.
+Clicking a column header SHALL sort the list by that column, in ascending order on the first click and descending on the second, and SHALL remove the sort on the third click, falling back to the most recently updated first. Selecting another column SHALL replace the active sort.
 
 #### Scenario: Sorting by a column
 - **WHEN** the user clicks a column header
-- **THEN** the list is ordered by that column
+- **THEN** the list is ordered ascending by that column
+
+#### Scenario: A second click reverses the order
+- **WHEN** the user clicks the same column header again
+- **THEN** the list is ordered descending by that column
+
+#### Scenario: A third click removes the sort
+- **WHEN** the user clicks the same column header a third time
+- **THEN** the list returns to the default order, most recently updated first
 
 #### Scenario: Default order is by last update
 - **WHEN** the history page opens

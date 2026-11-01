@@ -34,16 +34,24 @@ The settings page SHALL let the user create, edit and delete context templates, 
 - **WHEN** the user confirms deleting a template that has discussions
 - **THEN** the template and its discussions are gone
 
+#### Scenario: Deletion warns about the discussions
+- **WHEN** the user activates delete for a template
+- **THEN** the confirmation says that the template's discussions are deleted too
+
 ### Requirement: Template parameters are declared in the template text
 
-The settings page SHALL derive a template's parameters from the placeholders in its text, where each placeholder names a parameter and its type, and SHALL reject a template whose placeholder is malformed or names an unsupported type.
+The settings page SHALL derive a template's parameters from the placeholders in its text, written `{name:TYPE}` or `{name:TYPE:value1,value2}`, where the type is one of `STRING`, `SELECT` or `TEXT` (written in any case). It SHALL reject a placeholder whose name is empty, whose syntax is not of that form, or whose type is not one of the supported types.
 
 #### Scenario: Placeholders become parameters
 - **WHEN** a template's text declares a placeholder with a name and a supported type
-- **THEN** the saved template exposes that parameter to the editor
+- **THEN** the saved template exposes that parameter to the editor, typed according to the placeholder
+
+#### Scenario: Several values declare a select parameter
+- **WHEN** a placeholder lists values after its type
+- **THEN** the parameter is offered as a selection of those values
 
 #### Scenario: Malformed placeholder is rejected
-- **WHEN** a template's text contains a placeholder that does not follow the declared syntax
+- **WHEN** a template's text contains a placeholder whose name is empty or whose syntax does not follow the declared form
 - **THEN** the save fails with an error describing the expected syntax
 
 #### Scenario: Unsupported parameter type is rejected
@@ -52,15 +60,19 @@ The settings page SHALL derive a template's parameters from the placeholders in 
 
 ### Requirement: A user without templates gets two defaults
 
-When a user has no templates, CoEditor SHALL provide the default templates "No Context" and "With Context" so the editor is usable without any setup.
+When a user has no templates, CoEditor SHALL create and store the default templates "No Context" and "With Context" so the editor is usable without any setup, and SHALL recreate them if the user deletes every template.
 
 #### Scenario: Defaults appear for a new user
 - **WHEN** a user with no templates opens the editor or the settings page
-- **THEN** the templates "No Context" and "With Context" are available
+- **THEN** the templates "No Context" and "With Context" are created and available
+
+#### Scenario: Defaults return after deleting every template
+- **WHEN** the user deletes their last template and reopens the editor or the settings page
+- **THEN** the two default templates are created again
 
 ### Requirement: Editing happens in a sidebar with confirmed deletion
 
-Creating and editing a profile or a template SHALL happen in a sidebar that saves the entry, shows a pending state while saving, reports a failed save, and requires a confirmation step before deleting.
+Creating and editing a profile or a template SHALL happen in a sidebar that saves the entry, shows a pending state while saving, reports a failed save in the sidebar, and requires a confirmation step before deleting.
 
 #### Scenario: Failed save is reported
 - **WHEN** saving a profile or template fails

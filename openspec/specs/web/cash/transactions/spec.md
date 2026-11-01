@@ -20,11 +20,15 @@ Every transaction SHALL belong to one cash project and SHALL record the account 
 
 ### Requirement: Transaction input is validated
 
-Transaction input SHALL be validated as identifiers for the project and both accounts, a number amount and a valid date, and creating a transaction SHALL require the project to belong to the signed-in user.
+Transaction input SHALL be validated as identifiers for the project and both accounts, an amount that is a number, a date in the `YYYY-MM-DD` form that names a real calendar day, and a non-blank description, and creating a transaction SHALL require the project to belong to the signed-in user.
 
 #### Scenario: Malformed input is rejected
 - **WHEN** a transaction is saved with a missing or malformed field
 - **THEN** the save is rejected
+
+#### Scenario: An impossible date is rejected
+- **WHEN** a transaction is saved with a date that is not a real calendar day
+- **THEN** the save is rejected instead of failing later in the database
 
 #### Scenario: Booking into a foreign project is rejected
 - **WHEN** a user creates a transaction for a project they do not own
@@ -32,7 +36,7 @@ Transaction input SHALL be validated as identifiers for the project and both acc
 
 ### Requirement: Transactions in a closed period cannot be changed
 
-A transaction SHALL NOT be created, changed or deleted when its date lies on or before the project's latest closing date, and a change SHALL also be refused when the transaction's existing date is closed.
+A transaction SHALL NOT be created, changed or deleted when its date lies on or before the project's latest closing date, and a change SHALL also be refused when the transaction's existing date is closed. The refusal SHALL name the closed period.
 
 #### Scenario: New transaction in a closed period is refused
 - **WHEN** a transaction is saved with a date on or before the latest closing date
@@ -87,67 +91,79 @@ The account journal SHALL list the selected account's ledger entries inside the 
 - **THEN** the account's ledger entries for the period are listed with their running total
 
 #### Scenario: Total column follows the account's classification
-- **WHEN** the account is a sum of the running balance (a summation account)
+- **WHEN** the account is a summation account
 - **THEN** the total column shows the accumulated balance, sign-inverted for a credit account
 
 #### Scenario: Period change account shows the change
 - **WHEN** the selected account is an Expense, Income or Profit account
 - **THEN** the total column shows the change within the period rather than the accumulated balance
 
-### Requirement: An account journal entry records one side of a transaction
+### Requirement: An account journal booking records one side of a transaction
 
-Booking from the account journal SHALL take one account and one other account, SHALL debit the selected account for a positive amount and credit it for a negative amount, and SHALL store the amount unsigned.
+Booking from the account journal SHALL take the selected account and one other account, SHALL debit the selected account for an amount that increases its own balance and credit it for an amount that decreases it, and SHALL store the amount unsigned.
 
-#### Scenario: Positive amount debits the account
-- **WHEN** the user books a positive amount from the account journal
+#### Scenario: An amount that increases the balance debits the account
+- **WHEN** the user books an amount that increases the selected account's own balance
 - **THEN** the selected account is the debit side of the transaction
 
-#### Scenario: Negative amount credits the account
-- **WHEN** the user books a negative amount from the account journal
+#### Scenario: An amount that decreases the balance credits the account
+- **WHEN** the user books an amount that decreases the selected account's own balance
 - **THEN** the selected account is the credit side of the transaction
+
+#### Scenario: Credit accounts invert the entered sign
+- **WHEN** the user books a positive amount on a credit account
+- **THEN** the credit account is the credit side, because its displayed balance is sign-inverted
 
 ### Requirement: Derived ledger rows are not editable
 
-The account journal SHALL show the opening-balance row, the closing rows and the remaining-amount rows without offering to edit or delete them.
+The account journal SHALL show the opening-balance row and the closing rows without offering to edit or delete them. Rows that describe a real transaction, including the monthly closing's remaining-amount transaction, remain editable.
 
 #### Scenario: Closing row is read-only
 - **WHEN** the user selects a closing entry in the account journal
 - **THEN** no edit or delete action is offered
 
-### Requirement: Balance chart above the transaction table
+#### Scenario: A remaining-amount transaction is editable
+- **WHEN** the account journal shows the monthly closing's remaining-amount transaction
+- **THEN** it can be edited and deleted like any other transaction
 
-When an account is selected on the account journal page, the page SHALL display a line chart of the account's balance over the selected period directly above the transaction table.
+### Requirement: The account journal shows a balance chart above the transaction table
+
+When an account is selected on the account journal page and its selected period contains ledger entries, the page SHALL display a chart of the account's balance over that period directly above the transaction table; no chart SHALL be shown on the general journal or for an empty period.
 
 #### Scenario: Chart shown when an account is selected
 - **WHEN** a user opens the journal for a single account that has transactions in the selected period
-- **THEN** a line chart appears above the transaction table
+- **THEN** a chart appears above the transaction table
 
 #### Scenario: No chart on the general journal
 - **WHEN** a user opens the general journal without selecting a single account
 - **THEN** no balance chart is displayed
 
-### Requirement: Chart presentation matches the transaction table's totals
+#### Scenario: Empty period hides the chart
+- **WHEN** a user opens the journal for an account whose selected period has no transactions
+- **THEN** no chart is shown and the transaction table renders as before
 
-The chart SHALL present the account's balance the same way as the transaction table's Total column. For summation accounts it is a line of the running balance starting at the opening balance carried into the period; for expense, income and profit accounts it is a bar chart whose bars show only each group's net balance change. Credit accounts are sign-inverted, like the table.
+### Requirement: The chart type and values match the transaction table's total
+
+The chart SHALL present the account's balance the same way as the transaction table's Total column. A summation account SHALL be shown as a line of the running balance starting at the opening balance carried into the period; an Expense, Income or Profit account SHALL be shown as a bar chart whose bars show each group's net balance change. Credit accounts SHALL be sign-inverted, like the table.
 
 #### Scenario: Summation account shows a running-balance line
-- **WHEN** the account journal page shows an opening balance row in the transaction table (a summation account)
+- **WHEN** the account journal page shows an opening balance row in the transaction table
 - **THEN** the chart is a line whose first data point is that opening balance, before the first transaction of the period
 
 #### Scenario: Expense or income account shows bars of per-group differences
-- **WHEN** the selected account is an expense, income or profit account
-- **THEN** the chart is a bar chart with one bar per day (month period), month (year period), or year (all history), each bar showing only that group's net balance change
+- **WHEN** the selected account is an Expense, Income or Profit account
+- **THEN** the chart is a bar chart with one bar per group, each bar showing only that group's net balance change
 
-### Requirement: Chart plots one point per period group
+### Requirement: The chart plots one point per period group
 
-The chart SHALL show at most one point (or bar) per group, with the grouping matching the selected period: a single-month period groups by day, a single-year period by month, and the whole history by year. For bars, each group shows its net balance change (the difference between consecutive group-ending balances, or from the carried-in balance for the first group).
+The chart SHALL show at most one point or bar per group, with the grouping matching the selected period: a single-month period groups by day, a single-year period by month, and the whole history by year.
 
 #### Scenario: Each period group contributes one point
 - **WHEN** the chart renders the transactions of the selected period
-- **THEN** each day (month period), month (year period), or year (all history) contributes a single point or bar, in period order
+- **THEN** each day, month or year contributes a single point or bar, in period order
 
 #### Scenario: Several transactions in one group collapse
-- **WHEN** multiple transactions of the selected period fall within the same day, month, or year group
+- **WHEN** multiple transactions of the selected period fall within the same group
 - **THEN** the chart shows a single point for that group (the last transaction's running balance) or a single bar (the group's net change)
 
 ### Requirement: Responsive chart layout
@@ -161,11 +177,3 @@ The chart SHALL fit the page layout at desktop and mobile widths.
 #### Scenario: Mobile layout
 - **WHEN** the account journal is viewed at mobile width
 - **THEN** the chart fits within the viewport width without horizontal overflow
-
-### Requirement: Chart hidden when no transactions
-
-The chart SHALL be hidden when the selected period has no transactions to display.
-
-#### Scenario: Empty period hides the chart
-- **WHEN** a user opens the journal for an account whose selected period has no transactions
-- **THEN** no chart is shown and the transaction table renders as before

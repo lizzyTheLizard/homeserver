@@ -16,7 +16,7 @@ While the WhatsApp account is not paired, the page SHALL show a QR code to scan 
 
 ### Requirement: The page lists the account's chats
 
-The page SHALL list the account's chats with their name, whether they are a group, whether they are archived and the time of their last message, and SHALL offer a search over the list.
+The page SHALL list the account's chats with their name, whether they are a group, whether they are archived and the time of their last message, and SHALL offer a search that keeps the chats whose values match the entered text case-insensitively.
 
 #### Scenario: Chats are listed with their state
 - **WHEN** the account is connected
@@ -24,7 +24,7 @@ The page SHALL list the account's chats with their name, whether they are a grou
 
 #### Scenario: Search filters the chats
 - **WHEN** the user enters text into the search
-- **THEN** only chats matching the text remain listed
+- **THEN** only chats whose values contain that text, ignoring case, remain listed
 
 ### Requirement: A chat opens its messages and can be replied to or archived
 
@@ -37,6 +37,10 @@ Selecting a chat SHALL show that chat's messages, SHALL let the user send a plai
 #### Scenario: Sending a reply
 - **WHEN** the user sends a non-empty reply in a chat
 - **THEN** the message is sent to that chat and the chat's messages are reloaded
+
+#### Scenario: Sending is disabled without text
+- **WHEN** the reply is empty or whitespace-only
+- **THEN** the send control is disabled
 
 #### Scenario: Archiving and unarchiving
 - **WHEN** the user toggles the chat's archived state
@@ -56,7 +60,7 @@ The page SHALL offer to run a full sync of the account and to disconnect the acc
 
 ### Requirement: The page follows the connection status
 
-While the account is not connected, the page SHALL poll the connection status until it changes and then refresh the data, and it SHALL report a closed connection and any action failure instead of showing stale data.
+While the account is not connected, the page SHALL poll the connection status every second until it changes and then reload the data, and it SHALL report a closed connection and a failed action to the user.
 
 #### Scenario: Status changes refresh the page
 - **WHEN** the connection status changes while the page is open
@@ -68,7 +72,7 @@ While the account is not connected, the page SHALL poll the connection status un
 
 #### Scenario: Action failure is reported
 - **WHEN** a send, archive, sync or disconnect action fails
-- **THEN** the page shows the error without discarding the loaded data
+- **THEN** the page shows the error
 
 ### Requirement: The page reaches WhatsApp through the assistant
 

@@ -8,7 +8,7 @@ Defines the admin application: the dashboard and metrics that report the instanc
 
 ### Requirement: Admin requires the administrator identity
 
-Every admin page and admin action SHALL require the signed-in user to be the configured administrator, and SHALL reject every other user as unauthorized.
+The session SHALL carry the admin application only when the user's e-mail address matches the configured administrator address at sign-in, and every admin page and admin action SHALL require that application, rejecting every other user.
 
 #### Scenario: Administrator is admitted
 - **WHEN** the administrator opens an admin page or invokes an admin action
@@ -16,11 +16,15 @@ Every admin page and admin action SHALL require the signed-in user to be the con
 
 #### Scenario: Other users are rejected
 - **WHEN** a user who is not the administrator opens an admin page or invokes an admin action
-- **THEN** the request is rejected as unauthorized
+- **THEN** the request is rejected
 
-#### Scenario: Admin membership follows the configured administrator
-- **WHEN** the user's e-mail matches the configured administrator address at sign-in
-- **THEN** the session carries the admin application
+#### Scenario: Admin membership is decided at sign-in
+- **WHEN** the configured administrator address changes while a session is still valid
+- **THEN** the existing session keeps its admin application until the user signs in again
+
+#### Scenario: The admin entry is hidden from other users
+- **WHEN** a signed-in user who is not the administrator opens the application navigation
+- **THEN** the admin application is not offered
 
 ### Requirement: The dashboard reports the build the instance runs
 
@@ -44,7 +48,7 @@ The dashboard SHALL show an identifier of the running process, the time it start
 
 ### Requirement: The dashboard summarizes configuration and usage
 
-The dashboard SHALL link to the instance's configuration and database console, and SHALL show the memory in use together with the day and last-30-days counts of CoEditor commands and cash transactions.
+The dashboard SHALL link to the instance's configuration and to its metrics, and SHALL show the memory in use together with the day and last-30-days counts of CoEditor commands and cash transactions.
 
 #### Scenario: Metrics summary is shown
 - **WHEN** the dashboard opens
@@ -72,19 +76,19 @@ The metrics page SHALL show the memory in use, the process uptime, the database 
 
 ### Requirement: Metrics report CoEditor and cash usage counts
 
-The metrics page SHALL show, across all users, the number of CoEditor users, discussions and commands, and the number of cash users, projects, accounts and transactions, including counts for the last day, the last 30 days and the calendar month where applicable.
+The metrics page SHALL show, across all users, the number of CoEditor users, discussions and commands, and the number of cash users, projects, accounts and transactions. CoEditor SHALL report its totals together with the discussions and commands of the last 24 hours; cash SHALL report its totals together with the transactions of the last 24 hours, the last 30 days and the current calendar month.
 
 #### Scenario: CoEditor counts are shown
 - **WHEN** the metrics page opens
-- **THEN** the total and daily discussion and command counts and the number of CoEditor users are shown
+- **THEN** the totals and the last-24-hours discussion and command counts plus the number of CoEditor users are shown
 
 #### Scenario: Cash counts are shown
 - **WHEN** the metrics page opens
-- **THEN** the cash user, project, account and transaction counts are shown, including the day, 30-day and calendar-month figures
+- **THEN** the cash user, project, account and transaction counts are shown, with day, 30-day and calendar-month transaction figures
 
-### Requirement: Metrics are recomputed on each request
+### Requirement: Metrics reflect the state when the page is requested
 
-The metrics and dashboard figures SHALL reflect the state at the time the page is requested and SHALL NOT update themselves while the page stays open.
+The metrics and dashboard figures SHALL be computed when the page is requested and SHALL NOT refresh themselves while the page stays open.
 
 #### Scenario: Figures do not change without a reload
 - **WHEN** the user leaves the metrics page open
@@ -92,27 +96,27 @@ The metrics and dashboard figures SHALL reflect the state at the time the page i
 
 ### Requirement: The config page shows the current environment with secrets masked
 
-The config page SHALL list the running instance's environment entries grouped into categories, SHALL mask the values of entries whose name indicates a secret, SHALL shorten long values behind an expand control, and SHALL offer filtering and a toggle to reveal the secrets.
+The config page SHALL list the running instance's environment entries grouped into categories, SHALL mask the value of every entry whose name matches the secret pattern `PASSWORD`, `SECRET`, `KEY`, `TOKEN`, `CREDENTIAL` or `DB_CONNECTION_STRING`, SHALL shorten values longer than eighty characters behind a control that reveals the full value, and SHALL offer a filter over the entries' names and values together with a toggle to reveal the secrets.
 
 #### Scenario: Secret values are masked by default
 - **WHEN** the config page opens
-- **THEN** entries whose name indicates a secret show a mask instead of their value
+- **THEN** entries whose name matches the secret pattern show a mask instead of their value
 
 #### Scenario: Secrets can be revealed
 - **WHEN** the user activates the show-secrets control
 - **THEN** the secret values become visible
 
 #### Scenario: Long values are shortened
-- **WHEN** an entry's value is long
+- **WHEN** an entry's value is longer than eighty characters
 - **THEN** it is shown shortened with a control to reveal the full value
 
 #### Scenario: Filtering narrows the list
 - **WHEN** the user types into the filter
-- **THEN** only entries whose key or value contains the text remain listed
+- **THEN** only entries whose name or value contains the text remain listed
 
 ### Requirement: Cash administration manages projects across all users
 
-The cash administration SHALL list every user's projects and SHALL let the administrator create, change and delete them, including assigning a project to a different owner.
+The cash administration SHALL list every user's projects and SHALL let the administrator create, change and delete them, including assigning a project to a different owner by e-mail address, and SHALL record an informational event for each change.
 
 #### Scenario: All projects are listed
 - **WHEN** the administrator opens the cash administration
