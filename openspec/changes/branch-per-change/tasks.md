@@ -18,7 +18,7 @@
 
 ## 4. CI guard
 
-- [ ] 4.1 Add `scripts/change-guard.mjs` exporting `resolveChangeForBranch(branch, paths)` plus a CLI entrypoint reading `HEAD_REF`/`BASE_REF`, and `scripts/change-guard.test.mjs` covering matching branch, mismatched branch, archived folder, no change path, and two changes. Verify `node --test scripts/change-guard.test.mjs` passes and `HEAD_REF=branch-per-change BASE_REF=origin/main node scripts/change-guard.mjs` passes on this branch.
+- [x] 4.1 Add `scripts/change-guard.mjs` exporting `resolveChangeForBranch(branch, paths)` plus a CLI entrypoint reading `HEAD_REF`/`BASE_REF`, and `scripts/change-guard.test.mjs` covering matching branch, mismatched branch, archived folder, no change path, and two changes. Verify `node --test scripts/change-guard.test.mjs` passes and `HEAD_REF=branch-per-change BASE_REF=origin/main node scripts/change-guard.mjs` passes on this branch.
 - [ ] 4.2 Add `.github/workflows/change-guard.yml` triggered by `pull_request`, checking out with `fetch-depth: 0`, running the guard with `HEAD_REF=${{ github.head_ref }}` and `BASE_REF=origin/${{ github.base_ref }}`. Verify the job's command passes locally for this branch and, once the branch is pushed and a PR is open, the `change-guard` check reports success.
 
 ## 5. Integration verification
