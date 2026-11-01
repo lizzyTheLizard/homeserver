@@ -16,6 +16,19 @@ on:
       - 'infrastructure/**'
   workflow_dispatch:
 jobs:
+  lint:
+    name: Lint Web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./services/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm run lint:ci
   test:
     name: Test Web (unit + integration + storybook)
     runs-on: ubuntu-latest
@@ -45,8 +58,7 @@ jobs:
   build:
     name: Build and publish Web image
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push'
+    needs: [lint, test]
     permissions:
       contents: read
       packages: write

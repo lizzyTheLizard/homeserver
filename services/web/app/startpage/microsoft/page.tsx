@@ -13,7 +13,19 @@ export const metadata = {
 
 export default function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const status = await loadMicrosoftStatus()
+    const status = await loadMicrosoftStatus().catch((error: unknown) => {
+      console.error('Failed to load Microsoft status', error)
+      return {
+        connected: false,
+        mailStatus: 'disconnected',
+        todoStatus: 'disconnected',
+        calendarStatus: 'disconnected',
+        messages: [],
+        todos: [],
+        events: [],
+        userInfo: undefined,
+      }
+    })
     const allConnected = status.mailStatus === 'connected' && status.todoStatus === 'connected' && status.calendarStatus === 'connected'
     return (
       <main>
