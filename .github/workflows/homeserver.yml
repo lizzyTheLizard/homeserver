@@ -1,11 +1,30 @@
 name: "Homeserver"
 on: 
     push:
+    pull_request:
+        types: [opened, synchronize, reopened]
     workflow_dispatch:
 jobs:
+    change-guard:
+        name: Change guard
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7
+            with:
+              fetch-depth: 0
+          - name: Fetch base branch
+            run: git fetch --no-tags origin "${{ github.base_ref }}"
+          - name: Check the pull request carries an archived change
+            env:
+              HEAD_REF: ${{ github.head_ref }}
+              BASE_REF: origin/${{ github.base_ref }}
+            run: node scripts/change-guard.mjs
     lint:
         name: Lint (All)
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -16,6 +35,7 @@ jobs:
     test-assistant:
         name: Test Assistant
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         defaults:
           run:
             working-directory: ./assistant
@@ -29,6 +49,7 @@ jobs:
     test-web-unit:
         name: Test Web (Unit)
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         defaults:
           run:
             working-directory: ./web
@@ -42,6 +63,7 @@ jobs:
     test-web-integration:
         name: Test Web (Integration)
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         defaults:
           run:
             working-directory: ./web
@@ -55,6 +77,7 @@ jobs:
     test-web-storybook:
         name: Test Web (Storybook)
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         defaults:
           run:
             working-directory: ./web
@@ -77,6 +100,7 @@ jobs:
     test-whatsapp:
         name: Test WhatsApp Bridge
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         defaults:
           run:
             working-directory: ./whatsapp-bridge
@@ -90,6 +114,7 @@ jobs:
     test-wichteln:
         name: Test Wichteln
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         defaults:
           run:
             working-directory: ./wichteln
@@ -103,6 +128,7 @@ jobs:
     build-app:
         name: Build Application Docker Container
         runs-on: ubuntu-latest        
+        if: github.event_name != 'pull_request'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -138,6 +164,7 @@ jobs:
     build-whatsapp:
         name: Build WhatsApp Bridge Docker Container
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -165,6 +192,7 @@ jobs:
     build-assistant:
         name: Build Assistant Docker Container
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -192,6 +220,7 @@ jobs:
     build-wichteln:
         name: Build Wichteln Docker Container
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -219,6 +248,7 @@ jobs:
     build-dev-machine:
         name: Build Dev Machine Docker Container
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
@@ -246,6 +276,7 @@ jobs:
     integration-smoke:
         name: Integration Smoke (docker-compose stack)
         runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request'
         needs: [build-app, build-whatsapp, build-assistant, build-wichteln, build-dev-machine]
         steps:
           - name: Checkout
@@ -346,7 +377,7 @@ jobs:
         name: All Build Check Success
         runs-on: ubuntu-latest
         needs: [lint, test-assistant, test-web-unit, test-web-integration, test-web-storybook, test-whatsapp, test-wichteln, build-app, build-whatsapp, build-assistant, build-wichteln, build-dev-machine, integration-smoke]
-        if: always()
+        if: github.event_name != 'pull_request' && always()
         steps:
           - name: Fail if any required job failed or was cancelled
             if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
@@ -357,7 +388,7 @@ jobs:
         name: Restart Homeserver Stack
         needs: [all-build-checks]
         runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'        
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]'
         steps:
           - name: Checkout
             uses: actions/checkout@v7
