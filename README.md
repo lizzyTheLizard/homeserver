@@ -84,7 +84,7 @@ The stock OpenSpec workflows drive the lifecycle end to end:
 | Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
 | Ship | `openspec-archive-change` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
 
-The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`. Git hooks in `.githooks/` (installed by `pnpm install`) and the `Change guard` workflow enforce the branch binding.
+The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`. The `Change guard` workflow enforces the branch binding on every pull request.
 
 The `openspec-*` skills are auto-generated and must not be edited by hand.
 

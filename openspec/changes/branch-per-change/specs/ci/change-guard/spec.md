@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Binds every change to the branch named after it, so a change's plan, task commits and archive can only live on that branch and can only reach the default branch through a pull request.
+Binds every change to the branch named after it, so its plan, task commits and archive can only merge from that branch, and the change is still recognisable after it is archived.
 
 ## ADDED Requirements
 
@@ -34,30 +34,6 @@ CI SHALL fail a pull request whose head branch name does not equal the change fo
 
 - **WHEN** a pull request from branch `branch-per-change` adds `openspec/changes/branch-per-change/` and `openspec/changes/other-change/`
 - **THEN** the guard fails and reports that the branch names more than one change
-
-### Requirement: Change artifacts never land on the default branch
-
-The versioned git hooks SHALL reject a commit that stages paths under `openspec/changes/` or `openspec/specs/` while the default branch is checked out, and SHALL reject a push that would update the default branch.
-
-#### Scenario: Change commit on the default branch is rejected
-
-- **WHEN** a commit staging `openspec/changes/branch-per-change/proposal.md` is attempted on `main`
-- **THEN** the commit is rejected with a message naming the branch that the change requires
-
-#### Scenario: Push to the default branch is rejected
-
-- **WHEN** a push would update `refs/heads/main` on `origin`
-- **THEN** the push is rejected and suggests opening a pull request instead
-
-#### Scenario: Commit on the change branch is allowed
-
-- **WHEN** a commit staging `openspec/changes/branch-per-change/tasks.md` is attempted on branch `branch-per-change`
-- **THEN** the commit is allowed
-
-#### Scenario: Specs are not committed on the default branch
-
-- **WHEN** a commit staging `openspec/specs/ci/change-guard/spec.md` is attempted on `main`
-- **THEN** the commit is rejected
 
 ### Requirement: Archiving keeps the change name
 

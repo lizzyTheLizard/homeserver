@@ -15,20 +15,19 @@ The branch should be the unit of work, and it should exist before the change doe
   - `rules.proposal` states that a change starts from a request or a name, never from an issue, and that the name is the branch.
   - `operations.apply.guidance` keeps the one-task-one-commit rule and the trailer format, without the `(#<n>)` issue suffix.
   - `operations.archive.guidance` performs the last step: commit the archive isolated to `openspec/`, open the PR to `main` with an `OpenSpec-Change:` body linking the archived proposal, and arm squash auto-merge.
-- New enforcement so the contract does not rely on an agent reading it: versioned git hooks reject change artifacts on the default branch and reject pushes to it, and a CI guard fails a pull request whose head branch is not the change folder it adds.
+- One enforcement point so the contract does not rely on an agent reading it: a CI guard fails a pull request whose head branch is not the change folder it adds. Direct pushes to the default branch are left to GitHub branch protection, not repository code.
 - In-flight `issue-<n>-<slug>` work is not migrated: the guard compares branch to folder, never to a naming pattern, so an existing change keeps working under its old name.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `ci/change-guard`: Repository CI plus versioned git hooks bind every change to the branch named after it — a pull request that adds or modifies a change folder from a differently named branch fails, change artifacts cannot be committed or pushed on the default branch, and archive keeps the change name so the binding survives archiving.
+- `ci/change-guard`: CI binds every change to the branch named after it — a pull request that adds or modifies a change folder from a differently named branch fails, and archive keeps the change name so the binding survives archiving.
 
 ## Impact
 
 - `openspec/config.yaml`: `context`, `rules.proposal`, `operations.apply.guidance`, `operations.archive.guidance`
 - Deleted: `.agents/skills/gh-change-start/`, `.agents/skills/gh-change-ship/`, `.agents/skills/gh-issue-draft/` (including its `issue-template.md`)
 - `AGENTS.md`, `README.md`
-- New: `.githooks/pre-commit`, `.githooks/pre-push`, `scripts/change-guard.mjs` and its test, `.github/workflows/change-guard.yml`
-- `package.json`: a `prepare` script that installs `core.hooksPath`
+- New: `scripts/change-guard.mjs` and its test, `.github/workflows/change-guard.yml`
 - No runtime code and no product capability changes; web, assistant, whatsapp-bridge and wichteln are untouched.

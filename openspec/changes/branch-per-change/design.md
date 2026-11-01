@@ -18,13 +18,13 @@ See `proposal.md` for motivation. The constraints that shape the approach:
 - The branch exists before the plan does, and its name is exactly the change name.
 - Plan, per-task and archive commits all land on that branch; the PR opens from it after archive.
 - No GitHub issue is required anywhere in the flow, and no step reads or writes one.
-- Rejection is deterministic where the repository can enforce it (hooks locally, CI on PRs), not only a written instruction.
+- Rejection is deterministic at the pull request gate, from one tested implementation.
 - The guard tolerates archived folders and legacy `issue-<n>-<slug>` names.
 
 **Non-Goals:**
 
-- GitHub branch protection / rulesets. That is repository settings, not code; the change assumes protection on `main` stays in place.
-- Preventing `git commit --no-verify` / `git push --no-verify`. Hooks are a guard rail on the normal path; CI is the gate.
+- GitHub branch protection / rulesets, which guard direct pushes to the default branch. That is repository settings, not code; the change assumes protection on `main` stays in place.
+- Blocking a local commit or push before it reaches GitHub. Enforcement happens at the pull request.
 - Migrating or renaming existing branches, change folders or archive entries.
 - Closing, migrating or back-filling existing GitHub issues. They stop being part of the flow but remain readable history.
 
@@ -52,16 +52,11 @@ The name is derived from the request: lowercase, non-alphanumerics collapsed to 
 
 The archive workflow is the last step, and `openspec instructions archive` is where the CLI hands back `operations.archive.guidance`. So the guidance there ends the flow: commit the archive isolated to `openspec/`, push, open the PR to `main` with a `## Summary` body, an `OpenSpec-Change: <change>` line and a link to the archived proposal, then `gh pr merge --auto --squash`. Guidance is advisory — the CI guard is what makes a missing or wrongly-branched PR visible.
 
-### Enforcement is two layers with different scopes
+### CI is the single enforcement point
 
-Local hooks catch the common accident before it becomes history:
+`.github/workflows/change-guard.yml` runs on `pull_request`, checks out with `fetch-depth: 0`, diffs `origin/<base>...HEAD`, and passes the changed paths to `scripts/change-guard.mjs`. The job is in scope only when paths under `openspec/changes/` appear, so dependency and documentation PRs are unaffected.
 
-- `.githooks/pre-commit` rejects staging `openspec/changes/**` or `openspec/specs/**` on `main`, and on a feature branch rejects staging `openspec/changes/<other>/` when `<other>` is not the branch (archive folders exempt).
-- `.githooks/pre-push` rejects any refspec targeting `refs/heads/main`.
-
-`core.hooksPath` is installed by a `prepare` script in `package.json`, so the next `pnpm install` (local, Docker, CI) wires it up; the script is tolerant of an environment without git. Rejected: Husky — an extra dependency for one `git config` call.
-
-CI is the gate that hooks cannot be: `.github/workflows/change-guard.yml` runs on `pull_request`, checks out with `fetch-depth: 0`, diffs `origin/<base>...HEAD`, and passes the changed paths to `scripts/change-guard.mjs`. The job is in scope only when paths under `openspec/changes/` appear, so dependency and documentation PRs are unaffected.
+Git hooks were built first and then removed. A `pre-commit` hook repeated the branch-matching rule and a `pre-push` hook blocked `refs/heads/main`, but they are not the same check as the guard: the hook sees staged paths on a local branch, the guard sees a PR diff against a base. Keeping both meant two implementations of one rule, the hook's being untestable from CI, needing installation before it exists at all, and bypassable with `--no-verify`. The trade-off is accepted: direct pushes to the default branch are guarded by GitHub branch protection rather than repository code, and a wrong-branch commit is caught when the pull request check runs.
 
 ### Guard logic is a tested pure module
 
@@ -73,8 +68,8 @@ CI is the gate that hooks cannot be: `.github/workflows/change-guard.yml` runs o
 
 ## Risks / Trade-offs
 
-- [Config guidance is advisory; an agent can ignore it] → the hooks and the CI guard are the deterministic parts, and both fail loudly with the expected branch name in the message.
-- [Hooks are bypassable with `--no-verify`] → the CI guard on every PR that touches `openspec/changes/` is the actual gate; branch protection on `main` must stay enabled.
+- [Config guidance is advisory; an agent can ignore it] → the CI guard is the deterministic part and fails loudly with the expected branch name.
+- [A commit on `main` is only caught at the PR gate, or not at all] → branch protection on `main` must stay enabled; the guard cannot prevent a local commit, only a merge from a wrongly named branch.
 - [`context` is injected into every operation, so it cannot be step-specific] → keep it to invariants that are true at every step (branch, no issues, commits stay on branch); step-specific text goes in `rules.proposal` or the operation guidance.
 - [PRs touching no change folder skip the guard] → accepted: blocking Dependabot and docs PRs would be worse than the gap, and the flow always creates the folder.
 - [Guard fails when a PR legitimately spans two changes] → intended: one branch, one change; split the work.
@@ -86,6 +81,5 @@ CI is the gate that hooks cannot be: `.github/workflows/change-guard.yml` runs o
 
 1. Delete `.agents/skills/gh-issue-draft/`, `gh-change-start/`, `gh-change-ship/` and their rows in `AGENTS.md`/`README.md` first, so no entry point still advertises issues or wraps the workflows.
 2. Write the contract into `openspec/config.yaml` (`context`, `rules.proposal`, `operations.apply.guidance`, `operations.archive.guidance`), then confirm with `openspec instructions proposal|apply|archive --change <name> --json` that each consumer receives it.
-3. Hooks take effect on the next `pnpm install`; verify with `git config core.hooksPath` → `.githooks`.
-4. The CI guard activates on the next PR touching `openspec/changes/`. Existing open issue-named branches are unaffected.
-5. Rollback is independent per layer: revert `.githooks` and the workflow to disable enforcement; restore the previous `config.yaml` to get the issue-first text back.
+3. The CI guard activates on the next PR touching `openspec/changes/`. Existing open issue-named branches are unaffected.
+4. Rollback is independent per layer: remove the workflow to disable enforcement; restore the previous `config.yaml` to get the issue-first text back.

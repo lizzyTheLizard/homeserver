@@ -1,8 +1,5 @@
 schema: spec-driven
 context: |
-  Changes are change-first, not issue-first: there is no GitHub issue to file,
-  link or close, and no step reads or writes one.
-
   The change name, the branch name and the change folder are the same value:
   a kebab-case slug `<change>` used verbatim as `openspec/changes/<change>`
   and as branch `<change>`. Never work on a change while a different branch
@@ -17,9 +14,9 @@ context: |
 
 rules:
   proposal:
-    - A change starts from a user request or an explicit change name; never
-      from a GitHub issue. Derive the name as a kebab-case slug (lowercase,
-      non-alphanumerics collapsed to `-`, no `#`, no issue number).
+    - A change starts from a user request or an explicit change name.
+      Derive the name as a kebab-case slug (lowercase,
+      non-alphanumerics collapsed to `-`, no `#`).
     - The branch must already be `<change>` before the proposal is written.
       If the current branch differs, stop and create it from `origin/main`
       first.

@@ -14,8 +14,7 @@
     "test": "pnpm -r test",
     "test:watch": "pnpm -r test:watch",
     "clean": "pnpm -r clean && rimraf node_modules dist .eslintcache",
-    "build-storybook": "pnpm --filter @homeserver/web build-storybook",
-    "prepare": "git config core.hooksPath .githooks"
+    "build-storybook": "pnpm --filter @homeserver/web build-storybook"
  },
   "devDependencies": {
     "concurrently": "^10.0.5",
