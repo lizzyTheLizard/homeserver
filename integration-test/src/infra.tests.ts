@@ -80,4 +80,15 @@ describe('stack-smoke: infrastructure services', () => {
     )
     expect(allowed, `application root (${stack.appUrl}) did not answer through nginx (status ${String(status)})`).toContain(status)
   })
+
+  test('Wichteln app root is reachable over HTTPS through nginx', async () => {
+    const allowed = [200, 301, 302, 307, 308]
+    const status = await pollUntil(
+      () => httpsStatus(stack.wichtelnUrl),
+      code => allowed.includes(code),
+      `Wichteln app root (${stack.wichtelnUrl}) answers through nginx over HTTPS`,
+      90_000,
+    )
+    expect(allowed, `Wichteln app root (${stack.wichtelnUrl}) did not answer through nginx (status ${String(status)})`).toContain(status)
+  })
 })
