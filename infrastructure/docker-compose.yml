@@ -31,9 +31,9 @@ services:
     # Periodically reload nginx to pick up renewed certificates
     command: '/bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\""'
 
-  whatsapp-bridge:
-    container_name: WhatsApp-Bridge
-    image: whatsapp-bridge:latest
+  whatsapp:
+    container_name: WhatsApp
+    image: homeserver:whatsapp
     pull_policy: never
     restart: unless-stopped
     environment:
@@ -49,7 +49,7 @@ services:
 
   applicationprod:
     container_name: Application
-    image: homeserver:latest
+    image: homeserver:web
     pull_policy: never
     restart: unless-stopped
     env_file:
@@ -59,11 +59,11 @@ services:
       APP_URL: https://www.gutschi.site
       ASSISTANT_INTERNAL_URL: http://assistant:8500
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
-      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8400
+      WHATSAPP_BRIDGE_URL: http://whatsapp:8400
     depends_on:
       postgresprod:
         condition: service_healthy
-      whatsapp-bridge:
+      whatsapp:
         condition: service_healthy
       assistant:
         condition: service_healthy
@@ -76,7 +76,7 @@ services:
 
   wichteln:
     container_name: Wichteln
-    image: homeserver-wichteln:latest
+    image: homeserver:wichteln
     pull_policy: never
     restart: unless-stopped
     environment:
@@ -98,7 +98,7 @@ services:
 
   assistant:
     container_name: Assistant
-    image: homeserver-assistant:latest
+    image: homeserver:assistant
     pull_policy: never
     restart: unless-stopped
     env_file:
@@ -107,11 +107,11 @@ services:
       NODE_ENV: production
       APP_URL: https://www.gutschi.site
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
-      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8400
+      WHATSAPP_BRIDGE_URL: http://whatsapp:8400
     depends_on:
       postgresprod:
         condition: service_healthy
-      whatsapp-bridge:
+      whatsapp:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://assistant:8500/health',function(r){process.exit(r.statusCode===200?0:1)})"]
@@ -255,7 +255,7 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   dev-machine:
-    image: homeserver-dev-machine:latest
+    image: homeserver:dev-machine
     pull_policy: never
     container_name: DEV-Machine
     environment:

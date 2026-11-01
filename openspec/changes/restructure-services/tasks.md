@@ -11,7 +11,7 @@
 
 ## 3. Standardise image names on homeserver:<name>
 
-- [ ] 3.1 Change the compose stack's image names to `homeserver:web`, `homeserver:assistant`, `homeserver:whatsapp`, `homeserver:wichteln` and `homeserver:dev-machine`, and update the `integration-test/docker-compose.ci.yml` artifact names and the smoke suite's image references accordingly; verify the integration smoke stack boots and the smoke checks pass.
+- [x] 3.1 Change the compose stack's image names to `homeserver:web`, `homeserver:assistant`, `homeserver:whatsapp`, `homeserver:wichteln` and `homeserver:dev-machine`, and update the `integration-test/docker-compose.ci.yml` artifact names and the smoke suite's image references accordingly; verify the integration smoke stack boots and the smoke checks pass.
 
 ## 4. Split the pipeline into per-service workflows
 
