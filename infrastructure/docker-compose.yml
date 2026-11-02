@@ -7,7 +7,6 @@ services:
       - "80:80"
       - "443:443"
       - "8443:8443"
-      - "8444:8444"
       - "8445:8445"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
