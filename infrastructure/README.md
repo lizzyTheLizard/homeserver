@@ -51,7 +51,6 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
   | `wichteln.gutschi.site:443` | —       | `wichteln:3000`      | Wichteln app         |
   | `dev.gutschi.site:443`   | —          | `dev-machine:3000`   | Dev app (when running) |
   | `dev.gutschi.site:8443`  | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server) |
-  | `dev.gutschi.site:8444`  | dev        | `caddy` → `dev-machine:4096` | OpenCode         |
   | `dev.gutschi.site:8445`  | dev        | `caddy` → `dev-machine:6006` | Storybook       |
   | `logs.gutschi.site:443`  | admin      | `caddy` → `dozzle:8080` | Container logs    |
   | `www.gutschi.site:8443`  | admin      | `caddy` → `pgwebprod:8081` | Prod DB web UI |
@@ -66,10 +65,12 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
   (admin auth).
 * **`dev-machine`** is a full Linux dev environment (node:24-bookworm-slim) with Node 24,
   pnpm, Go, the GitHub CLI, PostgreSQL client tools, `wacli` (WhatsApp CLI),
-  **code-server** and the **DeepSeek Harbenss**, managed by `supervisord`. Access:
+  **code-server** and **Claude Code**, managed by `supervisord`. Access:
   * VS Code Remote SSH → `ssh dev@<host> -p 2222`
   * Browser VS Code → `https://dev.gutschi.site:8443`
-  * OpenCode → `https://dev.gutschi.site:8444`
+  * Claude Code (Remote Control) → connect from <https://claude.ai/code> or the
+    Claude app to the dev machine's `claude remote-control` session (requires a
+    one-time `claude /login` and an eligible Claude subscription)
 
 In development the WhatsApp bridge is **not** a separate container: `pnpm dev`
 inside `dev-machine` starts the TypeScript companion (`pnpm --filter
@@ -332,6 +333,10 @@ On first start the `dev-machine` entrypoint (`../dev-machine/entrypoint.sh`):
    `docker compose up -d --force-recreate dev-machine`.
 4. If you already have a key pair you want to use, put its **public** half in
    `DEV_SSH_KEY_PUB` (the private half stays on your workstation).
+5. Sign in to Claude Code once so its Remote Control server can run:
+   `docker compose exec -it dev-machine claude` (run `/login` and authenticate
+   with an eligible Claude subscription). The `claude-remote-control` supervisord
+   program then serves the machine's session at <https://claude.ai/code>.
 
 For containers that only need the SSH server without the source checkout, set
 `SKIP_GITHUB_BOOTSTRAP=1` in the service
