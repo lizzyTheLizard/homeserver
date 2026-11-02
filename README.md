@@ -48,7 +48,7 @@ Connect to the dev machine (see [infrastructure/README.md](infrastructure/README
 for the full setup):
 
 - **Browser VS Code:** <https://dev.gutschi.site:8443> (dev auth)
-- **Claude Code (Remote Control):** the dev machine runs `claude remote-control`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription)
+- **Claude Code (Remote Control):** the dev machine runs `claude remote-control --spawn worktree`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription). One session starts in `/home/dev/workspace`; every further session gets its own git worktree under `.claude/worktrees/`, so parallel sessions can work on different branches. `services/.env` and `infrastructure/.env` are copied into each worktree (listed in `.worktreeinclude`), but `node_modules` is not, so run `pnpm install` in a new worktree first. Clean worktrees are removed when their session ends; clean up leftovers with `git worktree list` / `git worktree remove <path>` and `git worktree prune`.
 - **VS Code Remote SSH:** `ssh dev@<host> -p 2222`
 
 Inside the dev machine the repo is already cloned at `/home/dev/workspace` with
@@ -109,10 +109,10 @@ The stock OpenSpec workflows drive the lifecycle end to end:
 |---|---|---|
 | Explore | `openspec-explore` | Understand the problem — nothing is written |
 | Propose | `openspec-propose` | Create the `<change>` branch, then the plan; commit it to that branch |
-| Implement | `openspec-apply-change` | One task at a time: implement → review → commit → push |
-| Ship | `openspec-archive-change` | Archive the change (sync delta specs), open the PR, enable auto-merge, watch CI |
+| Implement | `openspec-apply-change` | All tasks in one go → review of the full diff → one commit → push |
+| Ship | `openspec-archive-change` | Sync delta specs automatically, archive the change, open the PR with auto-merge, follow it until merged (fixes for failing checks are reviewed before they are committed) |
 
-The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the per-task commit format in `operations.apply.guidance`, the archive commit and pull request in `operations.archive.guidance`.
+The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the single-review apply flow and commit format in `operations.apply.guidance`, the spec sync, archive commit, pull request and PR follow-up in `operations.archive.guidance`.
 
 The `openspec-*` skills are auto-generated and must not be edited by hand.
 
