@@ -5,14 +5,13 @@
   "scripts": {
     "dev": "concurrently -k -n web,bridge,assistant -c blue,green,yellow \"pnpm dev:app\" \"pnpm dev:bridge\" \"pnpm dev:assistant\"",
     "dev:app": "pnpm --filter @homeserver/web dev",
-    "dev:bridge": "pnpm --filter @homeserver/whatsapp-bridge dev",
+    "dev:bridge": "pnpm --filter @homeserver/whatsapp dev",
     "dev:assistant": "pnpm --filter @homeserver/assistant dev",
     "dev:wichteln": "pnpm --filter @homeserver/wichteln dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "lint:ci": "pnpm -r lint:ci",
-    "test": "pnpm --filter !@homeserver/integration-test test",
-    "integration-test": "pnpm --filter @homeserver/integration-test test",
+    "test": "pnpm -r test",
     "test:watch": "pnpm -r test:watch",
     "clean": "pnpm -r clean && rimraf node_modules dist .eslintcache",
     "build-storybook": "pnpm --filter @homeserver/web build-storybook"

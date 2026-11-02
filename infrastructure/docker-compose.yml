@@ -31,10 +31,9 @@ services:
     # Periodically reload nginx to pick up renewed certificates
     command: '/bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\""'
 
-  whatsapp-bridge:
-    container_name: WhatsApp-Bridge
-    image: whatsapp-bridge:latest
-    pull_policy: never
+  whatsapp:
+    container_name: WhatsApp
+    image: ghcr.io/lizzythelizard/homeserver-whatsapp:latest
     restart: unless-stopped
     environment:
       WHATSAPP_DATA_DIR: /data
@@ -49,8 +48,7 @@ services:
 
   applicationprod:
     container_name: Application
-    image: homeserver:latest
-    pull_policy: never
+    image: ghcr.io/lizzythelizard/homeserver-web:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -59,11 +57,11 @@ services:
       APP_URL: https://www.gutschi.site
       ASSISTANT_INTERNAL_URL: http://assistant:8500
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
-      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8400
+      WHATSAPP_BRIDGE_URL: http://whatsapp:8400
     depends_on:
       postgresprod:
         condition: service_healthy
-      whatsapp-bridge:
+      whatsapp:
         condition: service_healthy
       assistant:
         condition: service_healthy
@@ -76,18 +74,17 @@ services:
 
   wichteln:
     container_name: Wichteln
-    image: homeserver-wichteln:latest
-    pull_policy: never
+    image: ghcr.io/lizzythelizard/homeserver-wichteln:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3000
-      DB_CONNECTION_STRING: postgres://wichteln:${WICHTELN_DB_PASSWORD}@postgreswichteln:5432/wichteln?sslmode=disable
+      DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
       SESSION_SECRET: ${WICHTELN_SESSION_SECRET}
       ADMIN_USER: ${WICHTELN_ADMIN_USER}
       ADMIN_PASSWORD: ${WICHTELN_ADMIN_PASSWORD}
     depends_on:
-      postgreswichteln:
+      postgresprod:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/api/health',function(r){process.exit(r.statusCode===200?0:1)}).on('error',function(){process.exit(1)})"]
@@ -98,8 +95,7 @@ services:
 
   assistant:
     container_name: Assistant
-    image: homeserver-assistant:latest
-    pull_policy: never
+    image: ghcr.io/lizzythelizard/homeserver-assistant:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -107,11 +103,11 @@ services:
       NODE_ENV: production
       APP_URL: https://www.gutschi.site
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
-      WHATSAPP_BRIDGE_URL: http://whatsapp-bridge:8400
+      WHATSAPP_BRIDGE_URL: http://whatsapp:8400
     depends_on:
       postgresprod:
         condition: service_healthy
-      whatsapp-bridge:
+      whatsapp:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://assistant:8500/health',function(r){process.exit(r.statusCode===200?0:1)})"]
@@ -132,23 +128,6 @@ services:
       - postgres_prod_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U homeserver -d homeserver"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  postgreswichteln:
-    container_name: Wichteln-Database
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: wichteln
-      POSTGRES_PASSWORD: ${WICHTELN_DB_PASSWORD}
-      POSTGRES_DB: wichteln
-    volumes:
-      - postgres_wichteln_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wichteln -d wichteln"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -255,8 +234,7 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   dev-machine:
-    image: homeserver-dev-machine:latest
-    pull_policy: never
+    image: ghcr.io/lizzythelizard/homeserver-dev-machine:latest
     container_name: DEV-Machine
     environment:
       REPO_URL: "${REPO_URL}"
@@ -289,7 +267,6 @@ services:
 
 volumes:
   postgres_prod_data:
-  postgres_wichteln_data:
   postgres_dev_data:
   dev_home:
   whatsapp_data:

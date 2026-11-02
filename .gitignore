@@ -5,3 +5,4 @@ dist
 build-storybook.log
 *.tsbuildinfo
 .ms-playwright
+.pnpm-store

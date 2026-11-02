@@ -13,20 +13,20 @@
 ## 1. System setup — what is contained and how it is available
 
 The entire stack is **self-hosted on a single home server** (no cloud provider,
-no Terraform). A single `docker-compose.yml` brings up every component. There is
-no container registry: the `homeserver:latest`, `whatsapp-bridge:latest`,
-`homeserver-assistant:latest` and `homeserver-wichteln:latest` images are built
-directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-application)).
+no Terraform). A single `docker-compose.yml` brings up every component. The five
+service images (`homeserver-web`, `homeserver-assistant`, `homeserver-whatsapp`,
+`homeserver-wichteln` and `homeserver-dev-machine`) are published to GitHub
+Container Registry as `ghcr.io/lizzythelizard/<name>:latest` by the per-service CI
+workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--upgrading-the-application)).
 
 ### Components
 
 | Concern            | Container (`container_name`)     | Image                       |
 |--------------------|---------------------------------|-----------------------------|
-| App (prod)         | `applicationprod` (`Prod-Application`) | `homeserver:latest`   |
-| Assistant          | `assistant` (`Prod-Assistant`)   | `homeserver-assistant:latest` |
-| WhatsApp bridge    | `whatsapp-bridge` (`Prod-WhatsApp-Bridge`) | `whatsapp-bridge:latest` |
-| Wichteln app       | `wichteln` (`Wichteln`)          | `homeserver-wichteln:latest` |
-| Wichteln database  | `postgreswichteln` (`Wichteln-Database`) | `postgres:16-alpine` |
+| App (prod)         | `applicationprod` (`Prod-Application`) | `ghcr.io/lizzythelizard/homeserver-web:latest` |
+| Assistant          | `assistant` (`Prod-Assistant`)   | `ghcr.io/lizzythelizard/homeserver-assistant:latest` |
+| WhatsApp bridge    | `whatsapp` (`WhatsApp`)          | `ghcr.io/lizzythelizard/homeserver-whatsapp:latest` |
+| Wichteln app       | `wichteln` (`Wichteln`)          | `ghcr.io/lizzythelizard/homeserver-wichteln:latest` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
 | Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
 | Front TLS proxy    | `nginx` (`Nginx`)                | `nginx:alpine`             |
@@ -36,7 +36,7 @@ directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-applicat
 | Backups            | `backup` (`Backup`)              | built from `db-backup/`    |
 | Logs UI            | `dozzle` (`Dozzle`)              | `amir20/dozzle:latest`     |
 | DB UI (prod)       | `pgwebprod` (`Prod-Pgweb`)       | `sosedoff/pgweb`           |
-| Development        | `dev-machine` (`Dev`)            | built from `../dev-machine/` |
+| Development        | `dev-machine` (`Dev`)            | `ghcr.io/lizzythelizard/homeserver-dev-machine:latest` |
 
 ### How things are reachable
 
@@ -73,10 +73,10 @@ directly on the server (by CI, see [§6.8](#68-deploying--upgrading-the-applicat
 
 In development the WhatsApp bridge is **not** a separate container: `pnpm dev`
 inside `dev-machine` starts the TypeScript companion (`pnpm --filter
-@homeserver/whatsapp-bridge dev`, i.e. `tsx watch`) which drives the `wacli`
+@homeserver/whatsapp dev`, i.e. `tsx watch`) which drives the `wacli`
 binary, as a local process alongside the Next.js server, tied to the same
 lifecycle. Its
-state is a local SQLite directory under `whatsapp-bridge/data/`, not `postgresdev`.
+state is a local SQLite directory under `services/whatsapp/data/`, not `postgresdev`.
 
 ---
 
@@ -89,10 +89,10 @@ cp infrastructure/env.example infrastructure/.env
 $EDITOR infrastructure/.env
 ```
 
-The Wichteln app has its own database and its own secrets. All four
-`WICHTELN_*` values in `env.example` are mandatory:
+The Wichteln app shares the production database (its tables are `wichteln_*`-
+prefixed) and has its own secrets. The three `WICHTELN_*` values in
+`env.example` are mandatory:
 
-* `WICHTELN_DB_PASSWORD` — password of the `wichteln` database user.
 * `WICHTELN_SESSION_SECRET` — at least 32 random characters, e.g.
   `openssl rand -hex 32`.
 * `WICHTELN_ADMIN_USER` / `WICHTELN_ADMIN_PASSWORD` — credentials for the
@@ -100,13 +100,12 @@ The Wichteln app has its own database and its own secrets. All four
 
 Without them the `wichteln` container reports unhealthy and returns `503`.
 
-For local development against `postgresdev`, create the app database once and
-point the dev server at it:
+For local development against `postgresdev`, the Wichteln app shares the dev
+`homeserver` database (no separate database to create); point the dev server at
+it:
 
 ```bash
-docker compose exec postgresdev createdb -U homeserver wichteln
-
-DB_CONNECTION_STRING="postgres://homeserver:homeserver@postgresdev:5432/wichteln?sslmode=disable" \
+DB_CONNECTION_STRING="postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable" \
 SESSION_SECRET="$(openssl rand -hex 32)" \
 ADMIN_USER=admin ADMIN_PASSWORD=dev \
 pnpm dev:wichteln
@@ -177,11 +176,10 @@ docker compose down -v                  # DANGER: also deletes named volumes
 ### Recreating / pulling
 
 ```bash
-docker compose pull                      # pull newer images for prebuilt services
+docker compose pull                      # pull the latest GHCR images for the service containers
 docker compose up -d                     # apply changed config / recreate changed services
 docker compose up -d --force-recreate    # force recreate even if nothing "changed"
-docker compose up -d --build             # rebuild the locally-built images
-                                        # (backup; dev-machine is built in CI and loaded from an artifact)
+docker compose up -d --build             # rebuild the backup service image (the only image built on the host)
 docker compose config                    # dry-run: validate the rendered compose file
 ```
 
@@ -335,8 +333,8 @@ On first start the `dev-machine` entrypoint (`../dev-machine/entrypoint.sh`):
 4. If you already have a key pair you want to use, put its **public** half in
    `DEV_SSH_KEY_PUB` (the private half stays on your workstation).
 
-For containers that only need the SSH server without the source checkout (e.g.
-the CI smoke-test stack), set `SKIP_GITHUB_BOOTSTRAP=1` in the service
+For containers that only need the SSH server without the source checkout, set
+`SKIP_GITHUB_BOOTSTRAP=1` in the service
 environment to skip the GitHub auth check and the initial clone; the default
 keeps the bootstrap above.
 
@@ -386,67 +384,17 @@ used by the dev-machine. Changing it requires editing `docker-compose.yml`
 (`postgresdev` + `dev-machine` `DB_CONNECTION_STRING`) and recreating both —
 only do this if you have a reason to.
 
-### 5.10 Integration smoke suite
-
-The `integration-test/` package verifies the **full stack end to end** against
-this `docker-compose.yml` together with the test-mode override
-`integration-test/docker-compose.ci.yml` (mock OIDC instead of Azure AD, fixed
-non-secret test values, ephemeral WhatsApp data), checking SSH (2222), bind9
-DNS, the Dozzle and Pgweb UIs over HTTPS, the application over nginx, and
-authenticated pages in headless Chromium (assistant greeting + WhatsApp QR).
-
-CI (the `integration-smoke` job, after the three image builds and before
-`deploy`) executes each step directly — there is no orchestrator script:
-
-```bash
-# 1. self-signed certificates for the smoke domains
-pnpm --filter @homeserver/integration-test certs
-
-# 2. smoke hosts (dev/www/logs.gutschi.site, mock-oidc-server) -> 127.0.0.1
-#    CI adds them with `sudo tee -a /etc/hosts`; add them once locally.
-
-# 3. compose project .env for ${VAR} interpolation (mirrors env.test)
-[ -f infrastructure/.env ] || cp integration-test/env.test infrastructure/.env
-
-# 4. boot the stack (AI_API_KEY is the only real secret)
-docker compose -f infrastructure/docker-compose.yml \
-  -f integration-test/docker-compose.ci.yml \
-  up -d --wait --wait-timeout 300 --remove-orphans
-
-# 5. run all checks (Vitest)
-pnpm --filter @homeserver/integration-test test
-
-# 6. tear down (also on failure)
-docker compose -f infrastructure/docker-compose.yml \
-  -f integration-test/docker-compose.ci.yml \
-  down --remove-orphans -v
-```
-
-* Requires **Docker** with the compose plugin. `docker compose up --wait` covers
-  the healthchecked services; the checks poll the rest (bind9, dozzle,
-  pgwebprod, dev-machine) themselves and each failing service reports its own
-  name. The teardown step runs even when a check fails — the suite never
-  touches the real `.env` or the real stack (its project name is
-  `homeserver-smoke` and `env_file` values from `env.test` win over any
-  `infrastructure/.env`).
-* **No Entra credentials needed.** The only secret used is `AI_API_KEY` for the
-  assistant greeting check — CI passes the `AI_API_KEY` secret to the compose
-  up step; locally, add it to `infrastructure/.env` or export it before step 4.
-* Self-signed certificates are written under `./certbot/conf/live/<domain>/`
-  (git-ignored) by `pnpm certs` before every run, and the smoke hosts
-  (`dev`/`www`/`logs.gutschi.site`, `mock-oidc-server`) must resolve to
-  `127.0.0.1` — CI adds them with `sudo`; local users add them once by hand.
-* The `integration-smoke` job feeds the "All Build Check Success" gate that is
-  the only required check for merging.
-
 ---
 
 ## 6. Deployment & repository
 
 * **Repo:** https://github.com/lizzyTheLizard/homeserver
 * **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
-* **CI deploy pipeline:** `.github/workflows/homeserver.yml` builds the
-  `homeserver:latest`, `whatsapp-bridge:latest`, `homeserver-assistant:latest`
-  and `homeserver-dev-machine:latest` images and deploys them to the server; the
-  compose stack is then started/updated with `docker compose up -d`.
+* **CI deploy pipeline:** each service has its own workflow in
+  `.github/workflows/` (`web.yml`, `assistant.yml`, `whatsapp.yml`,
+  `wichteln.yml`, `dev-machine.yml`) that, when its `services/<name>/` folder
+  changes, builds and publishes the image to GHCR
+  (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and then pulls it on the
+  server. The compose stack is then started/updated with
+  `docker compose up -d`.
 

@@ -1,0 +1,60 @@
+# syntax=docker.io/docker/dockerfile:1
+
+FROM node:24-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json ./package.json
+COPY pnpm* ./
+COPY services/assistant/package.json ./services/assistant/package.json
+RUN corepack enable pnpm && pnpm i --frozen-lockfile
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/services/assistant/node_modules ./services/assistant/node_modules
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm* ./
+COPY services/assistant/ ./services/assistant
+
+RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
+
+# Production dependencies only, so the runtime image does not carry the full
+# dev tree. Mirrors the whatsapp image's prod-deps stage.
+FROM base AS prod-deps
+WORKDIR /app
+COPY package.json ./package.json
+COPY pnpm* ./
+COPY services/assistant/package.json ./services/assistant/package.json
+RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/assistant
+
+# Production image, copy all the files and run the assistant server
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
+
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/services/assistant/node_modules ./services/assistant/node_modules
+COPY --from=builder /app/services/assistant/dist ./services/assistant/dist
+# The migrations are read at runtime (process.cwd()/db), so copy them beside the
+# compiled server entrypoint.
+COPY --from=builder --chown=nodejs:nodejs /app/services/assistant/db ./services/assistant/db
+
+USER nodejs
+
+EXPOSE 8500
+
+ENV PORT=8500
+ENV HOSTNAME="0.0.0.0"
+WORKDIR /app/services/assistant
+CMD ["node", "dist/server.js"]

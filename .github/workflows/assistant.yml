@@ -1,0 +1,112 @@
+name: "Assistant"
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+    paths:
+      - 'services/assistant/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  workflow_dispatch:
+jobs:
+  detect:
+    name: Detect Assistant changes
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.detect.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Detect changes
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags origin "${{ github.base_ref }}"
+            if git diff --name-only "origin/${{ github.base_ref }}"...HEAD | grep -qE '^(services/assistant/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml)'; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+  lint:
+    name: Lint Assistant
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.changed == 'true'
+    defaults:
+      run:
+        working-directory: ./services/assistant
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm run lint:ci
+  test:
+    name: Test Assistant
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.changed == 'true'
+    defaults:
+      run:
+        working-directory: ./services/assistant
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Tests
+        run: pnpm test
+  build:
+    name: Build and publish Assistant image
+    runs-on: ubuntu-latest
+    needs: [detect, lint, test]
+    if: needs.detect.outputs.changed == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Build and publish
+        uses: ./.github/actions/build-publish
+        with:
+          image: homeserver-assistant
+          dockerfile: services/assistant/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
+  deploy:
+    name: Deploy Assistant
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Deploy service
+        uses: ./.github/actions/deploy-service
+        with:
+          service: assistant
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
+  gate:
+    name: Gate Assistant
+    runs-on: ubuntu-latest
+    needs: [detect, lint, test, build]
+    if: always()
+    steps:
+      - name: Verify required jobs
+        run: |
+          if [ "${{ needs.detect.outputs.changed }}" = "true" ]; then
+            if [[ "${{ needs.lint.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.build.result }}" != "success" ]]; then
+              echo "A required job did not succeed"
+              exit 1
+            fi
+          fi
+          echo "Gate passed"
