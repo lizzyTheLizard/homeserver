@@ -11,7 +11,7 @@
 
 ## 3. Integration check
 
-- [ ] 3.1 Run `openspec validate fix-deploy-and-remote-control --strict` and `pnpm lint:ci`, and verify that both pass.
+- [x] 3.1 Run `openspec validate fix-deploy-and-remote-control --strict` and `pnpm lint:ci`, and verify that both pass.
 
 ## Workflow follow-up
 
