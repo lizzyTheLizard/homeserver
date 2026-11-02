@@ -1,0 +1,175 @@
+name: "Pipeline"
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: pipeline-${{ github.ref }}
+  # Superseded pull-request runs are cancelled; runs on main queue so a deploy is never interrupted
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+permissions:
+  contents: read
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+      assistant: ${{ steps.detect.outputs.assistant }}
+      whatsapp: ${{ steps.detect.outputs.whatsapp }}
+      wichteln: ${{ steps.detect.outputs.wichteln }}
+      dev-machine: ${{ steps.detect.outputs['dev-machine'] }}
+      infrastructure: ${{ steps.detect.outputs.infrastructure }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Fetch base branch
+        if: github.event_name == 'pull_request'
+        run: git fetch --no-tags origin "${{ github.base_ref }}"
+      - name: Detect changes
+        id: detect
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: node .github/scripts/detect-changes.mjs
+  change-guard:
+    name: Change guard
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Fetch base branch
+        run: git fetch --no-tags origin "${{ github.base_ref }}"
+      - name: Test pipeline scripts
+        run: node --test '.github/scripts/*.test.mjs'
+      - name: Check the pull request carries an archived, synced change
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: origin/${{ github.base_ref }}
+        run: node .github/scripts/change-guard.mjs
+  web:
+    name: Web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/service.yml
+    secrets: inherit
+    with:
+      service: web
+      image: homeserver-web
+      compose-service: applicationprod
+      test-command: |
+        pnpm run test --project unit
+        pnpm run test --project integration
+        pnpm run test --project storybook
+      playwright: true
+      revision-build-args: true
+      deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}
+  assistant:
+    name: Assistant
+    needs: changes
+    if: needs.changes.outputs.assistant == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/service.yml
+    secrets: inherit
+    with:
+      service: assistant
+      image: homeserver-assistant
+      compose-service: assistant
+      test-command: pnpm test
+      deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}
+  whatsapp:
+    name: WhatsApp
+    needs: changes
+    if: needs.changes.outputs.whatsapp == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/service.yml
+    secrets: inherit
+    with:
+      service: whatsapp
+      image: homeserver-whatsapp
+      compose-service: whatsapp
+      test-command: pnpm test
+      deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}
+  wichteln:
+    name: Wichteln
+    needs: changes
+    if: needs.changes.outputs.wichteln == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/service.yml
+    secrets: inherit
+    with:
+      service: wichteln
+      image: homeserver-wichteln
+      compose-service: wichteln
+      test-command: pnpm test
+      deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}
+  dev-machine:
+    name: Dev Machine
+    needs: changes
+    if: needs.changes.outputs['dev-machine'] == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/service.yml
+    secrets: inherit
+    with:
+      service: dev-machine
+      image: homeserver-dev-machine
+      compose-service: dev-machine
+      lint: false
+      deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}
+  deploy-infrastructure:
+    name: Deploy infrastructure
+    runs-on: ubuntu-latest
+    needs: [changes, web, assistant, whatsapp, wichteln, dev-machine]
+    # Waits for skipped services, but never deploys after a failed or cancelled publish
+    if: >-
+      ${{ always()
+      && github.ref == 'refs/heads/main'
+      && github.event_name == 'push'
+      && needs.changes.outputs.infrastructure == 'true'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Deploy infrastructure
+        uses: ./.github/actions/deploy-infrastructure
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [changes, change-guard, web, assistant, whatsapp, wichteln, dev-machine, deploy-infrastructure]
+    # Always runs, even when every earlier job failed, was cancelled or was skipped
+    if: always()
+    steps:
+      - name: Show job results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: echo "$NEEDS"
+      - name: Fail if a job failed or was cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "A job failed or was cancelled"
+          exit 1
+      - name: Quality Gate passed
+        run: echo "Every job succeeded or was skipped"

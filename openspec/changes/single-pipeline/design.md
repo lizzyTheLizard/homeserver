@@ -75,13 +75,13 @@ scripts' own tests there means a broken detector or guard fails the pull request
 
 ### 4. Infrastructure deploy replaces the per-service deploys
 
-`pipeline.yml` passes `deploy: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.changes.outputs.infrastructure != 'true' }}`
+`pipeline.yml` passes `deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}`
 to every service call. A separate `deploy-infrastructure` job needs `changes` and all five service
 calls and runs with
-`if: always() && github.ref == 'refs/heads/main' && needs.changes.outputs.infrastructure == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')`,
+`if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')`,
 so it waits for skipped services, never runs after a failed publish, and recreates the stack once
-with every new image. The composite deploy actions keep their own `github.event_name == 'push'`
-guards, which also makes a manual dispatch build but not deploy — unchanged from today.
+with every new image. Deploys are limited to `push` runs, so a manual dispatch builds but does not
+deploy — unchanged from today, and the composite deploy actions keep their own `push` guards too.
 Runs started by Dependabot deploy like any other `main` run; there is no actor exclusion.
 
 ### 5. Quality Gate
