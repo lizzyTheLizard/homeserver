@@ -19,7 +19,7 @@
 
 ## 4. Dependabot auto-merge
 
-- [ ] 4.1 Create a GitHub App with Contents and Pull requests read/write access, install it on the repository, and store its client ID and private key as the Dependabot secrets `AUTOMERGE_APP_CLIENT_ID` and `AUTOMERGE_APP_PRIVATE_KEY` (manual step for the user, with step-by-step instructions); verify `gh api repos/lizzyTheLizard/homeserver/dependabot/secrets` lists both secrets
+- [x] 4.1 Create a GitHub App with Contents and Pull requests read/write access, install it on the repository, and store its client ID and private key as the Dependabot secrets `AUTOMERGE_APP_CLIENT_ID` and `AUTOMERGE_APP_PRIVATE_KEY` (manual step for the user, with step-by-step instructions); verify `gh api repos/lizzyTheLizard/homeserver/dependabot/secrets` lists both secrets
 - [x] 4.2 Change `dependabot-auto-merge.yml` to get a token with `actions/create-github-app-token` and use it for merging and approving; verify it passes `actionlint`
 - [x] 4.3 Document the GitHub App and its two Dependabot secrets in `infrastructure/README.md` §6; verify the section names both secrets
 
