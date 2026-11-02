@@ -7,7 +7,7 @@
 
 ## 2. Claude Code Remote Control spawn mode
 
-- [ ] 2.1 In `services/dev-machine/supervisord.conf`, change the `claude-remote-control` command to `claude remote-control --spawn same-dir`, keeping `directory=/home/dev/workspace`. Verify that `claude remote-control --help` lists `same-dir` as a valid `--spawn` mode and that `grep -n "spawn" services/dev-machine/supervisord.conf` shows only `--spawn same-dir`.
+- [x] 2.1 In `services/dev-machine/supervisord.conf`, change the `claude-remote-control` command to `claude remote-control --spawn same-dir`, keeping `directory=/home/dev/workspace`. Verify that `claude remote-control --help` lists `same-dir` as a valid `--spawn` mode and that `grep -n "spawn" services/dev-machine/supervisord.conf` shows only `--spawn same-dir`.
 
 ## 3. Integration check
 
