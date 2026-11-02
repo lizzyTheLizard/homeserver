@@ -6,3 +6,6 @@ build-storybook.log
 *.tsbuildinfo
 .ms-playwright
 .pnpm-store
+
+# Claude Code Remote Control session worktrees
+.claude/worktrees/

@@ -23,11 +23,15 @@ rules:
 operations:
   apply:
     guidance:
-      - "Work one task at a time. After finishing a task and ticking its checkbox, stop and show the user the diff for review. Do not begin the next task before they have responded."
-      - "Once the user approves a task's diff, commit and push it. The commit message must follow the standard format: `<short imperative message>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Do not add an issue number."
-      - "After the last task, do not archive yourself. Ask the user to run the openspec-archive-change workflow instead."
+      - "Implement all tasks of the change in one go. Work through them in order and tick each checkbox when its task is done. Do not stop for review between tasks, and do not commit or push per task. Pause only for a real blocker or an unclear task."
+      - "After the last task, run lint and tests for the affected packages, then show the user the full diff of the change for a single review. Do not commit before they approve. If they ask for changes, make them and show the diff again."
+      - "Once the user approves, commit and push once. The commit message must follow the standard format: `<short imperative message>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Do not add an issue number."
+      - "Do not archive yourself. Ask the user to run the openspec-archive-change workflow instead."
   archive:
     guidance:
+      - "Always sync the change's delta specs into `openspec/specs/` before archiving. Do not ask whether to sync."
       - "Commit the archive isolated to `openspec/`: stage `-A openspec`, make sure nothing else is staged, and commit as `Archive <change>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Then push the branch."
       - "Open the pull request from the change branch to `main` with `gh pr create --body-file`: a `## Summary` heading, 2-4 bullets, an `OpenSpec-Change: <change>` line and a link to the archived proposal at `openspec/changes/archive/<date>-<change>/proposal.md`. Do not add a `Closes` line or an issue number."
-      - "Arm auto-merge with `gh pr merge --auto --squash`, report the PR URL, and watch the checks until they are green."
+      - "Arm auto-merge with `gh pr merge --auto --squash` and report the PR URL. Then follow the PR until it has merged: watch the checks with `gh pr checks --watch` and confirm with `gh pr view --json state,mergeStateStatus` that its state is `MERGED`."
+      - "If a check fails or the PR cannot merge, read the failing job's log (`gh run view --log-failed`) and fix the cause in the working tree on the change branch. Never commit or push such a fix on your own: show the user the diff, and only after they approve, commit (same trailers) and push. Then keep following the PR."
+      - "If a check fails with no clear cause in the code, for example a flaky or infrastructure failure, re-run it once with `gh run rerun --failed`. If it fails again, report it to the user instead of guessing a fix."
