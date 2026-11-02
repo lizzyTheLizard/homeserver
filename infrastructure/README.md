@@ -401,6 +401,13 @@ only do this if you have a reason to.
   `wichteln.yml`, `dev-machine.yml`) that, when its `services/<name>/` folder
   changes, builds and publishes the image to GHCR
   (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and then pulls it on the
-  server. The compose stack is then started/updated with
-  `docker compose up -d`.
+  server. It then recreates only its own service with
+  `docker compose up -d --force-recreate --remove-orphans <service>`.
+* **Infrastructure deploy:** `infrastructure.yml` runs on a push to `main` that
+  changes `infrastructure/**`, the workflow itself or the
+  `.github/actions/deploy-infrastructure` action, and on manual dispatch. It
+  syncs `infrastructure/` to the server, pulls all images and recreates the
+  whole stack with `docker compose up -d --force-recreate --remove-orphans`, so
+  every service is recreated and containers of services no longer in the
+  compose file are removed.
 

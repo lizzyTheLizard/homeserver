@@ -24,11 +24,15 @@ The deployment SHALL be a single docker-compose stack whose services share one n
 
 ### Requirement: Services wait for the dependencies that must be healthy
 
-The stack SHALL gate the reverse proxy on the application, the assistant and the auth proxy being healthy, and the application on the production database, the assistant and the WhatsApp bridge being healthy; other dependencies SHALL only order the start. The auth proxy SHALL only be started after the log and database viewers, without waiting for them to report healthy.
+The stack SHALL gate the reverse proxy on the application, the assistant and the auth proxy being healthy and on the Wichteln service having started, and the application on the production database, the assistant and the WhatsApp bridge being healthy; other dependencies SHALL only order the start. The auth proxy SHALL only be started after the log and database viewers, without waiting for them to report healthy.
 
 #### Scenario: Proxy waits for the application
 - **WHEN** the stack starts and the application is not yet healthy
 - **THEN** the reverse proxy does not start serving until the application reports healthy
+
+#### Scenario: Proxy can start once Wichteln exists
+- **WHEN** the stack starts and the Wichteln service has started but is not yet healthy
+- **THEN** the reverse proxy may start and answers Wichteln requests with a gateway error until the service is healthy
 
 #### Scenario: Application waits for its dependencies
 - **WHEN** the application starts
@@ -52,27 +56,19 @@ Each long-running service SHALL carry a healthcheck that probes it: the applicat
 
 ### Requirement: The stack keeps its data in named volumes
 
-The production database, the development database, the development home and the WhatsApp bridge data SHALL live in named volumes that survive a restart or re-creation of the stack, while certificates, backups and configuration are mounted from the host.
+The production database, the development database, the development home and the WhatsApp bridge data SHALL live in named volumes that survive a restart or re-creation of the stack, while certificates, backups and configuration are mounted from the host. The assistant's and Wichteln's data SHALL live in the shared production database rather than in dedicated volumes.
 
 #### Scenario: Data survives a stack restart
 - **WHEN** the stack is stopped and started again
 - **THEN** the databases, the development home and the WhatsApp data are retained
 
-### Requirement: Application images are supplied, never pulled
-
-The application, assistant, WhatsApp bridge and development-machine images SHALL be built by the pipeline and loaded onto the host, and the stack SHALL NOT pull them from a registry. The backup service's image SHALL be built on the host instead, and the remaining services SHALL use published images.
-
-#### Scenario: Stack uses the supplied images
-- **WHEN** the stack starts the application services
-- **THEN** it runs the locally loaded images of the deployed revision
-
-#### Scenario: A missing image is not substituted
-- **WHEN** one of the built images is missing on the host
-- **THEN** the stack fails to start that service instead of pulling a published image
+#### Scenario: Assistant and Wichteln share the production database
+- **WHEN** the assistant or Wichteln stores data
+- **THEN** the data is written to the shared production database and no dedicated database or volume exists for them
 
 ### Requirement: nginx terminates TLS and routes the public hostnames
 
-nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a health endpoint answering `ok` over plain HTTP and redirect everything else to HTTPS, and SHALL route each public hostname and port to its service, including the assistant WebSocket endpoint.
+nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a health endpoint answering `ok` over plain HTTP and redirect everything else to HTTPS, and SHALL route each public hostname and port to its service, including the assistant WebSocket endpoint and the Wichteln app.
 
 #### Scenario: Plain HTTP is redirected
 - **WHEN** a request arrives over plain HTTP that is not an ACME challenge or the health endpoint
@@ -85,6 +81,10 @@ nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a healt
 #### Scenario: Public hostname reaches its service
 - **WHEN** a request arrives for one of the published hostnames
 - **THEN** nginx forwards it to that hostname's service
+
+#### Scenario: Wichteln hostname reaches the Wichteln service
+- **WHEN** a request arrives for the Wichteln hostname over HTTPS
+- **THEN** nginx terminates TLS with the Wichteln certificate and forwards the request to the Wichteln service
 
 #### Scenario: Assistant WebSocket is proxied
 - **WHEN** a client connects to the assistant WebSocket endpoint
@@ -193,3 +193,56 @@ Every long-running service SHALL restart automatically unless it was stopped del
 #### Scenario: Certificate service does not restart on its own
 - **WHEN** the certificate service's renewal process ends
 - **THEN** it is not restarted automatically
+
+### Requirement: The Wichteln app runs as its own internal service
+
+The stack SHALL run the Wichteln app as its own service on the shared network and SHALL NOT publish the app outside the stack; it is reached only through the reverse proxy.
+
+#### Scenario: App is internal
+
+- **WHEN** the stack is running
+- **THEN** the Wichteln app is reachable directly only from the stack's network, and from outside only through nginx
+
+### Requirement: Application images are pulled from GHCR
+
+The web application, assistant, WhatsApp bridge, Wichteln and development-machine images SHALL be published to GitHub Container Registry as `ghcr.io/<owner>/homeserver-<name>:latest` and the stack SHALL pull them from the registry. The backup service's image SHALL be built on the host instead, and the remaining services SHALL use published images.
+
+#### Scenario: Stack pulls the application images from GHCR
+- **WHEN** the stack starts the application services
+- **THEN** it pulls the `ghcr.io/<owner>/homeserver-<name>:latest` image for each service from GitHub Container Registry
+
+#### Scenario: An unchanged service reuses its latest image
+- **WHEN** a service's folder has not changed since its last publish
+- **THEN** the stack pulls and runs that service's existing latest image rather than a freshly built one
+
+### Requirement: Wichteln stores its data in the shared database under a prefix
+
+The Wichteln app SHALL store its groups, participants, wishes and selections in the shared production database under `wichteln_`-prefixed tables, SHALL apply its own migration files at startup, and SHALL NOT use a dedicated database of its own.
+
+#### Scenario: Wichteln keeps its data in the shared database under a prefix
+- **WHEN** Wichteln stores a group, participant, wish or selection
+- **THEN** the data is written to the shared database using `wichteln_`-prefixed tables, and no dedicated Wichteln database exists
+
+#### Scenario: Wichteln waits for its database
+- **WHEN** the Wichteln service starts
+- **THEN** it starts only after the shared production database reports healthy
+
+### Requirement: An infrastructure deploy recreates the whole stack
+
+An infrastructure deploy SHALL force-recreate every service of the stack, including services whose definition did not change, and SHALL remove orphan containers of the stack, meaning containers whose service is no longer defined. It SHALL run for every push to the main branch that changes the stack definition or the infrastructure deploy's own definition.
+
+#### Scenario: Unchanged services are recreated
+- **WHEN** an infrastructure deploy runs
+- **THEN** every service of the stack is recreated, even when its configuration and image did not change
+
+#### Scenario: Orphan containers are removed
+- **WHEN** an infrastructure deploy runs and a container belongs to a service no longer defined in the stack
+- **THEN** that container is removed
+
+#### Scenario: A change to the deploy definition triggers a deploy
+- **WHEN** a push to the main branch changes only the infrastructure workflow or its deploy action
+- **THEN** an infrastructure deploy runs
+
+#### Scenario: A change to the stack definition triggers a deploy
+- **WHEN** a push to the main branch changes the stack definition or its mounted configuration
+- **THEN** an infrastructure deploy runs
