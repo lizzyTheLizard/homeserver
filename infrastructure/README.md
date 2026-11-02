@@ -72,11 +72,11 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
     Claude app to the dev machine's `claude remote-control` session (requires a
     one-time `claude /login` and an eligible Claude subscription)
 
-In development the WhatsApp bridge is **not** a separate container: `pnpm dev`
-inside `dev-machine` starts the TypeScript companion (`pnpm --filter
+In development neither the WhatsApp bridge nor Wichteln is a separate container.
+`pnpm dev` inside `dev-machine` starts Wichteln (`next dev` on port `3001`) and the TypeScript companion (`pnpm --filter
 @homeserver/whatsapp dev`, i.e. `tsx watch`) which drives the `wacli`
 binary, as a local process alongside the Next.js server, tied to the same
-lifecycle. Its
+lifecycle. The bridge's
 state is a local SQLite directory under `services/whatsapp/data/`, not `postgresdev`.
 
 ---
@@ -102,14 +102,15 @@ prefixed) and has its own secrets. The three `WICHTELN_*` values in
 Without them the `wichteln` container reports unhealthy and returns `503`.
 
 For local development against `postgresdev`, the Wichteln app shares the dev
-`homeserver` database (no separate database to create); point the dev server at
-it:
+`homeserver` database (no separate database to create). `pnpm dev` starts it on
+port `3001` alongside the other services (`pnpm dev:wichteln` starts it alone).
+Like them it reads `services/.env`, which must contain `DB_CONNECTION_STRING`
+plus Wichteln's unprefixed variables:
 
 ```bash
-DB_CONNECTION_STRING="postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable" \
-SESSION_SECRET="$(openssl rand -hex 32)" \
-ADMIN_USER=admin ADMIN_PASSWORD=dev \
-pnpm dev:wichteln
+SESSION_SECRET=dev-only-wichteln-session-secret-0000   # at least 32 characters
+ADMIN_USER=admin
+ADMIN_PASSWORD=admin
 ```
 
 Before first start you also need
