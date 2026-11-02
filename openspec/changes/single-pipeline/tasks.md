@@ -3,7 +3,7 @@
 ## 1. Pipeline scripts
 
 - [x] 1.1 Add `.github/scripts/detect-changes.mjs` (exported pure function from changed paths to `{web, assistant, whatsapp, wichteln, dev-machine, infrastructure}` plus a CLI that reads the diff range from the event and writes `GITHUB_OUTPUT`) with `detect-changes.test.mjs` covering every "The pipeline first detects what changed" scenario; verify with `node --test '.github/scripts/*.test.mjs'`
-- [ ] 1.2 Restore the change guard from `3aeb40d` into `.github/scripts/change-guard.mjs` and `change-guard.test.mjs`, tighten the sync rule to per-delta-path matching, and add tests for every `ci/change-guard` scenario including "A delta synced into a different capability fails"; verify with `node --test '.github/scripts/*.test.mjs'`
+- [x] 1.2 Restore the change guard from `3aeb40d` into `.github/scripts/change-guard.mjs` and `change-guard.test.mjs`, tighten the sync rule to per-delta-path matching, and add tests for every `ci/change-guard` scenario including "A delta synced into a different capability fails"; verify with `node --test '.github/scripts/*.test.mjs'`
 
 ## 2. Single pipeline
 
