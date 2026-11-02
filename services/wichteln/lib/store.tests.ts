@@ -4,6 +4,7 @@ import type { Queryable } from './db'
 import { applyMigrations } from './migrate'
 import * as store from './store'
 import { selectableWishOwners } from './matching'
+import { hashPassword } from './password'
 
 function pgliteQueryable(db: PGlite): Queryable {
   return {
@@ -30,7 +31,18 @@ describe('store', () => {
   })
 
   async function createTestGroup(names = ['Anna', 'Ben', 'Cara']) {
-    const result = await store.createGroup(queryable, 'Team', names)
+    const created = await store.createGroup(queryable, 'Team')
+    if (!created.ok) throw new Error(created.error)
+    for (const name of names) {
+      await register(created.value.id, name)
+    }
+    const group = await store.getGroup(queryable, created.value.id)
+    if (!group) throw new Error('Group disappeared')
+    return group
+  }
+
+  async function register(groupId: string, name: string, password = `${name}-password`) {
+    const result = await store.registerParticipant(queryable, groupId, name, await hashPassword(password))
     if (!result.ok) throw new Error(result.error)
     return result.value
   }
@@ -45,32 +57,60 @@ describe('store', () => {
     }
   }
 
-  test('creates a group with generated, unique passwords', async () => {
-    const group = await createTestGroup()
+  test('creates a group with an invite token and no participants', async () => {
+    const result = await store.createGroup(queryable, 'Team')
+    if (!result.ok) throw new Error(result.error)
 
-    expect(group.phase).toBe('wishes')
-    expect(group.users.map(user => user.name)).toEqual(expect.arrayContaining(['Anna', 'Ben', 'Cara']))
-    expect(new Set(group.users.map(user => user.password)).size).toBe(3)
+    expect(result.value.phase).toBe('wishes')
+    expect(result.value.users).toEqual([])
+    expect(result.value.inviteToken).toMatch(/^team-[a-z2-9]{10}$/)
     expect(await store.listGroups(queryable)).toHaveLength(1)
+
+    const other = await store.createGroup(queryable, 'Other')
+    if (!other.ok) throw new Error(other.error)
+    expect(other.value.inviteToken).not.toBe(result.value.inviteToken)
   })
 
-  test('rejects duplicate and too few participant names', async () => {
-    const duplicate = await store.createGroup(queryable, 'Team', ['Anna', 'anna'])
-    expect(duplicate).toEqual({ ok: false, error: 'Der Name „anna“ kommt mehrfach vor.' })
-
-    const tooFew = await store.createGroup(queryable, 'Team', ['Anna'])
-    expect(tooFew.ok).toBe(false)
+  test('rejects a group without a name', async () => {
+    expect(await store.createGroup(queryable, '')).toEqual({ ok: false, error: 'Bitte einen Gruppennamen eingeben.' })
+    expect(await store.listGroups(queryable)).toHaveLength(0)
   })
 
-  test('adds and removes participants during the wish phase', async () => {
+  test('finds a group by its invite token', async () => {
     const group = await createTestGroup()
 
-    expect(await store.addParticipants(queryable, group.id, ['Dora'])).toEqual({ ok: true, value: 1 })
-    expect((await store.addParticipants(queryable, group.id, ['dora'])).ok).toBe(false)
+    const found = await store.getGroupByInviteToken(queryable, group.inviteToken)
+    expect(found?.id).toBe(group.id)
+    expect(found?.users).toHaveLength(3)
+    expect(await store.getGroupByInviteToken(queryable, 'unknown')).toBeNull()
+    expect(await store.getGroupByInviteToken(queryable, '')).toBeNull()
+  })
 
-    const withDora = await store.getGroup(queryable, group.id)
-    const dora = withDora?.users.find(user => user.name === 'Dora')
-    if (!dora) throw new Error('Dora was not added')
+  test('registers participants with names unique per group, ignoring case', async () => {
+    const group = await createTestGroup(['Anna'])
+
+    const duplicate = await store.registerParticipant(queryable, group.id, 'ANNA', await hashPassword('whatever1'))
+    expect(duplicate).toEqual({ ok: false, error: 'Dieser Name ist in der Gruppe bereits vergeben.' })
+
+    const other = await createTestGroup([])
+    expect((await register(other.id, 'Anna')).name).toBe('Anna')
+
+    expect((await store.getGroup(queryable, group.id))?.users).toHaveLength(1)
+    expect((await store.getGroup(queryable, other.id))?.users).toHaveLength(1)
+  })
+
+  test('refuses registration once the selection phase has started', async () => {
+    const group = await createTestGroup(['Anna', 'Ben'])
+    await addWishes(group)
+    expect((await store.startSelection(queryable, group.id)).ok).toBe(true)
+
+    const late = await store.registerParticipant(queryable, group.id, 'Dora', await hashPassword('whatever1'))
+    expect(late.ok).toBe(false)
+  })
+
+  test('removes participants during the wish phase', async () => {
+    const group = await createTestGroup()
+    const dora = await register(group.id, 'Dora')
 
     await store.removeParticipant(queryable, group.id, dora.id)
     const withoutDora = await store.getGroup(queryable, group.id)
@@ -129,13 +169,50 @@ describe('store', () => {
     expect(new Set(final.users.map(user => user.selectedWishOf)).size).toBe(final.users.length)
   })
 
-  test('authenticates a participant by name and password', async () => {
-    const group = await createTestGroup()
-    const user = group.users.at(0)
-    if (!user) throw new Error('Group has no participants')
+  test('authenticates a participant only within their group', async () => {
+    const group = await createTestGroup(['Anna', 'Ben'])
+    const other = await createTestGroup(['Cara'])
 
-    expect(await store.authenticateParticipant(queryable, user.name.toUpperCase(), user.password)).not.toBeNull()
-    expect(await store.authenticateParticipant(queryable, user.name, 'wrong')).toBeNull()
+    const found = await store.authenticateParticipant(queryable, group.id, 'ANNA', 'Anna-password')
+    expect(found?.user.name).toBe('Anna')
+    expect(found?.group.id).toBe(group.id)
+    expect(await store.authenticateParticipant(queryable, group.id, 'Anna', 'wrong')).toBeNull()
+    expect(await store.authenticateParticipant(queryable, group.id, 'Nobody', 'Anna-password')).toBeNull()
+    expect(await store.authenticateParticipant(queryable, other.id, 'Anna', 'Anna-password')).toBeNull()
+  })
+
+  test('stores only password hashes', async () => {
+    const group = await createTestGroup(['Anna', 'Ben'])
+    await register(group.id, 'Cara', 'same-password')
+    await register(group.id, 'Dora', 'same-password')
+
+    const rows = await queryable.query<{ name: string, password_hash: string }>(
+      'SELECT name, password_hash FROM wichteln_users WHERE group_id = $1',
+      [group.id],
+    )
+    const hashes = rows.map(row => row.password_hash)
+    expect(hashes.every(hash => hash.startsWith('scrypt$'))).toBe(true)
+    expect(hashes).not.toContain('same-password')
+    expect(new Set(hashes).size).toBe(rows.length)
+  })
+
+  test('resets a password to a generated one', async () => {
+    const group = await createTestGroup(['Anna', 'Ben'])
+    const anna = group.users.find(user => user.name === 'Anna')
+    if (!anna) throw new Error('Anna is missing')
+
+    const reset = await store.resetPassword(queryable, group.id, anna.id)
+    if (!reset.ok) throw new Error(reset.error)
+
+    expect(reset.value).toMatch(/^[a-zA-Z2-9]{10}$/)
+    expect(await store.authenticateParticipant(queryable, group.id, 'Anna', 'Anna-password')).toBeNull()
+    expect(await store.authenticateParticipant(queryable, group.id, 'Anna', reset.value)).not.toBeNull()
+
+    const rows = await queryable.query<{ password_hash: string }>('SELECT password_hash FROM wichteln_users WHERE id = $1', [anna.id])
+    expect(rows[0]?.password_hash).not.toBe(reset.value)
+
+    const other = await createTestGroup(['Cara'])
+    expect((await store.resetPassword(queryable, other.id, anna.id)).ok).toBe(false)
   })
 
   test('deletes a group with its participants', async () => {

@@ -27,7 +27,7 @@ Each service lives in its own folder under `services/` and is published as its o
 
 ### Wichteln
 
-[`services/wichteln`](services/wichteln) — a small standalone Next.js app for an anonymous Secret Santa ("Wichteln") at wichteln.gutschi.site (dev: `http://localhost:3001`). It does not use the portal's OIDC login; it has its own admin credentials and per-participant passwords. Its data lives in `wichteln_*`-prefixed tables in the shared database.
+[`services/wichteln`](services/wichteln) — a small standalone Next.js app for an anonymous Secret Santa ("Wichteln") at wichteln.gutschi.site (dev: `http://localhost:3001`). It does not use the portal's OIDC login: the admin signs in with their own credentials and creates groups, and participants register themselves through the group's invite link with a name and password that only work in that group (stored as scrypt hashes; the admin can reset them). Its data lives in `wichteln_*`-prefixed tables in the shared database.
 
 1. The **admin** signs in on the start page with `ADMIN_USER` / `ADMIN_PASSWORD`, creates a group and enters the participants' names. A password is generated for each person ("copy all credentials" to hand them out).
 2. **Phase 1:** participants sign in with name + password and enter their wish (title + description); they can change it until phase 2 starts. The admin only sees *who* has already entered a wish.

@@ -6,7 +6,6 @@ function makeUser(id: string, hasWish = true): User {
   return {
     id,
     name: id,
-    password: 'secret',
     wish: hasWish ? { title: `Wish ${id}`, description: `Description ${id}` } : null,
     selectedWishOf: null,
   }
@@ -17,6 +16,7 @@ function makeGroup(users: User[], phase: Group['phase'] = 'selection'): Group {
     id: 'group-1',
     name: 'Test group',
     phase,
+    inviteToken: 'token',
     createdAt: '2026-01-01T00:00:00.000Z',
     users,
   }

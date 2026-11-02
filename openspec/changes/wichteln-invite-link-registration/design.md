@@ -24,9 +24,9 @@ See proposal.md for motivation and specs/wichteln/spec.md for the behavior.
 
 ## Decisions
 
-### Invite token separate from the group id
-Add `invite_token TEXT NOT NULL UNIQUE` to `wichteln_groups`, filled at creation with `randomBytes(24).toString('base64url')` (32 characters). The link is `/g/<token>`, built from the request origin on the admin page (the copy button uses `window.location.origin` as `CopyCredentials` does today).
-*Alternative:* use the group UUID in the link. It is random enough, but it also appears in admin URLs, and a separate token leaves room for rotating links later without a schema change. The extra column costs almost nothing.
+### Invite token: readable slug plus random suffix, separate from the group id
+Add `invite_token TEXT NOT NULL UNIQUE` to `wichteln_groups`, filled at creation by `lib/inviteToken.ts` as `<slug>-<suffix>`, e.g. `/g/team-weihnachten-2026-k7f3q9xmwa`. The slug is the group name lowercased, with umlauts and ß spelled out (ae/oe/ue/ss), other accents stripped, everything else collapsed to `-`, cut to 40 characters, and `gruppe` if nothing readable is left. Only the suffix is secret: 10 random characters from a 31-character lowercase alphabet without look-alikes, about 49 bits. The slug is fixed at creation. The admin page builds the full link from the browser's origin.
+*Alternatives:* a purely random 32-character token is equally safe but unreadable in a chat message. The group name alone would be guessable and let anyone register. The group UUID is also unreadable, and it already appears in admin URLs.
 
 ### Route layout
 - `/` — administrator sign-in only. A participant session still redirects to `/wunsch`. The page text tells participants to use their invite link. If the submitted name and password are not the admin's, the error says so and points to the invite link.

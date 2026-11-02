@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
 import { getGroup } from '@/lib/store'
 import { getDb } from '@/lib/db'
-import { AddParticipantsForm, CopyCredentials, SubmitButton } from '../../components'
-import { addParticipants, deleteGroup, removeParticipant, startSelection } from '../actions'
+import { CopyInviteLink, ResetPasswordForm, SubmitButton } from '../../components'
+import { deleteGroup, removeParticipant, resetPassword, startSelection } from '../actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +18,6 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
   const done = group.users.filter(u => (inWishes ? u.wish : u.selectedWishOf)).length
   const total = group.users.length
   const canStart = inWishes && total >= 2 && done === total
-  const credentials = group.users.map(u => `${u.name}: Benutzername „${u.name}“, Passwort „${u.password}“`).join('\n')
 
   return (
     <>
@@ -29,6 +28,16 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         <h1>{group.name}</h1>
         <span className="badge">{inWishes ? 'Phase 1 · Wünsche' : 'Phase 2 · Auswahl'}</span>
       </div>
+
+      <section className="card">
+        <h2>Einladungslink</h2>
+        <p className="muted">
+          {inWishes
+            ? 'Schicke diesen Link allen Teilnehmenden. Darüber registrieren sie sich für die Gruppe und melden sich später wieder an.'
+            : 'Die Registrierung ist geschlossen. Über den Link können sich bestehende Teilnehmende weiterhin anmelden.'}
+        </p>
+        <CopyInviteLink path={`/g/${group.inviteToken}`} />
+      </section>
 
       <section className="card">
         <div className="row">
@@ -51,11 +60,7 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
               <li key={u.id}>
                 <div className="participant">
                   <strong>{u.name}</strong>
-                  <span className="muted small">
-                    Passwort:
-                    {' '}
-                    <code>{u.password}</code>
-                  </span>
+                  <ResetPasswordForm name={u.name} action={resetPassword.bind(null, group.id, u.id)} />
                 </div>
                 <div className="participant-status">
                   <span className={`badge ${ok ? 'done' : 'open'}`}>
@@ -74,8 +79,9 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
           })}
         </ul>
 
+        {total === 0 && <p className="muted">Noch niemand hat sich registriert.</p>}
+
         <div className="row" style={{ marginTop: 12 }}>
-          <CopyCredentials text={credentials} />
           <Link href={`/admin/${group.id}`} className="small">
             Aktualisieren
           </Link>
@@ -105,10 +111,6 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
                     {total < 2 ? 'Es braucht mindestens zwei Teilnehmende.' : `Es fehlen noch ${String(total - done)} Wünsche.`}
                   </p>
                 )}
-              </section>
-
-              <section className="card">
-                <AddParticipantsForm action={addParticipants.bind(null, group.id)} />
               </section>
             </>
           )

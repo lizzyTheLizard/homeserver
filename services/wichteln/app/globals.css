@@ -269,8 +269,33 @@ button.link:hover:not(:disabled) {
   min-width: 0;
 }
 
-.participant code {
+.reset-password {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.reset-password code {
   font-size: 0.95rem;
+  user-select: all;
+}
+
+.error-text {
+  color: var(--primary);
+}
+
+.invite-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invite-link code {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  word-break: break-all;
   user-select: all;
 }
 
