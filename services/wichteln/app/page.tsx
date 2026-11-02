@@ -15,7 +15,10 @@ export default async function LoginPage() {
   return (
     <div className="card login">
       <h1>Willkommen beim Wichteln</h1>
-      <p className="muted">Melde dich mit den Zugangsdaten an, die du erhalten hast.</p>
+      <p className="muted">
+        Teilnehmende melden sich über den Einladungslink ihrer Gruppe an oder registrieren sich dort. Diese Anmeldung
+        ist nur für den Admin.
+      </p>
       <LoginForm />
     </div>
   )

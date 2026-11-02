@@ -1,8 +1,8 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, useSyncExternalStore } from 'react'
 import { useFormStatus } from 'react-dom'
-import { login, saveWish, selectWish, type FormState } from './actions'
+import { groupLogin, login, register, saveWish, selectWish, type FormState } from './actions'
 import { createGroup } from './admin/actions'
 
 function Message({ state }: { state: FormState }) {
@@ -55,6 +55,58 @@ export function LoginForm() {
   )
 }
 
+export function GroupLoginForm({ token }: { token: string }) {
+  const [state, action] = useActionState(groupLogin, undefined)
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="token" value={token} />
+      <div>
+        <label htmlFor="login-name">Name</label>
+        <input id="login-name" name="name" autoComplete="username" autoCapitalize="none" required />
+      </div>
+      <div>
+        <label htmlFor="login-password">Passwort</label>
+        <input id="login-password" name="password" type="password" autoComplete="current-password" required />
+      </div>
+      <Message state={state} />
+      <SubmitButton className="full">Anmelden</SubmitButton>
+    </form>
+  )
+}
+
+export function RegisterForm({ token }: { token: string }) {
+  const [state, action] = useActionState(register, undefined)
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="token" value={token} />
+      <div>
+        <label htmlFor="register-name">Name</label>
+        <input id="register-name" name="name" autoComplete="username" maxLength={60} required />
+        <span className="muted small">Damit meldest du dich später wieder an.</span>
+      </div>
+      <div>
+        <label htmlFor="register-password">Passwort</label>
+        <input id="register-password" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={200} required />
+        <span className="muted small">Mindestens 8 Zeichen.</span>
+      </div>
+      <div>
+        <label htmlFor="register-password-confirmation">Passwort wiederholen</label>
+        <input
+          id="register-password-confirmation"
+          name="passwordConfirmation"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          maxLength={200}
+          required
+        />
+      </div>
+      <Message state={state} />
+      <SubmitButton className="full">Registrieren</SubmitButton>
+    </form>
+  )
+}
+
 export function WishForm({ title, description }: { title?: string, description?: string }) {
   const [state, action] = useActionState(saveWish, undefined)
   return (
@@ -103,57 +155,65 @@ export function CreateGroupForm() {
         <label htmlFor="name">Gruppenname</label>
         <input id="name" name="name" placeholder="z. B. Team Weihnachten 2026" required />
       </div>
-      <div>
-        <label htmlFor="names">Teilnehmende</label>
-        <textarea id="names" name="names" placeholder={'Anna\nBen\nCarla'} required />
-        <span className="muted small">Ein Name pro Zeile (oder durch Komma getrennt). Der Name ist der Benutzername.</span>
-      </div>
+      <p className="muted small">Danach erhältst du einen Einladungslink, über den sich die Teilnehmenden selbst registrieren.</p>
       <Message state={state} />
       <SubmitButton className="full">Gruppe erstellen</SubmitButton>
     </form>
   )
 }
 
-export function AddParticipantsForm({
+export function ResetPasswordForm({
+  name,
   action: boundAction,
 }: {
-  action: (prev: FormState, formData: FormData) => Promise<FormState>
+  name: string
+  action: (prev: FormState) => Promise<FormState>
 }) {
   const [state, action] = useActionState(boundAction, undefined)
   return (
-    <form action={action} className="stack">
-      <div>
-        <label htmlFor="add-names">Weitere Teilnehmende</label>
-        <textarea id="add-names" name="names" placeholder="Ein Name pro Zeile" style={{ minHeight: 70 }} />
-      </div>
-      <Message state={state} />
-      <SubmitButton className="secondary">Hinzufügen</SubmitButton>
+    <form action={action} className="reset-password">
+      <SubmitButton className="link" confirm={`Passwort von ${name} wirklich zurücksetzen?`}>
+        Passwort zurücksetzen
+      </SubmitButton>
+      {state?.ok && (
+        <span className="small">
+          Neues Passwort:
+          {' '}
+          <code>{state.ok}</code>
+        </span>
+      )}
+      {state?.error && <span className="small error-text">{state.error}</span>}
     </form>
   )
 }
 
-export function CopyCredentials({ text }: { text: string }) {
+export function CopyInviteLink({ path }: { path: string }) {
   const [copied, setCopied] = useState(false)
+  const origin = useSyncExternalStore(subscribeNever, () => window.location.origin, () => '')
+  const link = `${origin}${path}`
 
   async function copy() {
-    const full = `Wichteln – Anmeldung unter ${window.location.origin}\n\n${text}`
     try {
-      await navigator.clipboard.writeText(full)
+      await navigator.clipboard.writeText(link)
       setCopied(true)
       setTimeout(() => { setCopied(false) }, 2000)
     }
     catch {
-      window.prompt('Zugangsdaten kopieren:', full)
+      window.prompt('Einladungslink kopieren:', link)
     }
   }
 
   return (
-    <button
-      type="button"
-      className="secondary"
-      onClick={() => { void copy() }}
-    >
-      {copied ? 'Kopiert ✓' : 'Alle Zugangsdaten kopieren'}
-    </button>
+    <div className="invite-link">
+      <code>{link}</code>
+      <button type="button" className="secondary" onClick={() => { void copy() }}>
+        {copied ? 'Kopiert ✓' : 'Einladungslink kopieren'}
+      </button>
+    </div>
   )
+}
+
+/** The page origin never changes, so there is nothing to subscribe to. */
+function subscribeNever() {
+  return () => { /* nothing to unsubscribe */ }
 }

@@ -11,27 +11,19 @@ import { formString } from '@/lib/form'
 export async function createGroup(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireAdmin()
   const name = formString(formData, 'name').trim()
-  const names = parseNames(formString(formData, 'names'))
   if (!name) return { error: 'Bitte einen Gruppennamen eingeben.' }
-  if (names.length < 2) return { error: 'Bitte mindestens zwei Teilnehmende eingeben.' }
 
-  const result = await withTransaction(db => store.createGroup(db, name, names))
+  const result = await withTransaction(db => store.createGroup(db, name))
   if (!result.ok) return { error: result.error }
 
   revalidatePath('/admin')
   redirect(`/admin/${result.value.id}`)
 }
 
-export async function addParticipants(groupId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+export async function resetPassword(groupId: string, userId: string): Promise<FormState> {
   await requireAdmin()
-  const names = parseNames(formString(formData, 'names'))
-  if (names.length === 0) return { error: 'Bitte mindestens einen Namen eingeben.' }
-
-  const result = await withTransaction(db => store.addParticipants(db, groupId, names))
-  revalidatePath(`/admin/${groupId}`)
-  return result.ok
-    ? { ok: `${String(result.value)} Teilnehmende hinzugefügt.` }
-    : { error: result.error }
+  const result = await withTransaction(db => store.resetPassword(db, groupId, userId))
+  return result.ok ? { ok: result.value } : { error: result.error }
 }
 
 export async function removeParticipant(groupId: string, userId: string) {
@@ -51,11 +43,4 @@ export async function deleteGroup(groupId: string) {
   await withTransaction(db => store.deleteGroup(db, groupId))
   revalidatePath('/admin')
   redirect('/admin')
-}
-
-function parseNames(raw: string) {
-  return raw
-    .split(/[\n,;]/)
-    .map(name => name.trim())
-    .filter(Boolean)
 }
