@@ -21,7 +21,7 @@ Connect to the dev machine (see [infrastructure/README.md](infrastructure/README
 for the full setup):
 
 - **Browser VS Code:** <https://dev.gutschi.site:8443> (dev auth)
-- **OpenCode:** <https://dev.gutschi.site:8444> (dev auth)
+- **Claude Code (Remote Control):** the dev machine runs `claude remote-control`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription)
 - **VS Code Remote SSH:** `ssh dev@<host> -p 2222`
 
 Inside the dev machine the repo is already cloned at `/home/dev/workspace` with
@@ -34,7 +34,7 @@ pnpm dev
 ```
 
 The full stack (prod database, application, reverse proxies, DNS, backups, and the
-`dev-machine` container with VS Code + OpenCode) is described in
+`dev-machine` container with VS Code + Claude Code) is described in
 [infrastructure/README.md](infrastructure/README.md).
 
 The dev server is at `http://localhost:3000`. All routes are protected by OpenID Connect (Microsoft Azure AD by default). Migrations in [services/web/db/](services/web/db/) run automatically on first DB connection.
@@ -110,7 +110,7 @@ Per-row ownership is keyed on the user's email (`owner_email`). There is no `use
 │   ├── assistant/      Standalone assistant service (port 8500, WebSocket)
 │   ├── whatsapp/       WhatsApp bridge container (wacli + companion)
 │   ├── wichteln/       Wichteln app (own migrations in web-style db/ folder)
-│   └── dev-machine/    Development container (code-server, OpenCode, SSH)
+│   └── dev-machine/    Development container (code-server, Claude Code, SSH)
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))
 ├── .github/workflows/  CI/CD (per-service build/deploy)
 ├── .agents/skills/     Agent skills: the OpenSpec workflows (see Development workflow)
