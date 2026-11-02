@@ -23,7 +23,8 @@ was deleted together with `homeserver.yml` in `180ad5d`; its logic is recoverabl
 - The required check name never depends on which services changed.
 
 **Non-Goals:**
-- Reintroducing the stack smoke suite.
+- The stack smoke suite: it is being moved out of the pipeline and is specified again by its own
+  change; this change only removes its stale requirements from `pipeline`.
 - Changing the deploy mechanics on the host (rsync, `docker compose`, `flock`) or the image names.
 - Touching `dependabot-auto-merge.yml`; it is a `pull_request_target` helper, not a build pipeline.
 
@@ -75,15 +76,14 @@ scripts' own tests there means a broken detector or guard fails the pull request
 
 ### 4. Infrastructure deploy replaces the per-service deploys
 
-`pipeline.yml` passes `deploy: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' && needs.changes.outputs.infrastructure != 'true' }}`
+`pipeline.yml` passes `deploy: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.changes.outputs.infrastructure != 'true' }}`
 to every service call. A separate `deploy-infrastructure` job needs `changes` and all five service
 calls and runs with
-`if: always() && github.ref == 'refs/heads/main' && github.actor != 'dependabot[bot]' && needs.changes.outputs.infrastructure == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')`,
+`if: always() && github.ref == 'refs/heads/main' && needs.changes.outputs.infrastructure == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')`,
 so it waits for skipped services, never runs after a failed publish, and recreates the stack once
 with every new image. The composite deploy actions keep their own `github.event_name == 'push'`
-guards, which also makes a manual dispatch build but not deploy — unchanged from today. The
-`dependabot[bot]` exclusion restores the existing spec rule that the per-service workflows had
-dropped.
+guards, which also makes a manual dispatch build but not deploy — unchanged from today.
+Runs started by Dependabot deploy like any other `main` run; there is no actor exclusion.
 
 ### 5. Quality Gate
 

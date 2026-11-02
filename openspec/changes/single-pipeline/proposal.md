@@ -32,9 +32,11 @@ readable and gives pull requests exactly one check to require.
   that change must have its main spec under `openspec/specs/` updated in the same pull request.
 - Change the `main` ruleset so the only required status check is "Quality Gate", replacing the five
   "Gate …" checks.
-- Remove the stale `pipeline` requirements for the stack smoke suite, the "All Build Check Success"
-  job and the artifact-based deploy: none of them has existed since the per-service restructure, and
-  they contradict the new single-pipeline requirements.
+- Remove the stale `pipeline` requirements for the "All Build Check Success" job and the
+  artifact-based deploy, which contradict the single pipeline, and drop the rule that a Dependabot
+  merge is not deployed: Dependabot merges deploy like any other merge.
+- Take the stack smoke suite requirements out of `pipeline`: the smoke suite is being moved out of
+  the pipeline and is specified again by its own change.
 
 ## Capabilities
 
@@ -46,7 +48,8 @@ _None._
 
 - `pipeline`: one pipeline with triggers limited to pull requests, `main` and manual runs, change
   detection driving per-service lint/test/build/publish/deploy, and a single always-running quality
-  gate; the stale smoke-suite and aggregated-check requirements are removed.
+  gate; Dependabot merges deploy; the aggregated-check requirement is removed and the smoke-suite
+  requirements leave this capability because the smoke suite is being moved.
 - `ci/change-guard`: the guard runs as part of the pipeline, also rejects an in-flight change folder
   left anywhere in the pull request, and checks that each delta spec's own main spec was synced
   rather than any file under `openspec/specs/`.

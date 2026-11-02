@@ -106,6 +106,30 @@ The pipeline SHALL end with one job named "Quality Gate" that depends on every o
 - **WHEN** a pull request targets main
 - **THEN** "Quality Gate" is the only required status check, and the pull request can merge once it passes
 
+### Requirement: Changed services are deployed from main
+
+The deploy SHALL run only for a run on the main branch, regardless of who started it, and only after the deployed service's lint, tests and image publish succeeded. For each changed service it SHALL synchronise the stack definition to the server, pull that service's published image and recreate only that service. Concurrent deploys on the server SHALL be serialised.
+
+#### Scenario: Deploy publishes the stack
+- **WHEN** the pipeline runs on main, the assistant is reported as changed and its image was published
+- **THEN** the stack definition is synchronised to the server and the assistant's container is recreated from the new image
+
+#### Scenario: A failing check blocks the deploy
+- **WHEN** a changed service's lint, tests or image build fail on main
+- **THEN** that service is not deployed
+
+#### Scenario: A dependabot merge deploys
+- **WHEN** a dependency update from the dependency bot is merged and the pipeline runs on main for it
+- **THEN** the changed services are deployed like for any other merge
+
+#### Scenario: A pull request never deploys
+- **WHEN** the pipeline runs for a pull request
+- **THEN** no deploy runs
+
+#### Scenario: An infrastructure change deploys the whole stack instead
+- **WHEN** the infrastructure is reported as changed on main
+- **THEN** no per-service deploy runs and the whole stack is deployed once after every changed image was published
+
 ## MODIFIED Requirements
 
 ### Requirement: Every package is linted and tested
@@ -120,31 +144,11 @@ The pipeline SHALL be able to lint every package and SHALL run the assistant's t
 - **WHEN** any lint, test or build job fails
 - **THEN** the publish and deploy of that service do not run
 
-### Requirement: Deploy runs only on the main branch
-
-The deploy SHALL run only for a run on the main branch, SHALL be skipped for a run started by the dependency bot, and SHALL run only after the deployed service's lint, tests and image publish succeeded. For each changed service it SHALL synchronise the stack definition to the server, pull that service's published image and recreate only that service. Concurrent deploys on the server SHALL be serialised.
-
-#### Scenario: Deploy publishes the stack
-- **WHEN** the pipeline runs on main, the assistant is reported as changed and its image was published
-- **THEN** the stack definition is synchronised to the server and the assistant's container is recreated from the new image
-
-#### Scenario: A failing check blocks the deploy
-- **WHEN** a changed service's lint, tests or image build fail on main
-- **THEN** that service is not deployed
-
-#### Scenario: A dependabot push does not deploy
-- **WHEN** the run on main was started by the dependency bot
-- **THEN** no service deploy and no infrastructure deploy runs
-
-#### Scenario: A pull request never deploys
-- **WHEN** the pipeline runs for a pull request
-- **THEN** no deploy runs
-
-#### Scenario: An infrastructure change deploys the whole stack instead
-- **WHEN** the infrastructure is reported as changed on main
-- **THEN** no per-service deploy runs and the whole stack is deployed once after every changed image was published
-
 ## REMOVED Requirements
+
+### Requirement: Deploy runs only on the main branch
+**Reason**: Replaced by "Changed services are deployed from main". The deploy is now per changed service, and a dependency-bot merge is deployed like any other merge instead of being skipped.
+**Migration**: None.
 
 ### Requirement: The pipeline runs on every push, pull request and on demand
 **Reason**: Replaced by "One pipeline runs for pull requests, the main branch and on demand"; the per-service pipelines and the shared pipeline are merged into one, and pushes to feature branches no longer run it.
@@ -159,24 +163,24 @@ The deploy SHALL run only for a run on the main branch, SHALL be skipped for a r
 **Migration**: None.
 
 ### Requirement: The stack smoke suite runs against the built images
-**Reason**: The smoke suite was removed with the per-service restructure and is not part of the pipeline.
-**Migration**: None.
+**Reason**: The stack smoke suite is being moved out of the pipeline and out of this capability; it has not run since the per-service restructure and will be specified again where it moves to, by its own change.
+**Migration**: Until then no smoke suite runs; the moved smoke suite's change adds its requirements back.
 
 ### Requirement: Infrastructure service checks
-**Reason**: Part of the removed smoke suite.
-**Migration**: None.
+**Reason**: Part of the stack smoke suite, which is being moved out of the pipeline (see "The stack smoke suite runs against the built images").
+**Migration**: Specified again with the moved smoke suite.
 
 ### Requirement: Authenticated page checks via headless browser
-**Reason**: Part of the removed smoke suite.
-**Migration**: None.
+**Reason**: Part of the stack smoke suite, which is being moved out of the pipeline (see "The stack smoke suite runs against the built images").
+**Migration**: Specified again with the moved smoke suite.
 
 ### Requirement: Test-mode stack configuration
-**Reason**: Part of the removed smoke suite.
-**Migration**: None.
+**Reason**: Part of the stack smoke suite, which is being moved out of the pipeline (see "The stack smoke suite runs against the built images").
+**Migration**: Specified again with the moved smoke suite.
 
 ### Requirement: The smoke suite runs locally against a locally built stack
-**Reason**: Part of the removed smoke suite.
-**Migration**: None.
+**Reason**: Part of the stack smoke suite, which is being moved out of the pipeline (see "The stack smoke suite runs against the built images").
+**Migration**: Specified again with the moved smoke suite.
 
 ### Requirement: One aggregated check per push
 **Reason**: Replaced by "One quality gate decides the run", which also gates pull requests.
