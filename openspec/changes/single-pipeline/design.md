@@ -69,7 +69,7 @@ Recover the script and its `node:test` file from `3aeb40d` into `.github/scripts
 root `scripts/` folder any more) and tighten the sync rule: collect every
 `openspec/changes/archive/<date>-<name>/specs/<path>/spec.md` and require
 `openspec/specs/<path>/spec.md` in the changed paths, reporting each missing one. The
-`change-guard` job runs only for `pull_request`, first `node --test .github/scripts/`, then the guard
+`change-guard` job runs only for `pull_request`, first `node --test '.github/scripts/*.test.mjs'`, then the guard
 with `HEAD_REF=${{ github.head_ref }}` and `BASE_REF=origin/${{ github.base_ref }}`. Running the
 scripts' own tests there means a broken detector or guard fails the pull request that broke it.
 
