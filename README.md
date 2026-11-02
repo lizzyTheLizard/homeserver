@@ -118,7 +118,7 @@ The `openspec-*` skills are auto-generated and must not be edited by hand.
 
 ## Architecture
 
-Each service is built into its own image (`ghcr.io/lizzythelizard/homeserver-<service>`) by its own workflow in `.github/workflows/` and deployed with `infrastructure/docker-compose.yml`. The web app calls the assistant over an internal URL, and the assistant talks to the WhatsApp bridge; web, assistant and Wichteln share the PostgreSQL database, each with its own migrations.
+Each service is built into its own image (`ghcr.io/lizzythelizard/homeserver-<service>`) by the single pipeline in `.github/workflows/pipeline.yml` (only when that service changed) and deployed with `infrastructure/docker-compose.yml`. The web app calls the assistant over an internal URL, and the assistant talks to the WhatsApp bridge; web, assistant and Wichteln share the PostgreSQL database, each with its own migrations.
 
 The **web** service uses the Next.js App Router with React Server Components by default. Mutations are exposed as Server Actions (`'use server'` files); there is no separate API layer.
 

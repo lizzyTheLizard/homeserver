@@ -396,18 +396,34 @@ only do this if you have a reason to.
 
 * **Repo:** https://github.com/lizzyTheLizard/homeserver
 * **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
-* **CI deploy pipeline:** each service has its own workflow in
-  `.github/workflows/` (`web.yml`, `assistant.yml`, `whatsapp.yml`,
-  `wichteln.yml`, `dev-machine.yml`) that, when its `services/<name>/` folder
-  changes, builds and publishes the image to GHCR
-  (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and then pulls it on the
-  server. It then recreates only its own service with
-  `docker compose up -d --force-recreate --remove-orphans <service>`.
-* **Infrastructure deploy:** `infrastructure.yml` runs on a push to `main` that
-  changes `infrastructure/**`, the workflow itself or the
-  `.github/actions/deploy-infrastructure` action, and on manual dispatch. It
-  syncs `infrastructure/` to the server, pulls all images and recreates the
-  whole stack with `docker compose up -d --force-recreate --remove-orphans`, so
-  every service is recreated and containers of services no longer in the
-  compose file are removed.
+* **CI/CD pipeline:** one workflow, `.github/workflows/pipeline.yml`, runs for
+  every pull request (opened, updated, reopened), every push to `main` and on
+  manual dispatch; pushes to other branches do not run it. Its stages:
+  1. **Detect changes** (`.github/scripts/detect-changes.mjs`) — which of web,
+     assistant, WhatsApp, Wichteln, dev machine and infrastructure changed,
+     against the pull request's base or, on `main`, the previous `main` commit.
+     Root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` and `.nvmrc`
+     count for every service; the pipeline's own files (`pipeline.yml`,
+     `service.yml`, `.github/actions/**`, `.github/scripts/**`) count for
+     everything. A manual run treats everything as changed.
+  2. **Checks** — for each changed service the reusable
+     `.github/workflows/service.yml` lints, tests and builds its image. On pull
+     requests the **change guard** (`.github/scripts/change-guard.mjs`) also
+     requires an archived OpenSpec change named after the branch, no in-flight
+     change folder, and every delta spec synced into `openspec/specs/`.
+  3. **Publish and deploy** (push to `main` only) — the changed images are
+     published to GHCR (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and
+     each changed service is recreated on the server with
+     `docker compose up -d --force-recreate --remove-orphans <service>`.
+  4. **Quality Gate** — always runs and fails if any job failed or was
+     cancelled; skipped jobs count as passed. It is the only status check the
+     `main` ruleset requires.
+* **Infrastructure deploy:** when the pipeline reports the infrastructure as
+  changed on `main` (anything under `infrastructure/` or the pipeline's own
+  files), the per-service deploys are skipped and, after every changed image
+  was published, one infrastructure deploy syncs `infrastructure/` to the
+  server, pulls all images and recreates the whole stack with
+  `docker compose up -d --force-recreate --remove-orphans`, so every service is
+  recreated and containers of services no longer in the compose file are
+  removed. Deploys on the host are serialised with `flock`.
 
