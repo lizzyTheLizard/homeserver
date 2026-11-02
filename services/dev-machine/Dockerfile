@@ -58,9 +58,9 @@ RUN curl -fsSL "https://github.com/openclaw/wacli/releases/download/v${WACLI_VER
  && chmod +x /usr/local/bin/wacli \
  && rm -rf /tmp/wacli.tar.gz /tmp/wacli
 
-# 6. Install code-server, Deepsek harness and openspec
+# 6. Install code-server, Claude Code and openspec
 RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN npm install -g @deepseek-ai/dsh
+RUN npm install -g @anthropic-ai/claude-code
 RUN npm install -g @fission-ai/openspec@latest
 
 # 7. Create dedicated non-root user "dev"
