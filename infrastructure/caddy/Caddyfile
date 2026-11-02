@@ -23,13 +23,6 @@
 	reverse_proxy dev-machine:8080
 }
 
-:8444 {
-	basic_auth {
-		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
-	}
-	reverse_proxy dev-machine:3080
-}
-
 :8445 {
 	basic_auth {
 		{$DEV_USERNAME} {$DEV_PASSWORD_HASH}
