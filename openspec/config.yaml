@@ -8,10 +8,7 @@ context: |
   Before the first artifact exists: the working tree is clean
   (`git status --porcelain` empty), `git fetch origin`, then
   `git switch -c <change> origin/main`. Change artifacts are never committed
-  on `main`. The reviewed plan is committed to the branch as soon as the
-  artifacts are complete; implementation starts on a new user request, and
-  every later commit (one per task, plus the archive) stays on that branch.
-
+  on `main`. 
 rules:
   proposal:
     - A change starts from a user request or an explicit change name.
@@ -23,13 +20,6 @@ rules:
     - Keep the proposal consistent with the request it came from; do not widen
       scope silently. If the request is too thin to propose from, say so
       instead of inventing scope.
-
-  tasks:
-    - Every task must be independently implementable, reviewable and committable.
-      One task becomes exactly one commit, so a task that cannot stand alone as a
-      commit is the wrong size.
-    - Order tasks so the branch is never left in a broken state between commits.
-
 operations:
   apply:
     guidance:

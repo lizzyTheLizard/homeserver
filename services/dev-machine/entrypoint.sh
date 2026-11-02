@@ -85,9 +85,6 @@ else
     fi
 fi
 
-# 5. Configure deepseek harness so that it can start a server listening on 0.0.0.0
-dsh plugin --profile web add dsh-web-startup-auth@latest
-
-# 6. Start supervisord
+# 5. Start supervisord
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 

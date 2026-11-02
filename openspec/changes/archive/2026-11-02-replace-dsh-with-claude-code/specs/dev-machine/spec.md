@@ -1,0 +1,35 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: The development machine serves the browser-based development interfaces
+
+The development machine SHALL serve a browser-based code server on port 8080, reached through the reverse proxy on the deployment's development hostname. The Storybook SHALL be reachable on its proxied port while a developer runs it. The development machine SHALL instead run Claude Code's Remote Control server, which the machine starts as an always-on service and which reaches Anthropic over outbound HTTPS without exposing any local port or web endpoint.
+
+#### Scenario: Code server is served
+- **WHEN** a developer opens the code server through the proxy
+- **THEN** it is served from the development machine
+
+#### Scenario: Agent web interface is served
+- **WHEN** a developer connects to the running Claude Code Remote Control session from another device
+- **THEN** the connection reaches the development machine's local session without a proxied web port
+
+#### Scenario: Storybook is reachable while running
+- **WHEN** a developer starts the Storybook in the machine
+- **THEN** the proxy publishes it on the Storybook port
+
+### Requirement: The development machine prepares the repository on start
+
+On start the development machine SHALL install the configured git identity, the developer's authorized public keys and a generated SSH key pair, SHALL check out the configured repository into the development home unless the bootstrap is skipped, and SHALL NOT install an agent browser plugin. When the bootstrap cannot authenticate against GitHub it SHALL report the failure together with the public key to add and exit instead of coming up half-configured.
+
+#### Scenario: Repository is checked out
+- **WHEN** the development machine starts with an empty development home
+- **THEN** the configured repository is cloned into the development home
+
+#### Scenario: Failed GitHub authentication is reported
+- **WHEN** the development machine cannot authenticate against GitHub
+- **THEN** it reports the failure, prints the public key to add and exits with a failure status
+
+#### Scenario: Bootstrap can be skipped
+- **WHEN** the bootstrap is configured to be skipped
+- **THEN** the machine starts without checking out the repository and without the GitHub authentication check
