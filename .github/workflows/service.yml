@@ -1,0 +1,121 @@
+name: "Service"
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: Folder name under services/ (e.g. web)
+        type: string
+        required: true
+      image:
+        description: Image name without the ghcr.io/lizzythelizard/ prefix (e.g. homeserver-web)
+        type: string
+        required: true
+      compose-service:
+        description: The compose service name to recreate on deploy (e.g. applicationprod)
+        type: string
+        required: true
+      lint:
+        description: Run the service's lint:ci script
+        type: boolean
+        default: true
+      test-command:
+        description: Shell commands that run the service's tests in its folder; empty skips the test job
+        type: string
+        default: ''
+      playwright:
+        description: Install the Playwright browsers before the tests
+        type: boolean
+        default: false
+      revision-build-args:
+        description: Pass the commit, branch, run id and build time as Docker build arguments
+        type: boolean
+        default: false
+      deploy:
+        description: Recreate the service on the host after publishing
+        type: boolean
+        default: false
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: inputs.lint
+    defaults:
+      run:
+        working-directory: ./services/${{ inputs.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm run lint:ci
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    if: inputs.test-command != ''
+    defaults:
+      run:
+        working-directory: ./services/${{ inputs.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Cache Playwright Browsers
+        if: inputs.playwright
+        uses: actions/cache@v6
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Install Playwright Browsers
+        if: inputs.playwright && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps
+      - name: Tests
+        run: ${{ inputs.test-command }}
+  build:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    # lint and test may be skipped for a service without them; only a failure or cancellation blocks the build
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Revision build arguments
+        id: revision
+        if: inputs.revision-build-args
+        run: |
+          {
+            echo "args<<EOF"
+            echo "GIT_COMMIT_HASH=${{ github.sha }}"
+            echo "GIT_BRANCH=${{ github.ref_name }}"
+            echo "GITHUB_RUN_ID=${{ github.run_id }}"
+            echo "BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Build and publish
+        uses: ./.github/actions/build-publish
+        with:
+          image: ${{ inputs.image }}
+          dockerfile: services/${{ inputs.service }}/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: ${{ steps.revision.outputs.args }}
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    if: inputs.deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Deploy service
+        uses: ./.github/actions/deploy-service
+        with:
+          service: ${{ inputs.compose-service }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-user: ${{ secrets.SSH_USER }}
