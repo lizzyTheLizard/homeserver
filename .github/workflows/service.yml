@@ -1,0 +1,152 @@
+name: "Service"
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: Folder name under services/ (e.g. web)
+        type: string
+        required: true
+      image:
+        description: Image name without the ghcr.io/lizzythelizard/ prefix (e.g. homeserver-web)
+        type: string
+        required: true
+      compose-service:
+        description: The compose service name to recreate on deploy (e.g. applicationprod)
+        type: string
+        required: true
+      lint:
+        description: Run the service's lint:ci script
+        type: boolean
+        default: true
+      test-command:
+        description: Shell commands that run the service's tests in its folder; empty skips the test job
+        type: string
+        default: ''
+      playwright:
+        description: Install the Playwright browsers before the tests
+        type: boolean
+        default: false
+      revision-build-args:
+        description: Pass the commit, branch, run id and build time as Docker build arguments
+        type: boolean
+        default: false
+      deploy:
+        description: Recreate the service on the host after publishing
+        type: boolean
+        default: false
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: inputs.lint
+    defaults:
+      run:
+        working-directory: ./services/${{ inputs.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm run lint:ci
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    if: inputs.test-command != ''
+    defaults:
+      run:
+        working-directory: ./services/${{ inputs.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Cache Playwright Browsers
+        if: inputs.playwright
+        uses: actions/cache@v6
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Install Playwright Browsers
+        if: inputs.playwright && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps
+      - name: Tests
+        run: ${{ inputs.test-command }}
+  build:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    # lint and test may be skipped for a service without them; only a failure or cancellation blocks the build
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Revision build arguments
+        id: revision
+        if: inputs.revision-build-args
+        run: |
+          {
+            echo "args<<EOF"
+            echo "GIT_COMMIT_HASH=${{ github.sha }}"
+            echo "GIT_BRANCH=${{ github.ref_name }}"
+            echo "GITHUB_RUN_ID=${{ github.run_id }}"
+            echo "BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/${{ inputs.service }}/Dockerfile
+          platforms: linux/amd64
+          # Pull requests only build; the image is published from main
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/lizzythelizard/${{ inputs.image }}:latest
+          labels: |
+            org.opencontainers.image.visibility=public
+          cache-from: type=gha,scope=${{ inputs.image }}
+          cache-to: type=gha,mode=min,scope=${{ inputs.image }}
+          build-args: ${{ steps.revision.outputs.args }}
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    if: inputs.deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add host key to known hosts
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan "$SSH_HOST" >> ~/.ssh/known_hosts
+      - name: Sync infrastructure files
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: rsync -avz ./infrastructure/ "$SSH_USER@$SSH_HOST:/opt/homeserver/"
+      - name: Pull image and recreate the service
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SERVICE: ${{ inputs.compose-service }}
+        # Serialize deploys on the host: parallel deploys racing on pull/prune break each other's image leases
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" "flock -w 900 /tmp/homeserver-deploy.lock sh -c 'set -e; cd /opt/homeserver; docker compose pull $SERVICE; docker compose up -d --force-recreate --remove-orphans $SERVICE; docker image prune -f'"

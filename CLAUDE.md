@@ -29,7 +29,7 @@ The binding rules (branch invariants, commit trailers `OpenSpec-Change:` / `Agen
 
 ## Architecture
 
-Services (each its own container image in GHCR, built/deployed by its own workflow in `.github/workflows/`, run on a self-hosted home server via `infrastructure/docker-compose.yml`):
+Services (each its own container image in GHCR, built and deployed by the single `.github/workflows/pipeline.yml`, which detects the changed services, runs their lint/test/build via `service.yml`, deploys from `main` and ends in the one required check "Quality Gate", run on a self-hosted home server via `infrastructure/docker-compose.yml`):
 
 - **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer.
 - **`services/assistant`** — standalone service on port 8500. Serves the assistant WebSocket (proxied by nginx) and internal REST APIs `/microsoft/*` and `/whatsapp/*` that the web app calls via `ASSISTANT_INTERNAL_URL` (not exposed publicly). Owns Microsoft tokens, mail/todo/calendar workers, WhatsApp proxying, weather/geolocation and background sync, talking directly to the shared Postgres.
