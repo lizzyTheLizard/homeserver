@@ -10,6 +10,7 @@
 - [x] 2.1 Add `.github/workflows/service.yml` (`workflow_call` only) with the lint → test → build → deploy chain and the inputs from design decision 1, reusing the `setup`, `build-publish` and `deploy-service` actions; verify it passes `actionlint`
 - [x] 2.2 Add `.github/workflows/pipeline.yml` with the triggers, concurrency, `changes` and `change-guard` jobs, the five service calls (web with its three test projects, Playwright and revision build args; dev machine without lint/test), the `deploy-infrastructure` job and the always-running "Quality Gate" per design decisions 2–6; verify it passes `actionlint` and that every job id appears in the gate's `needs`
 - [x] 2.3 Delete `web.yml`, `assistant.yml`, `whatsapp.yml`, `wichteln.yml`, `dev-machine.yml` and `infrastructure.yml`; verify `.github/workflows/` contains only `pipeline.yml`, `service.yml` and `dependabot-auto-merge.yml`
+- [x] 2.4 Fold the single-use actions `build-publish`, `deploy-service` (into `service.yml`) and `deploy-infrastructure` (into `pipeline.yml`) and delete them, keeping `setup`; verify `.github/actions/` contains only `setup` and no workflow references a deleted action
 
 ## 3. Documentation
 

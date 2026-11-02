@@ -67,7 +67,8 @@ _None._
 - `dependabot-auto-merge.yml` gets its token from a GitHub App. This needs a GitHub App, set up by
   hand, with Contents and Pull requests read/write access, installed on the repository. Its client ID and
   private key are stored as Dependabot secrets `AUTOMERGE_APP_CLIENT_ID` and `AUTOMERGE_APP_PRIVATE_KEY`.
-- `.github/actions/`: the existing `setup`, `build-publish`, `deploy-service` and
-  `deploy-infrastructure` actions are reused; a change-guard script is added under `.github/`.
+- `.github/actions/`: only `setup` stays; `build-publish`, `deploy-service` and
+  `deploy-infrastructure` are each used once and are folded into `service.yml` and `pipeline.yml`.
+- `.github/scripts/`: the change-detection and change-guard scripts with their tests.
 - GitHub repository ruleset `default` on `main`: required status checks change to "Quality Gate".
 - `infrastructure/README.md` (§6 Deployment) and `CLAUDE.md` describe the single pipeline.

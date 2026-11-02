@@ -7,9 +7,9 @@ on every pull request and on pushes to `main` filtered by path, repeats an inlin
 chains lint → test → build → deploy, and ends in its own `Gate <Service>` job. `infrastructure.yml`
 runs only on `main`. The `default` ruleset on `main` requires the five `Gate …` checks (strict).
 
-Reusable building blocks already exist and stay: `.github/actions/setup` (node + pnpm install),
-`build-publish` (buildx, pushes only on `refs/heads/main`), `deploy-service` and
-`deploy-infrastructure` (rsync + `docker compose` under a host-side `flock`, only on `push`).
+Composite actions exist today: `.github/actions/setup` (node + pnpm install), `build-publish`
+(buildx, pushes only on `refs/heads/main`), `deploy-service` and `deploy-infrastructure` (rsync +
+`docker compose` under a host-side `flock`, only on `push`).
 
 The change guard (`scripts/change-guard.mjs` + `scripts/change-guard.test.mjs`, added in `3aeb40d`)
 was deleted together with `homeserver.yml` in `180ad5d`; its logic is recoverable from history.
@@ -37,8 +37,8 @@ No `paths` filters — the detect job decides.
 
 The per-service chain lives in `.github/workflows/service.yml`, triggered only by `workflow_call`,
 with inputs: `service` (folder name), `image`, `compose-service`, `lint` (bool), `test-command`,
-`playwright` (bool), `build-args`, `deploy` (bool). Its jobs: `lint` → `test` → `build` (via
-`build-publish`) → `deploy` (via `deploy-service`, only when `inputs.deploy`). `pipeline.yml` calls it
+`playwright` (bool), `revision-build-args` (bool), `deploy` (bool). Its jobs: `lint` → `test` →
+`build` → `deploy` (only when `inputs.deploy`). `pipeline.yml` calls it
 five times, each gated by `if: needs.changes.outputs.<service> == 'true'`. The calls appear as
 "Web / Lint", "Assistant / Test", … inside the single Pipeline run.
 
@@ -46,6 +46,15 @@ five times, each gated by `if: needs.changes.outputs.<service> == 'true'`. The c
 behind; (b) one matrix per stage — a failing web test would then block publishing an unrelated
 assistant image, and the web job's extra Playwright/three-project steps don't fit a uniform matrix.
 The reusable workflow keeps each service's chain independent while staying one pipeline run.
+
+### 1a. Only shared steps stay composite actions
+
+A composite action is kept only when more than one place uses it. `setup` stays (lint and test both
+use it). `build-publish` and `deploy-service` were each used once, by `service.yml`, and
+`deploy-infrastructure` once, by `pipeline.yml`, so their steps are written into those jobs and the
+three actions are deleted. The deploy jobs already run only for a push to `main`, so the actions'
+per-step `push` guards are dropped; secrets reach shell steps through `env:` rather than inline
+expressions.
 
 ### 2. Change detection as a tested Node script
 
@@ -81,7 +90,7 @@ calls and runs with
 `if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')`,
 so it waits for skipped services, never runs after a failed publish, and recreates the stack once
 with every new image. Deploys are limited to `push` runs, so a manual dispatch builds but does not
-deploy — unchanged from today, and the composite deploy actions keep their own `push` guards too.
+deploy — unchanged from today.
 Runs started by Dependabot deploy like any other `main` run; there is no actor exclusion.
 
 ### 5. Quality Gate
