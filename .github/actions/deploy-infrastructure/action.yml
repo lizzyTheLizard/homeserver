@@ -32,5 +32,6 @@ runs:
     - name: Pull and recreate the whole stack
       if: ${{ github.event_name == 'push' }}
       shell: bash
+      # Serialize deploys on the host: parallel workflows racing on pull/prune break each other's image leases
       run: |
-        ssh ${{ inputs.ssh-user }}@${{ inputs.ssh-host }} "set -e; cd /opt/homeserver; docker compose pull; docker compose up -d --force-recreate --remove-orphans; docker image prune -f"
+        ssh ${{ inputs.ssh-user }}@${{ inputs.ssh-host }} "flock -w 900 /tmp/homeserver-deploy.lock sh -c 'set -e; cd /opt/homeserver; docker compose pull; docker compose up -d --force-recreate --remove-orphans; docker image prune -f'"
