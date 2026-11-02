@@ -62,10 +62,6 @@ The development machine SHALL provide the runtime, the package manager and the c
 - **WHEN** a developer runs the browser-dependent test suite for the first time
 - **THEN** its operating-system dependencies are already present and only the browser binaries have to be downloaded
 
-### Requirement: Remote Control sessions each get their own worktree`
-
-## MODIFIED Requirements
-
 ### Requirement: Remote Control sessions each get their own worktree
 
 The Remote Control server SHALL spawn each session it starts on demand in its own git worktree of the repository checkout in the development home. Concurrent sessions therefore SHALL NOT share a working directory or a checked-out branch. Each new worktree SHALL receive the repository's local, untracked environment configuration, so that the development scripts work in it without manual setup. The worktrees SHALL NOT show up as untracked files in the main checkout.
