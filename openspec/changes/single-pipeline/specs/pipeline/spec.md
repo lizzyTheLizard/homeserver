@@ -22,6 +22,10 @@ The repository SHALL have exactly one build-and-deploy pipeline. It SHALL run wh
 - **WHEN** the pipeline is dispatched by hand
 - **THEN** it runs and treats every service and the infrastructure as changed
 
+#### Scenario: A Dependabot auto-merge runs the pipeline
+- **WHEN** a Dependabot pull request is merged automatically after its "Quality Gate" passed
+- **THEN** the pipeline runs on main for the merge commit and deploys the changed services
+
 ### Requirement: The pipeline first detects what changed
 
 The pipeline SHALL start by determining which of the web application, assistant, WhatsApp bridge, Wichteln and development machine services and whether the infrastructure changed, comparing a pull request against its base branch and a push to main against the previous main commit. All later stages SHALL act only on what this stage reports as changed.

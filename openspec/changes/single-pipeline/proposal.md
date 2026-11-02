@@ -35,6 +35,9 @@ readable and gives pull requests exactly one check to require.
 - Remove the stale `pipeline` requirements for the "All Build Check Success" job and the
   artifact-based deploy, which contradict the single pipeline, and drop the rule that a Dependabot
   merge is not deployed: Dependabot merges deploy like any other merge.
+- `dependabot-auto-merge.yml` turns on auto-merge with a GitHub App token instead of `GITHUB_TOKEN`.
+  Merges made with `GITHUB_TOKEN` don't start workflow runs, so the merge to `main` used to start no
+  pipeline and nothing was deployed.
 - Take the stack smoke suite requirements out of `pipeline`: the smoke suite is being moved out of
   the pipeline and is specified again by its own change.
 
@@ -60,8 +63,10 @@ _None._
 ## Impact
 
 - `.github/workflows/`: `web.yml`, `assistant.yml`, `whatsapp.yml`, `wichteln.yml`,
-  `dev-machine.yml` and `infrastructure.yml` are replaced by one `pipeline.yml`;
-  `dependabot-auto-merge.yml` stays as it is.
+  `dev-machine.yml` and `infrastructure.yml` are replaced by one `pipeline.yml`.
+- `dependabot-auto-merge.yml` gets its token from a GitHub App. This needs a GitHub App, set up by
+  hand, with Contents and Pull requests read/write access, installed on the repository. Its ID and
+  private key are stored as Dependabot secrets `AUTOMERGE_APP_ID` and `AUTOMERGE_APP_PRIVATE_KEY`.
 - `.github/actions/`: the existing `setup`, `build-publish`, `deploy-service` and
   `deploy-infrastructure` actions are reused; a change-guard script is added under `.github/`.
 - GitHub repository ruleset `default` on `main`: required status checks change to "Quality Gate".

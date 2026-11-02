@@ -26,7 +26,6 @@ was deleted together with `homeserver.yml` in `180ad5d`; its logic is recoverabl
 - The stack smoke suite: it is being moved out of the pipeline and is specified again by its own
   change; this change only removes its stale requirements from `pipeline`.
 - Changing the deploy mechanics on the host (rsync, `docker compose`, `flock`) or the image names.
-- Touching `dependabot-auto-merge.yml`; it is a `pull_request_target` helper, not a build pipeline.
 
 ## Decisions
 
@@ -99,7 +98,22 @@ Job id `quality-gate`, name "Quality Gate", `needs:` every other top-level job (
 — superseded pull-request runs are cancelled; runs on `main` queue so a deploy is never interrupted.
 Host-side `flock` still serialises the deploys inside one run.
 
+### 7. Dependabot auto-merge through a GitHub App
+
+`dependabot-auto-merge.yml` first gets an installation token with `actions/create-github-app-token`
+(`app-id: ${{ secrets.AUTOMERGE_APP_ID }}`, `private-key: ${{ secrets.AUTOMERGE_APP_PRIVATE_KEY }}`)
+and uses it for `gh pr merge --auto --squash` and `gh pr review --approve`. GitHub merges on behalf
+of the account that turned auto-merge on, so the merge push is made by the app, and pushes by an app
+start workflow runs, unlike `GITHUB_TOKEN` pushes. The secrets must be **Dependabot secrets**: a run
+started by Dependabot cannot read Actions secrets, even under `pull_request_target`.
+
+*Alternatives:* a personal access token — tied to one account and expires; merging Dependabot pull
+requests by hand — a manual step on every bump.
+
 ## Risks / Trade-offs
+
+- [The GitHub App is missing or its secrets are not set] → The token step fails, auto-merge is not
+  turned on and the Dependabot pull request stays open; nothing is merged without a pipeline run.
 
 - [This change's own pull request deletes the workflows that produce the five required `Gate …`
   checks, so it can never satisfy the current ruleset] → Once the Pipeline has run on this pull
@@ -117,6 +131,8 @@ Host-side `flock` still serialises the deploys inside one run.
 
 ## Migration Plan
 
+0. Create and install the GitHub App and store `AUTOMERGE_APP_ID` and `AUTOMERGE_APP_PRIVATE_KEY`
+   as Dependabot secrets before merging.
 1. Land `pipeline.yml`, `service.yml` and `.github/scripts/` alongside the old workflows; open the
    pull request; confirm the Pipeline run and "Quality Gate" behave (old gates may still run).
 2. Delete the six old workflows in the same branch; confirm the Pipeline again.
