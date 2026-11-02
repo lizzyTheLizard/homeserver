@@ -426,4 +426,13 @@ only do this if you have a reason to.
   `docker compose up -d --force-recreate --remove-orphans`, so every service is
   recreated and containers of services no longer in the compose file are
   removed. Deploys on the host are serialised with `flock`.
+* **Dependabot auto-merge:** `.github/workflows/dependabot-auto-merge.yml`
+  approves and turns on auto-merge for Dependabot patch and minor updates. It
+  does so with a token of a dedicated GitHub App (Contents and Pull requests
+  read/write, installed on this repository), because a merge made with
+  `GITHUB_TOKEN` starts no workflow run and the pipeline would then never build
+  or deploy the update. The app's client ID and private key are stored as
+  **Dependabot** secrets `AUTOMERGE_APP_CLIENT_ID` and
+  `AUTOMERGE_APP_PRIVATE_KEY` (runs started by Dependabot cannot read Actions
+  secrets). Without them the token step fails and the pull request stays open.
 
