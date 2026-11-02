@@ -61,3 +61,11 @@ The development machine SHALL provide the runtime, the package manager and the c
 #### Scenario: Browser binaries are installed on demand
 - **WHEN** a developer runs the browser-dependent test suite for the first time
 - **THEN** its operating-system dependencies are already present and only the browser binaries have to be downloaded
+
+### Requirement: Remote Control sessions start in the repository
+
+The Remote Control server SHALL spawn its sessions in the same directory, the repository checkout in the development home, rather than in isolated worktrees or a single fixed session.
+
+#### Scenario: Remote sessions start in the repository
+- **WHEN** a developer starts a new session through Remote Control
+- **THEN** the session is spawned in the repository checkout in the development home
