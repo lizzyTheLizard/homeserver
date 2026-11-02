@@ -2,7 +2,7 @@
 
 ## 1. Full-stack infrastructure deploy
 
-- [ ] 1.1 In `.github/workflows/infrastructure.yml`, add `.github/workflows/infrastructure.yml` and `.github/actions/deploy-infrastructure/**` to the `push.paths` trigger next to `infrastructure/**`. Keep `docker compose up -d --force-recreate --remove-orphans` (no service argument) in `.github/actions/deploy-infrastructure/action.yml`. Verify that the YAML parses (`python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/infrastructure.yml`) and that the paths list contains all three entries.
+- [x] 1.1 In `.github/workflows/infrastructure.yml`, add `.github/workflows/infrastructure.yml` and `.github/actions/deploy-infrastructure/**` to the `push.paths` trigger next to `infrastructure/**`. Keep `docker compose up -d --force-recreate --remove-orphans` (no service argument) in `.github/actions/deploy-infrastructure/action.yml`. Verify that the YAML parses (`python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/infrastructure.yml`) and that the paths list contains all three entries.
 - [ ] 1.2 In `infrastructure/README.md` §6 (Deployment & repository), describe the `infrastructure.yml` workflow: what triggers it (`infrastructure/**`, its own workflow file, the `deploy-infrastructure` action, manual dispatch) and that it recreates the whole stack with `--force-recreate --remove-orphans`, while service workflows recreate only their own service. Verify that the section names both behaviours.
 
 ## 2. Claude Code Remote Control spawn mode

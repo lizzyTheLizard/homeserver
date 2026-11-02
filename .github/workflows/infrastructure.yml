@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'infrastructure/**'
+      - '.github/workflows/infrastructure.yml'
+      - '.github/actions/deploy-infrastructure/**'
   workflow_dispatch:
 jobs:
   deploy:
