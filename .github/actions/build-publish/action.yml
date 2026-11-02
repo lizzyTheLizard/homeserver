@@ -33,6 +33,8 @@ runs:
         platforms: linux/amd64
         push: ${{ github.ref == 'refs/heads/main' }}
         tags: ghcr.io/lizzythelizard/${{ inputs.image }}:latest
+        labels: |
+          org.opencontainers.image.visibility=public
         cache-from: type=gha,scope=${{ inputs.image }}
         cache-to: type=gha,mode=min,scope=${{ inputs.image }}
         build-args: ${{ inputs.build-args }}
