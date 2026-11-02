@@ -2,45 +2,153 @@
 
 ## Purpose
 
-Defines the continuous-integration and test work: the GitHub pipeline that lints, tests, builds and deploys the stack, the test suites that run locally and in CI, and the Docker image builds that feed the smoke suite and the deployment.
+Defines the continuous-integration and test work: the GitHub pipeline that lints, tests, builds and deploys the stack, the test suites that run locally and in CI, and the Docker image builds that feed the deployment. The stack smoke suite is not part of this capability.
 
 ## Requirements
 
-### Requirement: The pipeline runs on every push, pull request and on demand
+### Requirement: One pipeline runs for pull requests, the main branch and on demand
 
-Each service SHALL have its own pipeline that runs when its `services/<name>/` folder changes and SHALL build and deploy that service's image only then, and a shared pipeline SHALL run the jobs that span services (change guard, lint and the stack smoke suite). The lint, test, build, smoke and deploy jobs SHALL NOT run on pull requests; a pull request SHALL run only the change guard (see `ci/change-guard`), which is therefore the check required to merge it.
+The repository SHALL have exactly one build-and-deploy pipeline. It SHALL run when a pull request is opened, updated or reopened, when a commit is pushed to the main branch, and when dispatched by hand. It SHALL NOT run for a push to any other branch.
 
-#### Scenario: A push runs the pipeline
-- **WHEN** a commit is pushed to any branch
-- **THEN** the shared lint, test and build jobs run, and each changed service's pipeline builds and deploys its image
+#### Scenario: A pull request runs the pipeline
+- **WHEN** a pull request is opened, a commit is pushed to its branch, or it is reopened
+- **THEN** the pipeline runs once for the pull request
 
-#### Scenario: A change to a service runs its own pipeline
-- **WHEN** a commit changes files under a service's `services/<name>/` folder
-- **THEN** that service's pipeline builds and deploys its image, and the other services' pipelines do not run
+#### Scenario: A merge to main runs the pipeline
+- **WHEN** a commit reaches the main branch, for example by merging a pull request
+- **THEN** the pipeline runs once for that commit
 
-#### Scenario: A change outside a service folder runs only the shared jobs
-- **WHEN** a commit changes no service folder but changes shared files
-- **THEN** the shared jobs run and no per-service build or deploy runs
-
-#### Scenario: A pull request runs only the change guard
-- **WHEN** a pull request is opened or updated
-- **THEN** only the change guard runs, and the per-service and shared lint, test, build, smoke and deploy jobs are skipped
+#### Scenario: A feature branch without a pull request does not run the pipeline
+- **WHEN** a commit is pushed to a branch other than main that has no open pull request
+- **THEN** no pipeline run starts
 
 #### Scenario: A manual run is possible
-- **WHEN** a pipeline is dispatched by hand
-- **THEN** the same jobs run as for a push
+- **WHEN** the pipeline is dispatched by hand
+- **THEN** it runs and treats every service and the infrastructure as changed
+
+#### Scenario: A Dependabot auto-merge runs the pipeline
+- **WHEN** a Dependabot pull request is merged automatically after its "Quality Gate" passed
+- **THEN** the pipeline runs on main for the merge commit and deploys the changed services
+
+### Requirement: The pipeline first detects what changed
+
+The pipeline SHALL start by determining which of the web application, assistant, WhatsApp bridge, Wichteln and development machine services and whether the infrastructure changed, comparing a pull request against its base branch and a push to main against the previous main commit. All later stages SHALL act only on what this stage reports as changed.
+
+#### Scenario: A change inside a service folder
+- **WHEN** the compared commits change files under `services/<name>/` only
+- **THEN** only that service is reported as changed
+
+#### Scenario: A change to shared workspace files
+- **WHEN** the root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc` or the shared setup action changes
+- **THEN** every service is reported as changed
+
+#### Scenario: A change to the pipeline definition
+- **WHEN** the pipeline's own workflow or any of its actions changes
+- **THEN** every service and the infrastructure are reported as changed
+
+#### Scenario: A change to the stack definition
+- **WHEN** files under `infrastructure/` change
+- **THEN** the infrastructure is reported as changed
+
+#### Scenario: Nothing relevant changed
+- **WHEN** the compared commits change only files outside services, infrastructure, shared workspace files and the pipeline, for example only `openspec/`
+- **THEN** no service and no infrastructure is reported as changed
+
+#### Scenario: The previous main commit cannot be compared
+- **WHEN** a push to main has no comparable previous commit, for example the first push or a forced history rewrite
+- **THEN** every service and the infrastructure are reported as changed
+
+### Requirement: Changed services are linted, tested and built
+
+For each service reported as changed, the pipeline SHALL lint it, run its tests and build its image. A service that has no lint or test task, such as the development machine, SHALL only be built. Services not reported as changed SHALL be skipped in this stage.
+
+#### Scenario: A changed service is checked
+- **WHEN** the web application is reported as changed
+- **THEN** its lint, its three test projects and its image build run
+
+#### Scenario: An unchanged service is skipped
+- **WHEN** the assistant is not reported as changed
+- **THEN** the assistant's lint, test and build jobs are skipped
+
+#### Scenario: A pull request builds without publishing
+- **WHEN** the pipeline runs for a pull request
+- **THEN** the changed services' images are built but not published to the registry
+
+### Requirement: Each changed service's image is published from main
+
+The pipeline SHALL build the web application, assistant, WhatsApp bridge, Wichteln and development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, SHALL tag the web application image with the commit, branch, pipeline run and build time, and SHALL publish an image to GitHub Container Registry only on the main branch, only when its service changed and only after its lint and tests passed.
+
+#### Scenario: A changed service's image is published on main
+- **WHEN** the pipeline runs on main and the WhatsApp bridge is reported as changed and its lint and tests pass
+- **THEN** `ghcr.io/<owner>/homeserver-whatsapp:latest` is built from `services/whatsapp/` and published
+
+#### Scenario: A failing check blocks publishing
+- **WHEN** a changed service's lint or tests fail
+- **THEN** its image is not published
+
+#### Scenario: The application image carries its revision
+- **WHEN** the web application image is built
+- **THEN** it records the commit, branch, pipeline run and build time that produced it
+
+### Requirement: One quality gate decides the run
+
+The pipeline SHALL end with one job named "Quality Gate" that depends on every other job of the run and runs even when those jobs failed, were cancelled or were skipped. It SHALL fail when any job failed or was cancelled and SHALL pass when every job either succeeded or was skipped. "Quality Gate" SHALL be the only status check required to merge into main.
+
+#### Scenario: Everything passes
+- **WHEN** every job of the run succeeds
+- **THEN** "Quality Gate" passes
+
+#### Scenario: Unchanged services were skipped
+- **WHEN** only the web application changed, its jobs succeed and every other service's jobs are skipped
+- **THEN** "Quality Gate" passes
+
+#### Scenario: A job fails
+- **WHEN** any job of the run fails or is cancelled, including change detection, the change guard or a deploy
+- **THEN** "Quality Gate" still runs and fails
+
+#### Scenario: Every stage fails
+- **WHEN** change detection fails so that every later job is skipped
+- **THEN** "Quality Gate" still runs and fails
+
+#### Scenario: A pull request waits for the gate only
+- **WHEN** a pull request targets main
+- **THEN** "Quality Gate" is the only required status check, and the pull request can merge once it passes
+
+### Requirement: Changed services are deployed from main
+
+The deploy SHALL run only for a run on the main branch, regardless of who started it, and only after the deployed service's lint, tests and image publish succeeded. For each changed service it SHALL synchronise the stack definition to the server, pull that service's published image and recreate only that service. Concurrent deploys on the server SHALL be serialised.
+
+#### Scenario: Deploy publishes the stack
+- **WHEN** the pipeline runs on main, the assistant is reported as changed and its image was published
+- **THEN** the stack definition is synchronised to the server and the assistant's container is recreated from the new image
+
+#### Scenario: A failing check blocks the deploy
+- **WHEN** a changed service's lint, tests or image build fail on main
+- **THEN** that service is not deployed
+
+#### Scenario: A dependabot merge deploys
+- **WHEN** a dependency update from the dependency bot is merged and the pipeline runs on main for it
+- **THEN** the changed services are deployed like for any other merge
+
+#### Scenario: A pull request never deploys
+- **WHEN** the pipeline runs for a pull request
+- **THEN** no deploy runs
+
+#### Scenario: An infrastructure change deploys the whole stack instead
+- **WHEN** the infrastructure is reported as changed on main
+- **THEN** no per-service deploy runs and the whole stack is deployed once after every changed image was published
 
 ### Requirement: Every package is linted and tested
 
-The pipeline SHALL lint every package and SHALL run the assistant's tests, the web application's three test projects and the WhatsApp bridge's tests, and SHALL run the stack smoke suite in addition. A failing job SHALL stop the jobs that depend on it.
+The pipeline SHALL be able to lint every package and SHALL run the assistant's tests, the web application's three test projects, the WhatsApp bridge's tests and Wichteln's tests, each only when its service is reported as changed. A failing job SHALL stop the jobs that depend on it.
 
 #### Scenario: All checks run
-- **WHEN** a push reaches the pipeline
-- **THEN** the lint job, the five test jobs and the four image builds run
+- **WHEN** every service is reported as changed
+- **THEN** the lint and test jobs of every service and the five image builds run
 
 #### Scenario: A failing check stops its dependants
 - **WHEN** any lint, test or build job fails
-- **THEN** the smoke suite and the deploy do not run
+- **THEN** the publish and deploy of that service do not run
 
 ### Requirement: Linting can fix locally and only reports in CI
 
@@ -89,111 +197,3 @@ The Storybook project SHALL run its interaction tests in a Chromium browser, and
 #### Scenario: Missing browser blocks the Storybook project
 - **WHEN** the Storybook project runs on a machine without the browser binary
 - **THEN** the interaction tests cannot run until the browser is installed
-
-### Requirement: Four images are built on every push
-
-The pipeline SHALL build the web application, the assistant, the WhatsApp bridge and the development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-web:latest`, `ghcr.io/<owner>/homeserver-assistant:latest`, `ghcr.io/<owner>/homeserver-whatsapp:latest` and `ghcr.io/<owner>/homeserver-dev-machine:latest`, SHALL build each image only from its own service's workflow and folder, SHALL tag the web application image with the deployed revision's commit, branch, pipeline run and build time, and SHALL publish each image to GitHub Container Registry.
-
-#### Scenario: All four images are built
-- **WHEN** a push reaches the pipeline
-- **THEN** all four images are built under their `ghcr.io/<owner>/homeserver-<name>:latest` names and published to GitHub Container Registry
-
-#### Scenario: A service's image is built only from its own folder
-- **WHEN** a service's image is built
-- **THEN** it is built from that service's `services/<name>/` folder and Dockerfile
-
-#### Scenario: The application image carries its revision
-- **WHEN** the web application image is built
-- **THEN** it records the commit, branch, pipeline run and build time that produced it
-
-### Requirement: The stack smoke suite runs against the built images
-
-The pipeline SHALL run a stack smoke suite that depends on all four image builds, SHALL bootstrap the stack from the uploaded artifacts so that the four built images are loaded rather than rebuilt, SHALL remove the stack and its volumes afterwards even when a check fails, and SHALL expose the service logs when a check fails.
-
-#### Scenario: Smoke suite tests the built images
-- **WHEN** the smoke suite job starts
-- **THEN** it downloads and loads the image artifacts produced by the build jobs and boots the stack with them
-
-#### Scenario: Clean teardown on failure
-- **WHEN** one or more checks fail
-- **THEN** the stack is still torn down and no orphan containers remain
-
-#### Scenario: Logs are surfaced on failure
-- **WHEN** a check fails
-- **THEN** the stack's logs are printed to the run
-
-### Requirement: Infrastructure service checks
-
-The suite SHALL assert that SSH on port 2222 accepts TCP connections, bind9 answers DNS queries, Dozzle serves its UI over HTTPS with a 200 response, Pgweb serves its UI, the application container is healthy and its `/shared/ping` endpoint responds, and the application root page is reachable over HTTPS through nginx. Each check SHALL report the name of the service it targets.
-
-#### Scenario: Service down fails its own check clearly
-- **WHEN** a specific service is unreachable or unhealthy
-- **THEN** the check for that service fails with a message naming the service, while the remaining checks still report their own outcomes
-
-### Requirement: Authenticated page checks via headless browser
-
-The suite SHALL use a headless browser that accepts the self-signed certificates to authenticate through the mock OIDC flow and verify client-rendered content: the main page shows the assistant greeting, and the WhatsApp page renders a QR code region.
-
-#### Scenario: Assistant greeting is rendered
-- **WHEN** the browser is authenticated and opens the main page
-- **THEN** the assistant greeting text is visible
-
-#### Scenario: WhatsApp QR code region is rendered
-- **WHEN** the browser opens the WhatsApp page
-- **THEN** a QR code region is present
-
-### Requirement: Test-mode stack configuration
-
-The test stack SHALL run with self-signed certificates generated by a committed helper, a mock OIDC server as the identity provider on a remapped port, its own compose project name, and fixed non-secret test values (`ADMIN_EMAIL`, the database password, `SESSION_PASSWORD`, `APP_URL`, `CLIENT_ID`, `CLIENT_SECRET` and `LOGIN_ISSUER` pointing at the mock server). The only real secret is `AI_API_KEY`, which the application and the assistant both require at start-up.
-
-#### Scenario: Authentication works without Entra
-- **WHEN** a browser completes the OIDC flow against the mock server
-- **THEN** the application establishes an authenticated session without contacting the real Entra identity provider
-
-#### Scenario: The suite does not touch the deployment
-- **WHEN** the smoke suite runs
-- **THEN** it uses its own compose project name and remapped ports, so it does not collide with a running deployment
-
-### Requirement: One aggregated check per push
-
-The pipeline SHALL publish one aggregated job, "All Build Check Success", that depends on every lint, test, build and smoke job and that runs for a push; a pull request SHALL instead be gated by the change guard, because the full pipeline runs only after the merge.
-
-#### Scenario: Aggregated check passes when all jobs pass
-- **WHEN** every lint, test, build and smoke job of a push passes
-- **THEN** "All Build Check Success" passes and the deploy may run
-
-#### Scenario: Aggregated check blocks the deploy on any failure
-- **WHEN** any lint, test, build or smoke job fails
-- **THEN** "All Build Check Success" fails and the deploy does not run
-
-### Requirement: Deploy runs only on the main branch
-
-The deploy job SHALL depend on the aggregated check, SHALL run only for a push to the main branch, SHALL be skipped for a Dependabot push, and SHALL synchronise the stack definition and the four images to the server, load the images, recreate the services and wait until they report running or healthy before pruning the previous images.
-
-#### Scenario: Deploy publishes the stack
-- **WHEN** the pipeline runs on the main branch with every check and the smoke suite green
-- **THEN** the deploy synchronises the stack and the built images to the server, recreates the services and waits for them to report running or healthy
-
-#### Scenario: A failing check blocks the deploy
-- **WHEN** any check or the smoke suite fails on the main branch
-- **THEN** the deploy does not run
-
-#### Scenario: A dependabot push does not deploy
-- **WHEN** the push was made by the dependency bot
-- **THEN** the deploy job is skipped
-
-### Requirement: The smoke suite runs locally against a locally built stack
-
-The suite SHALL be runnable locally through the integration-test package against a stack the developer has built and brought up, using the committed test configuration and project name.
-
-#### Scenario: Local run of the smoke suite
-- **WHEN** a developer builds the images, brings the test stack up and runs the integration-test package
-- **THEN** the suite runs its checks against that stack and reports pass or fail
-
-### Requirement: Wichteln is built as its own image
-
-The pipeline SHALL build the Wichteln app as a `linux/amd64` image named `ghcr.io/<owner>/homeserver-wichteln:latest` from its own service's workflow and folder, and SHALL publish it to GitHub Container Registry.
-
-#### Scenario: The Wichteln image is built
-- **WHEN** a push changes the Wichteln service's folder
-- **THEN** the `ghcr.io/<owner>/homeserver-wichteln:latest` image is built from that folder and published to GitHub Container Registry

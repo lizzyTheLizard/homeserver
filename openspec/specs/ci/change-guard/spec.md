@@ -8,7 +8,7 @@ Ensures a pull request only carries finished work: the change is archived, the a
 
 ### Requirement: Pull requests carry only the archived change
 
-CI SHALL fail a pull request that adds or modifies an in-flight change folder under `openspec/changes/<name>/`. A pull request touching `openspec/changes/` MUST contain exactly one archived change, `openspec/changes/archive/<date>-<name>/`, whose `<name>` equals the head branch name, and when that archived change carries delta specs the pull request MUST also update `openspec/specs/`.
+The pipeline SHALL run the change guard for every pull request and SHALL fail it when the pull request adds or modifies an in-flight change folder under `openspec/changes/<name>/`. A pull request touching `openspec/changes/` MUST contain exactly one archived change, `openspec/changes/archive/<date>-<name>/`, whose `<name>` equals the head branch name, and for every delta spec `specs/<path>/spec.md` of that archived change the pull request MUST also change `openspec/specs/<path>/spec.md`.
 
 #### Scenario: Unarchived change fails
 
@@ -17,7 +17,7 @@ CI SHALL fail a pull request that adds or modifies an in-flight change folder un
 
 #### Scenario: Archived change passes
 
-- **WHEN** a pull request from branch `branch-per-change` adds `openspec/changes/archive/2026-11-01-branch-per-change/` and `openspec/specs/ci/change-guard/spec.md`
+- **WHEN** a pull request from branch `branch-per-change` adds `openspec/changes/archive/2026-11-01-branch-per-change/specs/ci/change-guard/spec.md` and changes `openspec/specs/ci/change-guard/spec.md`
 - **THEN** the guard passes
 
 #### Scenario: Mismatched branch fails
@@ -29,6 +29,11 @@ CI SHALL fail a pull request that adds or modifies an in-flight change folder un
 
 - **WHEN** a pull request adds `openspec/changes/archive/2026-11-01-branch-per-change/specs/ci/change-guard/spec.md` but no path under `openspec/specs/`
 - **THEN** the guard fails and reports that the main specs were not synced
+
+#### Scenario: A delta synced into a different capability fails
+
+- **WHEN** a pull request adds `openspec/changes/archive/2026-11-01-branch-per-change/specs/pipeline/spec.md` and `openspec/changes/archive/2026-11-01-branch-per-change/specs/ci/change-guard/spec.md` but changes only `openspec/specs/pipeline/spec.md`
+- **THEN** the guard fails and names `openspec/specs/ci/change-guard/spec.md` as not synced
 
 #### Scenario: Archived change without deltas passes
 
@@ -49,6 +54,16 @@ CI SHALL fail a pull request that adds or modifies an in-flight change folder un
 
 - **WHEN** a pull request adds `openspec/changes/branch-per-change/` and `openspec/changes/archive/2026-11-01-branch-per-change/`
 - **THEN** the guard fails because the change is not archived
+
+#### Scenario: A failing guard fails the quality gate
+
+- **WHEN** the change guard fails for a pull request
+- **THEN** the pipeline's "Quality Gate" fails and the pull request cannot merge
+
+#### Scenario: The guard does not run on main
+
+- **WHEN** the pipeline runs for a push to main or a manual dispatch
+- **THEN** the change guard is skipped
 
 ### Requirement: Archiving keeps the change name
 
