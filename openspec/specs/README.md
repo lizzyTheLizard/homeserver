@@ -35,9 +35,10 @@ read in.
    development interfaces, the repository bootstrap and the toolchain.
 4. **[infrastructure](infrastructure/spec.md)** — the deployed stack: the docker-compose services,
    the reverse proxies and TLS, DNS, and backup and restore.
-5. **[pipeline](pipeline/spec.md)** — the GitHub pipelines, the test suites, linting, the Docker
-   image builds and the stack smoke suite.
-6. **[ci/change-guard](ci/change-guard/spec.md)** — the pull-request guard that rejects a change
+5. **[pipeline](pipeline/spec.md)** — the single GitHub pipeline: change detection, per-service
+   linting, test suites and Docker image builds, publish and deploy from `main`, and the one
+   always-running "Quality Gate" that pull requests require.
+6. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
    which is not archived, not named after its branch, or whose spec deltas were not synced.
 7. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
    isolated stores, REST API and health endpoint.

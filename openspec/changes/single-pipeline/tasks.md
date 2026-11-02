@@ -14,7 +14,7 @@
 ## 3. Documentation
 
 - [x] 3.1 Rewrite the CI/deploy bullets in `infrastructure/README.md` §6 and the services/workflow sentence in `CLAUDE.md` to describe the single pipeline, its stages, the infrastructure-deploy rule and "Quality Gate" as the one required check; verify no remaining reference to the deleted workflow files with `grep -rn "web.yml\|assistant.yml\|whatsapp.yml\|wichteln.yml\|dev-machine.yml\|infrastructure.yml" --exclude-dir=node_modules --exclude-dir=openspec .`
-- [ ] 3.2 Update the `pipeline` and `ci/change-guard` entries in `openspec/specs/README.md` to match the new behaviour; verify the descriptions mention the single pipeline and the quality gate
+- [x] 3.2 Update the `pipeline` and `ci/change-guard` entries in `openspec/specs/README.md` to match the new behaviour; verify the descriptions mention the single pipeline and the quality gate
 
 ## 4. Dependabot auto-merge
 
