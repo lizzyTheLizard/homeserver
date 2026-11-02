@@ -101,7 +101,7 @@ Host-side `flock` still serialises the deploys inside one run.
 ### 7. Dependabot auto-merge through a GitHub App
 
 `dependabot-auto-merge.yml` first gets an installation token with `actions/create-github-app-token`
-(`app-id: ${{ secrets.AUTOMERGE_APP_ID }}`, `private-key: ${{ secrets.AUTOMERGE_APP_PRIVATE_KEY }}`)
+(`client-id: ${{ secrets.AUTOMERGE_APP_CLIENT_ID }}`, `private-key: ${{ secrets.AUTOMERGE_APP_PRIVATE_KEY }}`)
 and uses it for `gh pr merge --auto --squash` and `gh pr review --approve`. GitHub merges on behalf
 of the account that turned auto-merge on, so the merge push is made by the app, and pushes by an app
 start workflow runs, unlike `GITHUB_TOKEN` pushes. The secrets must be **Dependabot secrets**: a run
@@ -131,7 +131,7 @@ requests by hand — a manual step on every bump.
 
 ## Migration Plan
 
-0. Create and install the GitHub App and store `AUTOMERGE_APP_ID` and `AUTOMERGE_APP_PRIVATE_KEY`
+0. Create and install the GitHub App and store `AUTOMERGE_APP_CLIENT_ID` and `AUTOMERGE_APP_PRIVATE_KEY`
    as Dependabot secrets before merging.
 1. Land `pipeline.yml`, `service.yml` and `.github/scripts/` alongside the old workflows; open the
    pull request; confirm the Pipeline run and "Quality Gate" behave (old gates may still run).

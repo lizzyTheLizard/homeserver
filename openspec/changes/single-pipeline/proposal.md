@@ -65,8 +65,8 @@ _None._
 - `.github/workflows/`: `web.yml`, `assistant.yml`, `whatsapp.yml`, `wichteln.yml`,
   `dev-machine.yml` and `infrastructure.yml` are replaced by one `pipeline.yml`.
 - `dependabot-auto-merge.yml` gets its token from a GitHub App. This needs a GitHub App, set up by
-  hand, with Contents and Pull requests read/write access, installed on the repository. Its ID and
-  private key are stored as Dependabot secrets `AUTOMERGE_APP_ID` and `AUTOMERGE_APP_PRIVATE_KEY`.
+  hand, with Contents and Pull requests read/write access, installed on the repository. Its client ID and
+  private key are stored as Dependabot secrets `AUTOMERGE_APP_CLIENT_ID` and `AUTOMERGE_APP_PRIVATE_KEY`.
 - `.github/actions/`: the existing `setup`, `build-publish`, `deploy-service` and
   `deploy-infrastructure` actions are reused; a change-guard script is added under `.github/`.
 - GitHub repository ruleset `default` on `main`: required status checks change to "Quality Gate".
