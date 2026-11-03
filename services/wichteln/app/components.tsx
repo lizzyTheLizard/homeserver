@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useSyncExternalStore } from 'react'
 import { useFormStatus } from 'react-dom'
-import { groupLogin, login, register, saveWish, selectWish, type FormState } from './actions'
+import { changePassword, groupLogin, login, register, saveWish, selectWish, type FormState } from './actions'
 import { createGroup } from './admin/actions'
 
 function Message({ state }: { state: FormState }) {
@@ -42,7 +42,7 @@ export function LoginForm() {
   return (
     <form action={action} className="stack">
       <div>
-        <label htmlFor="username">Benutzername</label>
+        <label htmlFor="username">Name</label>
         <input id="username" name="username" autoComplete="username" autoCapitalize="none" required />
       </div>
       <div>
@@ -82,7 +82,7 @@ export function RegisterForm({ token }: { token: string }) {
       <div>
         <label htmlFor="register-name">Name</label>
         <input id="register-name" name="name" autoComplete="username" maxLength={60} required />
-        <span className="muted small">Damit meldest du dich später wieder an.</span>
+        <span className="muted small">Damit meldest du dich später an, in allen deinen Gruppen.</span>
       </div>
       <div>
         <label htmlFor="register-password">Passwort</label>
@@ -107,10 +107,39 @@ export function RegisterForm({ token }: { token: string }) {
   )
 }
 
-export function WishForm({ title, description }: { title?: string, description?: string }) {
+export function ChangePasswordForm({ continueTo }: { continueTo: string }) {
+  const [state, action] = useActionState(changePassword, undefined)
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="weiter" value={continueTo} />
+      <div>
+        <label htmlFor="new-password">Neues Passwort</label>
+        <input id="new-password" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={200} required />
+        <span className="muted small">Mindestens 8 Zeichen.</span>
+      </div>
+      <div>
+        <label htmlFor="new-password-confirmation">Neues Passwort wiederholen</label>
+        <input
+          id="new-password-confirmation"
+          name="passwordConfirmation"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          maxLength={200}
+          required
+        />
+      </div>
+      <Message state={state} />
+      <SubmitButton className="full">Passwort speichern</SubmitButton>
+    </form>
+  )
+}
+
+export function WishForm({ groupId, title, description }: { groupId: string, title?: string, description?: string }) {
   const [state, action] = useActionState(saveWish, undefined)
   return (
     <form action={action} className="stack">
+      <input type="hidden" name="groupId" value={groupId} />
       <div>
         <label htmlFor="title">Titel</label>
         <input id="title" name="title" defaultValue={title} maxLength={120} required />
@@ -125,13 +154,20 @@ export function WishForm({ title, description }: { title?: string, description?:
   )
 }
 
-export function WishPicker({ wishes }: { wishes: { ownerId: string, title: string, description: string }[] }) {
+export function WishPicker({
+  groupId,
+  wishes,
+}: {
+  groupId: string
+  wishes: { ownerId: string, title: string, description: string }[]
+}) {
   const [state, action] = useActionState(selectWish, undefined)
   return (
     <div className="stack">
       <Message state={state} />
       {wishes.map(w => (
         <form key={w.ownerId} action={action} className="wish">
+          <input type="hidden" name="groupId" value={groupId} />
           <input type="hidden" name="ownerId" value={w.ownerId} />
           <h3>{w.title}</h3>
           <p>{w.description}</p>
@@ -172,7 +208,7 @@ export function ResetPasswordForm({
   const [state, action] = useActionState(boundAction, undefined)
   return (
     <form action={action} className="reset-password">
-      <SubmitButton className="link" confirm={`Passwort von ${name} wirklich zurücksetzen?`}>
+      <SubmitButton className="link" confirm={`Passwort von ${name} wirklich zurücksetzen? Es gilt für alle Gruppen von ${name}.`}>
         Passwort zurücksetzen
       </SubmitButton>
       {state?.ok && (

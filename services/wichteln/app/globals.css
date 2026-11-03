@@ -96,6 +96,13 @@ h2 {
   flex-wrap: wrap;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .stack > * + * {
   margin-top: 12px;
 }

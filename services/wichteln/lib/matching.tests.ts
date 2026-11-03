@@ -5,6 +5,7 @@ import type { Group, User } from './store'
 function makeUser(id: string, hasWish = true): User {
   return {
     id,
+    accountId: `account-${id}`,
     name: id,
     wish: hasWish ? { title: `Wish ${id}`, description: `Description ${id}` } : null,
     selectedWishOf: null,

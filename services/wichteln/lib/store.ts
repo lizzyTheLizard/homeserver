@@ -3,14 +3,17 @@ import type { Queryable } from './db'
 import { selectableWishOwners } from './matching'
 import { createInviteToken } from './inviteToken'
 import { hashPassword, verifyPassword } from './password'
+import { NAME_TAKEN } from './registration'
 
 export interface Wish {
   title: string
   description: string
 }
 
+/** A participant: the membership of an account in one group. `id` is the participant id. */
 export interface User {
   id: string
+  accountId: string
   name: string
   wish: Wish | null
   /** id of the user whose wish this user has picked (phase 2) */
@@ -31,6 +34,17 @@ export interface Group {
 export interface UserRecord {
   group: Group
   user: User
+}
+
+export interface Account {
+  id: string
+  name: string
+  mustChangePassword: boolean
+}
+
+export interface GroupSummary {
+  id: string
+  name: string
 }
 
 export interface StoreSuccess<T> {
@@ -56,6 +70,7 @@ interface GroupRow {
 interface UserRow {
   id: string
   group_id: string
+  account_id: string
   name: string
   wish_title: string | null
   wish_description: string | null
@@ -63,12 +78,14 @@ interface UserRow {
 }
 
 const GROUP_COLUMNS = 'id, name, phase, invite_token, created_at'
-const USER_COLUMNS = 'id, group_id, name, wish_title, wish_description, selected_wish_of'
-const NAME_TAKEN = 'Dieser Name ist in der Gruppe bereits vergeben.'
+const USER_COLUMNS = 'p.id, p.group_id, p.account_id, a.name, p.wish_title, p.wish_description, p.selected_wish_of'
+const USER_FROM = 'wichteln_participants p JOIN wichteln_accounts a ON a.id = p.account_id'
+const USER_ORDER = 'p.created_at, a.name'
+const JOIN_CLOSED = 'Die Auswahlphase läuft bereits. Ein Beitritt ist nicht mehr möglich.'
 
 export async function listGroups(db: Queryable): Promise<Group[]> {
   const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM wichteln_groups ORDER BY created_at DESC`)
-  const users = await db.query<UserRow>(`SELECT ${USER_COLUMNS} FROM wichteln_users ORDER BY created_at, name`)
+  const users = await db.query<UserRow>(`SELECT ${USER_COLUMNS} FROM ${USER_FROM} ORDER BY ${USER_ORDER}`)
   const usersByGroup = new Map<string, UserRow[]>()
 
   for (const user of users) {
@@ -93,27 +110,41 @@ export async function getGroupByInviteToken(db: Queryable, token: string): Promi
   return group ? loadGroup(db, group) : null
 }
 
-export async function findUser(db: Queryable, groupId: string, userId: string): Promise<UserRecord | null> {
+export async function getAccount(db: Queryable, accountId: string): Promise<Account | null> {
+  const rows = await db.query<{ id: string, name: string, must_change_password: boolean }>(
+    'SELECT id, name, must_change_password FROM wichteln_accounts WHERE id = $1',
+    [accountId],
+  )
+  const row = rows.at(0)
+  return row ? { id: row.id, name: row.name, mustChangePassword: row.must_change_password } : null
+}
+
+/** The account's participation in a group, or `null` if it is not a member. */
+export async function findParticipant(db: Queryable, groupId: string, accountId: string): Promise<UserRecord | null> {
   const group = await getGroup(db, groupId)
   if (!group) return null
 
-  const user = group.users.find(candidate => candidate.id === userId)
+  const user = group.users.find(candidate => candidate.accountId === accountId)
   return user ? { group, user } : null
 }
 
+/** Groups the account is a member of, ordered by name. */
+export async function listAccountGroups(db: Queryable, accountId: string): Promise<GroupSummary[]> {
+  return db.query<GroupSummary>(
+    `SELECT g.id, g.name FROM wichteln_groups g JOIN wichteln_participants p ON p.group_id = g.id
+     WHERE p.account_id = $1 ORDER BY lower(g.name), g.created_at`,
+    [accountId],
+  )
+}
+
 /**
- * Signs a participant in within one group. Unknown names still pay for a hash
+ * Signs an account in by name and password. Unknown names still pay for a hash
  * check so the response time does not reveal which names exist.
  */
-export async function authenticateParticipant(
-  db: Queryable,
-  groupId: string,
-  name: string,
-  password: string,
-): Promise<UserRecord | null> {
+export async function authenticateAccount(db: Queryable, name: string, password: string): Promise<Account | null> {
   const rows = await db.query<{ id: string, password_hash: string }>(
-    'SELECT id, password_hash FROM wichteln_users WHERE group_id = $1 AND lower(name) = lower($2)',
-    [groupId, name],
+    'SELECT id, password_hash FROM wichteln_accounts WHERE lower(name) = lower($1)',
+    [name],
   )
   const row = rows.at(0)
   if (!row) {
@@ -121,7 +152,7 @@ export async function authenticateParticipant(
     return null
   }
   if (!await verifyPassword(password, row.password_hash)) return null
-  return findUser(db, groupId, row.id)
+  return getAccount(db, row.id)
 }
 
 export async function createGroup(db: Queryable, name: string): Promise<StoreResult<Group>> {
@@ -138,13 +169,16 @@ export async function createGroup(db: Queryable, name: string): Promise<StoreRes
   return { ok: true, value: group }
 }
 
-/** Adds a self-registered participant; `passwordHash` comes from `hashPassword`. */
-export async function registerParticipant(
+/**
+ * Creates an account and makes it a participant of the group, both or nothing.
+ * `passwordHash` comes from `hashPassword`. Run inside a transaction.
+ */
+export async function registerAccount(
   db: Queryable,
   groupId: string,
   name: string,
   passwordHash: string,
-): Promise<StoreResult<User>> {
+): Promise<StoreResult<Account>> {
   const locked = await lockGroup(db, groupId)
   if (!locked) return { ok: false, error: 'Gruppe nicht gefunden.' }
 
@@ -153,29 +187,64 @@ export async function registerParticipant(
   if (group.phase !== 'wishes') {
     return { ok: false, error: 'Die Auswahlphase läuft bereits. Eine Registrierung ist nicht mehr möglich.' }
   }
-  if (group.users.some(user => user.name.toLowerCase() === name.toLowerCase())) {
-    return { ok: false, error: NAME_TAKEN }
-  }
 
-  const userId = randomUUID()
+  const existing = await db.query<{ id: string }>('SELECT id FROM wichteln_accounts WHERE lower(name) = lower($1)', [name])
+  if (existing.length > 0) return { ok: false, error: NAME_TAKEN }
+
+  const accountId = randomUUID()
   try {
     await db.query(
-      'INSERT INTO wichteln_users (id, group_id, name, password_hash) VALUES ($1, $2, $3, $4)',
-      [userId, groupId, name, passwordHash],
+      'INSERT INTO wichteln_accounts (id, name, password_hash) VALUES ($1, $2, $3)',
+      [accountId, name, passwordHash],
     )
   }
   catch (error) {
     if (isUniqueViolation(error)) return { ok: false, error: NAME_TAKEN }
     throw error
   }
-  return { ok: true, value: { id: userId, name, wish: null, selectedWishOf: null } }
+  await db.query(
+    'INSERT INTO wichteln_participants (id, group_id, account_id) VALUES ($1, $2, $3)',
+    [randomUUID(), groupId, accountId],
+  )
+  return { ok: true, value: { id: accountId, name, mustChangePassword: false } }
 }
 
-/** Replaces a participant's password with a generated one and returns it in plain text, once. */
+/** Adds the account to the group during the wish phase; joining twice changes nothing. */
+export async function joinGroup(db: Queryable, groupId: string, accountId: string): Promise<StoreResult> {
+  const locked = await lockGroup(db, groupId)
+  if (!locked) return { ok: false, error: 'Gruppe nicht gefunden.' }
+
+  const group = await getGroup(db, groupId)
+  if (!group) return { ok: false, error: 'Gruppe nicht gefunden.' }
+  if (group.users.some(user => user.accountId === accountId)) return { ok: true, value: undefined }
+  if (group.phase !== 'wishes') return { ok: false, error: JOIN_CLOSED }
+
+  await db.query(
+    'INSERT INTO wichteln_participants (id, group_id, account_id) VALUES ($1, $2, $3) ON CONFLICT (group_id, account_id) DO NOTHING',
+    [randomUUID(), groupId, accountId],
+  )
+  return { ok: true, value: undefined }
+}
+
+/** Sets a self-chosen password and ends a pending forced change. `passwordHash` comes from `hashPassword`. */
+export async function changePassword(db: Queryable, accountId: string, passwordHash: string): Promise<StoreResult> {
+  const rows = await db.query<{ id: string }>(
+    'UPDATE wichteln_accounts SET password_hash = $1, must_change_password = FALSE WHERE id = $2 RETURNING id',
+    [passwordHash, accountId],
+  )
+  if (rows.length === 0) return { ok: false, error: 'Konto nicht gefunden.' }
+  return { ok: true, value: undefined }
+}
+
+/**
+ * Replaces the password of a group participant's account with a generated one,
+ * forces a change on the next sign-in and returns the password in plain text, once.
+ */
 export async function resetPassword(db: Queryable, groupId: string, userId: string): Promise<StoreResult<string>> {
   const password = generatePassword()
   const rows = await db.query<{ id: string }>(
-    'UPDATE wichteln_users SET password_hash = $1 WHERE id = $2 AND group_id = $3 RETURNING id',
+    `UPDATE wichteln_accounts SET password_hash = $1, must_change_password = TRUE
+     WHERE id = (SELECT account_id FROM wichteln_participants WHERE id = $2 AND group_id = $3) RETURNING id`,
     [await hashPassword(password), userId, groupId],
   )
   if (rows.length === 0) return { ok: false, error: 'Teilnehmer:in nicht gefunden.' }
@@ -189,7 +258,7 @@ export async function removeParticipant(db: Queryable, groupId: string, userId: 
   const group = await getGroup(db, groupId)
   if (group?.phase !== 'wishes') return
 
-  await db.query('DELETE FROM wichteln_users WHERE id = $1 AND group_id = $2', [userId, groupId])
+  await db.query('DELETE FROM wichteln_participants WHERE id = $1 AND group_id = $2', [userId, groupId])
 }
 
 export async function deleteGroup(db: Queryable, groupId: string): Promise<void> {
@@ -226,7 +295,7 @@ export async function saveWish(
   if (group.phase !== 'wishes') return { ok: false, error: 'Wünsche können nicht mehr geändert werden.' }
 
   await db.query(
-    'UPDATE wichteln_users SET wish_title = $1, wish_description = $2 WHERE id = $3',
+    'UPDATE wichteln_participants SET wish_title = $1, wish_description = $2 WHERE id = $3',
     [wish.title, wish.description, userId],
   )
   return { ok: true, value: undefined }
@@ -250,7 +319,7 @@ export async function selectWish(
   }
 
   try {
-    await db.query('UPDATE wichteln_users SET selected_wish_of = $1 WHERE id = $2', [ownerId, userId])
+    await db.query('UPDATE wichteln_participants SET selected_wish_of = $1 WHERE id = $2', [ownerId, userId])
   }
   catch (error) {
     if (isUniqueViolation(error)) {
@@ -271,7 +340,7 @@ async function lockGroup(db: Queryable, groupId: string): Promise<boolean> {
 
 async function loadGroup(db: Queryable, group: GroupRow): Promise<Group> {
   const users = await db.query<UserRow>(
-    `SELECT ${USER_COLUMNS} FROM wichteln_users WHERE group_id = $1 ORDER BY created_at, name`,
+    `SELECT ${USER_COLUMNS} FROM ${USER_FROM} WHERE p.group_id = $1 ORDER BY ${USER_ORDER}`,
     [group.id],
   )
   return mapGroup(group, users)
@@ -291,6 +360,7 @@ function mapGroup(row: GroupRow, users: UserRow[]): Group {
 function mapUser(row: UserRow): User {
   return {
     id: row.id,
+    accountId: row.account_id,
     name: row.name,
     wish: row.wish_title !== null && row.wish_description !== null
       ? { title: row.wish_title, description: row.wish_description }
