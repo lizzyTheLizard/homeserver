@@ -80,6 +80,12 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         </ul>
 
         {total === 0 && <p className="muted">Noch niemand hat sich registriert.</p>}
+        {total > 0 && (
+          <p className="muted small">
+            „Passwort zurücksetzen“ gilt für das Konto der Person, also für alle ihre Gruppen. Bei der nächsten Anmeldung
+            muss sie ein eigenes Passwort wählen.
+          </p>
+        )}
 
         <div className="row" style={{ marginTop: 12 }}>
           <Link href={`/admin/${group.id}`} className="small">

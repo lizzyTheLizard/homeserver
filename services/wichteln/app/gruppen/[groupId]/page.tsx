@@ -1,13 +1,18 @@
-import { requireUser } from '@/lib/session'
+import Link from 'next/link'
+import { requireParticipant } from '@/lib/session'
 import { selectableWishOwners } from '@/lib/matching'
+import { listAccountGroups } from '@/lib/store'
 import type { Group, User, Wish } from '@/lib/store'
-import { logout } from '../actions'
-import { WishForm, WishPicker } from '../components'
+import { getDb } from '@/lib/db'
+import { logout } from '../../actions'
+import { WishForm, WishPicker } from '../../components'
 
 export const dynamic = 'force-dynamic'
 
-export default async function WishPage() {
-  const { group, user } = await requireUser()
+export default async function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
+  const { groupId } = await params
+  const { account, group, user } = await requireParticipant(groupId)
+  const groupCount = (await listAccountGroups(await getDb(), account.id)).length
 
   return (
     <>
@@ -15,25 +20,39 @@ export default async function WishPage() {
         <div>
           <h1>
             Hallo
+            {' '}
             {user.name}
             !
           </h1>
           <span className="muted">
             Gruppe:
+            {' '}
             {group.name}
           </span>
         </div>
-        <form action={logout}>
-          <button className="secondary">Abmelden</button>
-        </form>
+        <div className="actions">
+          {groupCount > 1 && (
+            <Link href="/" className="button secondary">
+              Alle Gruppen
+            </Link>
+          )}
+          <Link href="/passwort" className="button secondary">
+            Passwort ändern
+          </Link>
+          <form action={logout}>
+            <button className="secondary">Abmelden</button>
+          </form>
+        </div>
       </div>
 
-      {group.phase === 'wishes' ? <WishPhase wish={user.wish} /> : <SelectionPhase group={group} user={user} />}
+      {group.phase === 'wishes'
+        ? <WishPhase groupId={group.id} wish={user.wish} />
+        : <SelectionPhase group={group} user={user} />}
     </>
   )
 }
 
-function WishPhase({ wish }: { wish: Wish | null }) {
+function WishPhase({ groupId, wish }: { groupId: string, wish: Wish | null }) {
   return (
     <section className="card">
       <div className="row">
@@ -45,7 +64,7 @@ function WishPhase({ wish }: { wish: Wish | null }) {
           ? 'Du kannst deinen Wunsch noch ändern, bis die Auswahlphase startet.'
           : 'Trage hier deinen Wunsch ein. Andere sehen später nur Titel und Beschreibung – nicht, von wem er stammt.'}
       </p>
-      <WishForm title={wish?.title} description={wish?.description} />
+      <WishForm groupId={groupId} title={wish?.title} description={wish?.description} />
     </section>
   )
 }
@@ -76,7 +95,7 @@ function SelectionPhase({ group, user }: { group: Group, user: User }) {
     <section className="card">
       <div className="row">
         <h2>Wähle einen Wunsch</h2>
-        <a href="/wunsch" className="small">
+        <a href={`/gruppen/${group.id}`} className="small">
           Aktualisieren
         </a>
       </div>
@@ -86,7 +105,7 @@ function SelectionPhase({ group, user }: { group: Group, user: User }) {
       </p>
       {wishes.length > 0
         ? (
-            <WishPicker wishes={wishes} />
+            <WishPicker groupId={group.id} wishes={wishes} />
           )
         : (
             <div className="alert error">Momentan ist kein Wunsch verfügbar. Bitte melde dich beim Admin.</div>
