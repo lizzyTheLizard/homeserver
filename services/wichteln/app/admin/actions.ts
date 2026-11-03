@@ -20,9 +20,9 @@ export async function createGroup(_prev: FormState, formData: FormData): Promise
   redirect(`/admin/${result.value.id}`)
 }
 
-export async function resetPassword(groupId: string, userId: string): Promise<FormState> {
+export async function resetPassword(accountId: string): Promise<FormState> {
   await requireAdmin()
-  const result = await withTransaction(db => store.resetPassword(db, groupId, userId))
+  const result = await withTransaction(db => store.resetPassword(db, accountId))
   return result.ok ? { ok: result.value } : { error: result.error }
 }
 

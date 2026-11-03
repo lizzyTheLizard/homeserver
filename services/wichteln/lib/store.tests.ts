@@ -1,4 +1,5 @@
 import { PGlite } from '@electric-sql/pglite'
+import { randomUUID } from 'crypto'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import type { Queryable } from './db'
 import { applyMigrations } from './migrate'
@@ -249,7 +250,7 @@ describe('store', () => {
     const anna = group.users.find(user => user.name === 'Anna')
     if (!anna) throw new Error('Anna is missing')
 
-    const reset = await store.resetPassword(queryable, group.id, anna.id)
+    const reset = await store.resetPassword(queryable, anna.accountId)
     if (!reset.ok) throw new Error(reset.error)
 
     expect(reset.value).toMatch(/^[a-zA-Z2-9]{10}$/)
@@ -259,15 +260,46 @@ describe('store', () => {
     const rows = await queryable.query<{ password_hash: string }>('SELECT password_hash FROM wichteln_accounts WHERE id = $1', [anna.accountId])
     expect(rows[0]?.password_hash).not.toBe(reset.value)
 
-    const other = await createTestGroup(['Cara'])
-    expect((await store.resetPassword(queryable, other.id, anna.id)).ok).toBe(false)
+    expect(await store.resetPassword(queryable, randomUUID())).toEqual({ ok: false, error: 'Konto nicht gefunden.' })
+  })
+
+  test('resets the password of an account that belongs to no group', async () => {
+    const group = await createTestGroup(['Anna', 'Ben'])
+    const anna = group.users.find(user => user.name === 'Anna')
+    if (!anna) throw new Error('Anna is missing')
+    await store.removeParticipant(queryable, group.id, anna.id)
+    expect(await store.listAccountGroups(queryable, anna.accountId)).toEqual([])
+
+    const reset = await store.resetPassword(queryable, anna.accountId)
+    if (!reset.ok) throw new Error(reset.error)
+
+    expect(await store.authenticateAccount(queryable, 'Anna', 'Anna-password')).toBeNull()
+    expect((await store.authenticateAccount(queryable, 'Anna', reset.value))?.mustChangePassword).toBe(true)
+  })
+
+  test('lists every account with its groups, ordered by name ignoring case', async () => {
+    const team = await createTestGroup(['ben', 'Anna'])
+    const family = await store.createGroup(queryable, 'Familie')
+    if (!family.ok) throw new Error(family.error)
+    const anna = team.users.find(user => user.name === 'Anna')
+    const ben = team.users.find(user => user.name === 'ben')
+    if (!anna || !ben) throw new Error('Participant is missing')
+    expect((await store.joinGroup(queryable, family.value.id, anna.accountId)).ok).toBe(true)
+    const cara = await register(family.value.id, 'Cara')
+    await store.removeParticipant(queryable, family.value.id, (await participant(family.value.id, cara.id)).id)
+
+    expect(await store.listAccounts(queryable)).toEqual([
+      { id: anna.accountId, name: 'Anna', groups: ['Familie', 'Team'] },
+      { id: ben.accountId, name: 'ben', groups: ['Team'] },
+      { id: cara.id, name: 'Cara', groups: [] },
+    ])
   })
 
   test('changes a password and ends a forced change', async () => {
     const group = await createTestGroup(['Anna', 'Ben'])
     const anna = group.users.find(user => user.name === 'Anna')
     if (!anna) throw new Error('Anna is missing')
-    const reset = await store.resetPassword(queryable, group.id, anna.id)
+    const reset = await store.resetPassword(queryable, anna.accountId)
     if (!reset.ok) throw new Error(reset.error)
 
     expect((await store.changePassword(queryable, anna.accountId, await hashPassword('new-password'))).ok).toBe(true)
