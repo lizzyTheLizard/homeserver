@@ -42,6 +42,13 @@ export interface Account {
   mustChangePassword: boolean
 }
 
+/** An account as the administrator sees it: its name and the names of its groups. */
+export interface AccountSummary {
+  id: string
+  name: string
+  groups: string[]
+}
+
 export interface GroupSummary {
   id: string
   name: string
@@ -134,6 +141,18 @@ export async function listAccountGroups(db: Queryable, accountId: string): Promi
     `SELECT g.id, g.name FROM wichteln_groups g JOIN wichteln_participants p ON p.group_id = g.id
      WHERE p.account_id = $1 ORDER BY lower(g.name), g.created_at`,
     [accountId],
+  )
+}
+
+/** Every account with the names of its groups, ordered by name ignoring case. */
+export async function listAccounts(db: Queryable): Promise<AccountSummary[]> {
+  return db.query<AccountSummary>(
+    `SELECT a.id, a.name, array_remove(array_agg(g.name ORDER BY lower(g.name), g.created_at), NULL) AS groups
+     FROM wichteln_accounts a
+     LEFT JOIN wichteln_participants p ON p.account_id = a.id
+     LEFT JOIN wichteln_groups g ON g.id = p.group_id
+     GROUP BY a.id, a.name
+     ORDER BY lower(a.name), a.created_at`,
   )
 }
 
@@ -237,17 +256,16 @@ export async function changePassword(db: Queryable, accountId: string, passwordH
 }
 
 /**
- * Replaces the password of a group participant's account with a generated one,
- * forces a change on the next sign-in and returns the password in plain text, once.
+ * Replaces the account's password with a generated one, forces a change on the
+ * next sign-in and returns the password in plain text, once.
  */
-export async function resetPassword(db: Queryable, groupId: string, userId: string): Promise<StoreResult<string>> {
+export async function resetPassword(db: Queryable, accountId: string): Promise<StoreResult<string>> {
   const password = generatePassword()
   const rows = await db.query<{ id: string }>(
-    `UPDATE wichteln_accounts SET password_hash = $1, must_change_password = TRUE
-     WHERE id = (SELECT account_id FROM wichteln_participants WHERE id = $2 AND group_id = $3) RETURNING id`,
-    [await hashPassword(password), userId, groupId],
+    'UPDATE wichteln_accounts SET password_hash = $1, must_change_password = TRUE WHERE id = $2 RETURNING id',
+    [await hashPassword(password), accountId],
   )
-  if (rows.length === 0) return { ok: false, error: 'Teilnehmer:in nicht gefunden.' }
+  if (rows.length === 0) return { ok: false, error: 'Konto nicht gefunden.' }
   return { ok: true, value: password }
 }
 

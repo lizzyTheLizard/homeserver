@@ -61,6 +61,14 @@ export default async function AdminPage() {
       </section>
 
       <section className="card">
+        <h2>Konten</h2>
+        <p className="muted">Alle Konten mit ihren Gruppen. Hier lässt sich jedes Passwort zurücksetzen, auch für Konten ohne Gruppe.</p>
+        <Link href="/admin/konten" className="button secondary">
+          Alle Konten anzeigen
+        </Link>
+      </section>
+
+      <section className="card">
         <h2>Neue Gruppe erstellen</h2>
         <CreateGroupForm />
       </section>

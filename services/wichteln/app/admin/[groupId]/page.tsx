@@ -60,7 +60,7 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
               <li key={u.id}>
                 <div className="participant">
                   <strong>{u.name}</strong>
-                  <ResetPasswordForm name={u.name} action={resetPassword.bind(null, group.id, u.id)} />
+                  <ResetPasswordForm name={u.name} action={resetPassword.bind(null, u.accountId)} />
                 </div>
                 <div className="participant-status">
                   <span className={`badge ${ok ? 'done' : 'open'}`}>
