@@ -27,7 +27,7 @@
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.2.0",
     "recharts": "^3.10.1",
-    "uuid": "^14.0.2",
+    "uuid": "^14.0.3",
     "winston": "^3.19.0",
     "zod": "^4.6.5"
   },
