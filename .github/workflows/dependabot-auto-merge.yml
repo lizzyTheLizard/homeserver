@@ -1,7 +1,7 @@
 name: Auto-merge Dependabot PRs
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
 # Merging and approving use the GitHub App token below; GITHUB_TOKEN only reads the metadata
@@ -21,7 +21,8 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       # A merge made with GITHUB_TOKEN starts no workflow run, so the merge to main would never run
-      # the pipeline; a merge made by the app does. Runs started by Dependabot only see Dependabot secrets.
+      # the pipeline; a merge made by the app does. Runs started by Dependabot only see Dependabot secrets
+      # (this is why the trigger is pull_request, not pull_request_target).
       - name: Get GitHub App token
         id: app-token
         if: |
