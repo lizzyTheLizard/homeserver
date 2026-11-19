@@ -12,3 +12,27 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/services/web"
+      - "/services/assistant"
+      - "/services/whatsapp"
+      - "/services/wichteln"
+      - "/services/dev-machine"
+      - "/infrastructure/db-backup"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 1
+
+  - package-ecosystem: "docker-compose"
+    directory: "/infrastructure"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 1
+    ignore:
+      # A major upgrade needs a data migration and a matching postgresql client in infrastructure/db-backup
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]

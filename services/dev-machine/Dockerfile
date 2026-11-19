@@ -1,5 +1,5 @@
 # Syntax=docker/dockerfile:1
-FROM node:24-bookworm-slim
+FROM node:24.22.3-bookworm-slim
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
