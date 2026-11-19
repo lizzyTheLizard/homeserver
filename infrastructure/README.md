@@ -433,6 +433,6 @@ only do this if you have a reason to.
   `GITHUB_TOKEN` starts no workflow run and the pipeline would then never build
   or deploy the update. The app's client ID and private key are stored as
   **Dependabot** secrets `AUTOMERGE_APP_CLIENT_ID` and
-  `AUTOMERGE_APP_PRIVATE_KEY` (runs started by Dependabot cannot read Actions
-  secrets). Without them the token step fails and the pull request stays open.
+  `AUTOMERGE_APP_PRIVATE_KEY` (`pull_request` runs started by Dependabot cannot
+  read Actions secrets). Without them the token step fails and the pull request stays open.
 
