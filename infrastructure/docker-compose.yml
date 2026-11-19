@@ -1,7 +1,7 @@
 services:
   nginx:
     container_name: Nginx
-    image: nginx:alpine
+    image: nginx:1.31.9-alpine3.24
     restart: unless-stopped
     ports:
       - "80:80"
@@ -117,7 +117,7 @@ services:
 
   postgresprod:
     container_name: Database
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine3.24
     restart: unless-stopped
     environment:
       POSTGRES_USER: homeserver
@@ -162,7 +162,7 @@ services:
 
   pgwebprod:
     container_name: Pgweb
-    image: sosedoff/pgweb
+    image: sosedoff/pgweb:0.17.0
     restart: unless-stopped
     command: --bind=0.0.0.0 --listen=8081
     environment:
@@ -173,7 +173,7 @@ services:
 
   dozzle:
     container_name: Dozzle
-    image: amir20/dozzle:latest
+    image: amir20/dozzle:v11.5.0
     restart: unless-stopped
     command: --enable-actions --enable-shell
     volumes:
@@ -181,7 +181,7 @@ services:
 
   caddy:
     container_name: Caddy
-    image: caddy:2-alpine
+    image: caddy:2.11.9-alpine
     env_file:
       - .env
     volumes:
@@ -205,7 +205,7 @@ services:
 
   bind9:
     container_name: Bind9
-    image: ubuntu/bind9:latest
+    image: ubuntu/bind9:9.20-26.04
     restart: unless-stopped
     ports:
       - "53:53/udp"
@@ -224,7 +224,7 @@ services:
         exec named -g -c /etc/bind/named.conf
 
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/certbot:v5.10.0
     container_name: Certbot
     volumes:
       - ./certbot/www:/var/www/certbot:rw
@@ -249,7 +249,7 @@ services:
 
   postgresdev:
     container_name: DEV-Database
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine3.24
     restart: unless-stopped
     environment:
       POSTGRES_USER: homeserver
