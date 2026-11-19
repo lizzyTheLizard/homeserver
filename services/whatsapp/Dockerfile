@@ -27,7 +27,7 @@ RUN apk add --no-cache ca-certificates curl tar \
  && chmod +x /usr/local/bin/wacli
 
 # ---- Stage 2: base + deps ----------------------------------------------
-FROM node:24.22.3-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
 
 FROM base AS deps
 # https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine
@@ -66,7 +66,7 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver
 
 # ---- Stage 5: runtime ---------------------------------------------------
 # We need slim here as wacli needs glibc
-FROM node:24.22.3-slim AS runner
+FROM node:26.13.1-slim AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/*
