@@ -28,8 +28,9 @@ function createLogger() {
 }
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
+  let message;
   // oxlint-disable-next-line typescript/restrict-template-expressions
-  let message = `${info.timestamp} ${info.level}: ${info.message}`
+  message = `${info.timestamp} ${info.level}: ${info.message}`
   // oxlint-disable-next-line typescript/restrict-template-expressions typescript/no-base-to-string
   if (info.stack) {message = `${message  }\n${info.stack}`}
   return message

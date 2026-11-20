@@ -32,8 +32,8 @@ export function spawnWacli(storeDir: string, args: string[], handleEvent: (event
 // (or a plain success envelope for commands that do not produce JSON). Rejects
 // With WacliError when the process exits non-zero.
 export function runWacli(storeDir: string, args: string[], hasResult: boolean, timeoutMs?: number): Promise<unknown> {
-  let stdout = '',
-   firstResult = false
+  // oxlint-disable-next-line init-declarations
+  let stdout = '', firstResult = false
   timeoutMs = timeoutMs ?? config.WHATSAPP_CMD_TIMEOUT_MS
   const fullArgs = ['--store', storeDir, ...args]
   if (hasResult) {fullArgs.push('--json')}
@@ -71,6 +71,7 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
         return
       }
       try {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         const parsed = JSON.parse(trimmed) as { data: unknown }
         finish(parsed.data)
       }
@@ -86,11 +87,12 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
 export function attachEventParser(stream: Readable | null, onEvent: (event: WacliEvent) => void, label?: string): void {
   if (!stream) {return}
   const prefix = label ? `[${label}] ` : ''
-  let buffer = ''
+  let buffer
   stream.setEncoding('utf8')
+  buffer = ''
   stream.on('data', (chunk: string) => {
     buffer += chunk
-    let newlineIndex = 0
+    let newlineIndex
     while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
       const line = buffer.slice(0, newlineIndex).trim()
       buffer = buffer.slice(newlineIndex + 1)

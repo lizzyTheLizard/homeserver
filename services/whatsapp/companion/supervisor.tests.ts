@@ -29,7 +29,9 @@ const testConfig = vi.hoisted(() => ({
 
 vi.mock('./config', () => ({ config: testConfig }))
 vi.mock('./wacli', () => ({
+  // oxlint-disable-next-line typescript/consistent-type-imports
   runWacli: mockRunWacli as typeof import('./wacli').runWacli,
+  // oxlint-disable-next-line typescript/consistent-type-imports
   spawnWacli: mockSpawnWacli as typeof import('./wacli').spawnWacli,
 }))
 

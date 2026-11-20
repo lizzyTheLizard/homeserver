@@ -42,6 +42,7 @@ function optionalNumber(name: string, defaultValue: number): number {
 
 export const config: Config = {
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
   PORT: optionalNumber('PORT', 8400),
   WACLI_BIN: optional('WACLI_BIN', 'wacli'),

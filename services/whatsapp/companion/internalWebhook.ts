@@ -43,11 +43,13 @@ function verifyWebhookSignature(secret: string, body: string, signatureHeader: s
 // Verifies the signature and parses a raw webhook body, returning the parsed
 // Payload. Throws on any failure so the caller can map it to an error response.
 function parseWebhookPayload(secret: string, body: unknown, signatureHeader: string | undefined): unknown {
-  let rawBody = ''
+  let rawBody;
   if ( Buffer.isBuffer(body)) {
     rawBody = body.toString('utf8')
   } else if(typeof body === 'string' ) {
     rawBody = body
+  } else {
+    rawBody = ''
   }
   if (!verifyWebhookSignature(secret, rawBody, signatureHeader)) {
     throw new Error('invalid webhook signature')

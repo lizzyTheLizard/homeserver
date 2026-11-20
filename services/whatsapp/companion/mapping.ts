@@ -17,6 +17,7 @@ export interface Message {
 
 export function mapChats(data: unknown): Chat[] {
   if (!Array.isArray(data)) {return []}
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const chats = data as WacliChat[]
   return chats
     .filter(chat => chat.jid !== 'status@broadcast')
@@ -49,6 +50,7 @@ interface WacliChat {
 }
 
 export function mapAuthenticated(data: unknown): boolean {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const obj = (typeof data === 'object' && data !== null ? data : {}) as Record<string, unknown>
   return obj.authenticated === true
 }
@@ -59,6 +61,7 @@ export function mapChatArchived(data: unknown): boolean {
 }
 
 export function mapMessages(data: unknown): Message[] {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const result = data as { messages?: WacliMessage[] } | undefined
   if (!Array.isArray(result?.messages)) {return []}
   return result.messages.map(mapMessage).filter(i => i.content.length > 0)
