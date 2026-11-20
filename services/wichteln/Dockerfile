@@ -1,9 +1,9 @@
 # syntax=docker.io/docker/dockerfile:1
 
 FROM node:26.13.1-alpine3.24 AS base
-# Node 25+ no longer bundles corepack. This installs only a bootstrap pnpm; inside the
-# workspace it switches to the exact version pinned in the root package.json `packageManager`.
-RUN npm install -g pnpm
+# Node 25+ no longer bundles corepack. Install pnpm directly; the root package.json
+# `devEngines.packageManager` range decides the exact version (pnpm downloads it if needed).
+RUN npm install -g pnpm@12
 
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.

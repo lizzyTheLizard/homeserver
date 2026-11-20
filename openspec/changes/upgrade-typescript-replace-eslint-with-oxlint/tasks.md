@@ -24,6 +24,7 @@
 
 ## 5. Node 26
 
-- [x] 5.1 Bump `node` to `26.13.1` in all Dockerfiles and align wichteln's `@types/node`; replace corepack with `npm install -g pnpm` in the Dockerfiles (pnpm self-switches to the `packageManager` version)
+- [x] 5.1 Bump `node` to `26.13.1` in all Dockerfiles and align wichteln's `@types/node`; replace corepack with `npm install -g pnpm@12` in the Dockerfiles; bump `.nvmrc` to `v26.13.1`
 - [x] 5.2 Update Node version mentions in `infrastructure/README.md` and `restore-backup.mjs`
-- [ ] 5.3 Confirm the image builds pass in the pipeline (no Docker available locally)
+- [x] 5.3 Move to pnpm 12 and pin it via `devEngines.packageManager` (replace `packageManager`), refresh `pnpm-lock.yaml`, verify frozen install, lint, build and tests
+- [ ] 5.4 Confirm the image builds pass in the pipeline (no Docker available locally)
