@@ -8,6 +8,8 @@ The docker-compose stack does not start properly: the name server container fail
 
 - Replace the name server image `ubuntu/bind9:9.20-26.04` with `internetsystemsconsortium/bind9:9.20`.
 - Make the generated zone file readable by adding `chmod 644 /etc/bind/db.gutschi.site` to the bind9 command, after the `sed` that creates it.
+- Let the name server run from a working directory that its non-root user can write (`directory "/tmp"` in `named.conf`), which the new image requires.
+- Add the missing `MICROSOFT_GRAPH_ISSUER` placeholder to `infrastructure/env.example`, without which the assistant exits at start-up.
 - Add a pipeline job that runs `docker compose up` for the stack and passes only once every container is running and healthy. No further checks (no DNS queries, no HTTP requests).
 - The new job runs when the infrastructure is reported as changed, after the changed service images are built and published, and gates the infrastructure deploy and the "Quality Gate".
 
@@ -21,6 +23,6 @@ The docker-compose stack does not start properly: the name server container fail
 
 ## Impact
 
-- `infrastructure/docker-compose.yml` (bind9 service)
+- `infrastructure/docker-compose.yml` (bind9 service), `infrastructure/bind9/named.conf`, `infrastructure/env.example`
 - `.github/workflows/pipeline.yml` (new job, `deploy-infrastructure` and `quality-gate` dependencies)
 - Dependabot will not propose bind9 updates beyond the `9.20` line; the image follows 9.20 patch releases on pull.
