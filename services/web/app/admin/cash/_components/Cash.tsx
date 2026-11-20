@@ -1,16 +1,16 @@
 'use client'
+import { Project } from '@/app/cash/_data/Project'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { v4 as randomUUID } from 'uuid'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Checkbox } from '@/app/shared/_components/form/Checkbox'
+import { useState } from 'react'
 import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { deleteProject, saveProject } from '../server'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
-import { Checkbox } from '@/app/shared/_components/form/Checkbox'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Input } from '@/app/shared/_components/form/Input'
-import type { Project } from '@/app/cash/_data/Project'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { v4 as randomUUID } from 'uuid'
 import { useListState } from '@/app/shared/_helper/ListState'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { useState } from 'react'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 
 export interface CashProps {
   projects?: Project[]
@@ -18,19 +18,19 @@ export interface CashProps {
 
 const columns = [
   textColumn('name', { header: 'Name' }),
-  textColumn('owner_email', { header: 'Owner', style: { overflow: 'clip' } }),
+  textColumn('owner_email', { style: { overflow: 'clip' }, header: 'Owner' }),
   boolColumn('archived', { header: 'Archived' }),
 ]
 
 export function Cash({ projects: projectsIn = [] }: CashProps) {
-  const [id, setId] = useState(randomUUID()),
-   [name, setName] = useState(''),
-   [archived, setArchived] = useState(false),
-   [owner_email, setOwnerEmail] = useState(''),
-   [projects, addProject, removeProject] = useListState<Project>(projectsIn),
-   [title, setTitle] = useState<string>('New Project'),
-   [sidebarId, openSidebar] = useSidebar(),
-   [noDelete, setNoDelete] = useState(false)
+  const [id, setId] = useState(randomUUID())
+  const [name, setName] = useState('')
+  const [archived, setArchived] = useState(false)
+  const [owner_email, setOwnerEmail] = useState('')
+  const [projects, addProject, removeProject] = useListState<Project>(projectsIn)
+  const [title, setTitle] = useState<string>('New Project')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [noDelete, setNoDelete] = useState(false)
 
   function showProject(project?: Project) {
     setId(project?.id ?? randomUUID())
@@ -47,7 +47,7 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
       <ActionButton onClick={() => { showProject() }}>Add Project</ActionButton>
       <DataTable
         columns={columns}
-        initialSortingOrder={[{ direction: 'ASC', key: 'name' }]}
+        initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
         data={projects}
         onRowClick={(project) => { showProject(project) }}
       />
@@ -55,7 +55,7 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
         id={sidebarId}
         title={title}
         type="Project"
-        onSave={() => saveProject({ archived, id, name, owner_email })}
+        onSave={() => saveProject({ id, name, owner_email, archived })}
         onAfterSave={addProject}
         onDelete={() => deleteProject(id)}
         onAfterDelete={() => { removeProject(id) }}

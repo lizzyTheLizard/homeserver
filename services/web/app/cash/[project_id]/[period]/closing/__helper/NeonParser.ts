@@ -1,17 +1,17 @@
-import { type ParseResult, parse } from 'papaparse';
-import type { NeonTransaction } from '@/app/cash/_data/Monthly'
+import { NeonTransaction } from '@/app/cash/_data/Monthly'
 import { Temporal } from '@js-temporal/polyfill'
 import { z } from 'zod'
+import { parse, ParseResult } from 'papaparse'
 
 export function parseNeonFile(file: File): Promise<NeonTransaction[]> {
   return new Promise((resolve, reject) => {
     parse(file, {
-      complete: (results) => { complete(resolve, reject, results) },
       delimiter: ';',
-      error: (error) => { reject(error) },
-      header: true,
       quoteChar: '"',
+      header: true,
       skipEmptyLines: true,
+      error: (error) => { reject(error) },
+      complete: (results) => { complete(resolve, reject, results) },
     })
   })
 }
@@ -25,16 +25,16 @@ function complete(resolve: (result: NeonTransaction[]) => void, reject: (reason:
   for (const input of results.data) {
     const parsingResult = NeonRowSchema.safeParse(input)
     if (!parsingResult.success) {
-      reject(new Error(`Invalid CSV data: ${  parsingResult.error.issues[0]?.message ?? 'unknown error'}`))
+      reject(new Error('Invalid CSV data: ' + (parsingResult.error.issues[0]?.message ?? 'unknown error')))
       return
     }
-    const rawRow = parsingResult.data,
-     row = {
-      amount: parseFloat(rawRow.Amount),
+    const rawRow = parsingResult.data
+    const row = {
       date: Temporal.PlainDate.from(rawRow.Date).toString(),
+      amount: parseFloat(rawRow.Amount),
       description: rawRow.Description,
-      order: rows.length,
       subject: ((rawRow.Subject?.length ?? 0) > 0) ? rawRow.Subject : undefined,
+      order: rows.length,
     }
     rows.push(row)
   }
@@ -42,8 +42,8 @@ function complete(resolve: (result: NeonTransaction[]) => void, reject: (reason:
 }
 
 const NeonRowSchema = z.object({
-  Amount: z.string().regex(/^-?\d+(?:\.\d{1,2})?$/, 'must be a valid number with up to 2 decimal places'),
   Date: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'must be a valid date in the format YYYY-MM-DD'),
+  Amount: z.string().regex(/^-?\d+(\.\d{1,2})?$/, 'must be a valid number with up to 2 decimal places'),
   Description: z.string().optional(),
   Subject: z.string().optional(),
 })

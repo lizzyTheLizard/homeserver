@@ -1,25 +1,25 @@
 import { type ChangeEvent } from 'react'
-import { Collapse } from '@/app/shared/_components/Collapse'
-import { Input } from '@/app/shared/_components/form/Input'
-import { Select } from '@/app/shared/_components/form/Select'
-import type { Template } from '../../_data/Template'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { notFound } from '@/app/shared/_helper/BackendError'
 import style from './EditorContext.module.css'
+import { Template } from '../../_data/Template'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { Collapse } from '@/app/shared/_components/Collapse'
+import { Select } from '@/app/shared/_components/form/Select'
+import { notFound } from '@/app/shared/_helper/BackendError'
 
 interface Props {
   templates: Template[]
   template: Template | undefined
   parameters: Record<string, string>
-  onTemplateChange?(template: Template): void
-  onParametersChange?(name: string, value: string | undefined): void
-  onBlur?(): void
+  onTemplateChange?: (template: Template) => void
+  onParametersChange?: (name: string, value: string | undefined) => void
+  onBlur?: () => void
 }
 
 export function EditorContext({ templates, template, parameters, onParametersChange, onTemplateChange, onBlur }: Props) {
   function handleTemplateChange(e: ChangeEvent<HTMLSelectElement>) {
-    const id = e.currentTarget.value,
-     result = templates.find(t => t.id === id)
+    const id = e.currentTarget.value
+    const result = templates.find(t => t.id === id)
     if (result === undefined) {
       throw notFound(`Template with id "${id}" not found.`)
     }
@@ -27,8 +27,8 @@ export function EditorContext({ templates, template, parameters, onParametersCha
   }
 
   function handleLanguageChange(e: ChangeEvent<HTMLSelectElement>) {
-    const language = e.currentTarget.value,
-     result = templates.find(t => t.language === language)
+    const language = e.currentTarget.value
+    const result = templates.find(t => t.language === language)
     if (result === undefined) {
       throw notFound(`No template found for language "${language}".`)
     }
@@ -36,7 +36,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
   }
 
   return (
-    <Collapse header="Context" initiallyExpanded>
+    <Collapse header="Context" initiallyExpanded={true}>
       <div className={style.collapse}>
         <div className={`row ${style.row}`}>
           <Select value={template?.language} onChange={(e) => { handleLanguageChange(e) }} required label="Language">

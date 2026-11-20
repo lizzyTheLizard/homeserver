@@ -1,8 +1,8 @@
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { MicrosoftCalendar } from './_components/MicrosoftCalendar'
+import { MicrosoftUserInfo } from './_components/MicrosoftUserInfo'
 import { MicrosoftMail } from './_components/MicrosoftMail'
 import { MicrosoftTodo } from './_components/MicrosoftTodo'
-import { MicrosoftUserInfo } from './_components/MicrosoftUserInfo'
+import { MicrosoftCalendar } from './_components/MicrosoftCalendar'
 import { MicrosoftWaitForConnection } from './_components/MicrosoftWaitForConnection'
 import { loadMicrosoftStatus } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
@@ -13,8 +13,8 @@ export const metadata = {
 
 export default function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const status = await loadMicrosoftStatus(),
-     allConnected = status.mailStatus === 'connected' && status.todoStatus === 'connected' && status.calendarStatus === 'connected'
+    const status = await loadMicrosoftStatus()
+    const allConnected = status.mailStatus === 'connected' && status.todoStatus === 'connected' && status.calendarStatus === 'connected'
     return (
       <main>
         <ActionTitle>

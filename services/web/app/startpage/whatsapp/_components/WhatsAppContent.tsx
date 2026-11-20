@@ -1,16 +1,16 @@
 'use client'
-import type { Chat, SyncStatus } from '@assistant/whatsapp/types'
-import { boolColumn, dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { disconnectAccount, fullSync, getStatus } from '../server'
 import { useEffect, useState } from 'react'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { useRouter } from 'next/navigation'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { textColumn, boolColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import QRCode from 'react-qr-code'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { getStatus, fullSync, disconnectAccount } from '../server'
 import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
-import { useRouter } from 'next/navigation'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import type { Chat, SyncStatus } from '@assistant/whatsapp/types'
+import QRCode from 'react-qr-code'
 
 const columns = [
   textColumn('name', { header: 'Name', style: { } }),
@@ -20,14 +20,14 @@ const columns = [
 ]
 
 export function WhatsAppContent({ chats, status, error: loadError }: { chats: Chat[], status: SyncStatus, error?: string }) {
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null),
-   [sidebarId, openSidebar] = useSidebar(),
-   [actionError, setActionError] = useState<string | undefined>(undefined),
-   [liveStatus, setLiveStatus] = useState<SyncStatus>(status),
-   router = useRouter(),
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
+  const [sidebarId, openSidebar] = useSidebar()
+  const [actionError, setActionError] = useState<string | undefined>(undefined)
+  const [liveStatus, setLiveStatus] = useState<SyncStatus>(status)
+  const router = useRouter()
 
-   statusError = liveStatus.type === 'closed' ? 'The WhatsApp connection is closed' : undefined,
-   error = actionError ?? loadError ?? statusError
+  const statusError = liveStatus.type === 'closed' ? 'The WhatsApp connection is closed' : undefined
+  const error = actionError ?? loadError ?? statusError
 
   function showMessages(chat: Chat) {
     setSelectedChat(chat)
@@ -37,19 +37,19 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
   async function handleFullSync() {
     setActionError(undefined)
     const result = await fullSync()
-    if (!result.success) {setActionError(result.error)}
-    else {router.refresh()}
+    if (!result.success) setActionError(result.error)
+    else router.refresh()
   }
 
   async function handleDisconnect() {
     setActionError(undefined)
     const result = await disconnectAccount()
-    if (!result.success) {setActionError(result.error)}
-    else {router.refresh()}
+    if (!result.success) setActionError(result.error)
+    else router.refresh()
   }
 
   useEffect(() => {
-    if (liveStatus.type === 'connected') {return}
+    if (liveStatus.type === 'connected') return
     const interval = setInterval(() => {
       getStatus().then((r) => {
         if (!r.success) {
@@ -59,7 +59,7 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
         const next = r.data
         setActionError(undefined)
         setLiveStatus(next)
-        if (next.type !== liveStatus.type) {router.refresh()}
+        if (next.type !== liveStatus.type) router.refresh()
       }).catch((err: unknown) => {
         setActionError(err instanceof Error ? err.message : new String(err).toString())
       })
@@ -67,7 +67,7 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
     return () => { clearInterval(interval) }
   }, [liveStatus.type, router])
 
-  if (liveStatus.type === 'fullsync') {return <LoadingSpinner text="Running full sync, this may take a while..." />}
+  if (liveStatus.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..."></LoadingSpinner>
   if (liveStatus.type === 'needAuth') {
     return (
       <div className={styles.qrContainer}>
@@ -90,7 +90,7 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
               data={chats}
               columns={columns}
               onRowClick={showMessages}
-              initialSortingOrder={[{ direction: 'DESC', key: 'lastMessageTimestamp' }, { direction: 'DESC', key: 'isArchived' }]}
+              initialSortingOrder={[{ key: 'lastMessageTimestamp', direction: 'DESC' }, { key: 'isArchived', direction: 'DESC' }]}
               searchLabel="Search chats…"
             />
           )}

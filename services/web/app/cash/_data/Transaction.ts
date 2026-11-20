@@ -1,6 +1,6 @@
-import { type Entity, type Queryable, count, removeNull } from '@/app/shared/_external/db/access';
-import { type Period, endDate, startDate, toString } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
+import { endDate, Period, toString, startDate } from '../_helper/Period'
+import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 
 export interface TransactionInput {
   id: string
@@ -36,8 +36,8 @@ export async function findTransactionsById(client: Queryable, owner: string, id:
     'SELECT * FROM transaction WHERE id = $1 AND owner_email = $2',
     [id, owner],
   )
-  if (result.rows.length === 0) {logger.debug(`No transaction found with id ${id} for owner ${owner}`)}
-  else {logger.debug(`Found transaction with id ${id} for owner ${owner}`)}
+  if (result.rows.length === 0) logger.debug(`No transaction found with id ${id} for owner ${owner}`)
+  else logger.debug(`Found transaction with id ${id} for owner ${owner}`)
   return removeNull(result.rows[0])
 }
 
@@ -46,8 +46,8 @@ export async function findOldestTransaction(client: Queryable, owner: string, pr
     `SELECT * FROM transaction WHERE project_id = $1 AND owner_email = $2 ORDER BY date ASC LIMIT 1`,
     [projectId, owner],
   )
-  if (result.rows.length === 0) {logger.debug(`No transactions found for project ${projectId} and owner ${owner}`)}
-  else {logger.debug(`Found oldest transaction for project ${projectId} and owner ${owner}`)}
+  if (result.rows.length === 0) logger.debug(`No transactions found for project ${projectId} and owner ${owner}`)
+  else logger.debug(`Found oldest transaction for project ${projectId} and owner ${owner}`)
   return removeNull(result.rows[0])
 }
 
@@ -56,7 +56,7 @@ export async function createTransaction(client: Queryable, owner: string, transa
     `INSERT INTO transaction (id, project_id, credit_account_id, debit_account_id, amount, date, description, owner_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
     [transaction.id, transaction.project_id, transaction.credit_account_id, transaction.debit_account_id, transaction.amount, transaction.date, transaction.description, owner],
   )
-  if (!result.rows[0]) {throw new Error('Failed to create transaction')}
+  if (!result.rows[0]) throw new Error('Failed to create transaction')
   logger.debug(`Transaction ${transaction.id} created for owner ${owner}`)
   return removeNull(result.rows[0])
 }

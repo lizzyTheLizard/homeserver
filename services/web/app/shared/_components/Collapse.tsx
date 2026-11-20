@@ -1,6 +1,6 @@
-import { Icon } from './Icon'
-import style from './Collapse.module.css'
 import { useState } from 'react'
+import style from './Collapse.module.css'
+import { Icon } from './Icon'
 
 export interface CollapseProps {
   header: string
@@ -17,7 +17,7 @@ export function Collapse({ children, header, initiallyExpanded }: React.PropsWit
     return (
       <div className={style.box} onClick={() => { setExpanded(true) }}>
         <button className={style.header} name="Collapse">
-          <Icon className={style.icon} name="caretRight" />
+          <Icon className={style.icon} name="caretRight"></Icon>
           {header}
         </button>
       </div>
@@ -26,7 +26,7 @@ export function Collapse({ children, header, initiallyExpanded }: React.PropsWit
   return (
     <div className={style.box} onClick={() => { setExpanded(false) }}>
       <button className={style.header} name="Collapse">
-        <Icon className={style.icon} name="caretDown" />
+        <Icon className={style.icon} name="caretDown"></Icon>
         {header}
       </button>
       <div className={style.content} onClick={(e) => { e.stopPropagation() }}>

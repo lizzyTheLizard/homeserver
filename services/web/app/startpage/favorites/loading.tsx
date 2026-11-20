@@ -1,6 +1,6 @@
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { FavoritesContent } from './_components/FavoritesContent'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { FavoritesContent } from './_components/FavoritesContent'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export default function Loading() {
   return (
@@ -9,7 +9,7 @@ export default function Loading() {
         <h1>Favorites</h1>
       </ActionTitle>
       <FavoritesContent favorites={[]} />
-      <LoadingSpinner />
+      <LoadingSpinner></LoadingSpinner>
     </main>
   )
 }

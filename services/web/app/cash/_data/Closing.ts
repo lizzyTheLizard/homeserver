@@ -1,5 +1,5 @@
-import { type Entity, type Queryable, removeNull } from '@/app/shared/_external/db/access';
-import { type Period, endDate, startDate, toString } from '../_helper/Period'
+import { endDate, Period, startDate, toString } from '../_helper/Period'
+import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface ClosingInput {
@@ -26,8 +26,8 @@ export async function findLastClosing(client: Queryable, owner: string, projectI
     `SELECT * FROM closing WHERE project_id = $1 AND owner_email = $2 ORDER BY date DESC LIMIT 1`,
     [projectId, owner],
   )
-  if (result.rows.length === 0) {logger.debug(`No closing found for project ${projectId} and owner ${owner}`)}
-  else {logger.debug(`Found closing for project ${projectId} and owner ${owner}`)}
+  if (result.rows.length === 0) logger.debug(`No closing found for project ${projectId} and owner ${owner}`)
+  else logger.debug(`Found closing for project ${projectId} and owner ${owner}`)
   return removeNull(result.rows[0])
 }
 
@@ -36,7 +36,7 @@ export async function createClosing(client: Queryable, owner: string, closing: C
     `INSERT INTO closing (id, project_id, date, capital_account_id, profit_account_id, profit, owner_email) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [closing.id, closing.project_id, closing.date, closing.capital_account_id, closing.profit_account_id, closing.profit, owner],
   )
-  if (!result.rows[0]) {throw new Error('Failed to create closing')}
+  if (!result.rows[0]) throw new Error('Failed to create closing')
   logger.debug(`Closing created for project ${closing.project_id} and owner ${owner}`)
   return removeNull(result.rows[0])
 }

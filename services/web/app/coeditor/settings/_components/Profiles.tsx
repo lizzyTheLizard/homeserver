@@ -1,17 +1,18 @@
 'use client'
-import { type ReactNode, useState } from 'react'
-import { deleteProfile, saveProfile } from '../server'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Input } from '@/app/shared/_components/form/Input'
-import type { Profile } from '../../_data/Profile'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { v4 as randomUUID } from 'uuid'
-import style from './Profiles.module.css'
-import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { useListState } from '@/app/shared/_helper/ListState'
+import { Profile } from '../../_data/Profile'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { deleteProfile, saveProfile } from '../server'
+import { useListState } from '@/app/shared/_helper/ListState'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { useState } from 'react'
+import { v4 as randomUUID } from 'uuid'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Profiles.module.css'
 
 export interface ProfilesProps {
   profiles?: Profile[]
@@ -24,13 +25,13 @@ const profileColumns = [
 ]
 
 export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
-  const [profiles, addProfile, removeProfile] = useListState(profilesIn),
-   [title, setTitle] = useState<string>('New Profile'),
-   [sidebarId, openSidebar] = useSidebar(),
-   [id, setId] = useState(''),
-   [language, setLanguage] = useState(''),
-   [text, setText] = useState(''),
-   [noDelete, setNoDelete] = useState(false)
+  const [profiles, addProfile, removeProfile] = useListState(profilesIn)
+  const [title, setTitle] = useState<string>('New Profile')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [id, setId] = useState('')
+  const [language, setLanguage] = useState('')
+  const [text, setText] = useState('')
+  const [noDelete, setNoDelete] = useState(false)
 
   function showProfile(profile?: Profile) {
     setId(profile?.id ?? randomUUID())
@@ -58,7 +59,7 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
         onRowClick={(profile) => { showProfile(profile) }}
         columns={profileColumns}
         data={profiles}
-        initialSortingOrder={[{ direction: 'ASC', key: 'language' }]}
+        initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
         renderMobile={renderMobile}
       />
       <Sidebar

@@ -1,10 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
-import type { UserSession } from '@/app/shared/auth/session'
-import { createOrModifyProject } from '@/app/cash/_data/Project'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { loadProjects } from './server'
-import { v4 as randomUUID } from 'uuid'
 import { transactional } from '@/app/shared/_external/db/access'
+import { v4 as randomUUID } from 'uuid'
+import { loadProjects } from './server'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
+import type { UserSession } from '@/app/shared/auth/session'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {
@@ -17,7 +17,7 @@ vi.mock('@/app/shared/auth/auth', async () => {
 
 describe('loadProjects', () => {
   test('Empty projects list', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadProjects()
@@ -26,12 +26,12 @@ describe('loadProjects', () => {
   })
 
   test('Load projects for user', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project1 = { archived: false, id: randomUUID(), name: 'Project Alpha', owner_email: task.id },
-     project2 = { archived: false, id: randomUUID(), name: 'Project Beta', owner_email: task.id },
-     project3 = { archived: false, id: randomUUID(), name: 'Project Gamma', owner_email: task.id }
+    const project1 = { id: randomUUID(), name: 'Project Alpha', owner_email: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'Project Beta', owner_email: task.id, archived: false }
+    const project3 = { id: randomUUID(), name: 'Project Gamma', owner_email: task.id, archived: false }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
@@ -46,11 +46,11 @@ describe('loadProjects', () => {
   })
 
   test('Load projects includes archived projects', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project1 = { archived: false, id: randomUUID(), name: 'Active Project', owner_email: task.id },
-     project2 = { archived: true, id: randomUUID(), name: 'Archived Project', owner_email: task.id }
+    const project1 = { id: randomUUID(), name: 'Active Project', owner_email: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'Archived Project', owner_email: task.id, archived: true }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
@@ -64,11 +64,11 @@ describe('loadProjects', () => {
   })
 
   test('Only loads projects for authenticated user', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const ownProject = { archived: false, id: randomUUID(), name: 'My Project', owner_email: task.id },
-     otherProject = { archived: false, id: randomUUID(), name: 'Other Project', owner_email: 'other-user-id' }
+    const ownProject = { id: randomUUID(), name: 'My Project', owner_email: task.id, archived: false }
+    const otherProject = { id: randomUUID(), name: 'Other Project', owner_email: 'other-user-id', archived: false }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, ownProject)
       await createOrModifyProject(tx, otherProject)
@@ -77,41 +77,41 @@ describe('loadProjects', () => {
     const result = await loadProjects()
 
     expect(result).toEqual([{
-      archived: false,
-      created_at: expect.any(String) as string,
       id: ownProject.id,
       name: 'My Project',
       owner_email: task.id,
+      archived: false,
+      created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
     }])
   })
 
   test('Returns all project fields', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const result = await loadProjects()
 
     expect(result).toHaveLength(1)
     expect(result[0]).toEqual(expect.objectContaining({
-      archived: false,
-      created_at: expect.any(String) as string,
       id: project.id,
       name: project.name,
       owner_email: task.id,
+      archived: false,
+      created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
     }))
   })
 
   test('Multiple users have separate project lists', async ({ task }) => {
-    const user1: UserSession = { applications: ['cash'], email: task.id, name: 'User 1' },
-     user2: UserSession = { applications: ['cash'], email: 'user-2-id', name: 'User 2' },
+    const user1: UserSession = { name: 'User 1', email: task.id, applications: ['cash'] }
+    const user2: UserSession = { name: 'User 2', email: 'user-2-id', applications: ['cash'] }
 
-     project1 = { archived: false, id: randomUUID(), name: 'User 1 Project', owner_email: task.id },
-     project2 = { archived: false, id: randomUUID(), name: 'User 2 Project', owner_email: 'user-2-id' }
+    const project1 = { id: randomUUID(), name: 'User 1 Project', owner_email: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'User 2 Project', owner_email: 'user-2-id', archived: false }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)

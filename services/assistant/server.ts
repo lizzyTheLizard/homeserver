@@ -1,24 +1,24 @@
-import type { Assistant, AssistantEvent, InitialContext } from './types'
-import { type IncomingMessage, type Server, type ServerResponse, createServer } from 'http';
-import { type UserSession, getUserSession, parseCookieHeader } from './session'
-import { type WebSocket, WebSocketServer } from 'ws';
+import { createServer, IncomingMessage, ServerResponse, Server } from 'http'
 import type { Duplex } from 'stream'
+import { WebSocketServer, WebSocket } from 'ws'
+import { getUserSession, parseCookieHeader, UserSession } from './session'
+import { logger } from './logger'
 import { createAssistantInstance } from './assistant'
+import { Assistant, AssistantEvent, InitialContext } from './types'
 import { handleMicrosoftApi } from './microsoft/route'
 import { handleWhatsappApi } from './whatsapp/route'
 import { initializeDatabase } from './db'
-import { logger } from './logger'
 import z from 'zod'
 
 interface ActiveAssistant {
   assistant: Assistant
-  listener(event: AssistantEvent): void
+  listener: (event: AssistantEvent) => void
   cleanupTimeout?: NodeJS.Timeout
   ws: WebSocket | undefined
 }
 
-const activeAssistants = new Map<string, ActiveAssistant>(),
- ASSISTANT_TTL_MS = 5 * 60 * 1000
+const activeAssistants = new Map<string, ActiveAssistant>()
+const ASSISTANT_TTL_MS = 5 * 60 * 1000
 
 main().catch((e: unknown) => {
   console.error('Error starting assistant', e)
@@ -31,10 +31,10 @@ async function main() {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
       return
     }
-    const {pathname} = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`)
+    const pathname = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`).pathname
     handleMicrosoftApi(req, res, pathname)
       .then((handled) => {
-        if (handled) {return true}
+        if (handled) return true
         return handleWhatsappApi(req, res, pathname)
       })
       .then((handled) => {
@@ -56,8 +56,8 @@ async function main() {
     })
   })
 
-  const hostname = process.env.HOSTNAME ?? '0.0.0.0',
-   port = parseInt(process.env.PORT ?? '8500', 10)
+  const hostname = process.env.HOSTNAME ?? '0.0.0.0'
+  const port = parseInt(process.env.PORT ?? '8500', 10)
   server.on('error', (error: Error) => {
     logger.error(`Assistant could not listen on ${hostname}:${port.toString()}`, error)
     process.exit(1)
@@ -69,45 +69,45 @@ async function main() {
 }
 
 async function handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buffer) {
-  const {url} = request
+  const url = request.url
   if (!url?.startsWith('/ws/assistant')) {
     socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
     socket.destroy()
     return
   }
-  const user = await authenticate(request),
-   wsServer = new WebSocketServer({ noServer: true })
+  const user = await authenticate(request)
+  const wsServer = new WebSocketServer({ noServer: true })
   wsServer.on('connection', (ws) => { handleConnection(ws, user) })
   wsServer.handleUpgrade(request, socket, head, (ws) => { wsServer.emit('connection', ws, request) })
 }
 
 async function authenticate(request: IncomingMessage): Promise<UserSession> {
-  const cookieHeader = request.headers.cookie ?? '',
-   cookies = parseCookieHeader(cookieHeader)
+  const cookieHeader = request.headers.cookie ?? ''
+  const cookies = parseCookieHeader(cookieHeader)
   return getUserSession(cookies)
 }
 
 function handleConnection(ws: WebSocket, user: UserSession): void {
   let currentUuid: string | undefined
   ws.on('message', (data: Buffer) => {
-    const input = JSON.parse(data.toString()) as unknown,
-     msg = validateObject(input, inputSchema)
-    if (msg.type === 'initialize') {currentUuid = handleInitialize(ws, msg, user)}
-    if (msg.type === 'reconnect') {currentUuid = handleReconnect(ws, msg)}
-    if (msg.type === 'message') {handleUserMessage(ws, msg, currentUuid)}
+    const input = JSON.parse(data.toString()) as unknown
+    const msg = validateObject(input, inputSchema)
+    if (msg.type === 'initialize') currentUuid = handleInitialize(ws, msg, user)
+    if (msg.type === 'reconnect') currentUuid = handleReconnect(ws, msg)
+    if (msg.type === 'message') handleUserMessage(ws, msg, currentUuid)
   })
   ws.on('close', (code) => { handleConnectionClose(code, currentUuid) })
 }
 
 function handleInitialize(ws: WebSocket, msg: { type: 'initialize', initialContext: InitialContext }, user: UserSession): string {
-  const uuid = crypto.randomUUID(),
-   assistant = createAssistantInstance(user),
-   activeAssistant = { assistant, listener: (event: AssistantEvent) => { ws.send(JSON.stringify(event)) }, ws }
+  const uuid = crypto.randomUUID()
+  const assistant = createAssistantInstance(user)
+  const activeAssistant = { assistant, ws, listener: (event: AssistantEvent) => { ws.send(JSON.stringify(event)) } }
   assistant.on(activeAssistant.listener)
   assistant.init(msg.initialContext)
     .then(() => { ws.send(JSON.stringify({ type: 'initialized', uuid })) })
     .catch((e: unknown) => {
-      ws.send(JSON.stringify({ message: 'Failed to initialize assistant', type: 'error' }))
+      ws.send(JSON.stringify({ type: 'error', message: 'Failed to initialize assistant' }))
       logger.error('Error initializing assistant', e)
     })
   activeAssistants.set(uuid, activeAssistant)
@@ -120,8 +120,8 @@ function handleReconnect(ws: WebSocket, msg: { type: 'reconnect', uuid: string }
     ws.close(4001, 'Session has expired, cannot reconnect')
     return undefined
   }
-  if (stored.ws) {stored.ws.close(4002, 'Reconnecting in new websocket, close this one')}
-  if (stored.cleanupTimeout) {clearTimeout(stored.cleanupTimeout)}
+  if (stored.ws) stored.ws.close(4002, 'Reconnecting in new websocket, close this one')
+  if (stored.cleanupTimeout) clearTimeout(stored.cleanupTimeout)
   stored.assistant.off(stored.listener)
   stored.ws = ws
   stored.listener = (event: AssistantEvent) => { ws.send(JSON.stringify(event)) }
@@ -138,51 +138,51 @@ function handleUserMessage(ws: WebSocket, msg: { type: 'message', message: strin
   }
   stored.assistant.send(msg.message)
     .catch((e: unknown) => {
-      ws.send(JSON.stringify({ message: 'Failed to send message to assistant', type: 'error' }))
+      ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message to assistant' }))
       logger.error('Error sending message to assistant', e)
     })
 }
 
 function handleConnectionClose(code: number, currentUuid: string | undefined): void {
-  if (!currentUuid) {return}
-  if (code === 4001) {return}
-  if (code === 4002) {return}
-  if (code === 4003) {return}
+  if (!currentUuid) return
+  if (code === 4001) return
+  if (code === 4002) return
+  if (code === 4003) return
   const stored = activeAssistants.get(currentUuid)
-  if (!stored) {return}
-  stored.assistant.off((e) => stored.listener(e))
+  if (!stored) return
+  stored.assistant.off(stored.listener)
   stored.ws = undefined
   setTimeout(() => { activeAssistants.delete(currentUuid) }, ASSISTANT_TTL_MS)
 }
 
 function validateObject<T extends z.ZodType>(input: unknown, schema: T): z.infer<T> {
   const result = schema.safeParse(input)
-  if (!result.success) {throw new Error('Invalid input')}
+  if (!result.success) throw new Error('Invalid input')
   return result.data
 }
 
 const inputSchema = z.union([
-  z.object({ initialContext: z.object({ location: z.object({ lat: z.number(), lon: z.number() }) }), type: z.literal('initialize') }),
+  z.object({ type: z.literal('initialize'), initialContext: z.object({ location: z.object({ lat: z.number(), lon: z.number() }) }) }),
   z.object({ type: z.literal('reconnect'), uuid: z.string() }),
-  z.object({ message: z.string(), type: z.literal('message') }),
+  z.object({ type: z.literal('message'), message: z.string() }),
 ])
 
 // Logs every served request with method, path, status and duration, so a call
-// That reaches the assistant is visible even when it then fails.
+// that reaches the assistant is visible even when it then fails.
 function requestTracing(req: IncomingMessage, res: ServerResponse): void {
-  const startedAt = Date.now(),
-   method = req.method ?? 'GET',
-   url = req.url ?? '/'
+  const startedAt = Date.now()
+  const method = req.method ?? 'GET'
+  const url = req.url ?? '/'
   res.on('finish', () => {
     logger.debug(`${method} ${url} ${res.statusCode.toString()} (${(Date.now() - startedAt).toString()}ms)`)
   })
 }
 
 // The listen host may be a container hostname, so report the address the
-// Socket actually bound to - that is what a client has to be able to reach.
+// socket actually bound to - that is what a client has to be able to reach.
 function describeBoundAddress(server: Server, fallback: string): string {
   const address = server.address()
-  if (address === null || typeof address === 'string') {return address ?? fallback}
+  if (address === null || typeof address === 'string') return address ?? fallback
   const port = address.port.toString()
   return address.family === 'IPv6' ? `[${address.address}]:${port}` : `${address.address}:${port}`
 }

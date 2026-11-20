@@ -1,20 +1,20 @@
 'use server'
 
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+import { requireAdmin } from '@/lib/session'
 import * as store from '@/lib/store'
+import { withTransaction } from '@/lib/db'
 import type { FormState } from '../actions'
 import { formString } from '@/lib/form'
-import { redirect } from 'next/navigation'
-import { requireAdmin } from '@/lib/session'
-import { revalidatePath } from 'next/cache'
-import { withTransaction } from '@/lib/db'
 
 export async function createGroup(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireAdmin()
   const name = formString(formData, 'name').trim()
-  if (!name) {return { error: 'Bitte einen Gruppennamen eingeben.' }}
+  if (!name) return { error: 'Bitte einen Gruppennamen eingeben.' }
 
   const result = await withTransaction(db => store.createGroup(db, name))
-  if (!result.ok) {return { error: result.error }}
+  if (!result.ok) return { error: result.error }
 
   revalidatePath('/admin')
   redirect(`/admin/${result.value.id}`)

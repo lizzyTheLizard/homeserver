@@ -1,10 +1,10 @@
 'use server'
-import { type ProjectInput, createOrModifyProject, findAllProjects, removeProjectAsAdmin } from '@/app/cash/_data/Project'
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
+import { createOrModifyProject, findAllProjects, ProjectInput, removeProjectAsAdmin } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
 import { toResponse } from '@/app/shared/_helper/ActionResponse'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
+import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export async function loadProjects() {
   await getAuthenticatedUserSession('admin')

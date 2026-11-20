@@ -1,16 +1,16 @@
 'use client'
-import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { DateTime } from '@/app/shared/_components/DateTime'
-import type { SerializedCalendarEvent } from '@assistant/microsoft/types'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import styles from './MicrosoftCalendar.module.css'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { useState } from 'react'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { textColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { DateTime } from '@/app/shared/_components/DateTime'
+import styles from './MicrosoftCalendar.module.css'
+import type { SerializedCalendarEvent } from '@assistant/microsoft/types'
 
 export function MicrosoftCalendar({ events }: { events: SerializedCalendarEvent[] }) {
-  const [selectedEvent, setSelectedEvent] = useState<SerializedCalendarEvent | null>(null),
-   [eventSidebarId, openEventSidebar] = useSidebar()
+  const [selectedEvent, setSelectedEvent] = useState<SerializedCalendarEvent | null>(null)
+  const [eventSidebarId, openEventSidebar] = useSidebar()
 
   function showEventDetails(event: CalendarPlus) {
     setSelectedEvent(event._original)
@@ -23,7 +23,7 @@ export function MicrosoftCalendar({ events }: { events: SerializedCalendarEvent[
         data={events.map(event => formatCalendar(event))}
         columns={calendarColumns}
         onRowClick={showEventDetails}
-        initialSortingOrder={[{ direction: 'ASC', key: 'startDate' }]}
+        initialSortingOrder={[{ key: 'startDate', direction: 'ASC' }]}
         searchLabel="Search calendar…"
       />
       <Sidebar id={eventSidebarId} title={selectedEvent?.subject ?? ''} type="Calendar Event" noDelete>
@@ -82,11 +82,11 @@ interface CalendarPlus {
 
 function formatCalendar(event: SerializedCalendarEvent): CalendarPlus {
   return {
-    _original: event,
-    endDate: event.end,
     id: event.id,
-    locationDisplay: event.location.displayName,
-    startDate: event.start,
     subject: event.subject,
+    startDate: event.start,
+    endDate: event.end,
+    locationDisplay: event.location.displayName,
+    _original: event,
   }
 }

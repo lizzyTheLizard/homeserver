@@ -1,5 +1,5 @@
-import type { Discussion } from '../../_data/Discussion'
-import type { Template } from '../../_data/Template'
+import { Discussion } from '../../_data/Discussion'
+import { Template } from '../../_data/Template'
 
 export interface EditorState {
   text: string
@@ -14,16 +14,16 @@ export interface EditorState {
 export function initialState(discussion: Discussion | undefined, templates: Template[]): EditorState {
   const template = discussion
     ? templates.find(t => t.id === discussion.template_id) ?? templates[0]
-    : templates[0],
-   parameters = discussion?.parameters ?? {}
+    : templates[0]
+  const parameters = discussion?.parameters ?? {}
   return {
-    contextValid: isValid(template, parameters),
-    lastText: discussion?.text ?? '',
-    parameters,
-    redoStack: [],
-    template,
-    text: discussion?.text ?? '',
     undoStack: [],
+    redoStack: [],
+    template: template,
+    parameters: parameters,
+    text: discussion?.text ?? '',
+    lastText: discussion?.text ?? '',
+    contextValid: isValid(template, parameters),
   }
 }
 
@@ -41,39 +41,39 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
     case 'COMMAND_EXECUTED':{
       return {
         ...state,
-        redoStack: [],
         text: action.discussion.text,
         undoStack: action.restart ? [] : [...state.undoStack, state.text],
+        redoStack: [],
       }
     }
     case 'TEMPLATE_CHANGE':{
-      if (action.template === state.template) {return state}
+      if (action.template === state.template) return state
       return {
         ...state,
-        contextValid: isValid(action.template, {}),
-        parameters: {},
         template: action.template,
+        parameters: {},
+        contextValid: isValid(action.template, {}),
       }
     }
     case 'PARAMETERS_CHANGE':{
-      if (state.parameters[action.name] === action.value) {return state}
+      if (state.parameters[action.name] === action.value) return state
       const newParameters = updateParameter(state.parameters, action.name, action.value)
       return {
         ...state,
-        contextValid: isValid(state.template, newParameters),
         parameters: newParameters,
+        contextValid: isValid(state.template, newParameters),
       }
     }
     case 'TEXT_CHANGE':{
-      if (action.text === state.text) {return state}
+      if (action.text === state.text) return state
       return {
         ...state,
-        redoStack: [],
         text: action.text,
+        redoStack: [],
       }
     }
     case 'TEXT_BLUR':{
-      if (state.lastText === state.text) {return state}
+      if (state.lastText === state.text) return state
       return {
         ...state,
         lastText: state.text,
@@ -84,9 +84,9 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
       const prevText = state.undoStack[state.undoStack.length - 1]
       return {
         ...state,
+        text: prevText,
         lastText: prevText,
         redoStack: [...state.redoStack, state.text],
-        text: prevText,
         undoStack: state.undoStack.slice(0, state.undoStack.length - 1),
       }
     }
@@ -94,20 +94,20 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
       const nextText = state.redoStack[state.redoStack.length - 1]
       return {
         ...state,
-        lastText: nextText,
-        redoStack: state.redoStack.slice(0, state.redoStack.length - 1),
         text: nextText,
+        lastText: nextText,
         undoStack: [...state.undoStack, state.text],
+        redoStack: state.redoStack.slice(0, state.redoStack.length - 1),
       }
     }
   }
 }
 
 function isValid(template: Template | undefined, parameters: Record<string, string>): boolean {
-  if (!template) {return false}
+  if (!template) return false
   for (const param of template.parameters) {
-    if (!(param.name in parameters)) {return false}
-    if (parameters[param.name].trim() === '') {return false}
+    if (!(param.name in parameters)) return false
+    if (parameters[param.name].trim() === '') return false
   }
   return true
 }

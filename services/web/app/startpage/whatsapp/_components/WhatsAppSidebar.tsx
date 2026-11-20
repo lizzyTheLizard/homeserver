@@ -1,13 +1,13 @@
 'use client'
-import type { Chat, Message } from '@assistant/whatsapp/types'
-import { archiveChat, loadMessages, sendChatMessage } from '../server'
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '@/app/shared/_components/form/Button'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { MessageBubble } from './MessageBubble'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import styles from './WhatsAppSidebar.module.css'
 import { useRouter } from 'next/navigation'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { Button } from '@/app/shared/_components/form/Button'
+import { loadMessages, archiveChat, sendChatMessage } from '../server'
+import { MessageBubble } from './MessageBubble'
+import styles from './WhatsAppSidebar.module.css'
+import type { Chat, Message } from '@assistant/whatsapp/types'
 
 interface WhatsAppSidebarProps {
   selectedChat: Chat | null
@@ -15,17 +15,17 @@ interface WhatsAppSidebarProps {
 }
 
 export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProps) {
-  const [messages, setMessages] = useState<Message[] | null>(null),
-   [messagesLoading, setMessagesLoading] = useState(Boolean(selectedChat)),
-   [archiveLoading, setArchiveLoading] = useState(false),
-   [sendLoading, setSendLoading] = useState(false),
-   [actionError, setActionError] = useState<string | undefined>(undefined),
-   [messageText, setMessageText] = useState(''),
-   scrollRef = useRef<HTMLDivElement>(null),
-   router = useRouter()
+  const [messages, setMessages] = useState<Message[] | null>(null)
+  const [messagesLoading, setMessagesLoading] = useState(!!selectedChat)
+  const [archiveLoading, setArchiveLoading] = useState(false)
+  const [sendLoading, setSendLoading] = useState(false)
+  const [actionError, setActionError] = useState<string | undefined>(undefined)
+  const [messageText, setMessageText] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
-    if (!selectedChat) {return}
+    if (!selectedChat) return
     void loadMessages(selectedChat.id).then(setMessages).finally(() => { setMessagesLoading(false) })
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -37,7 +37,7 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
   }, [messages])
 
   async function handleArchive() {
-    if (!selectedChat) {return}
+    if (!selectedChat) return
     setArchiveLoading(true)
     setActionError(undefined)
     const result = await archiveChat(selectedChat.id, !selectedChat.isArchived)
@@ -51,7 +51,7 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
   }
 
   async function handleSendMessage() {
-    if (!selectedChat || !messageText.trim()) {return}
+    if (!selectedChat || !messageText.trim()) return
     setSendLoading(true)
     setActionError(undefined)
     const result = await sendChatMessage(selectedChat.id, messageText.trim())

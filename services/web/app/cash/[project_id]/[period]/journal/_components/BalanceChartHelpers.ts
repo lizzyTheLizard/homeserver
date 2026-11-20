@@ -1,5 +1,5 @@
-import { type AccountType, isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
-import { type Period, startDate } from '@/app/cash/_helper/Period';
+import { Period, startDate } from '@/app/cash/_helper/Period'
+import { AccountType, isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
 import { config } from '@/app/shared/config'
 
 export interface BalancePoint {
@@ -29,8 +29,8 @@ export type BalanceChartKind = 'line' | 'bar'
  * one point per year.
  */
 export function granularityForPeriod(period: Period): BalanceGranularity {
-  if (period.year === undefined) {return 'year'}
-  if (period.month === undefined) {return 'month'}
+  if (period.year === undefined) return 'year'
+  if (period.month === undefined) return 'month'
   return 'day'
 }
 
@@ -50,9 +50,9 @@ export function chartKindForAccount(accountType: AccountType): BalanceChartKind 
  * point, showing the group's ending balance.
  */
 export function buildBalancePoints(transactions: TransactionWithOrdering[], openingBalance: number | undefined, period: Period): BalancePoint[] {
-  const granularity = granularityForPeriod(period),
-   points = lastPerGroup(transactions, granularity).map(transaction => toPoint(transaction.date, transaction.total_balance, false, granularity))
-  if (openingBalance === undefined) {return points}
+  const granularity = granularityForPeriod(period)
+  const points = lastPerGroup(transactions, granularity).map(transaction => toPoint(transaction.date, transaction.total_balance, false, granularity))
+  if (openingBalance === undefined) return points
   return [toPoint(startDate(period), openingBalance, true, granularity), ...points]
 }
 
@@ -76,9 +76,9 @@ export function prepareBalancePoints(transactions: TransactionWithOrdering[], la
  * never the accumulated sum. Credit accounts invert the sign, like the table.
  */
 export function prepareBalanceDeltas(transactions: TransactionWithOrdering[], lastBalance: number | undefined, accountType: AccountType, period: Period): BalancePoint[] {
-  const sign = isCreditAccount(accountType) ? -1 : 1,
-   granularity = granularityForPeriod(period),
-   groups = lastPerGroup(transactions, granularity)
+  const sign = isCreditAccount(accountType) ? -1 : 1
+  const granularity = granularityForPeriod(period)
+  const groups = lastPerGroup(transactions, granularity)
   let previous = lastBalance ?? 0
   return groups.map((group) => {
     const delta = normalizeZero((group.total_balance - previous) * sign)
@@ -101,21 +101,21 @@ function normalizeZero(value: number): number {
 /** Formats an ISO date as a short label for the x-axis. */
 export function formatDateLabel(date: string): string {
   const [year, month, day] = date.split('-')
-  if (!year || !month || !day) {return date}
+  if (!year || !month || !day) return date
   return `${day}.${month}.${year.slice(2)}`
 }
 
 /** Formats a balance using the configured locale and currency. */
 export function formatBalance(value: number): string {
-  return value.toLocaleString(config.NODE_PUBLIC_LOCALE, { currency: config.NODE_PUBLIC_CURRENCY, style: 'currency' })
+  return value.toLocaleString(config.NODE_PUBLIC_LOCALE, { style: 'currency', currency: config.NODE_PUBLIC_CURRENCY })
 }
 
 /** Labels a point's date according to the granularity: day, month or year. */
 export function formatGranularityLabel(date: string, granularity: BalanceGranularity): string {
-  if (granularity === 'year') {return date.slice(0, 4)}
+  if (granularity === 'year') return date.slice(0, 4)
   if (granularity === 'month') {
     const [year, month] = date.split('-')
-    if (!year || !month) {return date}
+    if (!year || !month) return date
     return `${month}.${year.slice(2)}`
   }
   return formatDateLabel(date)
@@ -133,7 +133,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
  * to (ticks are pinned to the data points' timestamps, ±half a day).
  */
 export function labelFor(value: unknown, data: BalancePoint[]): string {
-  if (typeof value !== 'number') {return ''}
+  if (typeof value !== 'number') return ''
   const point = data.find(p => Math.abs(p.x - value) < DAY_MS / 2)
   return point?.label ?? ''
 }
@@ -146,18 +146,18 @@ export function labelFor(value: unknown, data: BalancePoint[]): string {
  * reference line drawn at 0 aligns exactly with a grid line at 0.
  */
 export function niceTicks(min: number, max: number, desiredCount = 5): number[] {
-  if (!Number.isFinite(min) || !Number.isFinite(max)) {return [0]}
-  if (min === max) {return [min - 1, min, min + 1]}
-  if (min > max) {[min, max] = [max, min]}
-  const span = max - min,
-   rawStep = span / desiredCount,
-   magnitude = 10 ** Math.floor(Math.log10(rawStep)),
-   normalized = rawStep / magnitude,
-   factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10,
-   step = factor * magnitude,
-   start = Math.floor(min / step) * step,
-   end = Math.ceil(max / step) * step,
-   ticks: number[] = []
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [0]
+  if (min === max) return [min - 1, min, min + 1]
+  if (min > max) [min, max] = [max, min]
+  const span = max - min
+  const rawStep = span / desiredCount
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const normalized = rawStep / magnitude
+  const factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
+  const step = factor * magnitude
+  const start = Math.floor(min / step) * step
+  const end = Math.ceil(max / step) * step
+  const ticks: number[] = []
   for (let value = start; value <= end + step / 2; value += step) {
     // Round away float noise (e.g. 0.30000000000000004).
     ticks.push(Number(value.toFixed(9)))
@@ -166,11 +166,11 @@ export function niceTicks(min: number, max: number, desiredCount = 5): number[] 
 }
 
 function groupOf(date: string, granularity: BalanceGranularity): string {
-  if (granularity === 'year') {return date.slice(0, 4)}
-  if (granularity === 'month') {return date.slice(0, 7)}
+  if (granularity === 'year') return date.slice(0, 4)
+  if (granularity === 'month') return date.slice(0, 7)
   return date
 }
 
 function toPoint(date: string, total_balance: number, opening: boolean, granularity: BalanceGranularity): BalancePoint {
-  return { balance: total_balance, date, label: formatGranularityLabel(date, granularity), opening, x: toTimestamp(date) }
+  return { date, x: toTimestamp(date), label: formatGranularityLabel(date, granularity), balance: total_balance, opening }
 }

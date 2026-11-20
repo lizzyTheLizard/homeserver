@@ -1,5 +1,5 @@
-import { type IronSession, getIronSession } from 'iron-session';
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
+import { getIronSession, IronSession } from 'iron-session'
+import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import { config } from '../config'
 
 export interface UserSession {
@@ -9,7 +9,7 @@ export interface UserSession {
 }
 
 export interface CookieStore {
-  get(name: string): { name: string, value: string } | undefined
+  get: (name: string) => { name: string, value: string } | undefined
   set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void, (options: ResponseCookie): void }
 }
 
@@ -23,9 +23,9 @@ export interface SessionData {
 export async function getSession(cookies: CookieStore): Promise<IronSession<SessionData>> {
   const settings = {
     cookieName: config.SESSION.COOKIE_NAME,
-    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
     password: config.SESSION.SESSION_PASSWORD,
-    ttl: 604800, // 1 week in seconds,
+    ttl: 604800, // 1 week in seconds
+    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
   }
   return getIronSession<SessionData>(cookies, settings)
 }

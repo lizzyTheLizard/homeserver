@@ -1,10 +1,10 @@
 'use client'
-import { type ReactNode, useSyncExternalStore } from 'react';
-import actionTitleStyle from './ActionTitle.module.css'
 import { createPortal } from 'react-dom'
+import { ReactNode, useSyncExternalStore } from 'react'
+import actionTitleStyle from './ActionTitle.module.css'
 
-const unsubscribe = () => undefined,
- subscribe = () => unsubscribe
+const unsubscribe = () => undefined
+const subscribe = () => unsubscribe
 
 export function useActionTitle(): (content: ReactNode) => ReactNode {
   const container = useSyncExternalStore(
@@ -17,7 +17,7 @@ export function useActionTitle(): (content: ReactNode) => ReactNode {
   )
 
   return (content: ReactNode) => {
-    if (!container) {return content}
+    if (!container) return content
     return createPortal(content, container)
   }
 }

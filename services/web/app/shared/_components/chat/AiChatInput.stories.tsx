@@ -1,24 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import { useState } from 'react'
 import { expect, fireEvent, fn, waitFor, within } from 'storybook/test'
 import { AiChatInput } from './AiChatInput'
-import { useState } from 'react'
 
 const PLACEHOLDER = 'Ask me anything…'
 
 function getInput(canvas: HTMLElement): HTMLTextAreaElement {
   const el = within(canvas).getByPlaceholderText(PLACEHOLDER)
-  if (!(el instanceof HTMLTextAreaElement)) {throw new Error('expected the chat input to be a textarea')}
+  if (!(el instanceof HTMLTextAreaElement)) throw new Error('expected the chat input to be a textarea')
   return el
 }
 
 const meta = {
+  title: 'Shared/Chat/AiChatInput',
+  component: AiChatInput,
+  tags: ['autodocs'],
   args: {
+    value: '',
+    placeholder: PLACEHOLDER,
     onChange: fn(),
     onSubmit: fn(),
-    placeholder: PLACEHOLDER,
-    value: '',
   },
-  component: AiChatInput,
   render: (args) => {
     const [value, setValue] = useState(args.value)
     return (
@@ -30,8 +32,6 @@ const meta = {
       />
     )
   },
-  tags: ['autodocs'],
-  title: 'Shared/Chat/AiChatInput',
 } satisfies Meta<typeof AiChatInput>
 
 export default meta
@@ -49,8 +49,8 @@ export const Empty: Story = {
 
 export const Disabled: Story = {
   args: {
-    actions: [{ label: 'Improve' }],
     disabled: true,
+    actions: [{ label: 'Improve' }],
   },
   play: async ({ canvasElement }) => {
     await expect(getInput(canvasElement)).toBeDisabled()
@@ -61,8 +61,8 @@ export const Disabled: Story = {
 
 export const ActionsDisabledInputEnabled: Story = {
   args: {
-    actions: [{ label: 'Improve' }, { label: 'Summarize' }],
     actionsDisabled: true,
+    actions: [{ label: 'Improve' }, { label: 'Summarize' }],
   },
   play: async ({ canvasElement }) => {
     const input = getInput(canvasElement)
@@ -111,7 +111,7 @@ export const CtrlEnterInsertsNewline: Story = {
   play: async ({ canvasElement, args }) => {
     const input = getInput(canvasElement)
     await fireEvent.change(input, { target: { value: 'not sent' } })
-    await fireEvent.keyDown(input, { ctrlKey: true, key: 'Enter' })
+    await fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
     await expect(args.onSubmit).not.toHaveBeenCalled()
     await waitFor(async () => {
       await expect(input.value).toBe('not sent\n')
@@ -133,8 +133,8 @@ export const ShiftEnterInsertsNewline: Story = {
 
 export const CtrlEnterScrollsToCaret: Story = {
   play: async ({ canvasElement }) => {
-    const input = getInput(canvasElement),
-     manyLines = Array.from({ length: 15 }, (_, index) => `line ${String(index)}`).join('\n')
+    const input = getInput(canvasElement)
+    const manyLines = Array.from({ length: 15 }, (_, index) => `line ${String(index)}`).join('\n')
     await fireEvent.change(input, { target: { value: manyLines } })
     await waitFor(async () => {
       await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight)
@@ -142,7 +142,7 @@ export const CtrlEnterScrollsToCaret: Story = {
     input.scrollTop = 0
     input.selectionStart = input.value.length
     input.selectionEnd = input.value.length
-    await fireEvent.keyDown(input, { ctrlKey: true, key: 'Enter' })
+    await fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
     await waitFor(async () => {
       await expect(input.value).toBe(`${manyLines}\n`)
     })
@@ -214,8 +214,8 @@ export const ArrowKeysScrollThroughHistory: Story = {
 
 export const AutoGrowsAndScrolls: Story = {
   play: async ({ canvasElement }) => {
-    const input = getInput(canvasElement),
-     initialHeight = input.clientHeight
+    const input = getInput(canvasElement)
+    const initialHeight = input.clientHeight
 
     await fireEvent.change(input, { target: { value: 'one\ntwo\nthree\nfour\nfive' } })
     await waitFor(async () => {
@@ -235,10 +235,9 @@ export const ActionsSubmitTheirLabel: Story = {
     actions: [{ label: 'Improve' }, { label: 'Summarize' }],
   },
   play: async ({ canvasElement, args }) => {
-    const chip = await within(canvasElement).findByRole('button', { name: 'Improve' }),
-     form = getInput(canvasElement).closest('form')
+    const chip = await within(canvasElement).findByRole('button', { name: 'Improve' })
+    const form = getInput(canvasElement).closest('form')
     await expect(form).not.toBeNull()
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     await expect(chip.compareDocumentPosition(form as Element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await fireEvent.click(chip)
     await expect(args.onSubmit).toHaveBeenCalledWith('Improve')
@@ -252,8 +251,8 @@ export const ActionsWithCustomOnSelect: Story = {
     actions: [{ label: 'Improve', onSelect: fn() }, { label: 'Summarize', onSelect: fn() }],
   },
   play: async ({ canvasElement, args }) => {
-    const improveOnSelect = args.actions?.[0]?.onSelect,
-     summarizeOnSelect = args.actions?.[1]?.onSelect
+    const improveOnSelect = args.actions?.[0]?.onSelect
+    const summarizeOnSelect = args.actions?.[1]?.onSelect
     await fireEvent.click(within(canvasElement).getByRole('button', { name: 'Improve' }))
     await expect(improveOnSelect).toHaveBeenCalled()
     await expect(args.onSubmit).not.toHaveBeenCalled()
@@ -264,7 +263,7 @@ export const ActionsWithCustomOnSelect: Story = {
 
 export const ShowsReconnectingStatus: Story = {
   args: {
-    status: { inSeconds: 8, maxAttempts: 10, nextAttempt: 2, type: 'wait-for-reconnecting' },
+    status: { type: 'wait-for-reconnecting', nextAttempt: 2, maxAttempts: 10, inSeconds: 8 },
   },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByText(/Connection lost\. Reconnecting in 8s/)
@@ -284,8 +283,8 @@ export const ShowsFatalStatus: Story = {
 
 export const NoStatusIndicatorWhenReady: Story = {
   args: {
-    actions: [{ label: 'Improve' }],
     status: { type: 'ready' },
+    actions: [{ label: 'Improve' }],
   },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole('button', { name: 'Improve' })

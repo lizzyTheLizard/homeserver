@@ -1,16 +1,16 @@
 import { Header } from './shared/_components/Header'
 import { PwaManager } from './shared/_components/PwaManager'
-import { SidebarContainer } from './shared/_components/sidebar/SidebarContainer'
 import { getUserSession } from './shared/auth/auth'
+import { SidebarContainer } from './shared/_components/sidebar/SidebarContainer'
 
 export const metadata = {
   title: 'Gutschi.site',
 }
 
 export const viewport = {
+  width: 'device-width',
   initialScale: 1,
   interactiveWidget: 'resizes-content',
-  width: 'device-width',
 }
 
 export default async function RootLayout({ children }: React.PropsWithChildren) {
@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
       <body>
         <link rel="stylesheet" href="/global.css" />
         <PwaManager />
-        <Header accessibleApplications={user?.applications ?? []} hasSession={Boolean(user)} />
+        <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
         <SidebarContainer>
           {children}
         </SidebarContainer>

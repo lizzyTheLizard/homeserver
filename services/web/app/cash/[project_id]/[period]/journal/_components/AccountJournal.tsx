@@ -1,28 +1,28 @@
 'use client'
-import { type Period, lastDay, startDate, toUrlString, todayOrInPeriod } from '@/app/cash/_helper/Period'
-import { type ReactNode, useMemo, useState } from 'react'
-import type { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
-import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { deleteTransaction, saveTransaction } from '../server'
-import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
-import type { Account } from '@/app/cash/_data/Account'
-import { AccountBadge } from '@/app/cash/_components/AccountBadge'
-import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
-import type { ActionResponse } from '@/app/shared/_helper/ActionResponse'
-import { BalanceChart } from './BalanceChart'
-import { Currency } from '@/app/shared/_components/Currency'
+import { Account } from '@/app/cash/_data/Account'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Input } from '@/app/shared/_components/form/Input'
-import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
-import { Select } from '@/app/shared/_components/form/Select'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { v4 as randomUUID } from 'uuid'
-import style from './Journal.module.css'
-import { useRouter } from 'next/navigation'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { v4 as randomUUID } from 'uuid'
+import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { lastDay, Period, startDate, todayOrInPeriod, toUrlString } from '@/app/cash/_helper/Period'
+import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
+import { deleteTransaction, saveTransaction } from '../server'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Select } from '@/app/shared/_components/form/Select'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
+import { useRouter } from 'next/navigation'
+import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
+import { Currency } from '@/app/shared/_components/Currency'
+import { AccountBadge } from '@/app/cash/_components/AccountBadge'
+import { ReactNode, useMemo, useState } from 'react'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Journal.module.css'
+import { ActionResponse } from '@/app/shared/_helper/ActionResponse'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
+import { BalanceChart } from './BalanceChart'
 
 export interface AccountJournalProps {
   account: Account
@@ -34,39 +34,39 @@ export interface AccountJournalProps {
 }
 
 export function AccountJournal({ account, accounts, transactions: transactionsIn, lastTransaction, project_id, period }: AccountJournalProps) {
-  const router = useRouter(),
-   [current, setCurrent] = useState(getInitialInput(period)),
-   [title, setTitle] = useState<string>('New Transaction'),
-   [sidebarId, openSidebar] = useSidebar(),
-   [noDelete, setNoDelete] = useState(false),
+  const router = useRouter()
+  const [current, setCurrent] = useState(getInitialInput(period))
+  const [title, setTitle] = useState<string>('New Transaction')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [noDelete, setNoDelete] = useState(false)
 
-   transactions = useMemo(() => isSummationAccount(account.type) && lastTransaction
+  const transactions = useMemo(() => isSummationAccount(account.type) && lastTransaction
     ? [...transactionsIn, getOpeningBalanceTransaction(lastTransaction)]
-    : transactionsIn, [account.type, lastTransaction, transactionsIn]),
+    : transactionsIn, [account.type, lastTransaction, transactionsIn])
 
-   otherAccounts = useMemo(() => Array.from(new Set((transactionsIn).map(t => t.other_account_id)))
+  const otherAccounts = useMemo(() => Array.from(new Set((transactionsIn).map(t => t.other_account_id)))
     .map(accountId => accounts.find(a => a.id === accountId))
     .filter((a): a is Account => a !== undefined)
-    .sort((a, b) => a.name.localeCompare(b.name)), [transactionsIn, accounts]),
+    .sort((a, b) => a.name.localeCompare(b.name)), [transactionsIn, accounts])
 
-   columns = [
+  const columns = [
     accountColumn('other_account_id', otherAccounts, period, { className: style.account, header: 'Other Account', sort: false }),
-    currencyColumn('amount', { cell: amountCell, className: style.amount, header: 'Amount', sort: false }),
-    currencyColumn('total_balance', { cell: totalCell, className: style.amount, header: 'Total', sort: false }),
+    currencyColumn('amount', { cell: amountCell, header: 'Amount', className: style.amount, sort: false }),
+    currencyColumn('total_balance', { cell: totalCell, header: 'Total', className: style.amount, sort: false }),
     dateColumn('date', { className: style.date, header: 'Date', sort: false }),
-    textColumn('description', { header: 'Description', sort: false, style: { overflow: 'hidden', whiteSpace: 'pre-wrap' } }),
+    textColumn('description', { header: 'Description', style: { whiteSpace: 'pre-wrap', overflow: 'hidden' }, sort: false }),
   ]
 
   function amountCell(v: number | undefined): React.ReactNode {
-    if (!v) {return null}
+    if (!v) return null
     const adjustedValue = v * (isCreditAccount(account.type) ? -1 : 1)
     return <Currency amount={adjustedValue} />
   }
 
   function totalCell(v: number): React.ReactNode {
-    const lastBalance = lastTransaction?.total_balance ?? 0,
-     withoutSum = v - (isSummationAccount(account.type) ? 0 : lastBalance),
-     adjustedValue = withoutSum * (isCreditAccount(account.type) ? -1 : 1)
+    const lastBalance = lastTransaction?.total_balance ?? 0
+    const withoutSum = v - (isSummationAccount(account.type) ? 0 : lastBalance)
+    const adjustedValue = withoutSum * (isCreditAccount(account.type) ? -1 : 1)
     return <Currency amount={adjustedValue} />
   }
 
@@ -79,26 +79,26 @@ export function AccountJournal({ account, accounts, transactions: transactionsIn
       return
     }
     // Check if this is opnening balance. If so, cannot edit
-    if (!('amount' in transaction)) {return}
+    if (!('amount' in transaction)) return
     // Check if this is a closing transaction. If so, cannot edit
-    if (!transaction.transaction_id) {return}
-    setCurrent({ ...transaction, amount: ((isCreditAccount(account.type) ? -1 : 1) * transaction.amount).toString(), description: transaction.description ?? '', id: transaction.transaction_id })
+    if (!transaction.transaction_id) return
+    setCurrent({ ...transaction, id: transaction.transaction_id, description: transaction.description ?? '', amount: ((isCreditAccount(account.type) ? -1 : 1) * transaction.amount).toString() })
     setTitle('Edit Transaction')
     setNoDelete(false)
     openSidebar()
   }
 
   function save(): ActionResponse<Transaction> {
-    const currentAmmount = (isCreditAccount(account.type) ? -1 : 1) * parseFloat(current.amount),
-     credit_account_id = currentAmmount < 0 ? account.id : current.other_account_id,
-     debit_account_id = currentAmmount > 0 ? account.id : current.other_account_id,
-     amount = Math.abs(currentAmmount),
-     transaction: TransactionInput = {
+    const currentAmmount = (isCreditAccount(account.type) ? -1 : 1) * parseFloat(current.amount)
+    const credit_account_id = currentAmmount < 0 ? account.id : current.other_account_id
+    const debit_account_id = currentAmmount > 0 ? account.id : current.other_account_id
+    const amount = Math.abs(currentAmmount)
+    const transaction: TransactionInput = {
       ...current,
-      amount,
+      project_id,
       credit_account_id,
       debit_account_id,
-      project_id,
+      amount,
     }
     return saveTransaction(transaction)
   }
@@ -177,11 +177,11 @@ interface SidebarInput {
 
 function getInitialInput(period: Period): Omit<SidebarInput, 'amount'> & { amount: string } {
   return {
+    id: randomUUID(),
+    other_account_id: '',
     amount: '0',
     date: todayOrInPeriod(period),
     description: '',
-    id: randomUUID(),
-    other_account_id: '',
   }
 }
 
@@ -193,8 +193,8 @@ interface OpeningBalanceTransaction {
 
 function getOpeningBalanceTransaction(last: AccountTransaction): OpeningBalanceTransaction {
   return {
-    description: 'Opening Balance',
     id: '0',
     total_balance: last.total_balance,
+    description: 'Opening Balance',
   }
 }

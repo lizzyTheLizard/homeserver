@@ -3,13 +3,13 @@ import { DashboardCard } from './DashboardCard'
 import { Temporal } from '@js-temporal/polyfill'
 
 const meta = {
-  args: {
-    header: 'Dashboard Card Title',
-    items: [{ name: 'Item 1', value: 'Value 1' }, { date: Temporal.Instant.from('2025-02-01T10:32:10.821Z'), name: 'Item 2' }, { name: 'Item 3', url: 'https://example.com', value: 'Link' }],
-  },
+  title: 'Admin/DashboardCard',
   component: DashboardCard,
   tags: ['autodocs'],
-  title: 'Admin/DashboardCard',
+  args: {
+    header: 'Dashboard Card Title',
+    items: [{ name: 'Item 1', value: 'Value 1' }, { name: 'Item 2', date: Temporal.Instant.from('2025-02-01T10:32:10.821Z') }, { name: 'Item 3', value: 'Link', url: 'https://example.com' }],
+  },
 } satisfies Meta<typeof DashboardCard>
 export default meta
 

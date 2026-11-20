@@ -1,16 +1,16 @@
 'use client'
-import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { DateTime } from '@/app/shared/_components/DateTime'
-import type { SerializedTodoTask } from '@assistant/microsoft/types'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import styles from './MicrosoftTodo.module.css'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { useState } from 'react'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { textColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { DateTime } from '@/app/shared/_components/DateTime'
+import styles from './MicrosoftTodo.module.css'
+import type { SerializedTodoTask } from '@assistant/microsoft/types'
 
 export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
-  const [selectedTodo, setSelectedTodo] = useState<SerializedTodoTask | null>(null),
-   [todoSidebarId, openTodoSidebar] = useSidebar()
+  const [selectedTodo, setSelectedTodo] = useState<SerializedTodoTask | null>(null)
+  const [todoSidebarId, openTodoSidebar] = useSidebar()
 
   function showTodoDetails(todo: TodoPlus) {
     setSelectedTodo(todo._original)
@@ -23,7 +23,7 @@ export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
         data={todos.map(todo => formatTodo(todo))}
         columns={todoColumns}
         onRowClick={showTodoDetails}
-        initialSortingOrder={[{ direction: 'ASC', key: 'todoDate' }]}
+        initialSortingOrder={[{ key: 'todoDate', direction: 'ASC' }]}
         searchLabel="Search todos…"
       />
       <Sidebar id={todoSidebarId} title={selectedTodo?.title ?? ''} type="Todo" noDelete>
@@ -64,14 +64,14 @@ export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
 }
 
 const statusLabels: Record<string, string> = {
-  completed: 'Completed',
-  deferred: 'Deferred',
-  inProgress: 'In Progress',
   notStarted: 'Not Started',
+  inProgress: 'In Progress',
+  completed: 'Completed',
   waitingOnOthers: 'Waiting',
-},
+  deferred: 'Deferred',
+}
 
- todoColumns = [
+const todoColumns = [
   textColumn('title', { header: 'Title', style: {} }),
   textColumn('statusDisplay', { header: 'Status', style: { width: '12%' } }),
   textColumn('listName', { header: 'List', style: { width: '12%' } }),
@@ -90,11 +90,11 @@ interface TodoPlus {
 function formatTodo(todo: SerializedTodoTask): TodoPlus {
   const dateStr = todo.reminderDateTime?.toString() ?? todo.dueDate?.toString() ?? ''
   return {
-    _original: todo,
     id: todo.id,
-    listName: todo.listName,
-    statusDisplay: statusLabels[todo.status] ?? todo.status,
     title: todo.title,
+    statusDisplay: statusLabels[todo.status] ?? todo.status,
+    listName: todo.listName,
     todoDate: dateStr,
+    _original: todo,
   }
 }

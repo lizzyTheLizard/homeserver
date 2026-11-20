@@ -1,9 +1,9 @@
 'use server'
-import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
-import { type Favorite, type FavoriteInput, createOrModifyFavorite, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite';
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
+import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import { validateObject, validateString } from '@/app/shared/_helper/validation'
+import { createOrModifyFavorite, Favorite, FavoriteInput, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite'
 import { logEvent } from '@/app/shared/_data/Event'
 import { z } from 'zod'
 
@@ -27,15 +27,15 @@ export async function deleteFavorite(id: string): ActionResponse<Favorite | unde
     const user = await getAuthenticatedUserSession('startpage')
     validateString(id)
     const result = await removeFavorite(tx, user.email, id)
-    if (result) {await logEvent(tx, 'INFO', `Deleted favorite ${result.name}`)}
+    if (result) await logEvent(tx, 'INFO', `Deleted favorite ${result.name}`)
     return result
   }))
 }
 
 const FavoriteInputSchema = z.object({
-  description: z.string(),
   id: z.uuid(),
-  name: z.string().min(1),
   position: z.number().int().min(0),
+  name: z.string().min(1),
   url: z.string().min(1),
+  description: z.string(),
 })

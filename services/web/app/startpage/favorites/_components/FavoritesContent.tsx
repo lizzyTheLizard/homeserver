@@ -1,18 +1,18 @@
 'use client'
 
-import { type ReactNode, useState } from 'react';
-import { deleteFavorite, saveFavorite } from '../server'
-import { numberColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { ReactNode, useState } from 'react'
+import { Favorite } from '@/app/startpage/_data/Favorite'
+import { saveFavorite, deleteFavorite } from '../server'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import styles from './FavoritesContent.module.css'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import type { Favorite } from '@/app/startpage/_data/Favorite'
-import { Input } from '@/app/shared/_components/form/Input'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { v4 as randomUUID } from 'uuid'
-import styles from './FavoritesContent.module.css'
+import { textColumn, numberColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useListState } from '@/app/shared/_helper/ListState'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { v4 as randomUUID } from 'uuid'
 
 const columns = [
   numberColumn('position', { header: '#', style: { width: '5%' } }),
@@ -22,15 +22,15 @@ const columns = [
 ]
 
 export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favorite[] }) {
-  const [id, setId] = useState(randomUUID()),
-   [position, setPosition] = useState(''),
-   [name, setName] = useState(''),
-   [url, setUrl] = useState(''),
-   [description, setDescription] = useState(''),
-   [favorites, addFavorite, removeFavorite] = useListState<Favorite>(favoritesIn),
-   [title, setTitle] = useState<string>('New Favorite'),
-   [sidebarId, openSidebar] = useSidebar(),
-   [noDelete, setNoDelete] = useState(false)
+  const [id, setId] = useState(randomUUID())
+  const [position, setPosition] = useState('')
+  const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
+  const [description, setDescription] = useState('')
+  const [favorites, addFavorite, removeFavorite] = useListState<Favorite>(favoritesIn)
+  const [title, setTitle] = useState<string>('New Favorite')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [noDelete, setNoDelete] = useState(false)
 
   function showFavorite(fav?: Favorite) {
     const maxPosition = favorites.map(fav => fav.position).reduce((max, pos) => Math.max(max, pos), 0)
@@ -62,21 +62,22 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
 
   return (
     <>
-      <DataTable<Favorite>
+      <DataTable
         data={favorites}
         columns={columns}
         onRowClick={showFavorite}
         activeId={id}
         renderMobile={renderMobile}
-        initialSortingOrder={[{ direction: 'ASC', key: 'position' }]}
+        initialSortingOrder={[{ key: 'position', direction: 'ASC' }]}
         searchLabel="Search favorites…"
-       />
+      >
+      </DataTable>
       <ActionButton onClick={() => { showFavorite() }}>Add Favorite</ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
         type="Favorite"
-        onSave={() => saveFavorite({ description, id, name, position: parseInt(position), url })}
+        onSave={() => saveFavorite({ id, position: parseInt(position), name, url, description })}
         onAfterSave={addFavorite}
         onDelete={() => deleteFavorite(id)}
         onAfterDelete={() => { removeFavorite(id) }}

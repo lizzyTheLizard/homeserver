@@ -1,17 +1,18 @@
 'use client'
-import { type ReactNode, useState } from 'react'
-import { deleteTemplate, saveTemplate } from '../server'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Input } from '@/app/shared/_components/form/Input'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import type { Template } from '../../_data/Template'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { v4 as randomUUID } from 'uuid'
-import style from './Templates.module.css'
-import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { useListState } from '@/app/shared/_helper/ListState'
+import { Template } from '../../_data/Template'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { deleteTemplate, saveTemplate } from '../server'
+import { useListState } from '@/app/shared/_helper/ListState'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
+import { useState } from 'react'
+import { v4 as randomUUID } from 'uuid'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import style from './Templates.module.css'
 
 export interface TemplatesProps {
   templates?: Template[]
@@ -24,14 +25,14 @@ const templateColumns = [
 ]
 
 export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
-  const [templates, addTemplate, removeTemplate] = useListState(templatesIn),
-   [title, setTitle] = useState<string>('New Template'),
-   [sidebarId, openSidebar] = useSidebar(),
-   [id, setId] = useState(''),
-   [language, setLanguage] = useState(''),
-   [text, setText] = useState(''),
-   [name, setName] = useState(''),
-   [noDelete, setNoDelete] = useState(false)
+  const [templates, addTemplate, removeTemplate] = useListState(templatesIn)
+  const [title, setTitle] = useState<string>('New Template')
+  const [sidebarId, openSidebar] = useSidebar()
+  const [id, setId] = useState('')
+  const [language, setLanguage] = useState('')
+  const [text, setText] = useState('')
+  const [name, setName] = useState('')
+  const [noDelete, setNoDelete] = useState(false)
 
   function showTemplate(template?: Template) {
     setId(template?.id ?? randomUUID())
@@ -61,14 +62,14 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
         onRowClick={(template) => { showTemplate(template) }}
         columns={templateColumns}
         data={templates}
-        initialSortingOrder={[{ direction: 'ASC', key: 'language' }]}
+        initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
         renderMobile={renderMobile}
       />
       <Sidebar
         id={sidebarId}
         title={title}
         type="Template"
-        onSave={() => saveTemplate({ id, language, name, text })}
+        onSave={() => saveTemplate({ id, language, text, name })}
         onAfterSave={addTemplate}
         onDelete={() => deleteTemplate(id)}
         onAfterDelete={() => { removeTemplate(id) }}

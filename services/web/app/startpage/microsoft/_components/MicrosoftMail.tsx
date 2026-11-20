@@ -1,20 +1,20 @@
 'use client'
-import type { SerializedMessageFull, SerializedMessageListItem } from '@assistant/microsoft/types'
-import { boolColumn, dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { useState } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { DateTime } from '@/app/shared/_components/DateTime'
+import { textColumn, boolColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { loadMessage } from '../server'
+import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MicrosoftMail.module.css'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { useState } from 'react'
+import type { SerializedMessageListItem, SerializedMessageFull } from '@assistant/microsoft/types'
 
 export function MicrosoftMail({ messages }: { messages: SerializedMessageListItem[] }) {
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null),
-   [fullMessage, setFullMessage] = useState<SerializedMessageFull | null>(null),
-   [messageLoading, setMessageLoading] = useState(false),
-   [emailSidebarId, openEmailSidebar] = useSidebar()
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
+  const [fullMessage, setFullMessage] = useState<SerializedMessageFull | null>(null)
+  const [messageLoading, setMessageLoading] = useState(false)
+  const [emailSidebarId, openEmailSidebar] = useSidebar()
 
   function showMessageDetails(msg: MessagePlus) {
     setSelectedMessageId(msg.subject)
@@ -36,7 +36,7 @@ export function MicrosoftMail({ messages }: { messages: SerializedMessageListIte
         data={messages.map(msg => formatEmail(msg))}
         columns={emailColumns}
         onRowClick={showMessageDetails}
-        initialSortingOrder={[{ direction: 'DESC', key: 'receivedDateTime' }]}
+        initialSortingOrder={[{ key: 'receivedDateTime', direction: 'DESC' }]}
         searchLabel="Search emails…"
       />
       <Sidebar id={emailSidebarId} title={selectedMessageId ?? ''} type="Email" noDelete>

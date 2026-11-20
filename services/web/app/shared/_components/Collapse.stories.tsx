@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Collapse } from './Collapse'
 
 const meta = {
-  args: {
-    children: (<p>This is the collapsible content.</p>),
-    header: 'Click to expand',
-  },
+  title: 'Shared/Collapse',
   component: Collapse,
   tags: ['autodocs'],
-  title: 'Shared/Collapse',
+  args: {
+    header: 'Click to expand',
+    children: (<p>This is the collapsible content.</p>),
+  },
 } satisfies Meta<typeof Collapse>
 export default meta
 

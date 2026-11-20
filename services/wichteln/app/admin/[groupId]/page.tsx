@@ -1,23 +1,23 @@
-import { CopyInviteLink, ResetPasswordForm, SubmitButton } from '../../components'
-import { deleteGroup, removeParticipant, resetPassword, startSelection } from '../actions'
 import Link from 'next/link'
-import { getDb } from '@/lib/db'
-import { getGroup } from '@/lib/store'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
+import { getGroup } from '@/lib/store'
+import { getDb } from '@/lib/db'
+import { CopyInviteLink, ResetPasswordForm, SubmitButton } from '../../components'
+import { deleteGroup, removeParticipant, resetPassword, startSelection } from '../actions'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
   await requireAdmin()
-  const { groupId } = await params,
-   group = await getGroup(await getDb(), groupId)
-  if (!group) {notFound()}
+  const { groupId } = await params
+  const group = await getGroup(await getDb(), groupId)
+  if (!group) notFound()
 
-  const inWishes = group.phase === 'wishes',
-   done = group.users.filter(u => (inWishes ? u.wish : u.selectedWishOf)).length,
-   total = group.users.length,
-   canStart = inWishes && total >= 2 && done === total
+  const inWishes = group.phase === 'wishes'
+  const done = group.users.filter(u => (inWishes ? u.wish : u.selectedWishOf)).length
+  const total = group.users.length
+  const canStart = inWishes && total >= 2 && done === total
 
   return (
     <>
@@ -55,7 +55,7 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
 
         <ul className="list">
           {group.users.map((u) => {
-            const ok = inWishes ? Boolean(u.wish) : Boolean(u.selectedWishOf)
+            const ok = inWishes ? !!u.wish : !!u.selectedWishOf
             return (
               <li key={u.id}>
                 <div className="participant">

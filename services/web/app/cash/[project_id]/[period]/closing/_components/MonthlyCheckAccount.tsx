@@ -1,14 +1,14 @@
 'use client'
-import type { Account } from '@/app/cash/_data/Account'
-import { AccountJournal } from '../../journal/_components/AccountJournal'
-import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { Account } from '@/app/cash/_data/Account'
+import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { Monthly } from '@/app/cash/_data/Monthly'
+import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import type { Monthly } from '@/app/cash/_data/Monthly'
-import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import { AccountJournal } from '../../journal/_components/AccountJournal'
 import { markAsChecked } from '../server'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 
 export interface MonthlySharedProps {
   project_id: string
@@ -21,17 +21,17 @@ export interface MonthlySharedProps {
 }
 
 export function MonthlyCheckAccount({ monthly, accounts, account, transactions, lastTransaction, project_id, period }: MonthlySharedProps) {
-  const [loading, setLoading] = useState(false),
-   [error, setError] = useState<string | undefined>(undefined),
-   router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | undefined>(undefined)
+  const router = useRouter()
 
   function check() {
     setLoading(true)
     setError(undefined)
     markAsChecked(monthly.project_id, monthly.period)
       .then((r) => {
-        if (r.success) {router.refresh()}
-        else {setError(`Failed to check account: ${  r.error}`)}
+        if (r.success) router.refresh()
+        else setError('Failed to check account: ' + r.error)
         setLoading(false)
       })
       .catch((e: unknown) => {
@@ -45,7 +45,7 @@ export function MonthlyCheckAccount({ monthly, accounts, account, transactions, 
     <>
       {error && <div className="error">{error}</div>}
       {loading && (<LoadingSpinner />)}
-      <AccountJournal account={account} accounts={accounts} transactions={transactions} lastTransaction={lastTransaction} project_id={project_id} period={period} />
+      <AccountJournal account={account} accounts={accounts} transactions={transactions} lastTransaction={lastTransaction} project_id={project_id} period={period}></AccountJournal>
       <ActionButton onClick={() => { check() }}>Continue</ActionButton>
     </>
   )

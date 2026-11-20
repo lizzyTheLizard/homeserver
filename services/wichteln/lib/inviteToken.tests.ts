@@ -1,5 +1,5 @@
-import { createInviteToken, slugify } from './inviteToken'
 import { describe, expect, test } from 'vitest'
+import { createInviteToken, slugify } from './inviteToken'
 
 describe('slugify', () => {
   test('turns a group name into a readable slug', () => {

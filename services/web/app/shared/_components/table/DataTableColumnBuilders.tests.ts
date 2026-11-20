@@ -1,5 +1,5 @@
-import { boolColumn, dateColumn, enumColumn, numberColumn, textColumn } from './DataTableColumnBuilders'
 import { describe, expect, it } from 'vitest'
+import { numberColumn, textColumn, dateColumn, boolColumn, enumColumn } from './DataTableColumnBuilders'
 
 describe('numberColumn search', () => {
   const col = numberColumn('age')

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { numberColumn, textColumn } from './DataTableColumnBuilders'
-import type { ColumnDefinition } from './DataTable'
 import { sortAndFilter } from './sortAndFilter'
+import { numberColumn, textColumn } from './DataTableColumnBuilders'
+import { ColumnDefinition } from './DataTable'
 
 interface TestRow {
   id: string
@@ -10,12 +10,12 @@ interface TestRow {
 }
 
 const sampleData: TestRow[] = [
-  { age: 30, id: '1', name: 'Alice' },
-  { age: 25, id: '2', name: 'Bob' },
-  { age: 35, id: '3', name: 'Charlie' },
-],
+  { id: '1', name: 'Alice', age: 30 },
+  { id: '2', name: 'Bob', age: 25 },
+  { id: '3', name: 'Charlie', age: 35 },
+]
 
- columns = [
+const columns = [
   textColumn('name'),
   numberColumn('age'),
 ] as ColumnDefinition<unknown>[]
@@ -44,7 +44,7 @@ describe('sortAndFilter', () => {
   })
 
   it('applies sorting when searchTerm is empty', () => {
-    const result = sortAndFilter(sampleData, [{ direction: 'ASC', key: 'age' }], '', columns)
+    const result = sortAndFilter(sampleData, [{ key: 'age', direction: 'ASC' }], '', columns)
     expect(result[0].age).toBe(25)
     expect(result[1].age).toBe(30)
     expect(result[2].age).toBe(35)

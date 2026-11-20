@@ -1,16 +1,16 @@
-import { type Account, type AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account';
-import { type AccountTransaction, type AccountTransactionInput, createAccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { type Closing, createClosing } from '@/app/cash/_data/Closing';
-import { type Monthly, type MonthlyInput, type SharedTransaction, createMonthlyClosing, findForPeriod } from '@/app/cash/_data/Monthly'
-import { type NeonTransactionInput, addNeonTransactions, addSharedTransactions, initialize, loadData, markAsChecked } from './server'
 import { describe, expect, test, vi } from 'vitest'
-import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import { transactional } from '@/app/shared/_external/db/access'
+import { v4 as randomUUID } from 'uuid'
+import { initialize, addNeonTransactions, NeonTransactionInput, addSharedTransactions, markAsChecked, loadData } from './server'
+import { Account, AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
 import type { UserSession } from '@/app/shared/auth/session'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { createMonthlyClosing, findForPeriod, Monthly, type MonthlyInput, type SharedTransaction } from '@/app/cash/_data/Monthly'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { findAllTransactions } from '@/app/cash/_data/Transaction'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { v4 as randomUUID } from 'uuid'
-import { transactional } from '@/app/shared/_external/db/access'
+import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import { Closing, createClosing } from '@/app/cash/_data/Closing'
+import { AccountTransaction, createAccountTransaction, type AccountTransactionInput } from '@/app/cash/_data/AccountTransaction'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {
@@ -23,27 +23,27 @@ vi.mock('@/app/shared/auth/auth', async () => {
 
 describe('initialize', () => {
   test('Creates monthly closing successfully', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     account = { archived: false, id: randomUUID(), name: 'Cash', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     neonTransactions = [
-      { amount: 100, date: '2024-01-01', description: 'Transaction 1', order: 1 },
-      { amount: 200, date: '2024-01-02', description: 'Transaction 2', order: 2 },
-    ],
-     data: MonthlyInput = {
-      credit_card_account_id: account.id,
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const neonTransactions = [
+      { date: '2024-01-01', order: 1, amount: 100, description: 'Transaction 1' },
+      { date: '2024-01-02', order: 2, amount: 200, description: 'Transaction 2' },
+    ]
+    const data: MonthlyInput = {
       id: randomUUID(),
-      neon_account_id: account.id,
-      neon_transactions: neonTransactions,
-      period,
       project_id: project.id,
-      remaining_account_id: account.id,
+      period,
       shared_account_id: account.id,
-      shared_transactions: [],
+      neon_account_id: account.id,
+      remaining_account_id: account.id,
+      credit_card_account_id: account.id,
       state: 'NEON',
+      neon_transactions: neonTransactions,
+      shared_transactions: [],
     }
 
     await transactional(async (tx) => {
@@ -52,7 +52,7 @@ describe('initialize', () => {
     })
 
     const response = await initialize(data)
-    if (!response.success) {throw new Error(`Initialization failed: ${response.error}`)}
+    if (!response.success) throw new Error(`Initialization failed: ${response.error}`)
 
     const created = await transactional(async tx => findForPeriod(tx, task.id, data.project_id, data.period))
     expect(created).toEqual(expect.objectContaining(data))
@@ -61,21 +61,21 @@ describe('initialize', () => {
 
 describe('addNeonTransactions', () => {
   test('Success', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     otherAccount = { archived: false, id: randomUUID(), name: 'Expenses', project_id: project.id, type: 'Expense' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     neonTransactions = [
-      { amount: -50, date: '2024-01-05', description: 'Groceries', order: 1 },
-      { amount: 100, date: '2024-01-10', description: 'Salary', order: 2 },
-    ],
-     monthly = { credit_card_account_id: otherAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: neonTransactions, period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: otherAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput,
-     neonTransactionInputs: NeonTransactionInput[] = [
-      { accountId: otherAccount.id, description: 'Salary - Employer', order: 2 },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const neonTransactions = [
+      { date: '2024-01-05', order: 1, amount: -50, description: 'Groceries' },
+      { date: '2024-01-10', order: 2, amount: 100, description: 'Salary' },
+    ]
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: otherAccount.id, neon_account_id: neonAccount.id, remaining_account_id: remainingAccount.id, credit_card_account_id: otherAccount.id, state: 'NEON', neon_transactions: neonTransactions, shared_transactions: [] } as MonthlyInput
+    const neonTransactionInputs: NeonTransactionInput[] = [
+      { order: 2, accountId: otherAccount.id, description: 'Salary - Employer' },
     ]
 
     await transactional(async (tx) => {
@@ -91,38 +91,38 @@ describe('addNeonTransactions', () => {
 
     const updated = await transactional(async tx => findForPeriod(tx, task.id, project.id, monthly.period))
     expect(updated).toEqual(expect.objectContaining({
-      neon_transactions: [
-        { amount: -50, date: '2024-01-05', description: 'Groceries', order: 1, transaction_id: undefined },
-        { amount: 100, date: '2024-01-10', description: 'Salary', order: 2, transaction_id: expect.any(String) as string },
-      ],
       state: 'NEONCHECK',
+      neon_transactions: [
+        { date: '2024-01-05', order: 1, amount: -50, description: 'Groceries', transaction_id: undefined },
+        { date: '2024-01-10', order: 2, amount: 100, description: 'Salary', transaction_id: expect.any(String) as string },
+      ],
     }))
     const transaction = await transactional(async tx => findAllTransactions(tx, task.id, project.id, period))
     expect(transaction).toEqual([
       expect.objectContaining({
-        amount: 100,
         credit_account_id: otherAccount.id,
         debit_account_id: neonAccount.id,
+        amount: 100,
         description: 'Salary - Employer',
       }),
       expect.objectContaining({
-        amount: 50,
         credit_account_id: neonAccount.id,
-        date: '2024-01-31',
         debit_account_id: remainingAccount.id,
+        date: '2024-01-31',
+        amount: 50,
         description: 'Remaining amount for 2024-01',
       })])
   })
 
   test('Fails when monthly closing not found', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     account = { archived: false, id: randomUUID(), name: 'Cash', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     neonTransactionInputs: NeonTransactionInput[] = [
-      { accountId: account.id, description: 'Transaction', order: 1 },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const neonTransactionInputs: NeonTransactionInput[] = [
+      { order: 1, accountId: account.id, description: 'Transaction' },
     ]
 
     await transactional(async (tx) => {
@@ -131,24 +131,24 @@ describe('addNeonTransactions', () => {
     })
 
     const response = await addNeonTransactions(project.id, period, neonTransactionInputs)
-    expect(response).toEqual({ error: 'Monthly closing not found or not in NEON state', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not found or not in NEON state' })
   })
 
   test('Fails when monthly state is not NEON', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     otherAccount = { archived: false, id: randomUUID(), name: 'Expenses', project_id: project.id, type: 'Expense' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     neonTransactions = [
-      { amount: -50, date: '2024-01-05', description: 'Groceries', order: 1 },
-      { amount: 100, date: '2024-01-10', description: 'Salary', order: 2 },
-    ],
-     monthly = { credit_card_account_id: otherAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: neonTransactions, period, project_id: project.id, remaining_account_id: otherAccount.id, shared_account_id: otherAccount.id, shared_transactions: [], state: 'NEONCHECK' } as MonthlyInput,
-     neonTransactionInputs: NeonTransactionInput[] = [
-      { accountId: otherAccount.id, description: 'Groceries', order: 1 },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const neonTransactions = [
+      { date: '2024-01-05', order: 1, amount: -50, description: 'Groceries' },
+      { date: '2024-01-10', order: 2, amount: 100, description: 'Salary' },
+    ]
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: otherAccount.id, neon_account_id: neonAccount.id, remaining_account_id: otherAccount.id, credit_card_account_id: otherAccount.id, state: 'NEONCHECK', neon_transactions: neonTransactions, shared_transactions: [] } as MonthlyInput
+    const neonTransactionInputs: NeonTransactionInput[] = [
+      { order: 1, accountId: otherAccount.id, description: 'Groceries' },
     ]
 
     await transactional(async (tx) => {
@@ -159,23 +159,23 @@ describe('addNeonTransactions', () => {
     })
 
     const response = await addNeonTransactions(project.id, monthly.period, neonTransactionInputs)
-    expect(response).toEqual({ error: 'Monthly closing not found or not in NEON state', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not found or not in NEON state' })
   })
 
   test('Fails with invalid transaction input - missing order', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     otherAccount = { archived: false, id: randomUUID(), name: 'Expenses', project_id: project.id, type: 'Expense' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     neonTransactions = [
-      { amount: -50, date: '2024-01-05', description: 'Groceries', order: 1 },
-      { amount: 100, date: '2024-01-10', description: 'Salary', order: 2 },
-    ],
-     monthly = { credit_card_account_id: otherAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: neonTransactions, period, project_id: project.id, remaining_account_id: otherAccount.id, shared_account_id: otherAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput,
-     neonTransactionInputs = [
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const neonTransactions = [
+      { date: '2024-01-05', order: 1, amount: -50, description: 'Groceries' },
+      { date: '2024-01-10', order: 2, amount: 100, description: 'Salary' },
+    ]
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: otherAccount.id, neon_account_id: neonAccount.id, remaining_account_id: otherAccount.id, credit_card_account_id: otherAccount.id, state: 'NEON', neon_transactions: neonTransactions, shared_transactions: [] } as MonthlyInput
+    const neonTransactionInputs = [
       { accountId: otherAccount.id, description: 'Groceries' },
     ] as NeonTransactionInput[]
 
@@ -187,24 +187,24 @@ describe('addNeonTransactions', () => {
     })
 
     const response = await addNeonTransactions(project.id, monthly.period, neonTransactionInputs)
-    expect(response).toEqual({ error: 'Invalid input on field \'order\' (Invalid input: expected number, received undefined)', success: false })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'order\' (Invalid input: expected number, received undefined)' })
   })
 
   test('Fails with invalid transaction input - invalid account UUID', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     otherAccount = { archived: false, id: randomUUID(), name: 'Expenses', project_id: project.id, type: 'Expense' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     neonTransactions = [
-      { amount: -50, date: '2024-01-05', description: 'Groceries', order: 1 },
-      { amount: 100, date: '2024-01-10', description: 'Salary', order: 2 },
-    ],
-     monthly = { credit_card_account_id: otherAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: neonTransactions, period, project_id: project.id, remaining_account_id: otherAccount.id, shared_account_id: otherAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput,
-     neonTransactionInputs = [
-      { accountId: 'not-a-uuid', description: 'Groceries', order: 1 },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const otherAccount = { id: randomUUID(), project_id: project.id, name: 'Expenses', type: 'Expense', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const neonTransactions = [
+      { date: '2024-01-05', order: 1, amount: -50, description: 'Groceries' },
+      { date: '2024-01-10', order: 2, amount: 100, description: 'Salary' },
+    ]
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: otherAccount.id, neon_account_id: neonAccount.id, remaining_account_id: otherAccount.id, credit_card_account_id: otherAccount.id, state: 'NEON', neon_transactions: neonTransactions, shared_transactions: [] } as MonthlyInput
+    const neonTransactionInputs = [
+      { order: 1, accountId: 'not-a-uuid', description: 'Groceries' },
     ] as NeonTransactionInput[]
 
     await transactional(async (tx) => {
@@ -215,25 +215,25 @@ describe('addNeonTransactions', () => {
     })
 
     const response = await addNeonTransactions(project.id, monthly.period, neonTransactionInputs)
-    expect(response).toEqual({ error: 'Invalid input on field \'accountId\' (Invalid UUID)', success: false })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'accountId\' (Invalid UUID)' })
   })
 })
 
 describe('addSharedTransactions', () => {
   test('Success', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHARED' } as MonthlyInput,
-     sharedTransactions: SharedTransaction[] = [
-      { category: 'Food', transaction_id: randomUUID() },
-      { category: 'Transport', transaction_id: randomUUID() },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, neon_account_id: neonAccount.id, remaining_account_id: remainingAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHARED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const sharedTransactions: SharedTransaction[] = [
+      { transaction_id: randomUUID(), category: 'Food' },
+      { transaction_id: randomUUID(), category: 'Transport' },
     ]
 
     await transactional(async (tx) => {
@@ -250,19 +250,19 @@ describe('addSharedTransactions', () => {
 
     const updated = await transactional(async tx => findForPeriod(tx, task.id, project.id, monthly.period))
     expect(updated).toEqual(expect.objectContaining({
-      shared_transactions: sharedTransactions,
       state: 'FINISHED',
+      shared_transactions: sharedTransactions,
     }))
   })
 
   test('Fails when monthly closing not found', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     sharedTransactions: SharedTransaction[] = [
-      { category: 'Food', transaction_id: randomUUID() },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const sharedTransactions: SharedTransaction[] = [
+      { transaction_id: randomUUID(), category: 'Food' },
     ]
 
     await transactional(async (tx) => {
@@ -270,22 +270,22 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, period, sharedTransactions)
-    expect(response).toEqual({ error: 'Monthly closing not found or not in SHARED state', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not found or not in SHARED state' })
   })
 
   test('Fails when monthly state is not SHARED', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput,
-     sharedTransactions: SharedTransaction[] = [
-      { category: 'Food', transaction_id: randomUUID() },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEON', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const sharedTransactions: SharedTransaction[] = [
+      { transaction_id: randomUUID(), category: 'Food' },
     ]
 
     await transactional(async (tx) => {
@@ -298,21 +298,21 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ error: 'Monthly closing not found or not in SHARED state', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not found or not in SHARED state' })
   })
 
   test('Fails with invalid transaction input - missing transaction_id', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHARED' } as MonthlyInput,
-     sharedTransactions = [
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHARED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const sharedTransactions = [
       { category: 'Food' },
     ] as SharedTransaction[]
 
@@ -326,22 +326,22 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ error: 'Invalid input on field \'transaction_id\' (Invalid input: expected string, received undefined)', success: false })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'transaction_id\' (Invalid input: expected string, received undefined)' })
   })
 
   test('Fails with invalid transaction input - invalid transaction_id UUID', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHARED' } as MonthlyInput,
-     sharedTransactions = [
-      { category: 'Food', transaction_id: 'not-a-uuid' },
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHARED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const sharedTransactions = [
+      { transaction_id: 'not-a-uuid', category: 'Food' },
     ] as SharedTransaction[]
 
     await transactional(async (tx) => {
@@ -354,21 +354,21 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ error: 'Invalid input on field \'transaction_id\' (Invalid UUID)', success: false })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'transaction_id\' (Invalid UUID)' })
   })
 
   test('Fails with invalid transaction input - missing category', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHARED' } as MonthlyInput,
-     sharedTransactions = [
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHARED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const sharedTransactions = [
       { transaction_id: randomUUID() },
     ] as SharedTransaction[]
 
@@ -382,22 +382,22 @@ describe('addSharedTransactions', () => {
     })
 
     const response = await addSharedTransactions(project.id, monthly.period, sharedTransactions)
-    expect(response).toEqual({ error: 'Invalid input on field \'category\' (Invalid input: expected string, received undefined)', success: false })
+    expect(response).toEqual({ success: false, error: 'Invalid input on field \'category\' (Invalid input: expected string, received undefined)' })
   })
 })
 
 describe('markAsChecked', () => {
   test('Cannot mark NEON as checked', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEON', neon_transactions: [], shared_transactions: [] } as MonthlyInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -409,20 +409,20 @@ describe('markAsChecked', () => {
     })
 
     const response = await markAsChecked(project.id, period)
-    expect(response).toEqual({ error: 'Monthly closing not in CHECK state', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not in CHECK state' })
   })
 
   test('Transitions from NEONCHECK to CREDITCARDCHECK', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'NEONCHECK' } as MonthlyInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEONCHECK', neon_transactions: [], shared_transactions: [] } as MonthlyInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -441,16 +441,16 @@ describe('markAsChecked', () => {
   })
 
   test('Transitions from CREDITCARDCHECK to SHAREDCHECK', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'CREDITCARDCHECK' } as MonthlyInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'CREDITCARDCHECK', neon_transactions: [], shared_transactions: [] } as MonthlyInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -469,16 +469,16 @@ describe('markAsChecked', () => {
   })
 
   test('Transitions from SHAREDCHECK to SHARED', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHAREDCHECK' } as MonthlyInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHAREDCHECK', neon_transactions: [], shared_transactions: [] } as MonthlyInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -497,16 +497,16 @@ describe('markAsChecked', () => {
   })
 
   test('Cannot mark SHARED as checked', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHARED' } as MonthlyInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHARED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -518,33 +518,33 @@ describe('markAsChecked', () => {
     })
 
     const response = await markAsChecked(project.id, period)
-    expect(response).toEqual({ error: 'Monthly closing not in CHECK state', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not in CHECK state' })
   })
 
   test('Fails when monthly closing not found', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
     })
 
     const response = await markAsChecked(project.id, period)
-    expect(response).toEqual({ error: 'Monthly closing not found', success: false })
+    expect(response).toEqual({ success: false, error: 'Monthly closing not found' })
   })
 })
 
 describe('loadData', () => {
   test('NOT_FOUND', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     account1 = { archived: false, id: randomUUID(), name: 'Cash', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -553,23 +553,23 @@ describe('loadData', () => {
 
     const result = await loadData(project.id, period)
     expect(result).toEqual({
-      accounts: [expect.objectContaining(account1)],
-      lastMonthClosing: undefined,
       type: 'NOT_FOUND',
+      lastMonthClosing: undefined,
+      accounts: [expect.objectContaining(account1)],
     })
   })
 
   test('NEON', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [{ amount: -50, date: '2024-01-05', description: 'Groceries', order: 1 }], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEON', neon_transactions: [{ date: '2024-01-05', order: 1, amount: -50, description: 'Groceries' }], shared_transactions: [] } as MonthlyInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -582,24 +582,24 @@ describe('loadData', () => {
 
     const result = await loadData(project.id, period)
     expect(result).toEqual({
-      accounts: expect.arrayContaining([expect.objectContaining(creditCardAccount), expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount)]) as Account[],
-      monthly: expect.objectContaining({ id: monthly.id, state: 'NEON' }) as Monthly,
       type: 'NEON',
+      monthly: expect.objectContaining({ id: monthly.id, state: 'NEON' }) as Monthly,
+      accounts: expect.arrayContaining([expect.objectContaining(creditCardAccount), expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount)]) as Account[],
     })
   })
 
   test('CHECK_ACCOUNT', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'NEONCHECK' } as MonthlyInput,
-     transaction = { account_id: neonAccount.id, amount: 100, date: '2024-01-05', description: 'Test transaction', id: randomUUID(), ordering: 1, other_account_id: creditCardAccount.id, project_id: project.id, total_balance: 100 } as AccountTransactionInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEONCHECK', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const transaction = { id: randomUUID(), ordering: 1, account_id: neonAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2024-01-05', description: 'Test transaction' } as AccountTransactionInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -613,27 +613,27 @@ describe('loadData', () => {
 
     const result = await loadData(project.id, period)
     expect(result).toEqual({
+      type: 'CHECK_ACCOUNT',
+      monthly: expect.objectContaining({ id: monthly.id, state: 'NEONCHECK' }) as Monthly,
       account: expect.objectContaining(neonAccount) as Account,
       accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
-      lastTransaction: undefined,
-      monthly: expect.objectContaining({ id: monthly.id, state: 'NEONCHECK' }) as Monthly,
       transactions: expect.arrayContaining([expect.objectContaining(transaction)]) as AccountTransaction[],
-      type: 'CHECK_ACCOUNT',
+      lastTransaction: undefined,
     })
   })
 
   test('SHARED', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'SHARED' } as MonthlyInput,
-     transaction = { account_id: sharedAccount.id, amount: 100, date: '2024-01-05', description: 'Test transaction 1', id: randomUUID(), ordering: 1, other_account_id: creditCardAccount.id, project_id: project.id, total_balance: 100 } as AccountTransactionInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'SHARED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const transaction = { id: randomUUID(), ordering: 1, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2024-01-05', description: 'Test transaction 1' } as AccountTransactionInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -647,29 +647,29 @@ describe('loadData', () => {
 
     const result = await loadData(project.id, period)
     expect(result).toEqual({
-      accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount), expect.objectContaining(creditCardAccount)]) as Account[],
-      lastTransaction: undefined,
-      monthly: expect.objectContaining({ id: monthly.id, state: 'SHARED' }) as Monthly,
-      transactions: expect.arrayContaining([expect.objectContaining(transaction)]) as AccountTransaction[],
       type: 'SHARED',
+      monthly: expect.objectContaining({ id: monthly.id, state: 'SHARED' }) as Monthly,
+      accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount), expect.objectContaining(creditCardAccount)]) as Account[],
+      transactions: expect.arrayContaining([expect.objectContaining(transaction)]) as AccountTransaction[],
+      lastTransaction: undefined,
     })
   })
 
   test('FINISHED', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'FINISHED' } as MonthlyInput,
-     closing = { capital_account_id: sharedAccount.id, date: '2024-02-01', id: randomUUID(), profit: 500, profit_account_id: creditCardAccount.id, project_id: project.id },
-     transaction1 = { account_id: neonAccount.id, amount: 100, date: '2024-01-05', description: 'Transaction for neon account', id: randomUUID(), ordering: 1, other_account_id: creditCardAccount.id, project_id: project.id, total_balance: 100 } as AccountTransactionInput,
-     transaction2 = { account_id: sharedAccount.id, amount: 50, date: '2024-01-10', description: 'Transaction for shared account', id: randomUUID(), ordering: 1, other_account_id: creditCardAccount.id, project_id: project.id, total_balance: 150 } as AccountTransactionInput,
-     transaction3 = { account_id: sharedAccount.id, amount: 100, date: '2023-12-10', description: 'Transaction for shared account', id: randomUUID(), ordering: 2, other_account_id: creditCardAccount.id, project_id: project.id, total_balance: 100 } as AccountTransactionInput
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'FINISHED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2024-02-01', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 500 }
+    const transaction1 = { id: randomUUID(), ordering: 1, account_id: neonAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2024-01-05', description: 'Transaction for neon account' } as AccountTransactionInput
+    const transaction2 = { id: randomUUID(), ordering: 1, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 50, total_balance: 150, date: '2024-01-10', description: 'Transaction for shared account' } as AccountTransactionInput
+    const transaction3 = { id: randomUUID(), ordering: 2, account_id: sharedAccount.id, project_id: project.id, other_account_id: creditCardAccount.id, amount: 100, total_balance: 100, date: '2023-12-10', description: 'Transaction for shared account' } as AccountTransactionInput
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -686,29 +686,29 @@ describe('loadData', () => {
 
     const result = await loadData(project.id, period)
     expect(result).toEqual({
-      accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
-      lastTransactionNeonAccount: undefined,
-      lastTransactionSharedAccount: expect.objectContaining({ id: transaction3.id }) as AccountTransaction,
-      latestClosing: expect.objectContaining({ id: closing.id }) as Closing,
-      monthly: expect.objectContaining({ id: monthly.id, state: 'FINISHED' }) as Monthly,
-      transactionsNeonAccount: expect.arrayContaining([expect.objectContaining({ account_id: neonAccount.id })]) as AccountTransaction[],
-      transactionsSharedAccount: expect.arrayContaining([expect.objectContaining({ account_id: sharedAccount.id })]) as AccountTransaction[],
       type: 'FINISHED',
+      monthly: expect.objectContaining({ id: monthly.id, state: 'FINISHED' }) as Monthly,
+      accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
+      transactionsSharedAccount: expect.arrayContaining([expect.objectContaining({ account_id: sharedAccount.id })]) as AccountTransaction[],
+      lastTransactionSharedAccount: expect.objectContaining({ id: transaction3.id }) as AccountTransaction,
+      transactionsNeonAccount: expect.arrayContaining([expect.objectContaining({ account_id: neonAccount.id })]) as AccountTransaction[],
+      lastTransactionNeonAccount: undefined,
+      latestClosing: expect.objectContaining({ id: closing.id }) as Closing,
     })
   })
 
   test('Returns ALREADY_CLOSED when a closing exists that is >= lastDay of period and monthly is not FINISHED', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'NEON' } as MonthlyInput,
-     closing = { capital_account_id: sharedAccount.id, date: '2024-01-31', id: randomUUID(), profit: 1000, profit_account_id: creditCardAccount.id, project_id: project.id }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'NEON', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2024-01-31', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 1000 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -725,17 +725,17 @@ describe('loadData', () => {
   })
 
   test('Returns FINISHED state even when there is an ALREADY_CLOSED situation if monthly is FINISHED', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id },
-     neonAccount = { archived: false, id: randomUUID(), name: 'Neon', project_id: project.id, type: 'Asset' } as AccountInput,
-     sharedAccount = { archived: false, id: randomUUID(), name: 'Shared', project_id: project.id, type: 'Asset' } as AccountInput,
-     remainingAccount = { archived: false, id: randomUUID(), name: 'Remaining', project_id: project.id, type: 'Asset' } as AccountInput,
-     creditCardAccount = { archived: false, id: randomUUID(), name: 'Credit Card', project_id: project.id, type: 'Asset' } as AccountInput,
-     period = { current: false, day: undefined, month: 1, openEnded: false, year: 2024 } as MonthlyPeriod,
-     monthly = { credit_card_account_id: creditCardAccount.id, id: randomUUID(), neon_account_id: neonAccount.id, neon_transactions: [], period, project_id: project.id, remaining_account_id: remainingAccount.id, shared_account_id: sharedAccount.id, shared_transactions: [], state: 'FINISHED' } as MonthlyInput,
-     closing = { capital_account_id: sharedAccount.id, date: '2024-01-31', id: randomUUID(), profit: 1000, profit_account_id: creditCardAccount.id, project_id: project.id }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
+    const neonAccount = { id: randomUUID(), project_id: project.id, name: 'Neon', type: 'Asset', archived: false } as AccountInput
+    const sharedAccount = { id: randomUUID(), project_id: project.id, name: 'Shared', type: 'Asset', archived: false } as AccountInput
+    const remainingAccount = { id: randomUUID(), project_id: project.id, name: 'Remaining', type: 'Asset', archived: false } as AccountInput
+    const creditCardAccount = { id: randomUUID(), project_id: project.id, name: 'Credit Card', type: 'Asset', archived: false } as AccountInput
+    const period = { year: 2024, month: 1, openEnded: false, day: undefined, current: false } as MonthlyPeriod
+    const monthly = { id: randomUUID(), project_id: project.id, period, shared_account_id: sharedAccount.id, remaining_account_id: remainingAccount.id, neon_account_id: neonAccount.id, credit_card_account_id: creditCardAccount.id, state: 'FINISHED', neon_transactions: [], shared_transactions: [] } as MonthlyInput
+    const closing = { id: randomUUID(), project_id: project.id, date: '2024-01-31', capital_account_id: sharedAccount.id, profit_account_id: creditCardAccount.id, profit: 1000 }
 
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project)
@@ -749,14 +749,14 @@ describe('loadData', () => {
 
     const result = await loadData(project.id, period)
     expect(result).toEqual({
-      accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
-      lastTransactionNeonAccount: undefined,
-      lastTransactionSharedAccount: undefined,
-      latestClosing: expect.objectContaining({ id: closing.id }) as Closing,
-      monthly: expect.objectContaining({ id: monthly.id, state: 'FINISHED' }) as Monthly,
-      transactionsNeonAccount: [],
-      transactionsSharedAccount: [],
       type: 'FINISHED',
+      monthly: expect.objectContaining({ id: monthly.id, state: 'FINISHED' }) as Monthly,
+      accounts: expect.arrayContaining([expect.objectContaining(neonAccount), expect.objectContaining(sharedAccount), expect.objectContaining(creditCardAccount)]) as Account[],
+      transactionsSharedAccount: [],
+      lastTransactionSharedAccount: undefined,
+      transactionsNeonAccount: [],
+      lastTransactionNeonAccount: undefined,
+      latestClosing: expect.objectContaining({ id: closing.id }) as Closing,
     })
   })
 })

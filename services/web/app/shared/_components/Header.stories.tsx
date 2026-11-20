@@ -2,19 +2,19 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Header } from './Header'
 
 const meta = {
-  args: {
-    accessibleApplications: ['admin', 'coeditor'],
-    hasSession: true,
-    path: '/coeditor/editor',
-  },
+  title: 'Shared/Header',
   component: Header,
+  tags: ['autodocs'],
+  args: {
+    path: '/coeditor/editor',
+    hasSession: true,
+    accessibleApplications: ['admin', 'coeditor'],
+  },
   parameters: {
     nextjs: {
       appDirectory: true, // Enables App Router support
     },
   },
-  tags: ['autodocs'],
-  title: 'Shared/Header',
 } satisfies Meta<typeof Header>
 export default meta
 
@@ -30,24 +30,24 @@ export const NoApplication: StoryObj<typeof meta> = {
 
 export const Mobile: StoryObj<typeof meta> = {
   globals: {
-    viewport: { isRotated: false, value: 'mobile1' },
+    viewport: { value: 'mobile1', isRotated: false },
   },
 }
 
 export const MobileMultipleTabs: StoryObj<typeof meta> = {
-  args: {
-    accessibleApplications: ['startpage', 'coeditor'],
-    path: '/startpage/favorites',
-  },
   globals: {
-    viewport: { isRotated: false, value: 'mobile1' },
+    viewport: { value: 'mobile1', isRotated: false },
+  },
+  args: {
+    path: '/startpage/favorites',
+    accessibleApplications: ['startpage', 'coeditor'],
   },
 }
 
 export const NoSession: StoryObj<typeof meta> = {
   args: {
-    accessibleApplications: [],
-    hasSession: false,
     path: '/auth/shared/out',
+    hasSession: false,
+    accessibleApplications: [],
   },
 }

@@ -1,5 +1,5 @@
-import { config } from './config'
 import { getIronSession } from 'iron-session'
+import { config } from './config'
 
 export interface UserSession {
   name: string
@@ -25,19 +25,19 @@ interface ResponseCookie {
 }
 
 export interface CookieStore {
-  get(name: string): { name: string, value: string } | undefined
+  get: (name: string) => { name: string, value: string } | undefined
   set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void, (options: ResponseCookie): void }
 }
 
 export async function getUserSession(cookies: CookieStore): Promise<UserSession> {
   const settings = {
     cookieName: config.SESSION.COOKIE_NAME,
-    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
     password: config.SESSION.SESSION_PASSWORD,
-    ttl: 604800, // 1 week in seconds,
-  },
-   session = await getIronSession<{ userInfo?: UserSession }>(cookies, settings)
-  if (!session.userInfo) {throw new Error('No authenticated user session found')}
+    ttl: 604800, // 1 week in seconds
+    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
+  }
+  const session = await getIronSession<{ userInfo?: UserSession }>(cookies, settings)
+  if (!session.userInfo) throw new Error('No authenticated user session found')
   return session.userInfo
 }
 

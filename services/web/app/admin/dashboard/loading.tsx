@@ -1,9 +1,9 @@
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { DashboardCard } from '../_components/DashboardCard'
 import { EventsCard } from './_components/EventsCard'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { config } from '@/app/shared/config'
 import styles from './Dashboard.module.css'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { config } from '@/app/shared/config'
 
 export default function Loading() {
   return (
@@ -13,10 +13,10 @@ export default function Loading() {
       </ActionTitle>
       <LoadingSpinner />
       <div className={styles.grid}>
-        <DashboardCard header="Build" items={[]} />
-        <DashboardCard header="Run" items={[]} />
-        <DashboardCard header="Config" url="/admin/config" items={[]} />
-        <DashboardCard header="Metrics" url="/admin/metrics" items={[]} />
+        <DashboardCard header="Build" items={[]}></DashboardCard>
+        <DashboardCard header="Run" items={[]}></DashboardCard>
+        <DashboardCard header="Config" url="/admin/config" items={[]}></DashboardCard>
+        <DashboardCard header="Metrics" url="/admin/metrics" items={[]}></DashboardCard>
       </div>
       <EventsCard events={[]} logUrl={config.LOG_URL} />
     </main>

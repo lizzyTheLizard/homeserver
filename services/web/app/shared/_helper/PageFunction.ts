@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react'
-import { Temporal } from '@js-temporal/polyfill'
+import { ReactNode } from 'react'
 import { isBackendError } from './BackendError'
-import { logEvent } from '../_data/Event'
 import { logger } from '../logger'
+import { Temporal } from '@js-temporal/polyfill'
 import { nontransactional } from '../_external/db/access'
+import { logEvent } from '../_data/Event'
 
 export async function serverPageFunction(name: string, fn: () => Promise<ReactNode> | ReactNode): Promise<ReactNode> {
   const start = Temporal.Now.instant().epochMilliseconds
@@ -14,10 +14,10 @@ export async function serverPageFunction(name: string, fn: () => Promise<ReactNo
     return result
   }).catch(async (error: unknown) => {
     const time = Temporal.Now.instant().epochMilliseconds - start
-    if (isDynamicServerUsage(error)) {throw error}
+    if (isDynamicServerUsage(error)) throw error
     if (isBackendError(error)) {
-      if (error.showStack) {logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)}
-      else {logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)}
+      if (error.showStack) logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)
+      else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)
       throw error
     }
     const code = httpAccessResponseCode(error)
@@ -38,11 +38,11 @@ function isDynamicServerUsage(error: unknown): boolean {
 }
 
 function httpAccessResponseCode(error: unknown): number | undefined {
-  if (!(error instanceof Error)) {return undefined}
-  if (!('digest' in error) || typeof error.digest !== 'string') {return undefined}
-  if (!error.digest.startsWith('NEXT_HTTP_ERROR_FALLBACK;')) {return undefined}
-  const codeStr = error.digest.substring('NEXT_HTTP_ERROR_FALLBACK;'.length),
-   code = parseInt(codeStr, 10)
-  if (isNaN(code)) {return undefined}
+  if (!(error instanceof Error)) return undefined
+  if (!('digest' in error) || typeof error.digest !== 'string') return undefined
+  if (!error.digest.startsWith('NEXT_HTTP_ERROR_FALLBACK;')) return undefined
+  const codeStr = error.digest.substring('NEXT_HTTP_ERROR_FALLBACK;'.length)
+  const code = parseInt(codeStr, 10)
+  if (isNaN(code)) return undefined
   return code
 }

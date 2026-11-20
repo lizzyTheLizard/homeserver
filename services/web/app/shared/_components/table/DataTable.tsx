@@ -1,6 +1,6 @@
 'use client'
-import { type CSSProperties, type ReactNode, type TableHTMLAttributes, useMemo, useState } from 'react';
-import { type SortingOrder, sortAndFilter } from './sortAndFilter';
+import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
+import { sortAndFilter, SortingOrder } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
 import { SearchBar } from './SearchBar'
@@ -12,9 +12,9 @@ export interface DataTableProps<T extends { id: string }> extends TableHTMLAttri
   columns: ColumnDefinition<any>[]
   initialSortingOrder?: SortingOrder[]
   searchLabel?: string
-  onRowClick?(item: T): void
+  onRowClick?: (item: T) => void
   activeId?: string
-  renderMobile?(item: T): ReactNode
+  renderMobile?: (item: T) => ReactNode
 }
 
 export interface ColumnDefinition<FieldType> {
@@ -22,22 +22,22 @@ export interface ColumnDefinition<FieldType> {
   header: string
   style?: CSSProperties
   className?: string
-  sort?(a: FieldType, b: FieldType): number
-  cell(value: FieldType, id: string): ReactNode
+  sort?: (a: FieldType, b: FieldType) => number
+  cell: (value: FieldType, id: string) => ReactNode
   search(value: FieldType, searchTerm: string): boolean
 }
 
 export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialSortingOrder, searchLabel, activeId, renderMobile, ...props }: DataTableProps<T>) {
-  const classNames = style.dataTable + (props.className ? ` ${  props.className}` : ''),
-   [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? []),
-   [searchTerm, setSearchTerm] = useState('')
+  const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
+  const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
+  const [searchTerm, setSearchTerm] = useState('')
 
   function onSort(oldSort: SortingOrder | undefined, key: string) {
     const newOrder = sortingOrder.filter(f => f.key !== key)
     if (oldSort?.direction !== 'DESC') {
       newOrder.push(oldSort
-        ? { direction: 'DESC', key }
-        : { direction: 'ASC', key })
+        ? { key: key, direction: 'DESC' }
+        : { key: key, direction: 'ASC' })
     }
     setSortingOrder(newOrder)
   }
@@ -45,9 +45,9 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
   const sortedAndFilteredData = useMemo(
     () => sortAndFilter<T>(data, sortingOrder, searchTerm, columns),
     [data, sortingOrder, searchTerm, columns],
-  ),
+  )
 
-   table = (
+  const table = (
     <table {...props} className={classNames}>
       <thead>
         <tr>
@@ -80,12 +80,12 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
     </table>
   )
 
-  if (!renderMobile) {return (
+  if (!renderMobile) return (
     <>
       {searchLabel && <SearchBar label={searchLabel} value={searchTerm} onChange={setSearchTerm} />}
       {table}
     </>
-  )}
+  )
   return (
     <div className={style.container}>
       {searchLabel && <SearchBar label={searchLabel} value={searchTerm} onChange={setSearchTerm} />}

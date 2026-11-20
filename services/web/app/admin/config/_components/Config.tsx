@@ -1,17 +1,17 @@
 'use client'
 
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import type { ConfigSection } from '../server'
-import styles from './Config.module.css'
 import { useState } from 'react'
+import styles from './Config.module.css'
+import type { ConfigSection } from '../server'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export interface ConfigProps {
   data?: ConfigSection[]
 }
 
 export function Config({ data = [] }: ConfigProps) {
-  const [query, setQuery] = useState(''),
-   [showSecrets, setShowSecrets] = useState(false)
+  const [query, setQuery] = useState('')
+  const [showSecrets, setShowSecrets] = useState(false)
 
   return (
     <div>
@@ -45,7 +45,7 @@ function SectionCard({ section, showSecrets, query }: { section: ConfigSection, 
     || e.key.toLowerCase().includes(query.toLowerCase())
     || (e.value ?? '').toLowerCase().includes(query.toLowerCase()),
   )
-  if (filtered.length === 0) {return null}
+  if (filtered.length === 0) return null
   return (
     <div className={styles.card}>
       <div className={styles.sectionLabel}>{section.label}</div>
@@ -55,16 +55,16 @@ function SectionCard({ section, showSecrets, query }: { section: ConfigSection, 
 }
 
 function ConfigRow({ entry, showSecrets }: { entry: ConfigSection['entries'][number], showSecrets: boolean }) {
-  const [expanded, setExpanded] = useState(false),
-   val = entry.value ?? '',
-   masked = '••••••••••••••••'
+  const [expanded, setExpanded] = useState(false)
+  const val = entry.value ?? ''
+  const masked = '••••••••••••••••'
 
   let display: string
   if (entry.secret && !showSecrets) {
     display = masked
   }
   else if (entry.truncate && !expanded) {
-    display = `${val.slice(0, 60)  }…`
+    display = val.slice(0, 60) + '…'
   }
   else {
     display = val

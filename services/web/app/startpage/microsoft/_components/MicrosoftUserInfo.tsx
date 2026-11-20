@@ -1,12 +1,12 @@
 'use client'
-import { connectMicrosoft, disconnectMicrosoft } from '../server'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
-import { Button } from '@/app/shared/_components/form/Button'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import type { MicrosoftUserInfo } from '@assistant/microsoft/types'
-import styles from './MicrosoftUserInfo.module.css'
-import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { Button } from '@/app/shared/_components/form/Button'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { connectMicrosoft, disconnectMicrosoft } from '../server'
+import { useSearchParams } from 'next/navigation'
+import styles from './MicrosoftUserInfo.module.css'
+import type { MicrosoftUserInfo } from '@assistant/microsoft/types'
 
 interface MicrosoftUserInfoParam {
   connected: boolean
@@ -14,9 +14,9 @@ interface MicrosoftUserInfoParam {
 }
 
 export function MicrosoftUserInfo({ connected, userInfo }: MicrosoftUserInfoParam) {
-  const searchParams = useSearchParams(),
-   [error, setError] = useState<string | undefined>(searchParams.get('error') ?? undefined),
-   [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const [error, setError] = useState<string | undefined>(searchParams.get('error') ?? undefined)
+  const [loading, setLoading] = useState(false)
 
   async function handleConnect() {
     setLoading(true)
@@ -42,7 +42,7 @@ export function MicrosoftUserInfo({ connected, userInfo }: MicrosoftUserInfoPara
     window.location.reload()
   }
 
-  if (loading) {return (<LoadingSpinner />)}
+  if (loading) return (<LoadingSpinner></LoadingSpinner>)
 
   if (!connected) {
     return (

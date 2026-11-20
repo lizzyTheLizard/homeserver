@@ -1,19 +1,20 @@
-import { type Account, getAccount, listAccountGroups } from '@/lib/store'
 import Link from 'next/link'
-import { LoginForm } from './components'
-import { changePasswordPath } from '@/lib/continuePath'
-import { getDb } from '@/lib/db'
-import { getSession } from '@/lib/session'
-import { logout } from './actions'
 import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/session'
+import { getAccount, listAccountGroups } from '@/lib/store'
+import type { Account } from '@/lib/store'
+import { getDb } from '@/lib/db'
+import { changePasswordPath } from '@/lib/continuePath'
+import { logout } from './actions'
+import { LoginForm } from './components'
 
 export const dynamic = 'force-dynamic'
 
 export default async function StartPage() {
   const s = await getSession()
-  if (s?.role === 'admin') {redirect('/admin')}
+  if (s?.role === 'admin') redirect('/admin')
   const account = s?.role === 'user' ? await getAccount(await getDb(), s.accountId) : null
-  if (account) {return <GroupOverview account={account} />}
+  if (account) return <GroupOverview account={account} />
 
   return (
     <div className="card login">
@@ -27,10 +28,10 @@ export default async function StartPage() {
 }
 
 async function GroupOverview({ account }: { account: Account }) {
-  if (account.mustChangePassword) {redirect(changePasswordPath('/'))}
-  const groups = await listAccountGroups(await getDb(), account.id),
-   only = groups.length === 1 ? groups[0] : undefined
-  if (only) {redirect(`/gruppen/${only.id}`)}
+  if (account.mustChangePassword) redirect(changePasswordPath('/'))
+  const groups = await listAccountGroups(await getDb(), account.id)
+  const only = groups.length === 1 ? groups[0] : undefined
+  if (only) redirect(`/gruppen/${only.id}`)
 
   return (
     <>

@@ -1,9 +1,9 @@
-import { CreateGroupForm } from '../components'
 import Link from 'next/link'
-import { getDb } from '@/lib/db'
-import { listGroups } from '@/lib/store'
-import { logout } from '../actions'
 import { requireAdmin } from '@/lib/session'
+import { listGroups } from '@/lib/store'
+import { getDb } from '@/lib/db'
+import { logout } from '../actions'
+import { CreateGroupForm } from '../components'
 
 export const dynamic = 'force-dynamic'
 

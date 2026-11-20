@@ -13,13 +13,13 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 /** An input component styled
  */
 export function Input({ list, label, small, ...props }: InputProps) {
-  const [internalValue, setInternalValue] = useState(''),
-   [focus, setFocus] = useState(false),
-   fallbackId = useId(),
-   id = props.id ?? fallbackId,
-   listId = list ? `${id}-list` : undefined,
-   value = getValue(props.value, internalValue, props.type, focus),
-   inputClasses = [
+  const [internalValue, setInternalValue] = useState('')
+  const [focus, setFocus] = useState(false)
+  const fallbackId = useId()
+  const id = props.id ?? fallbackId
+  const listId = list ? `${id}-list` : undefined
+  const value = getValue(props.value, internalValue, props.type, focus)
+  const inputClasses = [
     style.input, props.className ?? '',
     label ? '' : style.noLabel,
     small ? style.small : '',
@@ -68,9 +68,9 @@ export function Input({ list, label, small, ...props }: InputProps) {
 function getValue(propValue: string | number | undefined, internalValue: string, type: string | undefined, focus: boolean): string | number {
   const preFormatedValue = propValue ?? internalValue
   // While editing, show unformatted value
-  if (focus) {return preFormatedValue}
+  if (focus) return preFormatedValue
   // For currency, show value incl. currency symbol
   if (type === 'currency')
-    {return new Intl.NumberFormat(undefined, { currency: 'CHF', style: 'currency' }).format(Number(preFormatedValue))}
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'CHF' }).format(Number(preFormatedValue))
   return preFormatedValue
 }

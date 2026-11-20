@@ -1,7 +1,7 @@
-import { type DeltaResponse, graphApiRequest, toInstant } from './graph'
-import { Mutex } from 'async-mutex'
 import { Temporal } from '@js-temporal/polyfill'
+import { Mutex } from 'async-mutex'
 import type { UserSession } from '../session'
+import { DeltaResponse, graphApiRequest, toInstant } from './graph'
 import { logger } from '../logger'
 
 export type InferenceClassification = 'focused' | 'other'
@@ -55,20 +55,20 @@ export async function getMicrosoftMailWorker(user: UserSession): Promise<Microso
 declare global {
   var microsoftMailWorkers: Map<string, MicrosoftMailWorker> | undefined
 }
-globalThis.microsoftMailWorkers = globalThis.microsoftMailWorkers ?? new Map<string, MicrosoftMailWorker>()
+globalThis.microsoftMailWorkers ??= new Map<string, MicrosoftMailWorker>()
 
-const facadeMutex = new Mutex(),
- inactivityTimeoutMs = 5 * 60 * 1000,
- deltaPollIntervalMs = 15 * 1000
+const facadeMutex = new Mutex()
+const inactivityTimeoutMs = 5 * 60 * 1000
+const deltaPollIntervalMs = 15 * 1000
 
 function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
-  const userId = user.email,
-   messages = new Map<string, MicrosoftMessageListItem>(),
-   mutex = new Mutex()
-  let deltaLink: string | undefined,
-   interval: ReturnType<typeof setInterval> | undefined,
-   timeout: ReturnType<typeof setTimeout> | undefined,
-   status: 'connecting' | 'connected' | 'error' = 'connecting'
+  const userId = user.email
+  const messages = new Map<string, MicrosoftMessageListItem>()
+  const mutex = new Mutex()
+  let deltaLink: string | undefined
+  let interval: ReturnType<typeof setInterval> | undefined
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let status: 'connecting' | 'connected' | 'error' = 'connecting'
 
   function close(): void {
     if (interval) {
@@ -83,7 +83,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   }
 
   function touch(): void {
-    if (timeout) {clearTimeout(timeout)}
+    if (timeout) clearTimeout(timeout)
     timeout = setTimeout(close, inactivityTimeoutMs)
   }
 
@@ -96,7 +96,6 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
 
   async function getMessage(messageId: string): Promise<MicrosoftMessageFull | undefined> {
     return await graphApiRequest(user, `/me/messages/${messageId}`, async (request) => {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const response = await request
         .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,body')
         .get() as RawMessageFull
@@ -109,11 +108,11 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     for (const m of messages.values()) {
       if (m.inferenceClassification === 'focused') {
         focused++
-        if (!m.isRead) {focusedUnread++}
+        if (!m.isRead) focusedUnread++
       }
       else {
         other++
-        if (!m.isRead) {otherUnread++}
+        if (!m.isRead) otherUnread++
       }
     }
     return { focused, focusedUnread, other, otherUnread }
@@ -125,7 +124,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
       logger.debug(`Send mail to ${to.join(', ')}`)
       await graphApiRequest(user, `/me/sendMail`, async (request) => {
         await request.post({
-          message: { body: { content: body, contentType: 'Text' }, subject, toRecipients },
+          message: { subject, body: { contentType: 'Text', content: body }, toRecipients },
           saveToSentItems: 'true',
         })
       })
@@ -139,10 +138,10 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   async function archiveMessage(user: UserSession, messageId: string): Promise<void> {
     try {
       const message = messages.get(messageId)
-      if (!message) {throw new Error(`Message with ID ${messageId} not found in cache`)}
+      if (!message) throw new Error(`Message with ID ${messageId} not found in cache`)
       messages.delete(messageId)
       const archiveFolder = await getArchiveFolder(user)
-      if (!archiveFolder) {throw new Error('Archive folder not found. Please check your Outlook setup.')}
+      if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
       logger.debug(`Archive mail ${messageId}`)
       await graphApiRequest(user, `/me/messages/${messageId}/move`, async (request) => {
         await request.post({ destinationId: archiveFolder })
@@ -159,9 +158,9 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     return mutex.runExclusive(async () => {
       const matching = Array.from(messages.values())
         .filter(m => m.from.emailAddress.address === senderEmail)
-      if (matching.length === 0) {return 0}
+      if (matching.length === 0) return 0
       const archiveFolder = await getArchiveFolder(user)
-      if (!archiveFolder) {throw new Error('Archive folder not found. Please check your Outlook setup.')}
+      if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
       for (const msg of matching) {
         messages.delete(msg.id)
         logger.debug(`Archive mail ${msg.id}`)
@@ -183,7 +182,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   }
 
   async function doDeltaPoll(): Promise<void> {
-    if (!deltaLink) {throw new Error('Delta link is not set. Initial fetch must be completed before delta polling can occur.')}
+    if (!deltaLink) throw new Error('Delta link is not set. Initial fetch must be completed before delta polling can occur.')
     await syncMessages(deltaLink)
     logger.debug(`[MicrosoftMailWorker] Delta poll complete for user ${userId}: ${String(messages.size)} messages`)
   }
@@ -191,19 +190,18 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   async function syncMessages(url: string): Promise<void> {
     let currentUrl: string | undefined = url
     while (currentUrl) {
-      const deltaResult: DeltaResponse<RawMessageListItem> = await graphApiRequest(user, currentUrl, async (request) => 
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-        await request.get() as DeltaResponse<RawMessageListItem>
-      )
+      const deltaResult: DeltaResponse<RawMessageListItem> = await graphApiRequest(user, currentUrl, async (request) => {
+        return await request.get() as DeltaResponse<RawMessageListItem>
+      })
       for (const item of deltaResult.value) {
-        if (item['@removed']) {messages.delete(item.id)}
-        else {messages.set(item.id, convertMessageListItem(item))}
+        if (item['@removed']) messages.delete(item.id)
+        else messages.set(item.id, convertMessageListItem(item))
       }
       if (deltaResult['@odata.nextLink']) {
         currentUrl = deltaResult['@odata.nextLink']
       }
       else {
-        if (deltaResult['@odata.deltaLink']) {deltaLink = deltaResult['@odata.deltaLink']}
+        if (deltaResult['@odata.deltaLink']) deltaLink = deltaResult['@odata.deltaLink']
         currentUrl = undefined
       }
     }
@@ -231,12 +229,11 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { archiveMessage, archiveMessagesFromSender, getInboxCount, getInboxMessages, getMessage, getStatus, sendMail, touch }
+  return { getInboxMessages, getMessage, getInboxCount, getStatus, sendMail, archiveMessage, archiveMessagesFromSender, touch }
 }
 
 async function getArchiveFolder(user: UserSession): Promise<string | undefined> {
   return await graphApiRequest(user, '/me/mailFolders', async (request) => {
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const response = await request
       .filter('displayName eq \'Archive\'')
       .select('id')
@@ -263,14 +260,14 @@ interface RawMessageFull extends RawMessageListItem {
 
 function convertMessageListItem(raw: RawMessageListItem): MicrosoftMessageListItem {
   return {
-    bodyPreview: raw.bodyPreview,
-    from: raw.from,
     id: raw.id,
-    inferenceClassification: raw.inferenceClassification,
-    isRead: raw.isRead,
-    receivedDateTime: toInstant(raw.receivedDateTime, ''),
     subject: raw.subject,
+    from: raw.from,
     toRecipients: raw.toRecipients,
+    receivedDateTime: toInstant(raw.receivedDateTime, ''),
+    isRead: raw.isRead,
+    bodyPreview: raw.bodyPreview,
+    inferenceClassification: raw.inferenceClassification,
   }
 }
 

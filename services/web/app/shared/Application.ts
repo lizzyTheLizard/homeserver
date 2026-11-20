@@ -4,46 +4,54 @@ export interface Application {
   name: string
   link: string
   description: string
-  getLinks(path: string): { text: string, href: string, hideMobile?: boolean }[]
+  getLinks: (path: string) => { text: string, href: string, hideMobile?: boolean }[]
 }
 
 export const applications: Application[] = [
   {
-    description: 'Browser start page with personal favorites', getLinks: () => [
-      { href: '/startpage/favorites', text: 'Favorites' },
-      { href: '/startpage/whatsapp', text: 'WhatsApp' },
-      { href: '/startpage/microsoft', text: 'Microsoft' },
-    ], icon: 'startpage', key: 'startpage', link: '/startpage/favorites', name: 'StartPage',
+    key: 'startpage', link: '/startpage/favorites', icon: 'startpage', name: 'StartPage',
+    description: 'Browser start page with personal favorites',
+    getLinks: () => [
+      { text: 'Favorites', href: '/startpage/favorites' },
+      { text: 'WhatsApp', href: '/startpage/whatsapp' },
+      { text: 'Microsoft', href: '/startpage/microsoft' },
+    ],
   },
   {
-    description: 'Double bookkeeping application for privates', getLinks: (path: string) => {
-      if (path.startsWith('/cash/projects/')) {return []}
-      if (!path.startsWith('/cash/')) {return []}
+    key: 'cash', link: '/cash/', icon: 'cash', name: 'Cash',
+    description: 'Double bookkeeping application for privates',
+    getLinks: (path: string) => {
+      if (path.startsWith('/cash/projects/')) return []
+      if (!path.startsWith('/cash/')) return []
       const split = path.split('/')
-      if (split.length < 4) {return []}
-      const projectId = split[2],
-       date = split[3]
+      if (split.length < 4) return []
+      const projectId = split[2]
+      const date = split[3]
       return [
-        { href: `/cash/${projectId}/${date}/journal`, text: 'Journal' },
-        { href: `/cash/${projectId}/${date}/accounts`, text: 'Accounts' },
-        { href: `/cash/${projectId}/${date}/reports`, text: 'Reports' },
-        { hideMobile: true, href: `/cash/${projectId}/${date}/closing`, text: 'Closing' },
+        { text: 'Journal', href: `/cash/${projectId}/${date}/journal` },
+        { text: 'Accounts', href: `/cash/${projectId}/${date}/accounts` },
+        { text: 'Reports', href: `/cash/${projectId}/${date}/reports` },
+        { text: 'Closing', href: `/cash/${projectId}/${date}/closing`, hideMobile: true },
       ]
-    }, icon: 'cash', key: 'cash', link: '/cash/', name: 'Cash',
+    },
   },
   {
-    description: 'General server admin', getLinks: () => [
-      { href: '/admin/dashboard', text: 'Dashboard' },
-      { href: '/admin/metrics', text: 'Metrics' },
-      { href: '/admin/config', text: 'Config' },
-      { href: '/admin/cash', text: 'Cash' },
-    ], icon: 'admin', key: 'admin', link: '/admin/dashboard', name: 'Admin',
+    key: 'admin', link: '/admin/dashboard', icon: 'admin', name: 'Admin',
+    description: 'General server admin',
+    getLinks: () => [
+      { text: 'Dashboard', href: '/admin/dashboard' },
+      { text: 'Metrics', href: '/admin/metrics' },
+      { text: 'Config', href: '/admin/config' },
+      { text: 'Cash', href: '/admin/cash' },
+    ],
   },
   {
-    description: 'Customizable AI-driven Editor', getLinks: () => [
-      { href: '/coeditor/editor', text: 'Editor' },
-      { href: '/coeditor/settings', text: 'Settings' },
-      { href: '/coeditor/history', text: 'History' },
-    ], icon: 'coeditor', key: 'coeditor', link: '/coeditor/editor', name: 'CoEditor',
+    key: 'coeditor', link: '/coeditor/editor', icon: 'coeditor', name: 'CoEditor',
+    description: 'Customizable AI-driven Editor',
+    getLinks: () => [
+      { text: 'Editor', href: '/coeditor/editor' },
+      { text: 'Settings', href: '/coeditor/settings' },
+      { text: 'History', href: '/coeditor/history' },
+    ],
   },
 ]

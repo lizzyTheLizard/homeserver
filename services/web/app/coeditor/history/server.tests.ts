@@ -1,11 +1,11 @@
 import { describe, expect, test, vi } from 'vitest'
-import type { UserSession } from '@/app/shared/auth/session'
-import { createDiscussion } from '../_data/Discussion'
-import { createOrModifyTemplate } from '../_data/Template'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { loadHistory } from './server'
-import { v4 as randomUUID } from 'uuid'
 import { transactional } from '@/app/shared/_external/db/access'
+import { v4 as randomUUID } from 'uuid'
+import type { UserSession } from '@/app/shared/auth/session'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { createOrModifyTemplate } from '../_data/Template'
+import { loadHistory } from './server'
+import { createDiscussion } from '../_data/Discussion'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {
@@ -17,15 +17,15 @@ vi.mock('@/app/shared/auth/auth', async () => {
 })
 
 // Mock AI
-vi.mock('../_external/AiPort', () => (
-  {
+vi.mock('../_external/AiPort', () => {
+  return {
     aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title' }),
   }
-))
+})
 
 describe('loadHistory', () => {
   test('Empty list', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadHistory()
@@ -34,10 +34,10 @@ describe('loadHistory', () => {
   })
 
   test('Existing Discussions', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), language: 'en', name: 'Template 1', text: 'A test template' },
-     input = { context: 'context', id: randomUUID(), parameters: {}, template_id: templateInput.id, text: 'New text', title: 'New Title' }
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
@@ -50,16 +50,16 @@ describe('loadHistory', () => {
   })
 
   test('Discussions from other users not loaded', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    const templateInput = { id: randomUUID(), language: 'en', name: 'Template 1', text: 'A test template' },
-     input = { context: 'context', id: randomUUID(), parameters: {}, template_id: templateInput.id, text: 'New text', title: 'New Title' }
+    const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
+    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
     await transactional(async (tx) => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
     })
 
-    const otherUser: UserSession = { applications: ['cash'], email: 'other-user-id', name: 'Other User' }
+    const otherUser: UserSession = { name: 'Other User', email: 'other-user-id', applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
     const result = await loadHistory()
 

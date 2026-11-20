@@ -1,5 +1,5 @@
-import { Accounts } from './_components/Accounts'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Accounts } from './_components/Accounts'
 import { loadAccounts } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
@@ -16,8 +16,8 @@ export interface AccountPageProps {
 
 export default async function Page({ params }: AccountPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const paramsResolved = await params,
-     accounts = await loadAccounts(paramsResolved.project_id)
+    const paramsResolved = await params
+    const accounts = await loadAccounts(paramsResolved.project_id)
     return (
       <main>
         <ActionTitle>

@@ -1,22 +1,22 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState, useRef } from 'react'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import styles from './EditableBlock.module.css'
 
 type EditState = 'viewing' | 'editing'
 
-export function EditableBlock({ content, onEdit, editable, response }: { content: string, onEdit?(editedText: string): void, editable?: boolean, response: boolean }) {
-  const [state, setState] = useState<EditState>('viewing'),
-   [editValue, setEditValue] = useState(content),
-   [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null),
-   viewRef = useRef<HTMLDivElement>(null),
-   textareaRef = useRef<HTMLTextAreaElement>(null)
+export function EditableBlock({ content, onEdit, editable, response }: { content: string, onEdit?: (editedText: string) => void, editable?: boolean, response: boolean }) {
+  const [state, setState] = useState<EditState>('viewing')
+  const [editValue, setEditValue] = useState(content)
+  const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
+  const viewRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   function handleEdit() {
     if (viewRef.current) {
       const rect = viewRef.current.getBoundingClientRect()
-      setDimensions({ height: rect.height, width: rect.width })
+      setDimensions({ width: rect.width, height: rect.height })
     }
     setEditValue(content)
     setState('editing')
@@ -33,7 +33,7 @@ export function EditableBlock({ content, onEdit, editable, response }: { content
 
   function handleOk() {
     if (editValue !== content) {
-      if (onEdit) {onEdit(editValue)}
+      if (onEdit) onEdit(editValue)
     }
     setState('viewing')
   }
@@ -58,7 +58,7 @@ export function EditableBlock({ content, onEdit, editable, response }: { content
             value={editValue}
             onChange={(e) => { setEditValue(e.target.value) }}
             onKeyDown={handleKeyDown}
-            style={dimensions ? { height: dimensions.height, width: dimensions.width } : undefined}
+            style={dimensions ? { width: dimensions.width, height: dimensions.height } : undefined}
             className={styles.editableTextarea}
           />
           <div className={styles.editableEditingToolbar}>

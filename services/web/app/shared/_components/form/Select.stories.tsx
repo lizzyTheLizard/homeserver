@@ -3,7 +3,11 @@ import { Select } from './Select'
 import { useState } from 'react'
 
 const meta = {
+  title: 'Shared/Form/Select',
+  component: Select,
   args: {
+    label: 'Select Input',
+    emptyLabel: 'Please Select',
     children: (
       <>
         <option value="Option 1">Option 1</option>
@@ -11,12 +15,8 @@ const meta = {
         <option value="Option 3">Option 3</option>
       </>
     ),
-    emptyLabel: 'Please Select',
-    label: 'Select Input',
   },
-  component: Select,
   tags: ['autodocs'],
-  title: 'Shared/Form/Select',
 } satisfies Meta<typeof Select>
 export default meta
 

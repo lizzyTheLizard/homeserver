@@ -1,22 +1,22 @@
 'use client'
 
-import { type Application, applications } from '@/app/shared/Application';
-import { Icon } from '@/app/shared/_components/Icon'
-import Link from 'next/link'
 import style from './Header.module.css'
+import { Application, applications } from '@/app/shared/Application'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { Icon } from '@/app/shared/_components/Icon'
 
 function startWithIgnoreCase(path: string, app: Application) {
-  const split = app.link.split('/'),
-   prefix = `/${  split[1]}`
+  const split = app.link.split('/')
+  const prefix = '/' + split[1]
   return path.toLowerCase().startsWith(prefix.toLowerCase())
 }
 
 function isActiveLink(href: string, currentPath: string): boolean {
-  if (href === '/') {return currentPath === '/'}
-  const lower = href.toLowerCase(),
-   lowerPath = currentPath.toLowerCase()
-  return lowerPath === lower || lowerPath.startsWith(`${lower  }/`)
+  if (href === '/') return currentPath === '/'
+  const lower = href.toLowerCase()
+  const lowerPath = currentPath.toLowerCase()
+  return lowerPath === lower || lowerPath.startsWith(lower + '/')
 }
 
 export interface HeaderProps {
@@ -26,28 +26,28 @@ export interface HeaderProps {
 }
 
 export function Header({ accessibleApplications, hasSession, path }: HeaderProps) {
-  const pathname = usePathname(),
-   effectivePath = path ?? pathname,
-   isStartPage = effectivePath === '/',
-   currentApplication = applications
+  const pathname = usePathname()
+  const effectivePath = path ?? pathname
+  const isStartPage = effectivePath === '/'
+  const currentApplication = applications
     .filter(app => accessibleApplications.includes(app.key))
-    .find(app => startWithIgnoreCase(effectivePath, app)),
-   showPortalLink = currentApplication !== undefined && accessibleApplications.length > 1
+    .find(app => startWithIgnoreCase(effectivePath, app))
+  const showPortalLink = currentApplication !== undefined && accessibleApplications.length > 1
 
   function linkClass(href: string, isMobile: boolean) {
     return [style.link, isMobile ? style.mobileLink : '', isActiveLink(href, effectivePath) ? style.activeLink : ''].join(' ')
   }
 
   function appLinkClass(href: string) {
-    return style.appLink + (isActiveLink(href, effectivePath) ? ` ${  style.activeAppLink}` : '')
+    return style.appLink + (isActiveLink(href, effectivePath) ? ' ' + style.activeAppLink : '')
   }
 
   function tabLinkClass(href: string) {
-    return style.tabLink + (isActiveLink(href, effectivePath) ? ` ${  style.activeTabLink}` : '')
+    return style.tabLink + (isActiveLink(href, effectivePath) ? ' ' + style.activeTabLink : '')
   }
 
   function buttonClass(href: string) {
-    return style.button + (isActiveLink(href, effectivePath) ? ` ${  style.activeButton}` : '')
+    return style.button + (isActiveLink(href, effectivePath) ? ' ' + style.activeButton : '')
   }
 
   return (
@@ -62,8 +62,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                     .filter(app => accessibleApplications.includes(app.key))
                     .map(app => (
                       <Link key={app.key} href={app.link} className={appLinkClass(app.link)}>
-                        {/* oxlint-disable-next-line typescript/no-unsafe-type-assertion */}
-                        <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ height: '1rem', width: '1rem' }} />
+                        <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ width: '1rem', height: '1rem' }} />
                         <span>{app.name}</span>
                       </Link>
                     ))}
@@ -72,7 +71,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                 {hasSession && (
                   <>
                     <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', false)}>Logout</a>
-                    <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', true)}><Icon style={{ height: '1.5rem', width: '1.5rem' }} name="logout" /></a>
+                    <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></a>
                   </>
                 )}
               </div>
@@ -81,8 +80,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                   .filter(app => accessibleApplications.includes(app.key))
                   .map(app => (
                     <Link key={app.key} href={app.link} className={tabLinkClass(app.link)}>
-                      {/* oxlint-disable-next-line typescript/no-unsafe-type-assertion */}
-                      <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ height: '1.1rem', width: '1.1rem' }} />
+                      <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ width: '1.1rem', height: '1.1rem' }} />
                       <span>{app.name}</span>
                     </Link>
                   ))}
@@ -102,13 +100,13 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                 {showPortalLink && (
                   <>
                     <Link href="/" className={linkClass('/', false)}>All Applications</Link>
-                    <Link href="/" className={linkClass('/', true)}><Icon style={{ height: '1.5rem', width: '1.5rem' }} name="home" /></Link>
+                    <Link href="/" className={linkClass('/', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="home" /></Link>
                   </>
                 )}
                 {hasSession && (
                   <>
                     <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', false)}>Logout</a>
-                    <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', true)}><Icon style={{ height: '1.5rem', width: '1.5rem' }} name="logout" /></a>
+                    <a href="/shared/auth/logout" className={linkClass('/shared/auth/logout', true)}><Icon style={{ width: '1.5rem', height: '1.5rem' }} name="logout" /></a>
                   </>
                 )}
               </div>

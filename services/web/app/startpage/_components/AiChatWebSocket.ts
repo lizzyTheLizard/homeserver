@@ -3,8 +3,8 @@
 import type { ChatState } from '@/app/shared/_components/chat/AiChatState'
 export type { ChatState } from '@/app/shared/_components/chat/AiChatState'
 
-const INTENTIONAL_CLOSE = 4100,
- STALL_TIMEOUT_MS = 15000
+const INTENTIONAL_CLOSE = 4100
+const STALL_TIMEOUT_MS = 15000
 export const MAX_RECONNECT_ATTEMPTS = 10
 
 export class AiChatWebSocket {
@@ -16,17 +16,17 @@ export class AiChatWebSocket {
   #retryAttempt = 0
   #lastSentMessage: string | undefined
 
-  onNewMessage: (message: string) => void = () => { /* Empty */ }
-  onNewActions: (actions: string[]) => void = () => { /* Empty */ }
-  onStateChange: (state: ChatState) => void = () => { /* Empty */ }
-  onIncomingMessageChange: (message: string) => void = () => { /* Empty */ }
+  onNewMessage: (message: string) => void = () => { /* empty */ }
+  onNewActions: (actions: string[]) => void = () => { /* empty */ }
+  onStateChange: (state: ChatState) => void = () => { /* empty */ }
+  onIncomingMessageChange: (message: string) => void = () => { /* empty */ }
 
   constructor(private readonly initialContext: { location: { lat: number, lon: number } }) {
   }
 
   public connect() {
     console.log('Connecting WebSocket')
-    if (this.#ws) {throw new Error('WebSocket already connected')}
+    if (this.#ws) throw new Error('WebSocket already connected')
     this.onStateChange({ type: 'connecting' })
     this.#ws = new WebSocket(getWebSocketUrl())
     this.#ws.onopen = () => { this.handleWebSocketOpen() }
@@ -37,31 +37,27 @@ export class AiChatWebSocket {
 
   private handleWebSocketOpen() {
     if (this.#connectionId) {
-      // This is a reconnection, so we need to tell the server that we are reconnecting
+      // this is a reconnection, so we need to tell the server that we are reconnecting
       this.#ws?.send(JSON.stringify({ type: 'reconnect', uuid: this.#connectionId }))
       return
     }
-    const {initialContext} = this
-    this.#ws?.send(JSON.stringify({ initialContext, type: 'initialize' }))
+    const initialContext = this.initialContext
+    this.#ws?.send(JSON.stringify({ type: 'initialize', initialContext }))
   }
 
   private handleMessage(event: MessageEvent) {
     try {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const data = JSON.parse(event.data as string) as IncommingMessage
-      if (data.type === 'initialized' && data.uuid) {this.onServerInitialized(data.uuid)}
-      else if (data.type === 'reconnected') {this.onReconnected()}
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-      else if (data.type === 'error') {this.onError('Got error message from server', new Error(event.data as string))}
-      else if (data.type === 'stream_response') {this.onStreamResponse(data.chunk ?? '')}
-      else if (data.type === 'tool_call') {this.onToolCall()}
-      else if (data.type === 'got_actions') {this.onGotActions(data.actions ?? [])}
-      else if (data.type === 'finished_response') {this.onFinishedResponse()}
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-      else {this.onError('Got an invalid message from server', new Error(event.data as string))}
+      if (data.type === 'initialized' && data.uuid) this.onServerInitialized(data.uuid)
+      else if (data.type === 'reconnected') this.onReconnected()
+      else if (data.type === 'error') this.onError('Got error message from server', new Error(event.data as string))
+      else if (data.type === 'stream_response') this.onStreamResponse(data.chunk ?? '')
+      else if (data.type === 'tool_call') this.onToolCall()
+      else if (data.type === 'got_actions') this.onGotActions(data.actions ?? [])
+      else if (data.type === 'finished_response') this.onFinishedResponse()
+      else this.onError('Got an invalid message from server', new Error(event.data as string))
     }
     catch (error: unknown) {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       this.onError(`Failed to parse server message`, error instanceof Error ? error : new Error(error as string))
     }
   }
@@ -86,14 +82,14 @@ export class AiChatWebSocket {
   private onStreamResponse(chunk: string) {
     this.#messageBuffer += chunk
     this.onIncomingMessageChange(this.#messageBuffer)
-    this.onStateChange({ stalled: false, type: 'waiting-for-response' })
+    this.onStateChange({ type: 'waiting-for-response', stalled: false })
     this.clearStalledTimer(true)
   }
 
   private onToolCall() {
     this.#messageBuffer = ''
     this.onIncomingMessageChange(this.#messageBuffer)
-    this.onStateChange({ stalled: false, type: 'waiting-for-response' })
+    this.onStateChange({ type: 'waiting-for-response', stalled: false })
     this.clearStalledTimer(true)
   }
 
@@ -106,7 +102,7 @@ export class AiChatWebSocket {
     this.#messageBuffer = ''
     this.onIncomingMessageChange(this.#messageBuffer)
     this.onStateChange({ type: 'ready' })
-    console.warn(`Web socket error ${  message}`, error)
+    console.warn('Web socket error ' + message, error)
     this.onNewMessage(message)
   }
 
@@ -142,18 +138,18 @@ export class AiChatWebSocket {
     }
     if (this.#retryAttempt >= MAX_RECONNECT_ATTEMPTS) {
       console.warn('WebSocket closed unexpectedly, retries exhausted', event.code, event.reason)
-      this.onStateChange({ maxAttempts: MAX_RECONNECT_ATTEMPTS, type: 'automatic-reconnecting-exhausted' })
+      this.onStateChange({ type: 'automatic-reconnecting-exhausted', maxAttempts: MAX_RECONNECT_ATTEMPTS })
       return
     }
     const nextAttempt = this.#retryAttempt + 1
-    let inSeconds = 2 ** nextAttempt
+    let inSeconds = Math.pow(2, nextAttempt)
     console.warn(`WebSocket closed unexpectedly, attempt retry ${nextAttempt.toString()} in ${inSeconds.toString()} seconds`, event.code, event.reason)
-    this.onStateChange({ inSeconds, maxAttempts: MAX_RECONNECT_ATTEMPTS, nextAttempt, type: 'wait-for-reconnecting' })
+    this.onStateChange({ type: 'wait-for-reconnecting', nextAttempt, maxAttempts: MAX_RECONNECT_ATTEMPTS, inSeconds })
     this.#reconnectionInterval = setInterval(() => {
       inSeconds--
       console.log(`Attempt retry ${nextAttempt.toString()} in ${inSeconds.toString()} seconds`)
-      this.onStateChange({ inSeconds, maxAttempts: MAX_RECONNECT_ATTEMPTS, nextAttempt, type: 'wait-for-reconnecting' })
-      if (inSeconds > 0) {return}
+      this.onStateChange({ type: 'wait-for-reconnecting', nextAttempt, maxAttempts: MAX_RECONNECT_ATTEMPTS, inSeconds })
+      if (inSeconds > 0) return
       this.retry(nextAttempt)
     }, 1000)
   }
@@ -167,53 +163,53 @@ export class AiChatWebSocket {
 
   public sendMessage(message: string) {
     this.#lastSentMessage = message
-    this.onStateChange({ stalled: false, type: 'waiting-for-response' })
+    this.onStateChange({ type: 'waiting-for-response', stalled: false })
     this.clearStalledTimer(true)
-    this.#ws?.send(JSON.stringify({ message, type: 'message' }))
+    this.#ws?.send(JSON.stringify({ type: 'message', message }))
   }
 
   public terminate() {
     console.log('Terminating WebSocket')
-    if (!this.#ws) {throw new Error('WebSocket not connected')}
+    if (!this.#ws) throw new Error('WebSocket not connected')
     this.#ws.close(INTENTIONAL_CLOSE)
     this.#ws = undefined
     this.#retryAttempt = 0
     this.clearStalledTimer()
     this.clearReconnectionInterval()
-    this.onError = () => { /* Empty */ }
-    this.onNewMessage = () => { /* Empty */ }
-    this.onNewActions = () => { /* Empty */ }
-    this.onStateChange = () => { /* Empty */ }
-    this.onIncomingMessageChange = () => { /* Empty */ }
+    this.onError = () => { /* empty */ }
+    this.onNewMessage = () => { /* empty */ }
+    this.onNewActions = () => { /* empty */ }
+    this.onStateChange = () => { /* empty */ }
+    this.onIncomingMessageChange = () => { /* empty */ }
     console.log('WebSocket terminated')
   }
 
   public forceReconnect() {
     this.clearReconnectionInterval()
     const nextAttempt = this.#retryAttempt + 1
-    console.log(`Forcing reconnect ${  nextAttempt.toString()}`)
+    console.log('Forcing reconnect ' + (nextAttempt.toString()))
     this.retry(nextAttempt)
   }
 
   private clearStalledTimer(restart = false) {
-    if (this.#stallTimer) {clearTimeout(this.#stallTimer)}
+    if (this.#stallTimer) clearTimeout(this.#stallTimer)
     this.#stallTimer = undefined
-    if (!restart) {return}
+    if (!restart) return
     this.#stallTimer = setTimeout(() => {
-      this.onStateChange({ stalled: true, type: 'waiting-for-response' })
+      this.onStateChange({ type: 'waiting-for-response', stalled: true })
     }, STALL_TIMEOUT_MS)
   }
 
   private clearReconnectionInterval() {
-    if (this.#reconnectionInterval) {clearInterval(this.#reconnectionInterval)}
+    if (this.#reconnectionInterval) clearInterval(this.#reconnectionInterval)
     this.#reconnectionInterval = undefined
   }
 }
 
 function getWebSocketUrl(): string {
   const configured = process.env.NEXT_PUBLIC_ASSISTANT_WEBSOCKET_URL
-  if (configured) {return configured}
-  if (typeof window === 'undefined') {return ''}
+  if (configured) return configured
+  if (typeof window === 'undefined') return ''
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${protocol}//${window.location.host}/ws/assistant`
 }

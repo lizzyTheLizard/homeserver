@@ -1,12 +1,11 @@
-const FALLBACK_LAT = 46.948,
- FALLBACK_LON = 7.4474,
- LOCAL_STORAGE_KEY = 'geolocation'
+const FALLBACK_LAT = 46.948
+const FALLBACK_LON = 7.4474
+const LOCAL_STORAGE_KEY = 'geolocation'
 
 function getStoredLocation(): { lon: number, lat: number } {
   try {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (stored) {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const parsed = JSON.parse(stored) as { lon: number, lat: number }
       if (typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
         return parsed
@@ -27,7 +26,7 @@ function updateLocationInBackground() {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(pos))
       },
       (error) => { console.warn('Geolocation update failed:', error) },
-      { enableHighAccuracy: false, maximumAge: 3600000, timeout: 5000 },
+      { timeout: 5000, enableHighAccuracy: false, maximumAge: 3600000 },
     )
   }
   catch (error) {

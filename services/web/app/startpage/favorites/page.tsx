@@ -1,7 +1,7 @@
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { FavoritesContent } from './_components/FavoritesContent'
-import { loadFavorites } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { loadFavorites } from './server'
+import { FavoritesContent } from './_components/FavoritesContent'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'StartPage - Favorites',

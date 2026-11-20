@@ -31,8 +31,8 @@ describe('parseCookieHeader', () => {
 
 describe('getSession', () => {
   test('returns empty session for unsigned cookie', async () => {
-    const cookies = parseCookieHeader('homeserver-session=invalid'),
-     session = await getSession(cookies)
+    const cookies = parseCookieHeader('homeserver-session=invalid')
+    const session = await getSession(cookies)
     expect(session.userInfo).toBeUndefined()
   })
 })

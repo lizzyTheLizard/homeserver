@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import type { UserSession } from '@/app/shared/auth/session'
-import { cookies } from 'next/headers'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { loadMessages } from './server'
+import type { UserSession } from '@/app/shared/auth/session'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { cookies } from 'next/headers'
 
 vi.mock('@/app/shared/auth/auth', async () => {
   const actual = await vi.importActual('@/app/shared/auth/auth')
@@ -16,7 +16,7 @@ vi.mock('next/headers', () => ({ cookies: vi.fn() }))
 
 const { mockWarn } = vi.hoisted(() => ({ mockWarn: vi.fn<(message: string) => void>() }))
 
-vi.mock('@/app/shared/logger', () => ({ logger: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: mockWarn } }))
+vi.mock('@/app/shared/logger', () => ({ logger: { warn: mockWarn, error: vi.fn(), info: vi.fn(), debug: vi.fn() } }))
 
 type ReadonlyRequestCookies = Awaited<ReturnType<typeof cookies>>
 
@@ -29,7 +29,7 @@ afterEach(() => {
 
 describe('loadMessages', () => {
   test('logs the assistant URL when the assistant is unreachable', async ({ task }) => {
-    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
     const cause = new Error('connect ECONNREFUSED 127.0.0.1:8500')

@@ -1,20 +1,19 @@
-// oxlint-disable no-magic-numbers
-import express, { type NextFunction, type Request, type Response } from 'express'
-import { Supervisor } from './supervisor'
+import express from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import { config } from './config'
-import { handleInternalWebhook } from './internalWebhook'
 import { logger } from './logger'
+import { handleInternalWebhook } from './internalWebhook'
+import { Supervisor } from './supervisor'
 
 type SessionRequest = Request<{ userId: string }>
 
 main()
 
 // Sets up and starts the REST API the Next.js app and the assistant call.
-// oxlint-disable-next-line max-statements
 function main(): void {
   // One supervisor per user, created lazily on first use.
-  const supervisors = new Map<string, Supervisor>(),
-   app = express()
+  const supervisors = new Map<string, Supervisor>()
+  const app = express()
 
   function supervisorFor(userId: string): Supervisor {
     let supervisor = supervisors.get(userId)
@@ -27,8 +26,8 @@ function main(): void {
 
   app.use(requestTracing)
   // The wacli webhook needs the raw body to verify the HMAC signature, so it is
-  // Mounted before the JSON parser that the rest of the API relies on.
-  app.post('/sessions/:userId/webhook', express.raw({ limit: '1mb', type: '*/*' }), async (req: SessionRequest, res) => {
+  // mounted before the JSON parser that the rest of the API relies on.
+  app.post('/sessions/:userId/webhook', express.raw({ type: '*/*', limit: '1mb' }), async (req: SessionRequest, res) => {
     const supervisor = supervisors.get(req.params.userId)
     if (!supervisor) {
       res.status(404).json({ error: 'webhook: no session' })
@@ -51,7 +50,6 @@ function main(): void {
   })
 
   app.post('/sessions/:userId/send-message', async (req: SessionRequest, res) => {
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const body = (req.body ?? {}) as Record<string, unknown>
     if (typeof body.to !== 'string' || !body.to || typeof body.text !== 'string' || !body.text) {
       res.status(400).json({ error: 'send_message: missing \'to\' or \'text\'' })
@@ -62,7 +60,6 @@ function main(): void {
   })
 
   app.post('/sessions/:userId/archive-chat', async (req: SessionRequest, res) => {
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const body = (req.body ?? {}) as Record<string, unknown>
     if (typeof body.id !== 'string' || !body.id) {
       res.status(400).json({ error: 'archive_chat: missing \'id\'' })
@@ -79,7 +76,7 @@ function main(): void {
 
   app.post('/sessions/:userId/disconnect', async (req: SessionRequest, res) => {
     const existing = supervisors.get(req.params.userId)
-    if (existing) {await existing.disconnect()}
+    if (existing) await existing.disconnect()
     res.status(204).end()
   })
 
@@ -89,7 +86,7 @@ function main(): void {
   })
 
   app.get('/sessions/:userId/messages', async (req: SessionRequest, res) => {
-    const {chatId} = req.query
+    const chatId = req.query.chatId
     if (typeof chatId !== 'string' || !chatId) {
       res.status(400).json({ error: 'missing chatId query parameter' })
       return
@@ -127,7 +124,7 @@ function requestTracing(req: Request, res: Response, next: NextFunction): void {
   next()
 }
 
-// oxlint-disable-next-line typescript/no-unused-vars max-params
+// oxlint-disable-next-line typescript/no-unused-vars
 function errorHandler(err: Error, _req: SessionRequest, res: Response, _next: NextFunction) {
   logger.warn('Error while serving request', err)
   res.status(500).json({ message: err.message })

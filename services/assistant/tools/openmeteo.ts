@@ -1,7 +1,7 @@
 import { logger } from '../logger'
 
-const CACHE_TTL_MS = 10 * 60 * 1000,
- cache = new Map<string, { data: unknown, timestamp: number }>()
+const CACHE_TTL_MS = 10 * 60 * 1000
+const cache = new Map<string, { data: unknown, timestamp: number }>()
 
 export async function openmeteoRequest(lat: number, lon: number, params: Record<string, string>): Promise<{ hourly?: unknown, daily?: unknown }> {
   const urlParams = new URLSearchParams()
@@ -12,7 +12,6 @@ export async function openmeteoRequest(lat: number, lon: number, params: Record<
     urlParams.append(key, value)
   }
   const url = `https://api.open-meteo.com/v1/forecast?${urlParams}`
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return await cachedFetch(url) as { hourly?: unknown, daily?: unknown }
 }
 
@@ -25,9 +24,9 @@ async function cachedFetch(url: string): Promise<unknown> {
     }
   }
   logger.silly(`Fetch data from ${url}`)
-  const start = Date.now(),
-   response = await fetch(url)
-  if (!response.ok) {throw new Error(`Failed to fetch: ${response.status.toString()} ${response.statusText}`)}
+  const start = Date.now()
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Failed to fetch: ${response.status.toString()} ${response.statusText}`)
   const data: unknown = await response.json()
   logger.silly(`Fetched from ${url} data in ${(Date.now() - start).toString()}ms`)
   cache.set(url, { data, timestamp: Date.now() })
@@ -35,21 +34,20 @@ async function cachedFetch(url: string): Promise<unknown> {
 }
 
 export function parseOpenMeteoData(hourlyOrDaily: unknown): Record<string, Record<string, unknown>> {
-  if (typeof hourlyOrDaily !== 'object' || hourlyOrDaily === null) {throw new Error('Invalid Open-Meteo data format')}
-  if (!('time' in hourlyOrDaily && Array.isArray(hourlyOrDaily.time))) {throw new Error('Invalid Open-Meteo data format: missing time array')}
+  if (typeof hourlyOrDaily !== 'object' || hourlyOrDaily === null) throw new Error('Invalid Open-Meteo data format')
+  if (!('time' in hourlyOrDaily && Array.isArray(hourlyOrDaily.time))) throw new Error('Invalid Open-Meteo data format: missing time array')
   const result: Record<string, Record<string, unknown>> = {}
   hourlyOrDaily.time.forEach((time: unknown, index: number) => {
-    if (typeof time !== 'string') {throw new Error('Invalid Open-Meteo data format: time should be a string')}
+    if (typeof time !== 'string') throw new Error('Invalid Open-Meteo data format: time should be a string')
     const timeResult: Record<string, unknown> = { }
     for (const [key, value] of Object.entries(hourlyOrDaily)) {
-      if (key === 'time') {continue}
-      if (!Array.isArray(value)) {throw new Error(`Invalid Open-Meteo data format for key ${key}`)}
-      if (key === 'temperature_2m') {timeResult.temperature = value[index]}
+      if (key === 'time') continue
+      if (!Array.isArray(value)) throw new Error(`Invalid Open-Meteo data format for key ${key}`)
+      if (key === 'temperature_2m') timeResult.temperature = value[index]
       else if (key === 'weather_code') {
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         timeResult.weather_condition = getWmoCondition(value[index] as number)
       }
-      else {timeResult[key] = value[index]}
+      else timeResult[key] = value[index]
     }
     result[time] = timeResult
   })
@@ -86,6 +84,6 @@ function getWmoCondition(code: number): string {
     case 95: return 'Slight or moderate thunderstorm'
     case 96: return 'Thunderstorm with slight hail'
     case 99: return 'Thunderstorm with heavy hail'
-    default: throw new Error(`Unknown WMO code: ${  String(code)}`)
+    default: throw new Error('Unknown WMO code: ' + String(code))
   }
 }

@@ -1,8 +1,8 @@
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Card } from '@/app/shared/_components/Card'
-import type { Project } from '../_data/Project'
 import { loadProjects } from './server'
+import { Project } from '../_data/Project'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Cash - Projects',

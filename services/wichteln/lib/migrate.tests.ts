@@ -1,10 +1,10 @@
-import { afterEach, describe, expect, test } from 'vitest'
 import { createHash, randomUUID } from 'crypto'
-import { PGlite } from '@electric-sql/pglite'
-import type { Queryable } from './db'
-import { applyMigrations } from './migrate'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { PGlite } from '@electric-sql/pglite'
+import { afterEach, describe, expect, test } from 'vitest'
+import type { Queryable } from './db'
+import { applyMigrations } from './migrate'
 import { splitSql } from './splitSql'
 
 function pgliteQueryable(db: PGlite): Queryable {
@@ -32,8 +32,8 @@ describe('database migrations', () => {
 
     const tables = await queryable.query<{ table_name: string }>(
       'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' ORDER BY table_name',
-    ),
-     names = tables.map(row => row.table_name)
+    )
+    const names = tables.map(row => row.table_name)
     expect(names).toEqual(
       expect.arrayContaining(['wichteln_migrations', 'wichteln_groups', 'wichteln_accounts', 'wichteln_participants']),
     )
@@ -68,8 +68,8 @@ describe('database migrations', () => {
     const queryable = pgliteQueryable(db)
     await applyMigrations(queryable)
 
-    const groupId = await insertGroup(queryable, 'token'),
-     accountId = await insertAccount(queryable, 'Anna')
+    const groupId = await insertGroup(queryable, 'token')
+    const accountId = await insertAccount(queryable, 'Anna')
     await insertParticipant(queryable, groupId, accountId)
 
     await expect(insertParticipant(queryable, groupId, accountId)).rejects.toThrow()
@@ -81,8 +81,8 @@ describe('database migrations', () => {
     const queryable = pgliteQueryable(db)
     await applyMigrations(queryable)
 
-    const groupId = await insertGroup(queryable, 'token'),
-     accountId = await insertAccount(queryable, 'Anna')
+    const groupId = await insertGroup(queryable, 'token')
+    const accountId = await insertAccount(queryable, 'Anna')
 
     await expect(queryable.query(
       'INSERT INTO wichteln_participants (id, group_id, account_id, wish_title) VALUES ($1, $2, $3, $4)',

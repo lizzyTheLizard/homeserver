@@ -1,10 +1,10 @@
-import { loadBuildInfo, loadConfigInfo, loadEvents, loadMetricsInfo, loadRunInfo } from './server'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { DashboardCard } from '../_components/DashboardCard'
-import { EventsCard } from './_components/EventsCard'
-import { config } from '@/app/shared/config'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { loadBuildInfo, loadConfigInfo, loadEvents, loadMetricsInfo, loadRunInfo } from './server'
+import { EventsCard } from './_components/EventsCard'
 import styles from './Dashboard.module.css'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { config } from '@/app/shared/config'
 
 export const metadata = {
   title: 'Admin - Dashboard',

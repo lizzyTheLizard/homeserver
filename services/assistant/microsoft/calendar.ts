@@ -1,6 +1,6 @@
-import { type DeltaResponse, graphApiRequest, toGraphDateTime, toInstant } from './graph'
-import { Mutex } from 'async-mutex'
 import { Temporal } from '@js-temporal/polyfill'
+import { Mutex } from 'async-mutex'
+import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant } from './graph'
 import type { UserSession } from '../session'
 import { logger } from '../logger'
 
@@ -65,21 +65,21 @@ export async function getMicrosoftCalendarWorker(user: UserSession): Promise<Mic
 declare global {
   var calendarWorkers: Map<string, MicrosoftCalendarWorker> | undefined
 }
-globalThis.calendarWorkers = globalThis.calendarWorkers ?? new Map<string, MicrosoftCalendarWorker>()
+globalThis.calendarWorkers ??= new Map<string, MicrosoftCalendarWorker>()
 
-const facadeMutex = new Mutex(),
- inactivityTimeoutMs = 5 * 60 * 1000,
- deltaPollIntervalMs = 15 * 1000,
- eventWindowMonths = 2
+const facadeMutex = new Mutex()
+const inactivityTimeoutMs = 5 * 60 * 1000
+const deltaPollIntervalMs = 15 * 1000
+const eventWindowMonths = 2
 
 function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWorker {
   const userId = user.email
   let calendars: MicrosoftCalendar[] = []
   const events = new Map<string, MicrosoftCalendarEvent>()
-  let deltaLink: string | undefined,
-   interval: NodeJS.Timeout | undefined,
-   timeout: NodeJS.Timeout | undefined,
-   status: 'connecting' | 'connected' | 'error' = 'connecting'
+  let deltaLink: string | undefined
+  let interval: NodeJS.Timeout | undefined
+  let timeout: NodeJS.Timeout | undefined
+  let status: 'connecting' | 'connected' | 'error' = 'connecting'
 
   function close(): void {
     if (interval) {
@@ -95,7 +95,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   }
 
   function touch(): void {
-    if (timeout) {clearTimeout(timeout)}
+    if (timeout) clearTimeout(timeout)
     timeout = setTimeout(close, inactivityTimeoutMs)
   }
 
@@ -104,10 +104,10 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   function getStatus(): string { return status }
 
   function getAllEvents(startDateTime?: Temporal.Instant, endDateTime?: Temporal.Instant): MicrosoftCalendarEvent[] {
-    const now = Temporal.Now.instant(),
-     windowEnd = now.toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant(),
-     start = startDateTime ?? now,
-     end = endDateTime ?? windowEnd
+    const now = Temporal.Now.instant()
+    const windowEnd = now.toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
+    const start = startDateTime ?? now
+    const end = endDateTime ?? windowEnd
 
     if (Temporal.Instant.compare(end, windowEnd) > 0) {
       throw new Error(`Cannot retrieve events beyond the next ${eventWindowMonths.toString()} months. Only events within this window are kept in memory.`)
@@ -119,19 +119,19 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   }
 
   function getEventCount(): EventCounts {
-    const now = Temporal.Now.instant(),
-     todayStart = now.toZonedDateTimeISO('UTC').with({ hour: 0, millisecond: 0, minute: 0, second: 0 }).toInstant(),
-     todayEnd = todayStart.add({ hours: 24 }),
-     weekEnd = todayStart.add({ hours: 7 * 24 })
+    const now = Temporal.Now.instant()
+    const todayStart = now.toZonedDateTimeISO('UTC').with({ hour: 0, minute: 0, second: 0, millisecond: 0 }).toInstant()
+    const todayEnd = todayStart.add({ hours: 24 })
+    const weekEnd = todayStart.add({ hours: 7 * 24 })
 
-    let eventsToday = 0,
-     eventsThisWeek = 0
+    let eventsToday = 0
+    let eventsThisWeek = 0
     for (const event of events.values()) {
-      if (event.isCancelled) {continue}
-      if (Temporal.Instant.compare(event.start, todayStart) >= 0 && Temporal.Instant.compare(event.start, todayEnd) < 0) {eventsToday++}
-      else if (Temporal.Instant.compare(event.start, todayEnd) >= 0 && Temporal.Instant.compare(event.start, weekEnd) < 0) {eventsThisWeek++}
+      if (event.isCancelled) continue
+      if (Temporal.Instant.compare(event.start, todayStart) >= 0 && Temporal.Instant.compare(event.start, todayEnd) < 0) eventsToday++
+      else if (Temporal.Instant.compare(event.start, todayEnd) >= 0 && Temporal.Instant.compare(event.start, weekEnd) < 0) eventsThisWeek++
     }
-    return { eventsThisWeek, eventsToday }
+    return { eventsToday, eventsThisWeek }
   }
 
   async function createEvent(
@@ -145,18 +145,17 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   ): Promise<MicrosoftCalendarEvent> {
     try {
       const eventBody: Record<string, unknown> = {
-        end: toGraphDateTime(end),
-        start: toGraphDateTime(start),
         subject,
+        start: toGraphDateTime(start),
+        end: toGraphDateTime(end),
       }
-      if (body) {eventBody.body = { content: body, contentType: 'text' }}
-      if (location) {eventBody.location = { displayName: location }}
-      const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async (request) => 
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-        await request.post(eventBody) as RawCalendarEvent
-      ),
-       event = convertCalendarEvent(response),
-       windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
+      if (body) eventBody.body = { contentType: 'text', content: body }
+      if (location) eventBody.location = { displayName: location }
+      const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async (request) => {
+        return await request.post(eventBody) as RawCalendarEvent
+      })
+      const event = convertCalendarEvent(response)
+      const windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
       if (Temporal.Instant.compare(event.start, windowEnd) <= 0) {
         events.set(event.id, event)
       }
@@ -170,45 +169,42 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
 
   async function doInitialFetch(): Promise<void> {
     calendars = await graphApiRequest(user, '/me/calendars', async (request) => {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const response = await request.get() as { value: MicrosoftCalendar[] }
       return response.value
     })
     events.clear()
     deltaLink = undefined
 
-    const now = Temporal.Now.instant(),
-     windowEnd = now.toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
+    const now = Temporal.Now.instant()
+    const windowEnd = now.toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
 
-    await syncCalendarEvents('/me/calendarView/delta', { endDateTime: windowEnd.toString(), startDateTime: now.toString() })
+    await syncCalendarEvents('/me/calendarView/delta', { startDateTime: now.toString(), endDateTime: windowEnd.toString() })
 
-    const calendarCount = calendars.length,
-     eventCount = events.size
+    const calendarCount = calendars.length
+    const eventCount = events.size
     logger.debug(`[MicrosoftCalendarWorker] Initial fetch complete for user ${userId}: ${String(calendarCount)} calendars, ${String(eventCount)} events`)
   }
 
   async function doDeltaPoll(): Promise<void> {
-    if (!deltaLink) {throw new Error('Delta link is not set. Initial fetch must be completed before delta polling can occur.')}
+    if (!deltaLink) throw new Error('Delta link is not set. Initial fetch must be completed before delta polling can occur.')
     await syncCalendarEvents(deltaLink)
     logger.debug(`[MicrosoftCalendarWorker] Delta poll complete for user ${userId}: ${String(events.size)} events`)
   }
 
   async function syncCalendarEvents(url: string, queryParams?: Record<string, string>): Promise<void> {
-    let currentUrl: string | undefined = url,
-     queryOnFirstCall = queryParams
+    let currentUrl: string | undefined = url
+    let queryOnFirstCall = queryParams
 
     while (currentUrl) {
       const deltaResult: DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }> = await graphApiRequest(user, currentUrl, async (request) => {
         if (queryOnFirstCall) {
           const params = queryOnFirstCall
           queryOnFirstCall = undefined
-          // oxlint-disable-next-line typescript/no-unsafe-type-assertion
           return await request
             .query(params)
             .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')
             .get() as DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }>
         }
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         return await request.get() as DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }>
       })
 
@@ -217,8 +213,8 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
           events.delete(item.id)
         }
         else {
-          const event = convertCalendarEvent(item),
-           windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
+          const event = convertCalendarEvent(item)
+          const windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
           if (Temporal.Instant.compare(event.start, windowEnd) <= 0) {
             events.set(event.id, event)
           }
@@ -259,7 +255,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { createEvent, getAllEvents, getCalendars, getEventCount, getStatus, touch }
+  return { getCalendars, getAllEvents, getEventCount, getStatus, createEvent, touch }
 }
 
 interface RawCalendarEvent {
@@ -283,21 +279,21 @@ interface RawCalendarEvent {
 
 function convertCalendarEvent(raw: RawCalendarEvent): MicrosoftCalendarEvent {
   return {
-    body: raw.body ?? { content: '', contentType: 'text' },
-    bodyPreview: raw.bodyPreview ?? '',
-    calendarName: raw.calendarName,
-    createdDateTime: raw.createdDateTime ? toInstant(raw.createdDateTime, '') : Temporal.Now.instant(),
-    end: toInstant(raw.end.dateTime, raw.end.timeZone),
     id: raw.id,
-    importance: raw.importance ?? 'normal',
+    subject: raw.subject ?? '',
+    bodyPreview: raw.bodyPreview ?? '',
+    body: raw.body ?? { contentType: 'text', content: '' },
+    start: toInstant(raw.start.dateTime, raw.start.timeZone),
+    end: toInstant(raw.end.dateTime, raw.end.timeZone),
+    location: raw.location ?? { displayName: '', uniqueIdType: '' },
     isAllDay: raw.isAllDay ?? false,
     isCancelled: raw.isCancelled ?? false,
-    lastModifiedDateTime: raw.lastModifiedDateTime ? toInstant(raw.lastModifiedDateTime, '') : Temporal.Now.instant(),
-    location: raw.location ?? { displayName: '', uniqueIdType: '' },
-    organizer: raw.organizer ?? { emailAddress: { address: '', name: '' } },
-    sensitivity: raw.sensitivity ?? 'normal',
     showAs: raw.showAs ?? 'free',
-    start: toInstant(raw.start.dateTime, raw.start.timeZone),
-    subject: raw.subject ?? '',
+    importance: raw.importance ?? 'normal',
+    sensitivity: raw.sensitivity ?? 'normal',
+    createdDateTime: raw.createdDateTime ? toInstant(raw.createdDateTime, '') : Temporal.Now.instant(),
+    lastModifiedDateTime: raw.lastModifiedDateTime ? toInstant(raw.lastModifiedDateTime, '') : Temporal.Now.instant(),
+    organizer: raw.organizer ?? { emailAddress: { name: '', address: '' } },
+    calendarName: raw.calendarName,
   }
 }

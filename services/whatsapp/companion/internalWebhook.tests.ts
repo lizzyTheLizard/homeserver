@@ -1,15 +1,16 @@
-import { type Mock, beforeEach, describe, expect, test, vi } from 'vitest'
-import type { Supervisor } from './supervisor'
 import { createHmac } from 'node:crypto'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Mock } from 'vitest'
 import { handleInternalWebhook } from './internalWebhook'
+import type { Supervisor } from './supervisor'
 
 const { mockWarn } = vi.hoisted(() => ({ mockWarn: vi.fn<(message: string, err?: unknown) => void>() }))
 
 vi.mock('./logger', () => ({ logger: { info: vi.fn(), warn: mockWarn } }))
 
-const secret = 'test-secret',
- chatId = '123@s.whatsapp.net',
- incomingBody = JSON.stringify({ Chat: chatId, FromMe: false })
+const secret = 'test-secret'
+const chatId = '123@s.whatsapp.net'
+const incomingBody = JSON.stringify({ Chat: chatId, FromMe: false })
 
 function sign(payload: string, signingSecret = secret): string {
   return `sha256=${createHmac('sha256', signingSecret).update(payload).digest('hex')}`
@@ -22,15 +23,15 @@ interface FakeSupervisor {
 }
 
 function makeSupervisor(): FakeSupervisor {
-  const isArchived = vi.fn().mockResolvedValue(true),
-   archiveChat = vi.fn().mockResolvedValue(undefined),
-   supervisor = {
-    archiveChat,
+  const isArchived = vi.fn().mockResolvedValue(true)
+  const archiveChat = vi.fn().mockResolvedValue(undefined)
+  const supervisor = {
+    userId: 'user@example.com',
     getWebhookSecret: () => secret,
     isArchived,
-    userId: 'user@example.com',
+    archiveChat,
   } as unknown as Supervisor
-  return { archiveChat, isArchived, supervisor }
+  return { supervisor, isArchived, archiveChat }
 }
 
 describe('handleInternalWebhook', () => {
@@ -48,8 +49,8 @@ describe('handleInternalWebhook', () => {
   })
 
   test('ignores a message the user sent themselves', async () => {
-    const { supervisor, isArchived, archiveChat } = makeSupervisor(),
-     outgoingBody = JSON.stringify({ Chat: chatId, FromMe: true })
+    const { supervisor, isArchived, archiveChat } = makeSupervisor()
+    const outgoingBody = JSON.stringify({ Chat: chatId, FromMe: true })
 
     await handleInternalWebhook(supervisor, outgoingBody, sign(outgoingBody))
 
@@ -68,8 +69,8 @@ describe('handleInternalWebhook', () => {
   })
 
   test('ignores a payload without a chat', async () => {
-    const { supervisor, isArchived, archiveChat } = makeSupervisor(),
-     payload = JSON.stringify({ FromMe: false })
+    const { supervisor, isArchived, archiveChat } = makeSupervisor()
+    const payload = JSON.stringify({ FromMe: false })
 
     await handleInternalWebhook(supervisor, payload, sign(payload))
 

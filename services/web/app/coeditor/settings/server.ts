@@ -1,14 +1,14 @@
 'use server'
 
-import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
-import { type Profile, type ProfileInput, createOrModifyProfile, findProfilesByOwner, removeProfile } from '../_data/Profile';
-import { type Template, type TemplateInput, createOrModifyTemplate, findTemplatesByOwner, removeTemplate } from '../_data/Template';
+import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../_data/Profile'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { logEvent } from '@/app/shared/_data/Event'
-import { logger } from '@/app/shared/logger'
 import { z } from 'zod'
+import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
+import { logger } from '@/app/shared/logger'
+import { logEvent } from '@/app/shared/_data/Event'
 
 export interface SettingsData {
   profiles: Profile[]
@@ -16,8 +16,8 @@ export interface SettingsData {
 }
 
 export async function loadSettings(): Promise<SettingsData> {
-  const user = await getAuthenticatedUserSession('coeditor'),
-   [templates, profiles] = await nontransactional(c => Promise.all([
+  const user = await getAuthenticatedUserSession('coeditor')
+  const [templates, profiles] = await nontransactional(c => Promise.all([
     findTemplatesByOwner(c, user.email),
     findProfilesByOwner(c, user.email),
   ]))
@@ -79,12 +79,12 @@ export async function saveTemplate(input: TemplateInput): ActionResponse<Templat
 
 const TemplateInputSchema = z.object({
   id: z.uuid(),
-  language: z.string().min(1),
   name: z.string().min(1),
+  language: z.string().min(1),
   text: z.string(),
-}),
+})
 
- ProfileInputSchema = z.object({
+const ProfileInputSchema = z.object({
   language: z.string().min(1),
   text: z.string().min(1),
 })

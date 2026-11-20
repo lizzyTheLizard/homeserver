@@ -1,11 +1,12 @@
-import { type Mock, beforeEach, describe, expect, test, vi } from 'vitest'
 import { PassThrough, Readable } from 'node:stream'
-import { type WacliEvent, attachEventParser, runWacli, spawnWacli } from './wacli'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Mock } from 'vitest'
+import { attachEventParser, runWacli, spawnWacli, type WacliEvent } from './wacli'
 
 const { mockDebug, mockWarn, mockSpawn } = vi.hoisted(() => ({
   mockDebug: vi.fn<(message: string) => void>(),
-  mockSpawn: vi.fn(),
   mockWarn: vi.fn<(message: string) => void>(),
+  mockSpawn: vi.fn(),
 }))
 
 vi.mock('./logger', () => ({ logger: { debug: mockDebug, warn: mockWarn } }))
@@ -18,15 +19,15 @@ describe('attachEventParser', () => {
 
   test('parses a warning event without logging it', async () => {
     const warning = {
+      event: 'warning',
       data: {
         code: 'app_state_lthash_mismatch',
         message: 'warning: app state regular_low hit an LTHash mismatch; requesting recovery snapshot',
         name: 'regular_low',
       },
-      event: 'warning',
       ts: 1791178646317,
-    },
-     events = await parseEvents([JSON.stringify(warning)])
+    }
+    const events = await parseEvents([JSON.stringify(warning)])
     expect(mockWarn).not.toHaveBeenCalled()
     expect(mockDebug).not.toHaveBeenCalled()
     expect(events).toEqual([warning])
@@ -46,11 +47,11 @@ describe('runWacli', () => {
   })
 
   test('runs concurrent commands for the same store in parallel', async () => {
-    const first = makeFakeChild(),
-     second = makeFakeChild()
+    const first = makeFakeChild()
+    const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
-    const firstRun = runWacli('/data/store-shared', ['chats', 'list'], true),
-     secondRun = runWacli('/data/store-shared', ['messages', 'list'], true)
+    const firstRun = runWacli('/data/store-shared', ['chats', 'list'], true)
+    const secondRun = runWacli('/data/store-shared', ['messages', 'list'], true)
     expect(mockSpawn).toHaveBeenCalledTimes(2)
     first.emit('close', 0)
     second.emit('close', 0)
@@ -58,8 +59,8 @@ describe('runWacli', () => {
   })
 
   test('accepts a command after a previous one succeeded', async () => {
-    const first = makeFakeChild(),
-     second = makeFakeChild()
+    const first = makeFakeChild()
+    const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
     const firstRun = runWacli('/data/store-success', ['chats', 'list'], true)
     first.emit('close', 0)
@@ -71,8 +72,8 @@ describe('runWacli', () => {
   })
 
   test('accepts a command after a previous one failed', async () => {
-    const first = makeFakeChild(),
-     second = makeFakeChild()
+    const first = makeFakeChild()
+    const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
     const firstRun = runWacli('/data/store-failure', ['chats', 'list'], true)
     first.emit('close', 1)
@@ -84,11 +85,11 @@ describe('runWacli', () => {
   })
 
   test('accepts concurrent commands', async () => {
-    const first = makeFakeChild(),
-     second = makeFakeChild()
+    const first = makeFakeChild()
+    const second = makeFakeChild()
     mockSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second)
-    const firstRun = runWacli('/data/store-one', ['chats', 'list'], true),
-     secondRun = runWacli('/data/store-two', ['chats', 'list'], true)
+    const firstRun = runWacli('/data/store-one', ['chats', 'list'], true)
+    const secondRun = runWacli('/data/store-two', ['chats', 'list'], true)
     expect(mockSpawn).toHaveBeenCalledTimes(2)
     first.emit('close', 0)
     second.emit('close', 0)
@@ -109,11 +110,11 @@ describe('spawnWacli', () => {
   })
 
   test('spawns in parallel with a running short command', async () => {
-    const short = makeFakeChild(),
-     long = makeFakeChild()
+    const short = makeFakeChild()
+    const long = makeFakeChild()
     mockSpawn.mockReturnValueOnce(short).mockReturnValueOnce(long)
-    const shortRun = runWacli('/data/store-parallel', ['chats', 'list'], true),
-     longRun = spawnWacli('/data/store-parallel', ['sync', '--follow'], () => undefined)
+    const shortRun = runWacli('/data/store-parallel', ['chats', 'list'], true)
+    const longRun = spawnWacli('/data/store-parallel', ['sync', '--follow'], () => undefined)
     expect(mockSpawn).toHaveBeenCalledTimes(2)
     expect(longRun).toBe(long)
     short.emit('close', 0)
@@ -122,8 +123,8 @@ describe('spawnWacli', () => {
 })
 
 async function parseEvents(lines: string[]): Promise<WacliEvent[]> {
-  const stream = Readable.from(lines.map(line => `${line  }\n`)),
-   events: WacliEvent[] = []
+  const stream = Readable.from(lines.map(line => line + '\n'))
+  const events: WacliEvent[] = []
   attachEventParser(stream, (event) => { events.push(event) })
   await new Promise<void>((resolve) => {
     stream.on('end', () => { resolve() })
@@ -140,18 +141,18 @@ interface FakeChild {
 }
 
 // Minimal ChildProcess stand-in: stdout/stderr are real streams and `emit`
-// Dispatches to the listeners runWacli registers through `on`.
+// dispatches to the listeners runWacli registers through `on`.
 function makeFakeChild(): FakeChild {
   const listeners = new Map<string, ((...args: unknown[]) => void)[]>()
   return {
-    emit(event: string, ...args: unknown[]): void {
-      for (const listener of listeners.get(event) ?? []) {listener(...args)}
-    },
+    stdout: new PassThrough(),
+    stderr: new PassThrough(),
     kill: vi.fn<() => boolean>(),
     on: vi.fn().mockImplementation((event: string, listener: (...args: unknown[]) => void) => {
       listeners.set(event, [...(listeners.get(event) ?? []), listener])
     }),
-    stderr: new PassThrough(),
-    stdout: new PassThrough(),
+    emit(event: string, ...args: unknown[]): void {
+      for (const listener of listeners.get(event) ?? []) listener(...args)
+    },
   }
 }

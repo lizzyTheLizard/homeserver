@@ -1,9 +1,9 @@
-import { loadAccountJournal, loadJournal } from './server'
-import { AccountJournal } from './_components/AccountJournal'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Journal } from './_components/Journal'
 import { fromUrlString } from '@/app/cash/_helper/Period'
+import { loadAccountJournal, loadJournal } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { AccountJournal } from './_components/AccountJournal'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import style from './_components/Journal.module.css'
 
 export const metadata = {
@@ -20,9 +20,9 @@ export interface JournalPageProps {
 
 export default async function Page({ params, searchParams }: JournalPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const period = fromUrlString((await params).period),
-     projectId = (await params).project_id,
-     {accountId} = (await searchParams)
+    const period = fromUrlString((await params).period)
+    const projectId = (await params).project_id
+    const accountId = (await searchParams).accountId
     if (accountId) {
       const journalData = await loadAccountJournal(period, projectId, accountId)
       return (

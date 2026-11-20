@@ -5,20 +5,20 @@ const APP_URL = process.env.NODE_ENV === 'production' ? 'https://www.gutschi.sit
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    background_color: '#ffffff',
-    description: 'Homeserver dashboard and applications',
-    display: 'standalone',
-    icons: [
-      { purpose: 'any', sizes: '192x192', src: '/icon-192.png', type: 'image/png' },
-      { purpose: 'maskable', sizes: '192x192', src: '/icon-192-maskable.png', type: 'image/png' },
-      { sizes: '512x512', src: '/icon-512.png', type: 'image/png' },
-    ],
-    id: APP_URL,
-    launch_handler: { client_mode: 'navigate-existing' },
     name: 'Gutschi.site',
+    description: 'Homeserver dashboard and applications',
+    id: APP_URL,
+    start_url: APP_URL + '/pwa.html',
+    display: 'standalone',
     orientation: 'portrait',
-    shortcuts: applications.map(a => ({ description: a.description, name: a.name, url: APP_URL + a.link })),
-    start_url: `${APP_URL  }/pwa.html`,
+    launch_handler: { client_mode: 'navigate-existing' },
     theme_color: '#0000dc',
+    background_color: '#ffffff',
+    icons: [
+      { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icon-192-maskable.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+      { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcuts: applications.map(a => ({ name: a.name, description: a.description, url: APP_URL + a.link })),
   }
 }

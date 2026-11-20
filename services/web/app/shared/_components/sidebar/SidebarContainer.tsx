@@ -1,15 +1,15 @@
 'use client'
-import { type HTMLAttributes, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
+import { HTMLAttributes, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react'
 import { SidebarContext } from './SidebarContext'
 import style from './SidebarContainer.module.css'
 
 export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
-  const className = `${style.sidebarContainer  } ${  props.className ?? ''}`,
-   [activeId, setActiveId] = useState<string | undefined>(undefined),
+  const className = style.sidebarContainer + ' ' + (props.className ?? '')
+  const [activeId, setActiveId] = useState<string | undefined>(undefined)
 
-   open = useCallback((id: string) => { setActiveId(id) }, []),
-   close = useCallback(() => { setActiveId(undefined) }, []),
-   isOpen = useCallback((id: string) => activeId === id, [activeId])
+  const open = useCallback((id: string) => { setActiveId(id) }, [])
+  const close = useCallback(() => { setActiveId(undefined) }, [])
+  const isOpen = useCallback((id: string) => activeId === id, [activeId])
 
   // Push history entry when sidebar transitions from closed to open
   useEffect(() => {
@@ -37,10 +37,10 @@ export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLA
     return () => { window.removeEventListener('popstate', onPopstate) }
   }, [close])
 
-  const contextValue = useMemo(() => ({ close, isOpen, open }), [open, close, isOpen])
+  const contextValue = useMemo(() => ({ open, close, isOpen }), [open, close, isOpen])
 
   function onClick() {
-    if (!activeId) {return}
+    if (!activeId) return
     close()
   }
 

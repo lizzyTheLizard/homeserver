@@ -1,4 +1,4 @@
-import { type Entity, type Queryable, removeNull } from '@/app/shared/_external/db/access';
+import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface FavoriteInput {
@@ -24,12 +24,12 @@ export async function createOrModifyFavorite(client: Queryable, ownerId: string,
   const result1 = await client.query<Favorite>(
     `SELECT * FROM user_favorite WHERE id = $1 AND owner_email = $2`,
     [input.id, ownerId],
-  ),
-   query = result1.rows[0]
+  )
+  const query = result1.rows[0]
     ? 'UPDATE user_favorite SET position = $3, name = $4, url = $5, description = $6, updated_at = NOW() WHERE id = $1 AND owner_email = $2 RETURNING *'
-    : 'INSERT INTO user_favorite (id, owner_email, position, name, url, description, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *',
-   result = await client.query<Favorite>(query, [input.id, ownerId, input.position, input.name, input.url, input.description])
-  if (!result.rows[0]) {throw new Error('Failed to modify favorite')}
+    : 'INSERT INTO user_favorite (id, owner_email, position, name, url, description, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *'
+  const result = await client.query<Favorite>(query, [input.id, ownerId, input.position, input.name, input.url, input.description])
+  if (!result.rows[0]) throw new Error('Failed to modify favorite')
   logger.debug(`Modified favorite '${input.name}' for owner ${ownerId}`)
   return removeNull(result.rows[0])
 }

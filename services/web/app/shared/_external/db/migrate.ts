@@ -1,9 +1,9 @@
-import type { Pool, PoolClient } from 'pg'
+import { Pool, PoolClient } from 'pg'
+import { logger } from '../../logger'
+import { promises as fs } from 'fs'
+import path from 'path'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
-import { promises as fs } from 'fs'
-import { logger } from '../../logger'
-import path from 'path'
 import { splitSql } from './splitSql'
 
 /**
@@ -16,8 +16,8 @@ export async function migrateDatabase(pool: Pool, upToIncluding?: string): Promi
   try {
     await client.query('BEGIN')
     logger.debug('Starting Database Migrations')
-    const planned = await getAllPlannedMigrations(),
-     existing = await getAllExistingMigrations(client)
+    const planned = await getAllPlannedMigrations()
+    const existing = await getAllExistingMigrations(client)
     logger.debug(`Found ${existing.length.toString()} existing and ${planned.length.toString()} planned migrations`)
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned, upToIncluding)
@@ -46,14 +46,14 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 }
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
-  const migrationsDir = path.join(process.cwd(), 'db'),
-   names = (await fs.readdir(migrationsDir))
+  const migrationsDir = path.join(process.cwd(), 'db')
+  const names = (await fs.readdir(migrationsDir))
     .filter(n => n.endsWith('.sql'))
-    .sort(),
-   result: PlannedDatabaseMigration[] = []
+    .sort()
+  const result: PlannedDatabaseMigration[] = []
   for (const name of names) {
-    const content = (await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')).replaceAll(/\r\n/g, '\n'),
-     hash = createHash('sha256').update(content).digest('hex')
+    const content = (await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')).replaceAll(/\r\n/g, '\n')
+    const hash = createHash('sha256').update(content).digest('hex')
     result.push({ content, hash, name, tmp: name.startsWith('XXX_') })
   }
   return result
@@ -76,8 +76,8 @@ function validateExistingMigrations(existing: DatabaseMigration[], planned: Plan
   // Check if there is a problem with the existing migrations
   for (const e of existing) {
     const p = planned.find(m => m.name === e.name)
-    if (!p) {throw databaseError(`Migration ${e.name} has been executed but the file does not exist any more, aborting!`)}
-    if (p.hash !== e.hash) {throw databaseError(`Migration ${e.name} has been executed but the file has changed, aborting!`)}
+    if (!p) throw databaseError(`Migration ${e.name} has been executed but the file does not exist any more, aborting!`)
+    if (p.hash !== e.hash) throw databaseError(`Migration ${e.name} has been executed but the file has changed, aborting!`)
   }
 }
 
@@ -86,14 +86,14 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
   let lastMigrationToRun: string | undefined = undefined
   for (const p of planned) {
     const e = existing.find(m => m.name === p.name)
-    if (e && lastMigrationToRun) {throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)}
+    if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
-      if (p.name === upToIncluding) {break}
+      if (p.name === upToIncluding) break
       continue
     }
     await runMigration(client, p)
     lastMigrationToRun = p.name
-    if (p.name === upToIncluding) {break}
+    if (p.name === upToIncluding) break
   }
 }
 

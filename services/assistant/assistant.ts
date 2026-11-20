@@ -1,23 +1,19 @@
-import type { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
-import type { ModelMessage, ToolSet } from 'ai'
+import { ModelMessage, ToolSet } from 'ai'
+import { send as groqSend } from './groq'
 import type { UserSession } from './session'
 import { generateInitialMessages } from './initial'
-import { getTools } from './tools'
-import { send as groqSend } from './groq'
 import { logger } from './logger'
+import { getTools } from './tools'
+import { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
 
 export function createAssistantInstance(user: UserSession): Assistant {
-  const listeners: AssistantEventListener[] = [],
-   messages: ModelMessage[] = []
+  const listeners: AssistantEventListener[] = []
+  const messages: ModelMessage[] = []
   let tools: ToolSet = {}
-  // oxlint-disable-next-line func-style
-  const onChunk = (chunk: string) => { emit({ chunk, type: 'stream_response' }) }
-  // oxlint-disable-next-line func-style
+  const onChunk = (chunk: string) => { emit({ type: 'stream_response', chunk }) }
   const onToolCall = () => { emit({ type: 'tool_call' }) }
-  // oxlint-disable-next-line func-style
   const onFinishedResponse = () => { emit({ type: 'finished_response' }) }
-  // oxlint-disable-next-line func-style
-  const onGotActions = (actions: string[]) => { emit({ actions, type: 'got_actions' }) }
+  const onGotActions = (actions: string[]) => { emit({ type: 'got_actions', actions }) }
 
   function emit(event: AssistantEvent) {
     listeners.forEach((listener) => { listener(event) })
@@ -29,7 +25,7 @@ export function createAssistantInstance(user: UserSession): Assistant {
 
   function off(listener: AssistantEventListener) {
     const index = listeners.indexOf(listener)
-    if (index >= 0) {listeners.splice(index, 1)}
+    if (index >= 0) listeners.splice(index, 1)
   }
 
   async function init(initialContext: InitialContext) {
@@ -42,14 +38,13 @@ export function createAssistantInstance(user: UserSession): Assistant {
 
   async function send(message: string) {
     logger.debug(`Sending message to assistant: ${message}`)
-    messages.push({ content: message, role: 'user' })
-    await groqSend({ messages, onChunk, onToolCall, tools })
+    messages.push({ role: 'user', content: message })
+    await groqSend({ messages, tools, onChunk, onToolCall })
     onFinishedResponse()
     logger.debug(`Assistant response finished`)
-    const messagesCopy = [...messages, { content: actionPrompt, role: 'user' }] satisfies ModelMessage[],
-     actionString = await groqSend({ messages: messagesCopy })
+    const messagesCopy = [...messages, { role: 'user', content: actionPrompt }] satisfies ModelMessage[]
+    const actionString = await groqSend({ messages: messagesCopy })
     try {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const actions = JSON.parse(actionString) as string[]
       onGotActions(actions)
     }
@@ -59,7 +54,7 @@ export function createAssistantInstance(user: UserSession): Assistant {
     }
   }
 
-  return { init, off, on, send }
+  return { on, off, init, send }
 }
 
 const actionPrompt = 'Give me a JSON array of next actions only.'

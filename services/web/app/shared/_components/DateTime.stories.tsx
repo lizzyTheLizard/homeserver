@@ -3,9 +3,9 @@ import { DateTime } from './DateTime'
 import { Temporal } from '@js-temporal/polyfill'
 
 const meta = {
+  title: 'Shared/DateTime',
   component: DateTime,
   tags: ['autodocs'],
-  title: 'Shared/DateTime',
 } satisfies Meta<typeof DateTime>
 export default meta
 

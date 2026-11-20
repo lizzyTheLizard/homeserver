@@ -18,33 +18,33 @@ export function PwaManager() {
     let pingInterval: NodeJS.Timeout | undefined = undefined
 
     function startPinger() {
-      if (pingInterval) {return}
+      if (pingInterval) return
       sendPing()
       pingInterval = setInterval(sendPing, 60000)
     }
 
     function stopPinger() {
-      if (!pingInterval) {return}
+      if (!pingInterval) return
       clearInterval(pingInterval)
       pingInterval = undefined
     }
 
     function sendPing() {
       fetch('/shared/ping', {
-        body: JSON.stringify({ timestamp: Date.now() }),
-        headers: { 'Content-Type': 'application/json' },
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timestamp: Date.now() }),
       }).catch((err: unknown) => { console.error('Ping failed:', err) })
     }
 
     // Monitor if the user minimizes the PWA or switches apps on Android
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {startPinger()}
-      else {stopPinger()}
+      if (document.visibilityState === 'visible') startPinger()
+      else stopPinger()
     })
 
     // Start on initial load
-    if (document.visibilityState === 'visible') {startPinger()}
+    if (document.visibilityState === 'visible') startPinger()
   }, [])
 
   return null

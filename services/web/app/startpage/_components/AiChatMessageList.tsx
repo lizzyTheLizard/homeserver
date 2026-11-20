@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import { AiMessageBubble } from '@/app/shared/_components/chat/AiMessageBubble'
-import type { ChatState } from './AiChatWebSocket'
 import styles from './AiChatMessageList.module.css'
+import { ChatState } from './AiChatWebSocket'
 
 export interface Message {
   id: number
@@ -15,21 +15,21 @@ export interface AiChatMessageListProps {
   messages: Message[]
   state: ChatState
   incomingMessage: string
-  onEdit(editedText: string): void
+  onEdit: (editedText: string) => void
   hasActions: boolean
 }
 
 export function AiChatMessageList({ messages, state, incomingMessage, hasActions, onEdit }: AiChatMessageListProps) {
-  const listRef = useRef<HTMLDivElement>(null),
-   ready = state.type === 'ready',
-   incomming = state.type === 'waiting-for-response' || state.type === 'connecting',
-   stalled = state.type === 'waiting-for-response' && state.stalled
+  const listRef = useRef<HTMLDivElement>(null)
+  const ready = state.type === 'ready'
+  const incomming = state.type === 'waiting-for-response' || state.type === 'connecting'
+  const stalled = state.type === 'waiting-for-response' && state.stalled
 
   useEffect(() => {
     if (listRef.current && listRef.current.clientWidth > 600)
-      {listRef.current.scrollTop = listRef.current.scrollHeight}
+      listRef.current.scrollTop = listRef.current.scrollHeight
     else
-      {window.scrollTo(0, document.body.scrollHeight)}
+      window.scrollTo(0, document.body.scrollHeight)
   }, [messages, incomingMessage, incomming, stalled, hasActions])
 
   return (
@@ -38,7 +38,7 @@ export function AiChatMessageList({ messages, state, incomingMessage, hasActions
         const editable = ready && msg.role === 'assistant' && index === messages.length - 1
         return (
           <AiMessageBubble
-            key={`message_${  msg.id.toString()}`}
+            key={'message_' + msg.id.toString()}
             role={msg.role}
             content={msg.content}
             editable={editable}
@@ -46,7 +46,7 @@ export function AiChatMessageList({ messages, state, incomingMessage, hasActions
           />
         )
       })}
-      {incomming && (<AiMessageBubble role="assistant" content={incomingMessage} generating stalled={stalled} />)}
+      {incomming && (<AiMessageBubble role="assistant" content={incomingMessage} generating={true} stalled={stalled} />)}
     </div>
   )
 }

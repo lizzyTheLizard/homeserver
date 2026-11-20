@@ -2,72 +2,72 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { AiMessageBubble } from './AiMessageBubble'
 
 const meta = {
-  argTypes: {
-    content: { control: 'text' },
-    editable: { control: 'boolean' },
-    generating: { control: 'boolean' },
-    role: { control: 'select', options: ['user', 'assistant'] },
-    stalled: { control: 'boolean' },
-  },
+  title: 'Shared/Chat/AiMessageBubble',
   component: AiMessageBubble,
   tags: ['autodocs'],
-  title: 'Shared/Chat/AiMessageBubble',
+  argTypes: {
+    role: { control: 'select', options: ['user', 'assistant'] },
+    content: { control: 'text' },
+    generating: { control: 'boolean' },
+    stalled: { control: 'boolean' },
+    editable: { control: 'boolean' },
+  },
 } satisfies Meta<typeof AiMessageBubble>
 export default meta
 
 export const UserMessage: StoryObj<typeof meta> = {
   args: {
-    content: 'What is the weather like today?',
     role: 'user',
+    content: 'What is the weather like today?',
   },
 }
 
 export const AiMessage: StoryObj<typeof meta> = {
   args: {
-    content: 'The weather is currently sunny with a temperature of 22°C. Perfect for a walk!',
     role: 'assistant',
+    content: 'The weather is currently sunny with a temperature of 22°C. Perfect for a walk!',
   },
 }
 
 export const AiMessageWithMarkdown: StoryObj<typeof meta> = {
   args: {
-    content: 'Here is some **bold text** and a [link](https://example.com).\n\n- Item 1\n- Item 2\n- Item 3',
     role: 'assistant',
+    content: 'Here is some **bold text** and a [link](https://example.com).\n\n- Item 1\n- Item 2\n- Item 3',
   },
 }
 
 export const GeneratingEmpty: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: '',
     generating: true,
-    role: 'assistant',
     stalled: false,
   },
 }
 
 export const GeneratingEmptyStalled: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: '',
     generating: true,
-    role: 'assistant',
     stalled: true,
   },
 }
 
 export const GeneratingPartial: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: 'Here\'s your email summary:\n\n- Stefan Meier — Project meeting next Thursday at 14:00\n- Oliver Braun — Question about Q2 numbers, needs reply',
     generating: true,
-    role: 'assistant',
     stalled: false,
   },
 }
 
 export const GeneratingPartialStalled: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: 'Sure! Here\'s a draft for Thomas:\n\n"Hey Thomas! Yes, I\'ll be there Saturday —',
     generating: true,
-    role: 'assistant',
     stalled: true,
   },
 }
@@ -76,17 +76,17 @@ const EDITABLE_CONTENT = 'Hi Thomas! I\'ve drafted a reply for you.\n\n~~~input\
 
 export const EditableBeforeEdit: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: EDITABLE_CONTENT,
     editable: true,
-    role: 'assistant',
   },
 }
 
 export const EditableDuringEdit: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: EDITABLE_CONTENT,
     editable: true,
-    role: 'assistant',
   },
   play: async ({ canvasElement }) => {
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -99,9 +99,9 @@ export const EditableDuringEdit: StoryObj<typeof meta> = {
 
 export const EditableAfterEdit: StoryObj<typeof meta> = {
   args: {
+    role: 'assistant',
     content: EDITABLE_CONTENT,
     editable: true,
-    role: 'assistant',
   },
   play: async ({ canvasElement }) => {
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -127,14 +127,14 @@ export const EditableAfterEdit: StoryObj<typeof meta> = {
 
 export const EditableResponse: StoryObj<typeof meta> = {
   args: {
-    content: 'I updated the text\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where? Should I bring anything?\n~~~',
     role: 'user',
+    content: 'I updated the text\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where? Should I bring anything?\n~~~',
   },
 }
 
 export const AllVariants: StoryObj = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '600px', padding: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', maxWidth: '600px' }}>
       <AiMessageBubble role="user" content="What is the weather like today?" />
       <AiMessageBubble role="assistant" content="The weather is currently sunny with a temperature of 22°C." />
       <AiMessageBubble role="assistant" content="Here is some **bold text** and a [link](https://example.com)." />

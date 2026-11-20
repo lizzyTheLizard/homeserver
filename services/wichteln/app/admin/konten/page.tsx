@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { ResetPasswordForm } from '../../components'
-import { getDb } from '@/lib/db'
-import { listAccounts } from '@/lib/store'
 import { requireAdmin } from '@/lib/session'
+import { listAccounts } from '@/lib/store'
+import { getDb } from '@/lib/db'
+import { ResetPasswordForm } from '../../components'
 import { resetPassword } from '../actions'
 
 export const dynamic = 'force-dynamic'

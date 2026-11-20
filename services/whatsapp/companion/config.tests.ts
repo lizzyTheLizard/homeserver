@@ -20,8 +20,8 @@ describe('config', () => {
   })
 })
 
-// Config.ts reads the environment once at import time, so the module registry
-// Has to be reset for a stubbed value to take effect.
+// config.ts reads the environment once at import time, so the module registry
+// has to be reset for a stubbed value to take effect.
 async function loadTimeout(): Promise<number> {
   vi.resetModules()
   const { config } = await import('./config')

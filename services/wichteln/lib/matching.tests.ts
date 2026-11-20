@@ -1,24 +1,24 @@
-import type { Group, User } from './store'
 import { describe, expect, test } from 'vitest'
 import { selectableWishOwners } from './matching'
+import type { Group, User } from './store'
 
 function makeUser(id: string, hasWish = true): User {
   return {
-    accountId: `account-${id}`,
     id,
+    accountId: `account-${id}`,
     name: id,
+    wish: hasWish ? { title: `Wish ${id}`, description: `Description ${id}` } : null,
     selectedWishOf: null,
-    wish: hasWish ? { description: `Description ${id}`, title: `Wish ${id}` } : null,
   }
 }
 
 function makeGroup(users: User[], phase: Group['phase'] = 'selection'): Group {
   return {
-    createdAt: '2026-01-01T00:00:00.000Z',
     id: 'group-1',
-    inviteToken: 'token',
     name: 'Test group',
     phase,
+    inviteToken: 'token',
+    createdAt: '2026-01-01T00:00:00.000Z',
     users,
   }
 }
@@ -31,22 +31,22 @@ describe('selectableWishOwners', () => {
   })
 
   test('does not offer a wish that has already been selected', () => {
-    const a = makeUser('a'),
-     b = makeUser('b'),
-     c = makeUser('c')
+    const a = makeUser('a')
+    const b = makeUser('b')
+    const c = makeUser('c')
     a.selectedWishOf = 'b'
-    const group = makeGroup([a, b, c]),
+    const group = makeGroup([a, b, c])
 
-     selectable = selectableWishOwners(group, 'c')
+    const selectable = selectableWishOwners(group, 'c')
 
     expect(selectable).not.toContain('b')
     expect(selectable).toContain('a')
   })
 
   test('does not offer a wish whose selection would leave another participant without a foreign wish', () => {
-    const a = makeUser('a'),
-     b = makeUser('b'),
-     c = makeUser('c')
+    const a = makeUser('a')
+    const b = makeUser('b')
+    const c = makeUser('c')
     a.selectedWishOf = 'c'
     const group = makeGroup([a, b, c])
 
@@ -60,9 +60,9 @@ describe('selectableWishOwners', () => {
   })
 
   test('lets every participant end up with a foreign wish', () => {
-    const users = ['a', 'b', 'c', 'd', 'e'].map(id => makeUser(id)),
-     group = makeGroup(users),
-     chosen = new Set<string>()
+    const users = ['a', 'b', 'c', 'd', 'e'].map(id => makeUser(id))
+    const group = makeGroup(users)
+    const chosen = new Set<string>()
 
     for (const user of users) {
       const selectable = selectableWishOwners(group, user.id)
@@ -86,8 +86,8 @@ describe('selectableWishOwners', () => {
   })
 
   test('offers nothing to a participant who has already selected', () => {
-    const a = makeUser('a'),
-     b = makeUser('b')
+    const a = makeUser('a')
+    const b = makeUser('b')
     a.selectedWishOf = 'b'
     const group = makeGroup([a, b])
 

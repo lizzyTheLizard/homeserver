@@ -1,15 +1,15 @@
-import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { fromUrlString } from '@/app/cash/_helper/Period'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
-import { MonthlyCheckAccount } from './_components/MonthlyCheckAccount'
-import { MonthlyFinished } from './_components/MonthlyFinished'
+import { isMonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
 import { MonthlyInit } from './_components/MonthlyInit'
 import { MonthlyNeon } from './_components/MonthlyNeon'
 import { MonthlyShared } from './_components/MonthlyShared'
-import { PeriodPicker } from '@/app/cash/_components/PeriodPicker'
-import { fromUrlString } from '@/app/cash/_helper/Period'
-import { isMonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import { MonthlyFinished } from './_components/MonthlyFinished'
+import { MonthlyCheckAccount } from './_components/MonthlyCheckAccount'
 import { loadData } from './server'
-import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
 
 export const metadata = {
   title: 'Cash - Closing',
@@ -24,10 +24,10 @@ export interface ClosingPageProps {
 
 export default async function Page({ params }: ClosingPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const projectId = (await params).project_id,
-     period = fromUrlString((await params).period)
+    const projectId = (await params).project_id
+    const period = fromUrlString((await params).period)
 
-    if (!isMonthlyPeriod(period)) {return (
+    if (!isMonthlyPeriod(period)) return (
       <main>
         <ActionTitle>
           <h1>Monthly Closing</h1>
@@ -36,7 +36,7 @@ export default async function Page({ params }: ClosingPageProps) {
         <ActionButton disabled variant="primary">Continue</ActionButton>
         <div>This period is not a valid monthly period.</div>
       </main>
-    )}
+    )
 
     const pageData = await loadData(projectId, period)
     switch (pageData.type) {

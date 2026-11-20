@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import styles from './Clock.module.css'
 import { useIsClient } from '../../shared/_helper/useIsClient'
+import styles from './Clock.module.css'
 
 function useClock() {
   const [now, setNow] = useState(new Date())
@@ -14,10 +14,10 @@ function useClock() {
 }
 
 export function Clock() {
-  const now = useClock(),
-   isClient = useIsClient(),
-   timeString = isClient ? now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '\u00A0',
-   dateString = isClient ? now.toLocaleDateString('de-AT', { day: 'numeric', month: 'long', weekday: 'long', year: 'numeric' }) : '\u00A0'
+  const now = useClock()
+  const isClient = useIsClient()
+  const timeString = isClient ? now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '\u00A0'
+  const dateString = isClient ? now.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '\u00A0'
 
   return (
     <div className={styles.clockBlock}>

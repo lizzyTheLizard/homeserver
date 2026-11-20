@@ -1,43 +1,43 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, waitFor } from 'storybook/test'
-import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import { BalanceChart } from './BalanceChart'
-import type { Period } from '@/app/cash/_helper/Period'
+import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { Period } from '@/app/cash/_helper/Period'
 
 function transaction(date: string, total_balance: number, ordering = 0): AccountTransaction {
   return {
-    account_id: 'account-1',
-    amount: 100,
-    created_at: date,
-    date,
     id: `${date}-${ordering.toString()}`,
     ordering,
-    other_account_id: 'account-2',
-    owner_email: 'owner@example.com',
+    account_id: 'account-1',
     project_id: 'project-1',
+    other_account_id: 'account-2',
+    amount: 100,
     total_balance,
+    date,
+    created_at: date,
     updated_at: date,
+    owner_email: 'owner@example.com',
   }
 }
 
-const period: Period = { current: false, month: 4, year: 2026 },
+const period: Period = { current: false, year: 2026, month: 4 }
 
- transactions = [
+const transactions = [
   transaction('2026-04-05', 1200, 1),
   transaction('2026-04-12', 1350, 2),
   transaction('2026-04-20', 1500, 3),
-],
+]
 
- meta = {
-  args: {
-    accountType: 'Cash',
-    lastBalance: 1000,
-    period,
-    transactions,
-  },
+const meta = {
+  title: 'Cash/BalanceChart',
   component: BalanceChart,
   tags: ['autodocs'],
-  title: 'Cash/BalanceChart',
+  args: {
+    transactions,
+    lastBalance: 1000,
+    accountType: 'Cash',
+    period,
+  },
 } satisfies Meta<typeof BalanceChart>
 export default meta
 
@@ -59,13 +59,13 @@ export const RendersEveryTransactionAndOpeningBalance: StoryObj<typeof meta> = {
 
 export const OpeningBalanceIsFirstPoint: StoryObj<typeof meta> = {
   play: async ({ canvas }) => {
-    const chart = canvas.getByTestId('balance-chart'),
+    const chart = canvas.getByTestId('balance-chart')
     // X-axis ticks are the date labels; the y-axis ticks are currency values.
-     labels = await waitFor(() => {
+    const labels = await waitFor(() => {
       const ticks = Array.from(chart.querySelectorAll('.recharts-cartesian-axis-tick-value'))
         .map(node => node.textContent)
         .filter((text): text is string => /\d{2}\.\d{2}\.\d{2}/.test(text))
-      if (ticks.length === 0) {throw new Error('x-axis ticks not rendered yet')}
+      if (ticks.length === 0) throw new Error('x-axis ticks not rendered yet')
       return ticks
     })
     await expect(labels).toEqual(['01.04.26', '05.04.26', '12.04.26', '20.04.26'])
@@ -74,9 +74,9 @@ export const OpeningBalanceIsFirstPoint: StoryObj<typeof meta> = {
 
 export const IsNotInteractive: StoryObj<typeof meta> = {
   play: async ({ canvas }) => {
-    const chart = canvas.getByTestId('balance-chart'),
-     surface = chart.querySelector('.recharts-surface')
-    if (!surface) {throw new Error('chart surface not rendered')}
+    const chart = canvas.getByTestId('balance-chart')
+    const surface = chart.querySelector('.recharts-surface')
+    if (!surface) throw new Error('chart surface not rendered')
 
     // No focusable chart element (accessibility layer disabled).
     await expect(surface).not.toHaveAttribute('tabindex')
@@ -95,8 +95,8 @@ export const IsNotInteractive: StoryObj<typeof meta> = {
 
 export const HidesWhenEmpty: StoryObj<typeof meta> = {
   args: {
-    lastBalance: undefined,
     transactions: [],
+    lastBalance: undefined,
   },
   play: async ({ canvas }) => {
     await expect(canvas.queryByTestId('balance-chart')).not.toBeInTheDocument()
@@ -105,13 +105,13 @@ export const HidesWhenEmpty: StoryObj<typeof meta> = {
 
 export const ExpenseAccountShowsBars: StoryObj<typeof meta> = {
   args: {
-    accountType: 'Expense',
-    lastBalance: 5000,
     transactions: [
       transaction('2026-04-05', 5100, 1),
       transaction('2026-04-05', 5120, 2),
       transaction('2026-04-12', 5300, 1),
     ],
+    lastBalance: 5000,
+    accountType: 'Expense',
   },
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
@@ -129,12 +129,12 @@ export const ExpenseAccountShowsBars: StoryObj<typeof meta> = {
 
 export const IncomeAccountShowsInvertedBars: StoryObj<typeof meta> = {
   args: {
-    accountType: 'Income',
-    lastBalance: 5000,
     transactions: [
       transaction('2026-04-05', 5120, 1),
       transaction('2026-04-12', 5300, 1),
     ],
+    lastBalance: 5000,
+    accountType: 'Income',
   },
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
@@ -158,12 +158,12 @@ export const CreditAccountInvertsBalance: StoryObj<typeof meta> = {
 
 export const ShowsOnePointPerDay: StoryObj<typeof meta> = {
   args: {
-    lastBalance: 900,
     transactions: [
       transaction('2026-04-05', 1000, 1),
       transaction('2026-04-05', 1100, 2),
       transaction('2026-04-06', 1200, 1),
     ],
+    lastBalance: 900,
   },
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
@@ -179,8 +179,6 @@ export const ShowsOnePointPerDay: StoryObj<typeof meta> = {
 
 export const OnePointPerMonthForYearPeriod: StoryObj<typeof meta> = {
   args: {
-    lastBalance: 900,
-    period: { current: false, year: 2026 },
     transactions: [
       transaction('2026-01-10', 1050, 1),
       transaction('2026-01-25', 1100, 2),
@@ -188,6 +186,8 @@ export const OnePointPerMonthForYearPeriod: StoryObj<typeof meta> = {
       transaction('2026-12-15', 1220, 1),
       transaction('2026-12-31', 1400, 2),
     ],
+    lastBalance: 900,
+    period: { current: false, year: 2026 },
   },
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
@@ -202,14 +202,14 @@ export const OnePointPerMonthForYearPeriod: StoryObj<typeof meta> = {
 
 export const OnePointPerYearForAllHistory: StoryObj<typeof meta> = {
   args: {
-    lastBalance: undefined,
-    period: { },
     transactions: [
       transaction('2024-03-10', 1000, 1),
       transaction('2024-11-25', 1100, 2),
       transaction('2026-05-05', 1200, 1),
       transaction('2026-09-20', 1300, 2),
     ],
+    lastBalance: undefined,
+    period: { },
   },
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
@@ -224,24 +224,23 @@ export const OnePointPerYearForAllHistory: StoryObj<typeof meta> = {
 
 export const XSpacingIsProportionalToDays: StoryObj<typeof meta> = {
   args: {
-    lastBalance: 900,
     transactions: [
       transaction('2026-04-05', 1000, 1),
       transaction('2026-04-10', 1100, 2),
       transaction('2026-04-30', 1200, 3),
     ],
+    lastBalance: 900,
   },
   play: async ({ canvas }) => {
-    const chart = canvas.getByTestId('balance-chart'),
+    const chart = canvas.getByTestId('balance-chart')
     // Opening balance (01.04) + 3 transactions = 4 dots, read in document order.
-     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-     dots = Array.from(chart.querySelectorAll('.recharts-line-dot')) as unknown as SVGElement[]
+    const dots = Array.from(chart.querySelectorAll('.recharts-line-dot')) as unknown as SVGElement[]
     await expect(dots).toHaveLength(4)
-    const cx = dots.map(dot => Number(dot.getAttribute('cx'))),
+    const cx = dots.map(dot => Number(dot.getAttribute('cx')))
     // Gaps: 01.04→05.04 = 4 days, 05.04→10.04 = 5 days, 10.04→30.04 = 20 days.
-     gap1 = cx[1] - cx[0],
-     gap2 = cx[2] - cx[1],
-     gap3 = cx[3] - cx[2]
+    const gap1 = cx[1] - cx[0]
+    const gap2 = cx[2] - cx[1]
+    const gap3 = cx[3] - cx[2]
     // Drawn distance must be proportional to real time: 20 days > 5 days, 5 > 4.
     await expect(gap3).toBeGreaterThan(gap2 * 2)
     await expect(gap2).toBeGreaterThan(gap1)

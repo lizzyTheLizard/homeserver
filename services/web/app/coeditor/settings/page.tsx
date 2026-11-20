@@ -1,8 +1,8 @@
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { Profiles } from './_components/Profiles'
-import { Templates } from './_components/Templates'
 import { loadSettings } from './server'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
+import { Templates } from './_components/Templates'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'CoEditor - Settings',

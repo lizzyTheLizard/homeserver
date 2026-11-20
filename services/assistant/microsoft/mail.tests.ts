@@ -1,28 +1,28 @@
-import { beforeAll, describe, expect, test } from 'vitest'
+import { describe, expect, test, beforeAll } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
-import type { UserSession } from '../session'
-import { getMicrosoftMailWorker } from './mail'
-import { setMicrosoftToken } from './data'
 import { transactional } from '../db'
+import { setMicrosoftToken } from './data'
+import { getMicrosoftMailWorker } from './mail'
+import type { UserSession } from '../session'
 
-const {TEST_MICROSOFT_REFRESH_TOKEN} = process.env
+const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
   const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
   let user: UserSession
 
   beforeAll(async () => {
-    user = { applications: ['startpage'], email: 'mail-test@test.com', name: 'Test' }
+    user = { name: 'Test', email: 'mail-test@test.com', applications: ['startpage'] }
     await transactional(db => setMicrosoftToken(db, user.email, {
       access_token: '',
-      expires_at: 0,
       refresh_token: token,
+      expires_at: 0,
     }))
   })
 
   test('getInboxMessages returns messages', async () => {
-    const worker = await getMicrosoftMailWorker(user),
-     messages = worker.getInboxMessages()
+    const worker = await getMicrosoftMailWorker(user)
+    const messages = worker.getInboxMessages()
 
     expect(Array.isArray(messages)).toBe(true)
     if (messages.length > 0) {
@@ -34,8 +34,8 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
   }, 30000)
 
   test('getInboxCount returns counts', async () => {
-    const worker = await getMicrosoftMailWorker(user),
-     counts = worker.getInboxCount()
+    const worker = await getMicrosoftMailWorker(user)
+    const counts = worker.getInboxCount()
 
     expect(typeof counts.focused).toBe('number')
     expect(typeof counts.focusedUnread).toBe('number')
@@ -44,9 +44,9 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
   })
 
   test('getMessage returns full message', async () => {
-    const worker = await getMicrosoftMailWorker(user),
-     messages = worker.getInboxMessages()
-    if (messages.length === 0) {return}
+    const worker = await getMicrosoftMailWorker(user)
+    const messages = worker.getInboxMessages()
+    if (messages.length === 0) return
 
     const message = await worker.getMessage(messages[0].id)
 

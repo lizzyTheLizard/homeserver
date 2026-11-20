@@ -1,5 +1,5 @@
-import { changePasswordPath, safeContinuePath } from './continuePath'
 import { describe, expect, test } from 'vitest'
+import { changePasswordPath, safeContinuePath } from './continuePath'
 
 describe('safeContinuePath', () => {
   test('accepts the start page, invite pages and group pages', () => {

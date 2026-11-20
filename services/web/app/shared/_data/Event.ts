@@ -1,4 +1,4 @@
-import { type Queryable, removeNull, transactional } from '@/app/shared/_external/db/access'
+import { Queryable, removeNull, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 
 export const EventLevels = ['INFO', 'WARN', 'ERROR']

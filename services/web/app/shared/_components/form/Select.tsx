@@ -1,5 +1,5 @@
-import style from './Select.module.css'
 import { useId } from 'react'
+import style from './Select.module.css'
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
@@ -13,9 +13,9 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
  * A select component allowing users to choose from a list of options.
  */
 export function Select({ label, emptyLabel, small, children, ...props }: SelectProps) {
-  const fallbackId = useId(),
-   id = props.id ?? fallbackId,
-   inputClasses = [
+  const fallbackId = useId()
+  const id = props.id ?? fallbackId
+  const inputClasses = [
     style.input, props.className ?? '',
     label ? '' : style.noLabel,
     small ? style.small : '',

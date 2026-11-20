@@ -1,5 +1,5 @@
-import { NAME_TAKEN, passwordError, registrationError } from './registration'
 import { describe, expect, test } from 'vitest'
+import { NAME_TAKEN, passwordError, registrationError } from './registration'
 
 describe('registrationError', () => {
   test('accepts a valid name and matching password', () => {

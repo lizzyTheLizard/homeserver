@@ -1,23 +1,23 @@
 'use client'
 
-import { AiChatMessageList, type Message } from './AiChatMessageList'
-import { AiChatWebSocket, type ChatState } from './AiChatWebSocket'
-import { useEffect, useRef, useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { AiChatMessageList, Message } from './AiChatMessageList'
 import { AiChatInput } from '@/app/shared/_components/chat/AiChatInput'
 import { Icon } from '@/app/shared/_components/Icon'
-import { getLocation } from '../_helper/location'
+import { AiChatWebSocket, ChatState } from './AiChatWebSocket'
 import styles from './AiChatWindow.module.css'
+import { getLocation } from '../_helper/location'
 
 export function AiChatWindow({ loading = false }: { loading?: boolean }) {
-  const [messages, setMessages] = useState<Message[]>([]),
-   [actions, setActions] = useState<string[]>([]),
-   [input, setInput] = useState(''),
-   [state, setState] = useState<ChatState>({ type: 'initial' }),
-   [incomingMessage, setIncomingMessage] = useState(''),
-   webSocketRef = useRef<AiChatWebSocket | undefined>(undefined),
+  const [messages, setMessages] = useState<Message[]>([])
+  const [actions, setActions] = useState<string[]>([])
+  const [input, setInput] = useState('')
+  const [state, setState] = useState<ChatState>({ type: 'initial' })
+  const [incomingMessage, setIncomingMessage] = useState('')
+  const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
 
-   canInput = state.type === 'ready',
-   retryLabel = state.type === 'wait-for-reconnecting'
+  const canInput = state.type === 'ready'
+  const retryLabel = state.type === 'wait-for-reconnecting'
     ? 'Retry now'
     : state.type === 'automatic-reconnecting-exhausted'
       ? 'Retry again'
@@ -34,7 +34,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
 
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
-    websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { content: str, id: prev.length, role: 'assistant' }]) }
+    websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }]) }
     websocket.onNewActions = (actions) => { setActions(actions) }
     websocket.onStateChange = (state) => { setState(state) }
     websocket.onIncomingMessageChange = (message) => { setIncomingMessage(message) }
@@ -48,9 +48,9 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
 
   function send(text: string) {
     const t = text.trim()
-    if (!t) {return}
+    if (!t) return
     setInput('')
-    setMessages(prev => [...prev, { content: text, id: prev.length, role: 'user' }])
+    setMessages(prev => [...prev, { role: 'user', content: text, id: prev.length }])
     setActions([])
     webSocketRef.current?.sendMessage(t)
   }
@@ -76,12 +76,12 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       <div className={styles.header}>
         {retryLabel && (
           <button className={styles.restartButton} onClick={handleRetry} title="Retry connection">
-            <Icon name="reconnect" style={{ height: 14, width: 14 }} />
+            <Icon name="reconnect" style={{ width: 14, height: 14 }} />
             {retryLabel}
           </button>
         )}
         <button className={styles.restartButton} onClick={handleRestart} title="Restart conversation">
-          <Icon name="restart" style={{ height: 14, width: 14 }} />
+          <Icon name="restart" style={{ width: 14, height: 14 }} />
           Restart
         </button>
       </div>

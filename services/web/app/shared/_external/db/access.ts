@@ -1,4 +1,4 @@
-import type { Pool, PoolClient } from 'pg'
+import { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
 declare global {
@@ -36,8 +36,8 @@ export async function nontransactional<T>(fn: (client: Queryable) => Promise<T>)
  * @returns The result of the function
  */
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const pool = await getPoolPromise(),
-   client = await pool.connect()
+  const pool = await getPoolPromise()
+  const client = await pool.connect()
   try {
     await client.query('BEGIN')
     const result = await fn(client)
@@ -70,20 +70,16 @@ export type Entity<T> = T & {
  */
 export const removeNull = <T>(input: T): T => {
   if (input === null)
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    {return undefined as T}
+    return undefined as T
   if (Array.isArray(input)) {
     // Process each array element recursively
     // oxlint-disable-next-line typescript/no-unsafe-return
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return input.map(item => removeNull(item)) as T
   }
   if (typeof input === 'object') {
     // Process object entries recursively
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return Object.entries(input).reduce((acc, [key, value]) => {
       // oxlint-disable-next-line typescript/no-unsafe-assignment, typescript/no-explicit-any, typescript/no-unsafe-member-access
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       (acc as any)[key] = removeNull(value)
       return acc
     }, {}) as T

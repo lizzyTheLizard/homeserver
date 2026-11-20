@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { expect, fn } from 'storybook/test'
 import { ActionTitle } from './ActionTitle'
+import { expect, fn } from 'storybook/test'
 import { Button } from './form/Button'
 
 const meta = {
+  title: 'Shared/ActionTitle',
   component: ActionTitle,
+  tags: ['autodocs'],
   globals: {
     viewport: { value: undefined },
   },
-  tags: ['autodocs'],
-  title: 'Shared/ActionTitle',
 } satisfies Meta<typeof ActionTitle>
 export default meta
 
@@ -58,6 +58,9 @@ export const MultipleActions: StoryObj<typeof meta> = {
 }
 
 export const Mobile: StoryObj<typeof meta> = {
+  globals: {
+    viewport: { value: 'mobile1', isRotated: false },
+  },
   args: {
     children:
     <>
@@ -66,8 +69,5 @@ export const Mobile: StoryObj<typeof meta> = {
       <Button onClick={fn()}>New2</Button>
       <Button onClick={fn()}>New3</Button>
     </>,
-  },
-  globals: {
-    viewport: { isRotated: false, value: 'mobile1' },
   },
 }

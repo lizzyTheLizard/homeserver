@@ -5,15 +5,15 @@ import type { Group, User } from './store'
  * given a remaining wish that isn't their own (bipartite perfect matching).
  */
 function canComplete(users: User[], wishOwnerIds: string[]): boolean {
-  if (users.length !== wishOwnerIds.length) {return false}
-  const matchOfWish = new Map<string, string>(),
+  if (users.length !== wishOwnerIds.length) return false
+  const matchOfWish = new Map<string, string>()
 
-   tryAssign = (user: User, seen: Set<string>): boolean => {
+  const tryAssign = (user: User, seen: Set<string>): boolean => {
     for (const owner of wishOwnerIds) {
-      if (owner === user.id || seen.has(owner)) {continue}
+      if (owner === user.id || seen.has(owner)) continue
       seen.add(owner)
-      const current = matchOfWish.get(owner),
-       currentUser = current ? users.find(u => u.id === current) : undefined
+      const current = matchOfWish.get(owner)
+      const currentUser = current ? users.find(u => u.id === current) : undefined
       if (!current || (currentUser && tryAssign(currentUser, seen))) {
         matchOfWish.set(owner, user.id)
         return true
@@ -28,11 +28,11 @@ function canComplete(users: User[], wishOwnerIds: string[]): boolean {
 /** Owners of wishes that `userId` may pick right now. */
 export function selectableWishOwners(group: Group, userId: string): string[] {
   const me = group.users.find(u => u.id === userId)
-  if (!me || me.selectedWishOf || group.phase !== 'selection') {return []}
+  if (!me || me.selectedWishOf || group.phase !== 'selection') return []
 
-  const taken = new Set(group.users.map(u => u.selectedWishOf).filter(Boolean)),
-   openWishOwners = group.users.filter(u => u.wish && !taken.has(u.id)).map(u => u.id),
-   otherSelectors = group.users.filter(u => !u.selectedWishOf && u.id !== userId)
+  const taken = new Set(group.users.map(u => u.selectedWishOf).filter(Boolean))
+  const openWishOwners = group.users.filter(u => u.wish && !taken.has(u.id)).map(u => u.id)
+  const otherSelectors = group.users.filter(u => !u.selectedWishOf && u.id !== userId)
 
   return openWishOwners.filter(
     owner =>

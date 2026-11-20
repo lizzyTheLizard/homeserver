@@ -1,7 +1,7 @@
 'use client'
 
-import { EditableBlock } from './EditableBlock'
 import Markdown from 'react-markdown'
+import { EditableBlock } from './EditableBlock'
 import styles from './AiMessageBubble.module.css'
 
 export interface AiMessageBubbleProps {
@@ -10,31 +10,31 @@ export interface AiMessageBubbleProps {
   generating?: boolean
   stalled?: boolean
   editable?: boolean
-  onEdit?(editedText: string): void
+  onEdit?: (editedText: string) => void
 }
 
 export function AiMessageBubble({ role, content, generating, stalled, editable, onEdit }: AiMessageBubbleProps) {
-  const hasMessage = content.trim().length > 0,
-   showGenerating = generating && hasMessage,
-   messageClass = role === 'assistant' ? styles.aiMessage : styles.userMessage
+  const hasMessage = content.trim().length > 0
+  const showGenerating = generating && hasMessage
+  const messageClass = role === 'assistant' ? styles.aiMessage : styles.userMessage
 
   function codeComponent({ className, children }: React.ComponentPropsWithoutRef<'code'>) {
-    if (!className?.includes('language-input')) {return <code className={className}>{children}</code>}
+    if (!className?.includes('language-input')) return <code className={className}>{children}</code>
     // oxlint-disable-next-line typescript/no-base-to-string
-    const text = String(Array.isArray(children) ? children.join('') : children ?? ''),
-     response = role === 'user'
-    return <EditableBlock key={`input_${  text}`} content={text} onEdit={onEdit} editable={editable} response={response} />
+    const text = String(Array.isArray(children) ? children.join('') : children ?? '')
+    const response = role === 'user'
+    return <EditableBlock key={'input_' + text} content={text} onEdit={onEdit} editable={editable} response={response} />
   }
 
   const label = stalled ? <StalledLabel /> : showGenerating ? <GeneratingLabel /> : null
 
   let bubbleClass = role === 'assistant' ? styles.aiBubble : styles.userBubble
-  if (stalled) {bubbleClass += ` ${  styles.stalledBubble}`}
-  if (!hasMessage) {bubbleClass += ` ${  styles.typingBubble}`}
+  if (stalled) bubbleClass += ' ' + styles.stalledBubble
+  if (!hasMessage) bubbleClass += ' ' + styles.typingBubble
 
   let mainContent = <Markdown components={{ code: codeComponent }}>{content}</Markdown>
-  if (!hasMessage) {mainContent = <TypingIndicator stalled={stalled} />}
-  if (showGenerating) {mainContent = <Markdown components={{ code: codeComponent }}>{content}</Markdown>}
+  if (!hasMessage) mainContent = <TypingIndicator stalled={stalled} />
+  if (showGenerating) mainContent = <Markdown components={{ code: codeComponent }}>{content}</Markdown>
 
   return (
     <div className={messageClass}>

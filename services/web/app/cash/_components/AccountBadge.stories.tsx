@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ACCOUNT_TYPES } from '../_data/AccountType'
 import { AccountBadge } from './AccountBadge'
+import { ACCOUNT_TYPES } from '../_data/AccountType'
 
 const meta = {
-  args: { name: 'Bank Account', type: 'Cash' },
+  title: 'Cash/AccountBadge',
   component: AccountBadge,
   tags: ['autodocs'],
-  title: 'Cash/AccountBadge',
+  args: { name: 'Bank Account', type: 'Cash' },
 } satisfies Meta<typeof AccountBadge>
 export default meta
 

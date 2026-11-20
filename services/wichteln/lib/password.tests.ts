@@ -10,8 +10,8 @@ describe('password', () => {
   })
 
   test('salts every hash and never stores the plain password', async () => {
-    const first = await hashPassword('same-password'),
-     second = await hashPassword('same-password')
+    const first = await hashPassword('same-password')
+    const second = await hashPassword('same-password')
 
     expect(first).not.toBe(second)
     expect(first).not.toContain('same-password')

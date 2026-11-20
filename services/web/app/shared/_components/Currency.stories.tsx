@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Currency } from './Currency'
 
 const meta = {
+  title: 'Shared/Currency',
   component: Currency,
   tags: ['autodocs'],
-  title: 'Shared/Currency',
 } satisfies Meta<typeof Currency>
 export default meta
 

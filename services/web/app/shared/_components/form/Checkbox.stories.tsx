@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { expect, fn } from 'storybook/test'
-import { Checkbox } from './Checkbox'
 import { useState } from 'react'
+import { fn, expect } from 'storybook/test'
+import { Checkbox } from './Checkbox'
 
 const meta = {
-  args: {
-  },
+  title: 'Shared/Form/Checkbox',
   component: Checkbox,
   tags: ['autodocs'],
-  title: 'Shared/Form/Checkbox',
+  args: {
+  },
 } satisfies Meta<typeof Checkbox>
 export default meta
 
@@ -30,12 +30,6 @@ export const Checked: StoryObj<typeof meta> = {
     label: 'Checked checkbox',
     onChange: fn(),
   },
-  play: async ({ args, canvas, userEvent }) => {
-    const input = canvas.getByLabelText('Checked checkbox')
-    await userEvent.click(input)
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ checked: true }) as HTMLInputElement }))
-  },
   render: (args) => {
     const [checked, setChecked] = useState(args.checked)
     return (
@@ -45,6 +39,11 @@ export const Checked: StoryObj<typeof meta> = {
         onChange={(e) => { setChecked(e.target.checked); args.onChange?.(e) }}
       />
     )
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    const input = canvas.getByLabelText('Checked checkbox')
+    await userEvent.click(input)
+    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ checked: true }) as HTMLInputElement }))
   },
 }
 

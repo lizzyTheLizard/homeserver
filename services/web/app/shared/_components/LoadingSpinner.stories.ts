@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { LoadingSpinner } from './LoadingSpinner'
 
 const meta = {
+  title: 'Shared/LoadingSpinner',
   component: LoadingSpinner,
   tags: ['autodocs'],
-  title: 'Shared/LoadingSpinner',
 } satisfies Meta<typeof LoadingSpinner>
 export default meta
 

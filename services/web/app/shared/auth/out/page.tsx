@@ -1,6 +1,6 @@
-import { config } from '@/app/shared/config'
 import { getUserSession } from '../auth'
 import { redirect } from 'next/navigation'
+import { config } from '@/app/shared/config'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
@@ -11,7 +11,7 @@ export default async function Page() {
   return serverPageFunction(metadata.title, async () => {
     const user = await getUserSession()
     if (user) {
-      redirect(`${config.APP_URL  }/shared/auth/logout`)
+      redirect(config.APP_URL + '/shared/auth/logout')
     }
     else {
       return (

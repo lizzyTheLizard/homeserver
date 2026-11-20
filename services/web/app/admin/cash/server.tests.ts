@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
-import { deleteProject, loadProjects, saveProject } from './server'
-import type { UserSession } from '@/app/shared/auth/session'
-import { createOrModifyProject } from '@/app/cash/_data/Project'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { v4 as randomUUID } from 'uuid'
 import { transactional } from '@/app/shared/_external/db/access'
+import { v4 as randomUUID } from 'uuid'
+import { deleteProject, loadProjects, saveProject } from './server'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
+import type { UserSession } from '@/app/shared/auth/session'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {
@@ -16,12 +16,12 @@ vi.mock('@/app/shared/auth/auth', async () => {
 })
 
 describe('loadProjects', () => {
-  beforeAll(() => 
+  beforeAll(() => {
     // Clear all projects before starting tests
-    transactional(async (tx) => {
+    return transactional(async (tx) => {
       await tx.query('DELETE FROM project')
     })
-  )
+  })
 
   afterEach(async () => {
     // Clean up all projects after each test
@@ -31,7 +31,7 @@ describe('loadProjects', () => {
   })
 
   test('Empty projects list', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadProjects()
@@ -40,12 +40,12 @@ describe('loadProjects', () => {
   })
 
   test('Load projects for user', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project1 = { archived: false, id: randomUUID(), name: 'Project Alpha', owner_email: task.id },
-     project2 = { archived: false, id: randomUUID(), name: 'Project Beta', owner_email: task.id },
-     project3 = { archived: false, id: randomUUID(), name: 'Project Gamma', owner_email: task.id }
+    const project1 = { id: randomUUID(), name: 'Project Alpha', owner_email: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'Project Beta', owner_email: task.id, archived: false }
+    const project3 = { id: randomUUID(), name: 'Project Gamma', owner_email: task.id, archived: false }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
@@ -60,11 +60,11 @@ describe('loadProjects', () => {
   })
 
   test('Load projects includes archived projects', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project1 = { archived: false, id: randomUUID(), name: 'Active Project', owner_email: task.id },
-     project2 = { archived: true, id: randomUUID(), name: 'Archived Project', owner_email: task.id }
+    const project1 = { id: randomUUID(), name: 'Active Project', owner_email: task.id, archived: false }
+    const project2 = { id: randomUUID(), name: 'Archived Project', owner_email: task.id, archived: true }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
@@ -78,11 +78,11 @@ describe('loadProjects', () => {
   })
 
   test('Load projects for all users', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const ownProject = { archived: false, id: randomUUID(), name: 'My Project', owner_email: task.id },
-     otherProject = { archived: false, id: randomUUID(), name: 'Other Project', owner_email: 'other-user-id' }
+    const ownProject = { id: randomUUID(), name: 'My Project', owner_email: task.id, archived: false }
+    const otherProject = { id: randomUUID(), name: 'Other Project', owner_email: 'other-user-id', archived: false }
     await transactional(async (tx) => {
       await createOrModifyProject(tx, ownProject)
       await createOrModifyProject(tx, otherProject)
@@ -91,37 +91,37 @@ describe('loadProjects', () => {
     const result = await loadProjects()
 
     expect(result).toEqual([{
-      archived: false,
-      created_at: expect.any(String) as string,
       id: ownProject.id,
       name: ownProject.name,
       owner_email: task.id,
-      updated_at: expect.any(String) as string,
-    }, {
       archived: false,
       created_at: expect.any(String) as string,
+      updated_at: expect.any(String) as string,
+    }, {
       id: otherProject.id,
       name: otherProject.name,
       owner_email: 'other-user-id',
+      archived: false,
+      created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
     }])
   })
 
   test('Returns all project fields', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Test Project', owner_email: task.id }
+    const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const result = await loadProjects()
 
     expect(result).toEqual([{
-      archived: false,
-      created_at: expect.any(String) as string,
       id: project.id,
       name: project.name,
       owner_email: task.id,
+      archived: false,
+      created_at: expect.any(String) as string,
       updated_at: expect.any(String) as string,
     }])
   })
@@ -136,38 +136,38 @@ describe('saveProject', () => {
   })
 
   test('Create a new project', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const projectInput = { archived: false, id: randomUUID(), name: 'New Project', owner_email: task.id },
-     response = await saveProject(projectInput)
+    const projectInput = { id: randomUUID(), name: 'New Project', owner_email: task.id, archived: false }
+    const response = await saveProject(projectInput)
 
-    if (!response.success) {throw new Error('Expected success response')}
+    if (!response.success) throw new Error('Expected success response')
     expect(response.data).toEqual(expect.objectContaining(projectInput))
   })
 
   test('Update an existing project', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const projectId = randomUUID(),
-     originalProject = { archived: false, id: projectId, name: 'Original Name', owner_email: task.id }
+    const projectId = randomUUID()
+    const originalProject = { id: projectId, name: 'Original Name', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, originalProject))
 
-    const updatedProject = { archived: true, id: projectId, name: 'Updated Name', owner_email: task.id },
-     response = await saveProject(updatedProject)
+    const updatedProject = { id: projectId, name: 'Updated Name', owner_email: task.id, archived: true }
+    const response = await saveProject(updatedProject)
 
-    if (!response.success) {throw new Error('Expected success response')}
+    if (!response.success) throw new Error('Expected success response')
     expect(response.data).toEqual(expect.objectContaining(updatedProject))
   })
 
   test('Requires admin authentication', async ({ task }) => {
     vi.mocked(getAuthenticatedUserSession).mockRejectedValue(new Error('Unauthorized'))
 
-    const projectInput = { archived: false, id: randomUUID(), name: 'New Project', owner_email: task.id },
-     response = await saveProject(projectInput)
+    const projectInput = { id: randomUUID(), name: 'New Project', owner_email: task.id, archived: false }
+    const response = await saveProject(projectInput)
 
-    expect(response).toEqual({ error: expect.any(String) as string, success: false })
+    expect(response).toEqual({ success: false, error: expect.any(String) as string })
   })
 })
 
@@ -180,10 +180,10 @@ describe('deleteProject', () => {
   })
 
   test('Delete an existing project', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const project = { archived: false, id: randomUUID(), name: 'Project to Delete', owner_email: task.id }
+    const project = { id: randomUUID(), name: 'Project to Delete', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
     const response = await deleteProject(project.id)
@@ -196,11 +196,11 @@ describe('deleteProject', () => {
   })
 
   test('Delete non-existent project succeeds', async ({ task }) => {
-    const user: UserSession = { applications: ['cash'], email: task.id, name: 'Test User' }
+    const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const nonExistentId = randomUUID(),
-     response = await deleteProject(nonExistentId)
+    const nonExistentId = randomUUID()
+    const response = await deleteProject(nonExistentId)
 
     expect(response.success).toBe(true)
   })
@@ -210,6 +210,6 @@ describe('deleteProject', () => {
 
     const response = await deleteProject(randomUUID())
 
-    expect(response).toEqual({ error: expect.any(String) as string, success: false })
+    expect(response).toEqual({ success: false, error: expect.any(String) as string })
   })
 })

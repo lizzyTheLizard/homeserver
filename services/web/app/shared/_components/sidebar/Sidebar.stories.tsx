@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { type MouseEvent, type ReactNode, useState } from 'react';
-import { Button } from '../form/Button'
 import { Sidebar } from './Sidebar'
 import { SidebarContainer } from './SidebarContainer'
 import { useSidebar } from './SidebarContext'
+import { MouseEvent, ReactNode, useState } from 'react'
+import { Button } from '../form/Button'
 
 function SidebarStoryContent({ args, container }: { args: { title: string, type: string, mainContent: ReactNode }, container: HTMLDivElement | undefined }) {
   const [sidebarId, openSidebar] = useSidebar()
@@ -21,23 +21,26 @@ function SidebarStoryContent({ args, container }: { args: { title: string, type:
 }
 
 const meta = {
+  title: 'Shared/Sidebar',
+  tags: ['autodocs'],
+  globals: {
+    viewport: { value: undefined },
+  },
   argTypes: {
-    title: { control: 'text' },
     type: { control: 'text' },
+    title: { control: 'text' },
   },
   args: {
+    type: 'Template',
+    title: 'Sidebar Title',
     mainContent: (
       <>
         <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore</p>
         <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore</p>
       </>
     ),
-    title: 'Sidebar Title',
-    type: 'Template',
   },
-  globals: {
-    viewport: { value: undefined },
-  },
+
   render: (args) => {
     const [container, setContainer] = useState<HTMLDivElement | undefined>(undefined)
     return (
@@ -48,8 +51,6 @@ const meta = {
       </div>
     )
   },
-  tags: ['autodocs'],
-  title: 'Shared/Sidebar',
 } satisfies Meta<{ type: string, title: string, mainContent: ReactNode }>
 export default meta
 
@@ -86,13 +87,13 @@ export const Opened: StoryObj<typeof meta> = {
 
 export const Mobile: StoryObj<typeof meta> = {
   globals: {
-    viewport: { isRotated: false, value: 'mobile1' },
+    viewport: { value: 'mobile1', isRotated: false },
   },
 }
 
 export const MobileOpened: StoryObj<typeof meta> = {
   globals: {
-    viewport: { isRotated: false, value: 'mobile1' },
+    viewport: { value: 'mobile1', isRotated: false },
   },
   play: ({ canvasElement }) => {
     const sidebar = canvasElement.querySelector('button')
@@ -101,6 +102,9 @@ export const MobileOpened: StoryObj<typeof meta> = {
 }
 
 export const MobileLong: StoryObj<typeof meta> = {
+  globals: {
+    viewport: { value: 'mobile1', isRotated: false },
+  },
   args: {
     mainContent: (
       <>
@@ -118,8 +122,5 @@ export const MobileLong: StoryObj<typeof meta> = {
         <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore</p>
         <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore</p>
       </>),
-  },
-  globals: {
-    viewport: { isRotated: false, value: 'mobile1' },
   },
 }

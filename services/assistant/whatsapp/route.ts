@@ -1,13 +1,13 @@
-import type { IncomingMessage, ServerResponse } from 'http'
-import { type UserSession, getUserSession, parseCookieHeader } from '../session'
-import { archiveWhatsappChat, disconnectWhatsapp, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, startWhatsapp, triggerWhatsappFullSync } from './whatsapp'
+import { IncomingMessage, ServerResponse } from 'http'
+import { getUserSession, parseCookieHeader, UserSession } from '../session'
 import { logger } from '../logger'
+import { archiveWhatsappChat, disconnectWhatsapp, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, startWhatsapp, triggerWhatsappFullSync } from './whatsapp'
 
 export async function handleWhatsappApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
-  if (!pathname.startsWith('/whatsapp')) {return false}
+  if (!pathname.startsWith('/whatsapp')) return false
   try {
-    const user = await authenticate(req),
-     handled = await route(user, req, res, pathname)
+    const user = await authenticate(req)
+    const handled = await route(user, req, res, pathname)
     if (!handled) {
       sendJson(res, 404, { error: 'Not found' })
     }
@@ -22,8 +22,8 @@ export async function handleWhatsappApi(req: IncomingMessage, res: ServerRespons
 }
 
 async function authenticate(req: IncomingMessage): Promise<UserSession> {
-  const cookieHeader = req.headers.cookie ?? '',
-   cookies = parseCookieHeader(cookieHeader)
+  const cookieHeader = req.headers.cookie ?? ''
+  const cookies = parseCookieHeader(cookieHeader)
   return await getUserSession(cookies)
 }
 
@@ -49,8 +49,8 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/whatsapp/messages' && method === 'GET') {
-    const url = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`),
-     chatId = url.searchParams.get('chatId')
+    const url = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`)
+    const chatId = url.searchParams.get('chatId')
     if (!chatId) {
       sendJson(res, 400, { error: 'Missing chatId' })
       return true
@@ -68,7 +68,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/whatsapp/archive-chat' && method === 'POST') {
-    const body = await readJson(req, { archived: false, chatId: '' })
+    const body = await readJson(req, { chatId: '', archived: false })
     await archiveWhatsappChat(user.email, body.chatId, body.archived)
     sendJson(res, 200, { success: true })
     return true
@@ -99,7 +99,6 @@ async function readJson<T>(req: IncomingMessage, defaults: T): Promise<T> {
     req.on('data', (chunk: Buffer) => { body += chunk.toString() })
     req.on('end', () => {
       try {
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         const parsed = body ? JSON.parse(body) as T : defaults
         resolve({ ...defaults, ...parsed })
       }

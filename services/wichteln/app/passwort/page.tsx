@@ -1,15 +1,15 @@
-import { ChangePasswordForm } from '../components'
 import Link from 'next/link'
-import { logout } from '../actions'
 import { requireAccount } from '@/lib/session'
 import { safeContinuePath } from '@/lib/continuePath'
+import { logout } from '../actions'
+import { ChangePasswordForm } from '../components'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ChangePasswordPage({ searchParams }: { searchParams: Promise<{ weiter?: string | string[] }> }) {
-  const account = await requireAccount({ allowPendingChange: true }),
-   { weiter } = await searchParams,
-   target = safeContinuePath(typeof weiter === 'string' ? weiter : undefined)
+  const account = await requireAccount({ allowPendingChange: true })
+  const { weiter } = await searchParams
+  const target = safeContinuePath(typeof weiter === 'string' ? weiter : undefined)
 
   return (
     <div className="card login">

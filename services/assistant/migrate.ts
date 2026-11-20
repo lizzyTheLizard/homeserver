@@ -1,13 +1,13 @@
-import type { Pool, PoolClient } from 'pg'
 import { createHash } from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { Pool, PoolClient } from 'pg'
 import { splitSql } from './splitSql'
 
-const MIGRATIONS_DIR = path.join(process.cwd(), 'db'),
+const MIGRATIONS_DIR = path.join(process.cwd(), 'db')
 
 /** Lock key used to serialise migrations across concurrently starting instances. */
- MIGRATION_LOCK_ID = 8_342_120
+const MIGRATION_LOCK_ID = 8_342_120
 
 interface AppliedMigration {
   name: string
@@ -55,8 +55,8 @@ async function applyMigrations(client: PoolClient): Promise<void> {
     )
   `)
 
-  const planned = await readPlannedMigrations(),
-   applied = new Map(
+  const planned = await readPlannedMigrations()
+  const applied = new Map(
     (await client.query<AppliedMigration>('SELECT name, hash FROM assistant_migrations')).rows.map(m => [m.name, m.hash]),
   )
   let seenUnapplied = false
@@ -85,15 +85,15 @@ async function applyMigrations(client: PoolClient): Promise<void> {
 async function readPlannedMigrations(): Promise<PlannedMigration[]> {
   const names = (await fs.readdir(MIGRATIONS_DIR))
     .filter(name => name.endsWith('.sql'))
-    .sort(),
+    .sort()
 
-   migrations: PlannedMigration[] = []
+  const migrations: PlannedMigration[] = []
   for (const name of names) {
     const content = (await fs.readFile(path.join(MIGRATIONS_DIR, name), 'utf8')).replaceAll(/\r\n/g, '\n')
     migrations.push({
+      name,
       content,
       hash: createHash('sha256').update(content).digest('hex'),
-      name,
     })
   }
   return migrations
