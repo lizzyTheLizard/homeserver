@@ -10,6 +10,7 @@ The docker-compose stack does not start properly: the name server container fail
 - Make the generated zone file readable by adding `chmod 644 /etc/bind/db.gutschi.site` to the bind9 command, after the `sed` that creates it.
 - Let the name server run from a working directory that its non-root user can write (`directory "/tmp"` in `named.conf`), which the new image requires.
 - Add the missing `MICROSOFT_GRAPH_ISSUER` placeholder to `infrastructure/env.example`, without which the assistant exits at start-up.
+- Pass the development machine's existing `SKIP_GITHUB_BOOTSTRAP` switch through the compose file (default `0`, so production is unchanged) so the start-up check does not need a GitHub SSH key.
 - Add a pipeline job that runs `docker compose up` for the stack and passes only once every container is running and healthy. No further checks (no DNS queries, no HTTP requests).
 - The new job runs when the infrastructure is reported as changed, after the changed service images are built and published, and gates the infrastructure deploy and the "Quality Gate".
 

@@ -169,7 +169,10 @@ jobs:
           getent hosts registry-1.docker.io
           sudo ss -lntup | grep ':53 ' || true
       - name: Use the placeholder configuration
-        run: cp infrastructure/env.example infrastructure/.env
+        run: |
+          cp infrastructure/env.example infrastructure/.env
+          # The development machine would otherwise exit without a GitHub SSH key
+          echo "SKIP_GITHUB_BOOTSTRAP=1" >> infrastructure/.env
       - name: Start the stack and wait until every container is healthy
         working-directory: infrastructure
         run: |

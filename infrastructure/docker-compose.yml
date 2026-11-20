@@ -242,6 +242,8 @@ services:
       GIT_USER_EMAIL: "${GIT_MAIL}"
       DEV_SSH_KEY_PUB: "${DEV_SSH_KEY_PUB}"
       DEV: "true"
+      # 1 skips the GitHub SSH check and repository clone (used by the pipeline start-up check)
+      SKIP_GITHUB_BOOTSTRAP: "${SKIP_GITHUB_BOOTSTRAP:-0}"
     volumes:
       - dev_home:/home/dev
     restart: unless-stopped
