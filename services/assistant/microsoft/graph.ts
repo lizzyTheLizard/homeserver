@@ -1,4 +1,3 @@
-import * as client from 'openid-client'
 import * as oidc from 'openid-client'
 import { Client, type GraphRequest } from '@microsoft/microsoft-graph-client'
 import { type MicrosoftToken, getMicrosoftToken, setMicrosoftToken } from './data'
@@ -23,12 +22,12 @@ export async function getLoginRedirectUrl(callbackUrl: string): Promise<URL> {
     scope: 'offline_access Mail.ReadWrite Mail.Send Tasks.ReadWrite User.Read Calendars.ReadWrite',
   },
    clientConfig = await getClientConfig()
-  return client.buildAuthorizationUrl(clientConfig, parameters)
+  return oidc.buildAuthorizationUrl(clientConfig, parameters)
 }
 
 export async function handleMicrosoftLoginCallback(user: UserSession, currentUrl: URL): Promise<void> {
   const clientConfig = await getClientConfig(),
-   tokenSet = await client.authorizationCodeGrant(clientConfig, currentUrl),
+   tokenSet = await oidc.authorizationCodeGrant(clientConfig, currentUrl),
    accessToken = tokenSet.access_token,
    refreshToken = tokenSet.refresh_token,
    expiresAt = Number(tokenSet.expires_at) || Math.floor(Date.now() / 1000) + 3000
@@ -61,7 +60,7 @@ export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken
   return tokenMutex.runExclusive(async () => {
     const now = Math.floor(Date.now() / 1000)
     return transactional(async (db) => {
-      const token = await transactional(db => getMicrosoftToken(db, user.email))
+      const token = await transactional(db2 => getMicrosoftToken(db2, user.email))
       if (!token) {return undefined}
       if (token.expires_at > now + 60) {return token}
       const clientConfig = await getClientConfig(),
@@ -77,11 +76,11 @@ export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken
   })
 }
 
-async function getClientConfig(): Promise<client.Configuration> {
-  clientConfigCache ??= client.discovery(new URL(config.MICROSOFT_GRAPH.ISSUER), config.MICROSOFT_GRAPH.APPLICATION_ID, config.MICROSOFT_GRAPH.CLIENT_SECRET)
+async function getClientConfig(): Promise<oidc.Configuration> {
+  clientConfigCache = clientConfigCache ?? oidc.discovery(new URL(config.MICROSOFT_GRAPH.ISSUER), config.MICROSOFT_GRAPH.APPLICATION_ID, config.MICROSOFT_GRAPH.CLIENT_SECRET)
   return clientConfigCache
 }
-let clientConfigCache: Promise<client.Configuration> | undefined = undefined
+let clientConfigCache: Promise<oidc.Configuration> | undefined = undefined
 
 export function toInstant(dateTime: string, timeZone: string): Temporal.Instant {
   if (timeZone === 'UTC' || !timeZone) {

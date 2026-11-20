@@ -6,7 +6,7 @@ import styles from './EditableBlock.module.css'
 
 type EditState = 'viewing' | 'editing'
 
-export function EditableBlock({ content, onEdit, editable, response }: { content: string, onEdit?: (editedText: string) => void, editable?: boolean, response: boolean }) {
+export function EditableBlock({ content, onEdit, editable, response }: { content: string, onEdit?(editedText: string): void, editable?: boolean, response: boolean }) {
   const [state, setState] = useState<EditState>('viewing'),
    [editValue, setEditValue] = useState(content),
    [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null),

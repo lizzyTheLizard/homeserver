@@ -11,9 +11,9 @@ interface Props {
   templates: Template[]
   template: Template | undefined
   parameters: Record<string, string>
-  onTemplateChange?: (template: Template) => void
-  onParametersChange?: (name: string, value: string | undefined) => void
-  onBlur?: () => void
+  onTemplateChange?(template: Template): void
+  onParametersChange?(name: string, value: string | undefined): void
+  onBlur?(): void
 }
 
 export function EditorContext({ templates, template, parameters, onParametersChange, onTemplateChange, onBlur }: Props) {

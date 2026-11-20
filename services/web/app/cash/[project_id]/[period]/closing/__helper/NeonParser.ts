@@ -42,7 +42,7 @@ function complete(resolve: (result: NeonTransaction[]) => void, reject: (reason:
 }
 
 const NeonRowSchema = z.object({
-  Amount: z.string().regex(/^-?\d+(\.\d{1,2})?$/, 'must be a valid number with up to 2 decimal places'),
+  Amount: z.string().regex(/^-?\d+(?:\.\d{1,2})?$/, 'must be a valid number with up to 2 decimal places'),
   Date: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'must be a valid date in the format YYYY-MM-DD'),
   Description: z.string().optional(),
   Subject: z.string().optional(),

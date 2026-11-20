@@ -6,6 +6,7 @@ import { logger } from './logger'
 import { pathToFileURL } from 'node:url'
 import { readdir } from 'node:fs/promises'
 
+// oxlint-disable-next-line no-underscore-dangle
 declare const __dirname: string
 const TOOLS_DIR = join(__dirname, 'tools')
 
@@ -26,6 +27,6 @@ export async function getTools(user: UserSession): Promise<ToolSet> {
 
 function isToolFile(f: Dirent): boolean {
   if (!f.isFile()) {return false} // Skip directories and symlinks
-  if (!/-tools\.(ts|js)$/.test(f.name)) {return false} // Only tool implementation files
+  if (!/-tools\.(?:ts|js)$/.test(f.name)) {return false} // Only tool implementation files
   return true
 }

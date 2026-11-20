@@ -100,11 +100,11 @@ function describeError(error: unknown): string {
 
 function errorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error),
-   match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
+   match = /^Assistant API error \d+: /.exec(message)
   if (!match) {return message}
   try {
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    const body = JSON.parse(match[1]) as { error?: unknown }
+    const body = JSON.parse(message.slice(match[0].length)) as { error?: unknown }
     if (typeof body.error === 'string' && body.error.length > 0) {return body.error}
   }
   catch {

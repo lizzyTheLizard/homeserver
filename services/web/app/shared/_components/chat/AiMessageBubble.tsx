@@ -10,7 +10,7 @@ export interface AiMessageBubbleProps {
   generating?: boolean
   stalled?: boolean
   editable?: boolean
-  onEdit?: (editedText: string) => void
+  onEdit?(editedText: string): void
 }
 
 export function AiMessageBubble({ role, content, generating, stalled, editable, onEdit }: AiMessageBubbleProps) {

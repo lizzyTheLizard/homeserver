@@ -9,7 +9,7 @@ export interface UserSession {
 }
 
 export interface CookieStore {
-  get: (name: string) => { name: string, value: string } | undefined
+  get(name: string): { name: string, value: string } | undefined
   set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void, (options: ResponseCookie): void }
 }
 

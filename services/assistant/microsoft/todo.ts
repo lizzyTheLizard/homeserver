@@ -65,8 +65,8 @@ const facadeMutex = new Mutex(),
  inactivityTimeoutMs = 5 * 60 * 1000,
  deltaPollIntervalMs = 15 * 1000
 
-function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
-  const userId = user.email
+function createMicrosoftTodoWorker(userSession: UserSession): MicrosoftTodoWorker {
+  const userId = userSession.email
   let lists: MicrosoftTodoList[] = []
   const tasks = new Map<string, MicrosoftTodoTask[]>(),
    tasksDeltaLinks = new Map<string, string>()
@@ -220,7 +220,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   }
 
   async function doInitialFetch(): Promise<void> {
-    lists = await graphApiRequest(user, '/me/todo/lists', async (request) => {
+    lists = await graphApiRequest(userSession, '/me/todo/lists', async (request) => {
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const response = await request.get() as { value: MicrosoftTodoList[] }
       return response.value
@@ -247,7 +247,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   async function syncListTasks(list: MicrosoftTodoList, url: string): Promise<void> {
     let currentUrl: string | undefined = url
     while (currentUrl) {
-      const deltaResult: DeltaResponse<RawTodoTask> = await graphApiRequest(user, currentUrl, async (request) => 
+      const deltaResult: DeltaResponse<RawTodoTask> = await graphApiRequest(userSession, currentUrl, async (request) => 
         // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         await request.get() as DeltaResponse<RawTodoTask>
       )
@@ -279,9 +279,9 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         status = 'connecting'
         doInitialFetch()
           .then(() => { status = 'connected' })
-          .catch((error: unknown) => {
+          .catch((error1: unknown) => {
             status = 'error'
-            logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+            logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, error1)
           })
       })
   }, deltaPollIntervalMs)

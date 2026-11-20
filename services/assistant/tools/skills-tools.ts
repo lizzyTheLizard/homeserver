@@ -20,7 +20,7 @@ export function getSkillTools(skillDir: string): ToolSet {
     if (!skill) {continue}
     skillTools[`load_skill_${skill.name}`] = tool({
       description: skill.description,
-      execute: skill.execute,
+      execute: () => skill.execute(),
       inputSchema: z.object({}),
     })
   }
@@ -49,13 +49,13 @@ function parseMetadata(skillDirPath: string): { name: string, description: strin
   const skillFilePath = join(skillDirPath, skillFile),
    content = fs.readFileSync(skillFilePath, 'utf-8'),
 
-   metadata = /---\r?\n([\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
+   metadata = /---\r?\n(?<frontmatter>[\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
   if (!metadata) {
     logger.warn(`Skill file ${skillFilePath} has invalid frontmatter, metadata is missing`)
     return undefined
   }
   const frontmatter: Record<string, string> = {}
-  for (const line of metadata[1].split(/\r?\n/)) {
+  for (const line of (metadata.groups?.frontmatter ?? '').split(/\r?\n/)) {
     const colonIndex = line.indexOf(':')
     if (colonIndex > 0) {
       const key = line.slice(0, colonIndex).trim(),
@@ -94,5 +94,5 @@ async function loadSkill(name: string, skillDirPath: string): Promise<string> {
 interface ParsedSkill {
   name: string
   description: string
-  execute: () => Promise<string>
+  execute(): Promise<string>
 }

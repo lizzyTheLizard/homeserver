@@ -203,7 +203,7 @@ export function ResetPasswordForm({
   action: boundAction,
 }: {
   name: string
-  action: (prev: FormState) => Promise<FormState>
+  action(prev: FormState): Promise<FormState>
 }) {
   const [state, action] = useActionState(boundAction, undefined)
   return (

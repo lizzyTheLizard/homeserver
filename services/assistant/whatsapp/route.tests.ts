@@ -1,3 +1,4 @@
+// oxlint-disable typescript/consistent-type-imports
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { EventEmitter } from 'events'
 import type { UserSession } from '../session'

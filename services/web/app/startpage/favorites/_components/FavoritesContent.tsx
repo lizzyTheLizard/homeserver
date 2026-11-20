@@ -62,7 +62,7 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
 
   return (
     <>
-      <DataTable
+      <DataTable<Favorite>
         data={favorites}
         columns={columns}
         onRowClick={showFavorite}

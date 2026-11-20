@@ -12,7 +12,7 @@ import z from 'zod'
 
 interface ActiveAssistant {
   assistant: Assistant
-  listener: (event: AssistantEvent) => void
+  listener(event: AssistantEvent): void
   cleanupTimeout?: NodeJS.Timeout
   ws: WebSocket | undefined
 }
@@ -150,7 +150,7 @@ function handleConnectionClose(code: number, currentUuid: string | undefined): v
   if (code === 4003) {return}
   const stored = activeAssistants.get(currentUuid)
   if (!stored) {return}
-  stored.assistant.off(stored.listener)
+  stored.assistant.off((e) => stored.listener(e))
   stored.ws = undefined
   setTimeout(() => { activeAssistants.delete(currentUuid) }, ASSISTANT_TTL_MS)
 }

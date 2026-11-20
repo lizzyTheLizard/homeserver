@@ -7,7 +7,7 @@ import style from './DataTableColumnBuilder.module.css'
 export interface Options<FieldType> {
   header?: string
   sort?: boolean
-  cell?: (value: FieldType, id: string) => ReactNode
+  cell?(value: FieldType, id: string): ReactNode
   style?: CSSProperties
   className?: string
 }

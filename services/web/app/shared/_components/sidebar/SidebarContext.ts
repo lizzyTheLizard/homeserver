@@ -2,9 +2,9 @@ import { createContext, useContext, useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
 
 export interface SidebarContextValue {
-  open: (id: string) => void
-  close: () => void
-  isOpen: (id: string) => boolean
+  open(id: string): void
+  close(): void
+  isOpen(id: string): boolean
 }
 
 export const SidebarContext = createContext<SidebarContextValue | null>(null)

@@ -4,7 +4,7 @@ export interface Application {
   name: string
   link: string
   description: string
-  getLinks: (path: string) => { text: string, href: string, hideMobile?: boolean }[]
+  getLinks(path: string): { text: string, href: string, hideMobile?: boolean }[]
 }
 
 export const applications: Application[] = [

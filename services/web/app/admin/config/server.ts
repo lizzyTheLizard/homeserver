@@ -29,11 +29,11 @@ export async function loadConfig(): Promise<ConfigSection[]> {
   await getAuthenticatedUserSession('admin')
 
   const allKeys = Object.keys(process.env).sort(),
-   runtimeKeys = allKeys.filter(k => /^(NODE_|HOME|PORT|PWD|SHELL|USER|APP_URL)/.test(k) || ['HOSTNAME', 'RAM', 'TZ', 'PATH'].includes(k)),
-   authKeys = allKeys.filter(k => /^(CLIENT_|ISSUER|SESSION_|OID_|OPLN_|COOKIE_NAME|ADMIN_)/.test(k) || k.endsWith('_API_KEY')),
+   runtimeKeys = allKeys.filter(k => /^(?:NODE_|HOME|PORT|PWD|SHELL|USER|APP_URL)/.test(k) || ['HOSTNAME', 'RAM', 'TZ', 'PATH'].includes(k)),
+   authKeys = allKeys.filter(k => /^(?:CLIENT_|ISSUER|SESSION_|OID_|OPLN_|COOKIE_NAME|ADMIN_)/.test(k) || k.endsWith('_API_KEY')),
    dbKeys = allKeys.filter(k => k.startsWith('DB_')),
    devKeys = allKeys.filter(k => k.startsWith('WSL')),
-   nodeKeys = allKeys.filter(k => /^(npm_|NODE_|NVM_|NODE|pnpm|COREPACK|PNPM)/.test(k)),
+   nodeKeys = allKeys.filter(k => /^(?:npm_|NODE_|NVM_|NODE|pnpm|COREPACK|PNPM)/.test(k)),
    categorized = new Set([...runtimeKeys, ...authKeys, ...dbKeys, ...devKeys, ...nodeKeys]),
    appKeys = allKeys.filter(k => !categorized.has(k))
 

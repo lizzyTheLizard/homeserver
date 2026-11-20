@@ -59,7 +59,7 @@ export function splitSql(sql: string): string[] {
 
     // Dollar-quoted string: $tag$ ... $tag$
     if (c === '$') {
-      const tagMatch = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i))
+      const tagMatch = /^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i))
       if (tagMatch) {
         const tag = tagMatch[0],
          start = i + tag.length,

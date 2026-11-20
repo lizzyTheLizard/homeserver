@@ -59,9 +59,9 @@ export async function createOrModifyTemplate(client: Queryable, owner: string, i
 }
 
 function extractParameters(text: string): TemplateParameter[] {
-  const PARAMETER_REGEX = /\{([^}]+)\}/g
+  const PARAMETER_REGEX = /\{[^}]+\}/g
   return Array.from(text.matchAll(PARAMETER_REGEX)).map((match) => {
-    const matchedString = match[1],
+    const matchedString = match[0].slice(1, -1),
      parameterDetails = getParameterDetails(matchedString),
      matchedLength = matchedString.length + 2 // +2 for the curly braces
     return { ...parameterDetails, endPosition: match.index + matchedLength, startPosition: match.index }

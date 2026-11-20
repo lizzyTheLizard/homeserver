@@ -12,8 +12,8 @@ const MAX_TOOL_ITERATIONS = 10,
 export interface SendOptions {
   messages: ModelMessage[]
   tools?: ToolSet
-  onChunk?: (chunk: string) => void
-  onToolCall?: () => void
+  onChunk?(chunk: string): void
+  onToolCall?(): void
 }
 
 export async function send(options: SendOptions): Promise<string> {
@@ -36,17 +36,18 @@ async function stream(options: SendOptions): Promise<ModelMessage[]> {
 }
 
 async function generate(options: SendOptions): Promise<ModelMessage[]> {
-  const config = getConfig(options),
-   result = await generateText(config)
+  const config = getConfig(options)
+  const result = await generateText(config)
   return result.responseMessages
 }
 
-function getConfig({ messages, tools, onToolCall }: SendOptions): Parameters<typeof generateText>[0] {
+function getConfig(options: SendOptions): Parameters<typeof generateText>[0] {
+  const { messages, tools } = options
   return {
     ...agentSettings,
     maxOutputTokens: 2048,
     messages,
-    onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) {onToolCall?.()} },
+    onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) {options.onToolCall?.()} },
     onToolExecutionEnd: ({ toolCall }) => { logger.debug(`Tool execution ended: ${toolCall.toolName}`) },
     onToolExecutionStart: ({ toolCall }) => { logger.debug(`Tool execution started: ${toolCall.toolName}`) },
     stopWhen: isStepCount(MAX_TOOL_ITERATIONS),

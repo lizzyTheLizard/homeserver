@@ -6,7 +6,7 @@ import { useActionTitle } from '../ActionTitleHelpers'
 export interface SearchBarProps {
   label: string
   value: string
-  onChange: (value: string) => void
+  onChange(value: string): void
 }
 
 export function SearchBar({ label, value, onChange }: SearchBarProps) {

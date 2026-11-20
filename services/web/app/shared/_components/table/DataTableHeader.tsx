@@ -6,7 +6,7 @@ import style from './DataTableHeader.module.css'
 export interface DataTableHeaderProps<FieldType> {
   sortingOrder: SortingOrder[]
   column: ColumnDefinition<FieldType>
-  onSort: (oldSort: SortingOrder | undefined, key: string) => void
+  onSort(oldSort: SortingOrder | undefined, key: string): void
 }
 
 export function DataTableHeader<FieldType>({ column, sortingOrder, onSort }: DataTableHeaderProps<FieldType>) {

@@ -109,7 +109,7 @@ export function getPrecipitationString(hourly: Record<string, Record<string, unk
 
   if (events.length === 0) {return 'No rain to be expected.'}
 
-  const first = events[0]
+  const [first] = events;
   if (events.length === 1) {
     if (first.isNow) {
       if (first.noClearing) {return capitalize(`${first.condition} is expected to continue.`)}

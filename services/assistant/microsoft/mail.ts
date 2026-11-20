@@ -55,7 +55,7 @@ export async function getMicrosoftMailWorker(user: UserSession): Promise<Microso
 declare global {
   var microsoftMailWorkers: Map<string, MicrosoftMailWorker> | undefined
 }
-globalThis.microsoftMailWorkers ??= new Map<string, MicrosoftMailWorker>()
+globalThis.microsoftMailWorkers = globalThis.microsoftMailWorkers ?? new Map<string, MicrosoftMailWorker>()
 
 const facadeMutex = new Mutex(),
  inactivityTimeoutMs = 5 * 60 * 1000,

@@ -4,7 +4,7 @@ import styles from './AiActionList.module.css'
 
 export interface AiActionListAction {
   label: string
-  onSelect: () => void
+  onSelect(): void
 }
 
 export interface AiActionListProps {

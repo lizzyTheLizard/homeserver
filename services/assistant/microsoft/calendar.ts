@@ -65,7 +65,7 @@ export async function getMicrosoftCalendarWorker(user: UserSession): Promise<Mic
 declare global {
   var calendarWorkers: Map<string, MicrosoftCalendarWorker> | undefined
 }
-globalThis.calendarWorkers ??= new Map<string, MicrosoftCalendarWorker>()
+globalThis.calendarWorkers = globalThis.calendarWorkers ?? new Map<string, MicrosoftCalendarWorker>()
 
 const facadeMutex = new Mutex(),
  inactivityTimeoutMs = 5 * 60 * 1000,

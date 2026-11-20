@@ -41,7 +41,8 @@
       "method"
     ],
     "no-continue": "off",
-    "init-declarations": "off"
+    "init-declarations": "off",
+    "prefer-destructuring": "off"
   },
   "overrides": [
     {

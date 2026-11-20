@@ -15,7 +15,7 @@ export interface AiChatMessageListProps {
   messages: Message[]
   state: ChatState
   incomingMessage: string
-  onEdit: (editedText: string) => void
+  onEdit(editedText: string): void
   hasActions: boolean
 }
 

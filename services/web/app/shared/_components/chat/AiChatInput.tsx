@@ -9,13 +9,13 @@ import styles from './AiChatInput.module.css'
 
 export interface AiChatInputAction {
   label: string
-  onSelect?: () => void
+  onSelect?(): void
 }
 
 export interface AiChatInputProps {
   value: string
-  onChange: (value: string) => void
-  onSubmit: (text: string) => void
+  onChange(value: string): void
+  onSubmit(text: string): void
   disabled?: boolean
   actionsDisabled?: boolean
   placeholder?: string

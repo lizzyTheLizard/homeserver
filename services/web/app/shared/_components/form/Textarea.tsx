@@ -14,7 +14,7 @@ export interface TextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
   value?: string
   keepSelection?: boolean
   ref?: React.RefObject<HTMLTextAreaElement | null>
-  onSelectionChange?: (selection?: Selection) => void
+  onSelectionChange?(selection?: Selection): void
 }
 
 /** A textarea component with the following additional features

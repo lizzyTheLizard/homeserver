@@ -12,9 +12,9 @@ export interface DataTableProps<T extends { id: string }> extends TableHTMLAttri
   columns: ColumnDefinition<any>[]
   initialSortingOrder?: SortingOrder[]
   searchLabel?: string
-  onRowClick?: (item: T) => void
+  onRowClick?(item: T): void
   activeId?: string
-  renderMobile?: (item: T) => ReactNode
+  renderMobile?(item: T): ReactNode
 }
 
 export interface ColumnDefinition<FieldType> {
@@ -22,8 +22,8 @@ export interface ColumnDefinition<FieldType> {
   header: string
   style?: CSSProperties
   className?: string
-  sort?: (a: FieldType, b: FieldType) => number
-  cell: (value: FieldType, id: string) => ReactNode
+  sort?(a: FieldType, b: FieldType): number
+  cell(value: FieldType, id: string): ReactNode
   search(value: FieldType, searchTerm: string): boolean
 }
 

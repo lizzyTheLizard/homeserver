@@ -15,10 +15,10 @@ export interface SidebarProps<T> {
   title: string
   type?: string
   noDelete?: boolean
-  onSave?: () => ActionResponse<T>
-  onAfterSave?: (result: T) => void
-  onDelete?: () => ActionResponse<unknown>
-  onAfterDelete?: () => void
+  onSave?(): ActionResponse<T>
+  onAfterSave?(result: T): void
+  onDelete?(): ActionResponse<unknown>
+  onAfterDelete?(): void
 }
 
 export function Sidebar<T>({ container, ...props }: PropsWithChildren<SidebarProps<T> & { container?: HTMLElement | null }>) {

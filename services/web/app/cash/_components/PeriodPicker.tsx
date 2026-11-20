@@ -6,7 +6,7 @@ import { useActionTitle } from '@/app/shared/_components/ActionTitleHelpers'
 
 export interface PeriodPickerProps {
   period: Period
-  onPeriodChange?: (period: Period) => void
+  onPeriodChange?(period: Period): void
   project_id?: string
 }
 
