@@ -6,6 +6,7 @@ function getStoredLocation(): { lon: number, lat: number } {
   try {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (stored) {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const parsed = JSON.parse(stored) as { lon: number, lat: number }
       if (typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
         return parsed

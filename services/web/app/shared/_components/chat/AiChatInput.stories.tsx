@@ -238,6 +238,7 @@ export const ActionsSubmitTheirLabel: Story = {
     const chip = await within(canvasElement).findByRole('button', { name: 'Improve' }),
      form = getInput(canvasElement).closest('form')
     await expect(form).not.toBeNull()
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     await expect(chip.compareDocumentPosition(form as Element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await fireEvent.click(chip)
     await expect(args.onSubmit).toHaveBeenCalledWith('Improve')

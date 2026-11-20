@@ -33,6 +33,7 @@ export const Checked: StoryObj<typeof meta> = {
   play: async ({ args, canvas, userEvent }) => {
     const input = canvas.getByLabelText('Checked checkbox')
     await userEvent.click(input)
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ checked: true }) as HTMLInputElement }))
   },
   render: (args) => {

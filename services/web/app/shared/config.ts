@@ -47,6 +47,7 @@ function optional(name: string, defaultValue: string): string {
 }
 
 export const config: Config = {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
   LOG_URL: required('LOG_URL', 'http://localhost:4000'),

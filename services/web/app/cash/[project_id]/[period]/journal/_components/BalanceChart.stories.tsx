@@ -234,6 +234,7 @@ export const XSpacingIsProportionalToDays: StoryObj<typeof meta> = {
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart'),
     // Opening balance (01.04) + 3 transactions = 4 dots, read in document order.
+     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
      dots = Array.from(chart.querySelectorAll('.recharts-line-dot')) as unknown as SVGElement[]
     await expect(dots).toHaveLength(4)
     const cx = dots.map(dot => Number(dot.getAttribute('cx'))),

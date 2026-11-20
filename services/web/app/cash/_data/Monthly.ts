@@ -38,6 +38,7 @@ export async function findForPeriod(client: Queryable, ownerId: string, projectI
     [projectId, ownerId, toString(period)],
   )
   if (!result.rows[0]) {return undefined}
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return removeNull({ ...result.rows[0], period: fromUrlString(result.rows[0].period as unknown as string) as MonthlyPeriod })
 }
 
@@ -47,6 +48,7 @@ export async function findBeforePeriod(client: Queryable, ownerId: string, proje
     [projectId, ownerId, toString(period)],
   )
   if (!result.rows[0]) {return undefined}
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return removeNull({ ...result.rows[0], period: fromUrlString(result.rows[0].period as unknown as string) as MonthlyPeriod })
 }
 
@@ -57,6 +59,7 @@ export async function createMonthlyClosing(client: Queryable, ownerId: string, i
   )
   if (!result.rows[0]) {throw new Error('Failed to create monthly closing')}
   logger.debug(`Created monthly closing ${input.id} for project ${input.project_id} and period ${toString(input.period)}`)
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return removeNull({ ...result.rows[0], period: fromUrlString(result.rows[0].period as unknown as string) as MonthlyPeriod })
 }
 
@@ -67,5 +70,6 @@ export async function modifyMonthlyClosing(client: Queryable, ownerId: string, i
   )
   if (!result.rows[0]) {throw new Error('Failed to modify monthly closing')}
   logger.debug(`Modified monthly closing ${input.id} for project ${input.project_id} and period ${toString(input.period)}`)
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return removeNull({ ...result.rows[0], period: fromUrlString(result.rows[0].period as unknown as string) as MonthlyPeriod })
 }

@@ -48,6 +48,7 @@ export const config: Config = {
     CLIENT_SECRET: required('MICROSOFT_GRAPH_CLIENT_SECRET', 'dev-only-client-secret'),
     ISSUER: required('MICROSOFT_GRAPH_ISSUER', 'https://login.microsoftonline.com/dev-only-tenant-id/v2.0'),
   },
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
   SESSION: {
     COOKIE_NAME: required('COOKIE_NAME', 'homeserver-session'),

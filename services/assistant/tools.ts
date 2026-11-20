@@ -16,7 +16,8 @@ export async function getTools(user: UserSession): Promise<ToolSet> {
   for (const file of toolFiles) {
     const filePath = join(TOOLS_DIR, file.name),
      importPath = file.name.endsWith('.js') ? filePath : pathToFileURL(filePath).href,
-     mod = await import(importPath) as { default: (user: UserSession) => ToolSet }
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+     mod = await import(importPath) as { default(user: UserSession):ToolSet }
     Object.assign(allTools, mod.default(user))
   }
   logger.debug(`Loaded ${Object.keys(allTools).length.toString()} tools from ${TOOLS_DIR}`)

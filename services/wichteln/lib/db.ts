@@ -17,6 +17,7 @@ class PgQueryable implements Queryable {
 
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
     const result = await this.client.query(sql, params)
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return result.rows as T[]
   }
 }

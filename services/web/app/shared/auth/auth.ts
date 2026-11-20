@@ -59,8 +59,10 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   }),
    claims = tokenSet.claims()
   if (!claims) {throw authenticationFailed(`No claims found in token set during callback`)}
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const email = claims.email as string
   if (!email) {throw authenticationFailed(`No email claim found in token set during callback`)}
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const name = (claims.given_name as string | undefined) ?? email,
    applications = await getApplications(email),
    result = session.originalUrlRelative ?? '/',

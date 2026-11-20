@@ -22,6 +22,7 @@ export async function startWhatsapp(userId: string): Promise<SyncStatus> {
     const text = await response.text()
     throw new Error(`Failed to start WhatsApp: ${response.status.toString()} ${text}`)
   }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return response.json() as Promise<SyncStatus>
 }
 
@@ -32,6 +33,7 @@ export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
     const text = await response.text()
     throw new Error(`Failed to get WhatsApp status: ${response.status.toString()} ${text}`)
   }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return response.json() as Promise<SyncStatus>
 }
 
@@ -41,6 +43,7 @@ export async function getWhatsappChats(userId: string): Promise<Chat[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch chats: ${response.status.toString()} ${await response.text()}`)
   }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return response.json() as Promise<Chat[]>
 }
 

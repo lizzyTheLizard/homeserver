@@ -62,14 +62,17 @@ async function getWeather(initialContext: InitialContext): Promise<PartResult> {
   ]),
    daily = parseOpenMeteoData(data.daily),
    hourly = parseOpenMeteoData(data.hourly),
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
    temperatures = Object.entries(hourly).filter(([timeKey]) => timeKey.startsWith(today)).map(([, point]) => point.temperature as number),
    minTemp = Math.min(...temperatures),
    maxTemp = Math.max(...temperatures),
    timeStr = `${Temporal.Now.plainDateTimeISO().toString().substring(0, 13)  }:00`,
    current = hourly[timeStr]
   let text = ''
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   text += `Currently the weather is **${current.weather_condition as string}** with **${current.temperature as string}°C,** in **${city}**.  `
   text += `During the day, the temperature will rise to **${maxTemp.toString()}°C** and drop to **${minTemp.toString()}°C** in the evening.  `
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   text += `The sun will rise at **${formatTime(daily[today].sunrise as string)}** and set at **${formatTime(daily[today].sunset as string)}**. `
   text += getPrecipitationString(hourly, Temporal.Now.plainDateTimeISO())
   text += '\n\n'
@@ -87,14 +90,17 @@ export function getPrecipitationString(hourly: Record<string, Record<string, unk
   let i = 0
   while (i < entries.length) {
     const [, point] = entries[i]
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     if (!PRECIPITATION_CONDITIONS.has(point.weather_condition as string)) {
       i++
       continue
     }
 
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const condition = (point.weather_condition as string).toLowerCase(),
      start = entries[i][0].substring(11, 16)
     let j = i + 1
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     while (j < entries.length && (entries[j][1].weather_condition as string).toLowerCase() === condition) {j++}
     const end = j < entries.length ? entries[j][0].substring(11, 16) : entries[j - 1][0].substring(11, 16)
     events.push({ condition, end, isNow: entries[i][0].startsWith(currentHour), noClearing: j >= entries.length, start })

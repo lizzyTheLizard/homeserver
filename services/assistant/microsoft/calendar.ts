@@ -152,6 +152,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
       if (body) {eventBody.body = { content: body, contentType: 'text' }}
       if (location) {eventBody.location = { displayName: location }}
       const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async (request) => 
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         await request.post(eventBody) as RawCalendarEvent
       ),
        event = convertCalendarEvent(response),
@@ -201,6 +202,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
         if (queryOnFirstCall) {
           const params = queryOnFirstCall
           queryOnFirstCall = undefined
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion
           return await request
             .query(params)
             .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')

@@ -10,10 +10,14 @@ export function createAssistantInstance(user: UserSession): Assistant {
   const listeners: AssistantEventListener[] = [],
    messages: ModelMessage[] = []
   let tools: ToolSet = {}
-  const onChunk = (chunk: string) => { emit({ chunk, type: 'stream_response' }) },
-   onToolCall = () => { emit({ type: 'tool_call' }) },
-   onFinishedResponse = () => { emit({ type: 'finished_response' }) },
-   onGotActions = (actions: string[]) => { emit({ actions, type: 'got_actions' }) }
+  // oxlint-disable-next-line func-style
+  const onChunk = (chunk: string) => { emit({ chunk, type: 'stream_response' }) }
+  // oxlint-disable-next-line func-style
+  const onToolCall = () => { emit({ type: 'tool_call' }) }
+  // oxlint-disable-next-line func-style
+  const onFinishedResponse = () => { emit({ type: 'finished_response' }) }
+  // oxlint-disable-next-line func-style
+  const onGotActions = (actions: string[]) => { emit({ actions, type: 'got_actions' }) }
 
   function emit(event: AssistantEvent) {
     listeners.forEach((listener) => { listener(event) })
@@ -45,6 +49,7 @@ export function createAssistantInstance(user: UserSession): Assistant {
     const messagesCopy = [...messages, { content: actionPrompt, role: 'user' }] satisfies ModelMessage[],
      actionString = await groqSend({ messages: messagesCopy })
     try {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const actions = JSON.parse(actionString) as string[]
       onGotActions(actions)
     }

@@ -40,6 +40,7 @@ export async function handleMicrosoftLoginCallback(user: UserSession, currentUrl
 }
 
 export async function getUserInfo(user: UserSession): Promise<MicrosoftUserInfo | undefined> {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return await graphApiRequest(user, '/me', request => request.get() as Promise<MicrosoftUserInfo>)
 }
 

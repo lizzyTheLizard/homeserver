@@ -59,7 +59,7 @@ export async function getMicrosoftTodoWorker(user: UserSession): Promise<Microso
 declare global {
   var msTodoWorkers: Map<string, MicrosoftTodoWorker> | undefined
 }
-globalThis.msTodoWorkers ??= new Map<string, MicrosoftTodoWorker>()
+globalThis.msTodoWorkers = globalThis.msTodoWorkers ?? new Map<string, MicrosoftTodoWorker>()
 
 const facadeMutex = new Mutex(),
  inactivityTimeoutMs = 5 * 60 * 1000,
@@ -149,6 +149,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       if (!list) {throw new Error(`List with ID ${listId} not found`)}
       logger.debug(`Create task in list ${listId} with body ${JSON.stringify(taskBody)}`)
       const result = await graphApiRequest(user, `/me/todo/lists/${listId}/tasks`, async (request) => {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         const response = await request.post(taskBody) as RawTodoTask
         return { ...convertTask(response), listName: list.displayName }
       })
@@ -172,6 +173,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       if (updates.reminderDateTime !== undefined) {patchBody.reminderDateTime = toGraphDateTime(updates.reminderDateTime)}
       logger.debug(`Update task ${taskId} with ${JSON.stringify(patchBody)}`)
       const result = await graphApiRequest(user, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async (request) => {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         const response = await request.patch(patchBody) as RawTodoTask
         return { ...convertTask(response), listName: list.displayName }
       })
@@ -219,6 +221,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
 
   async function doInitialFetch(): Promise<void> {
     lists = await graphApiRequest(user, '/me/todo/lists', async (request) => {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const response = await request.get() as { value: MicrosoftTodoList[] }
       return response.value
     })
@@ -245,6 +248,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     let currentUrl: string | undefined = url
     while (currentUrl) {
       const deltaResult: DeltaResponse<RawTodoTask> = await graphApiRequest(user, currentUrl, async (request) => 
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         await request.get() as DeltaResponse<RawTodoTask>
       )
       for (const rawTask of deltaResult.value) {

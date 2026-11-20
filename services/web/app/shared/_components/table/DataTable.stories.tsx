@@ -52,6 +52,7 @@ export const Sorting: StoryObj<Complicated> = {
       dateColumn('date', { header: 'Date' }),
       boolColumn('bool', { header: 'Boolean' }),
     ],
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     data: [...Array(200).keys()].map(i => ({ bool: i % 2 === 0, date: Temporal.PlainDate.from({ day: (i % 30) + 1, month: 1, year: 2020 }), id: i.toString(), select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, text: `This is text number ${i.toString()}` })),
   },
 }
@@ -64,6 +65,7 @@ export const Search: StoryObj<Complicated> = {
       dateColumn('date', { header: 'Date' }),
       boolColumn('bool', { header: 'Boolean' }),
     ],
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     data: [...Array(200).keys()].map(i => ({ bool: i % 2 === 0, date: Temporal.PlainDate.from({ day: (i % 30) + 1, month: 1, year: 2020 }), id: i.toString(), select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, text: `This is text number ${i.toString()}` })),
     searchLabel: 'Search…',
   },

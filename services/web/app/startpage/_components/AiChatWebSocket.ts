@@ -47,17 +47,21 @@ export class AiChatWebSocket {
 
   private handleMessage(event: MessageEvent) {
     try {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const data = JSON.parse(event.data as string) as IncommingMessage
       if (data.type === 'initialized' && data.uuid) {this.onServerInitialized(data.uuid)}
       else if (data.type === 'reconnected') {this.onReconnected()}
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       else if (data.type === 'error') {this.onError('Got error message from server', new Error(event.data as string))}
       else if (data.type === 'stream_response') {this.onStreamResponse(data.chunk ?? '')}
       else if (data.type === 'tool_call') {this.onToolCall()}
       else if (data.type === 'got_actions') {this.onGotActions(data.actions ?? [])}
       else if (data.type === 'finished_response') {this.onFinishedResponse()}
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       else {this.onError('Got an invalid message from server', new Error(event.data as string))}
     }
     catch (error: unknown) {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       this.onError(`Failed to parse server message`, error instanceof Error ? error : new Error(error as string))
     }
   }

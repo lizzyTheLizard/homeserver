@@ -6,6 +6,7 @@ const CACHE_TTL_MS = 10 * 60 * 1000,
 export async function getLocationDescription(location: { lat: number, lon: number }): Promise<string> {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat.toString()}&lon=${location.lon.toString()}`,
+     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
      data = await cachedFetch(url) as { address: { city: string } }
     return data.address.city
   }
@@ -18,6 +19,7 @@ export async function getLocationDescription(location: { lat: number, lon: numbe
 export async function getLocationByName(placeName: string): Promise<{ lat: number, lon: number }> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${placeName}&format=jsonv2`,
+     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
      data = await cachedFetch(url) as { lat: string, lon: string }[]
     return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }
   }

@@ -370,6 +370,7 @@ function mapGroup(row: GroupRow, users: UserRow[]): Group {
     id: row.id,
     inviteToken: row.invite_token,
     name: row.name,
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     phase: row.phase as Phase,
     users: users.map(mapUser),
   }

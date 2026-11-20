@@ -89,6 +89,7 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
 
   useEffect(() => {
     const select = document.getElementsByClassName('accountInput'),
+     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
      firstSelect = select[0] as HTMLSelectElement
     firstSelect.focus()
   }, [])

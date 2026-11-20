@@ -10,22 +10,26 @@ const MICROSOFT_CALLBACK_PATH = '/startpage/microsoft/callback'
 
 export async function loadMicrosoftStatus(): Promise<MicrosoftStatus> {
   await getAuthenticatedUserSession('startpage')
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return assistantGet('/microsoft/status') as Promise<MicrosoftStatus>
 }
 
 export async function checkMicrosoftStatus(): Promise<MicrosoftConnectionStatus> {
   await getAuthenticatedUserSession('startpage')
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return assistantGet('/microsoft/check-status') as Promise<MicrosoftConnectionStatus>
 }
 
 export async function loadMessage(messageId: string): Promise<SerializedMessageFull | undefined> {
   await getAuthenticatedUserSession('startpage')
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return assistantGet(`/microsoft/mail/messages?id=${encodeURIComponent(messageId)}`) as Promise<SerializedMessageFull | undefined>
 }
 
 export async function connectMicrosoft(): Promise<ActionResponse<string>> {
   await getAuthenticatedUserSession('startpage')
   const callbackUrl = config.APP_URL + MICROSOFT_CALLBACK_PATH
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return toResponse(assistantGet(`/microsoft/login-url?callbackUrl=${encodeURIComponent(callbackUrl)}`) as Promise<{ url: string }>)
     .then((response) => {
       if (!response.success) {return response}

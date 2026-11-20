@@ -77,6 +77,7 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
   }
 
   function updateSelection(e: React.SyntheticEvent<HTMLTextAreaElement>) {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const target = e.target as HTMLTextAreaElement,
      start = target.selectionStart,
      end = target.selectionEnd,

@@ -92,7 +92,7 @@ function formatSenderName(senderJid: string, fromMe: boolean, senderName: string
 }
 
 function normalizeTimestamp(value: unknown): string {
-  const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/
+  const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/
   if (typeof value !== 'string' || value === '') {return ''}
   if (UTC_TIMESTAMP.test(value)) {
     // Strip any fractional seconds.

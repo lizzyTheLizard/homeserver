@@ -62,6 +62,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                     .filter(app => accessibleApplications.includes(app.key))
                     .map(app => (
                       <Link key={app.key} href={app.link} className={appLinkClass(app.link)}>
+                        {/* oxlint-disable-next-line typescript/no-unsafe-type-assertion */}
                         <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ height: '1rem', width: '1rem' }} />
                         <span>{app.name}</span>
                       </Link>
@@ -80,6 +81,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                   .filter(app => accessibleApplications.includes(app.key))
                   .map(app => (
                     <Link key={app.key} href={app.link} className={tabLinkClass(app.link)}>
+                      {/* oxlint-disable-next-line typescript/no-unsafe-type-assertion */}
                       <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ height: '1.1rem', width: '1.1rem' }} />
                       <span>{app.name}</span>
                     </Link>

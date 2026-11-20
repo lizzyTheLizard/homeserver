@@ -78,6 +78,7 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
 
   useEffect(() => {
     const inputs = document.getElementsByClassName('categoryInput'),
+     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
      firstInput = inputs[0] as HTMLInputElement | undefined
     firstInput?.focus()
   }, [])

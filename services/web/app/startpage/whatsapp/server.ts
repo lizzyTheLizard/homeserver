@@ -10,6 +10,7 @@ export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, e
   await getAuthenticatedUserSession('startpage')
   let status: SyncStatus
   try {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     status = await assistantGet('/whatsapp/start') as SyncStatus
   }
   catch (error: unknown) {
@@ -17,6 +18,7 @@ export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, e
   }
   if (status.type !== 'connected') {return { chats: [], status }}
   try {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return { chats: await assistantGet('/whatsapp/chats') as Chat[], status }
   }
   catch (error: unknown) {
@@ -26,10 +28,12 @@ export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, e
 
 export async function loadMessages(chatId: string): Promise<Message[]> {
   await getAuthenticatedUserSession('startpage')
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return assistantGet(`/whatsapp/messages?chatId=${encodeURIComponent(chatId)}`) as Promise<Message[]>
 }
 
 export async function getStatus(): ActionResponse<SyncStatus> {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return toResponse(assistantGet('/whatsapp/status') as Promise<SyncStatus>)
 }
 
@@ -99,6 +103,7 @@ function errorMessage(error: unknown): string {
    match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
   if (!match) {return message}
   try {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const body = JSON.parse(match[1]) as { error?: unknown }
     if (typeof body.error === 'string' && body.error.length > 0) {return body.error}
   }

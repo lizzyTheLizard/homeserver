@@ -28,7 +28,9 @@ function createLogger() {
 }
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   let message = `${info.timestamp as string} ${info.level}: ${info.message as string}`
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   if (info.stack) {message = `${message  }\n${  info.stack as string}`}
   return message
 }

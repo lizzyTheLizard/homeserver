@@ -41,6 +41,7 @@ export const Filled: StoryObj<typeof meta> = {
     const input = canvas.getByLabelText('Filled input')
     await userEvent.click(input)
     await userEvent.keyboard('Hello, World!')
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ value: 'Hello, World!' }) as HTMLTextAreaElement }))
   },
   render: (args) => {

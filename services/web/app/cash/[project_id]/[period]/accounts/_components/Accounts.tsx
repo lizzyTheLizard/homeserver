@@ -93,6 +93,7 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         noDelete={noDelete}
       >
         <Input type="text" label="Name" required value={name} onChange={(e) => { setName(e.target.value) }} />
+        {/* oxlint-disable-next-line typescript/no-unsafe-type-assertion */}
         <Select label="Type" required value={type} onChange={(e) => { setType(e.target.value as AccountType) }}>
           {ACCOUNT_TYPES.map(accountType => (<option key={accountType} value={accountType}>{accountType}</option>))}
         </Select>

@@ -9,6 +9,7 @@ export const metadata = {
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return serverPageFunction(metadata.title, async () => {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const discussionId = (await searchParams).id as string | undefined,
      editorData = await loadEditorData(discussionId)
     return (

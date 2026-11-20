@@ -14,7 +14,9 @@ vi.mock('@/app/shared/_external/db/access', async (importOriginal: () => Promise
   const actual = await importOriginal()
   return {
     ...actual,
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     nontransactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     transactional(fn: (client: PoolClient) => Promise<unknown>) { return fn(pglite as unknown as PoolClient) },
   }
 })

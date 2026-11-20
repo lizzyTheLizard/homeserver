@@ -25,6 +25,7 @@ export function DataTableRow<DataType extends { id: string }>({ row, columns, on
     <tr key={row.id} onClick={onClick} className={rowClass}>
       {columns.map(column => (
         <td key={row.id + column.key} className={column.className} style={column.style} headers={column.header}>
+          {/* oxlint-disable-next-line typescript/no-unsafe-type-assertion */}
           {column.cell(row[column.key as keyof DataType], row.id)}
         </td>
       ))}

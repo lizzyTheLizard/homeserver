@@ -30,7 +30,9 @@ async function recalculateTransactionsForAccount(client: Queryable, owner: strin
 
 async function recalculateSingleTransaction(c: Context): Promise<AccountTransaction> {
   const details = 'credit_account_id' in c.item
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     ? getTransactionDetails(c as Context<Transaction>)
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     : getClosingDetails(c as Context<Closing>),
 
    accountTransaction: AccountTransactionInput = {

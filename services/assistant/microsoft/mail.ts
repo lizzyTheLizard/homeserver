@@ -96,6 +96,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
 
   async function getMessage(messageId: string): Promise<MicrosoftMessageFull | undefined> {
     return await graphApiRequest(user, `/me/messages/${messageId}`, async (request) => {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const response = await request
         .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,body')
         .get() as RawMessageFull
@@ -191,6 +192,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     let currentUrl: string | undefined = url
     while (currentUrl) {
       const deltaResult: DeltaResponse<RawMessageListItem> = await graphApiRequest(user, currentUrl, async (request) => 
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         await request.get() as DeltaResponse<RawMessageListItem>
       )
       for (const item of deltaResult.value) {
@@ -234,6 +236,7 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
 
 async function getArchiveFolder(user: UserSession): Promise<string | undefined> {
   return await graphApiRequest(user, '/me/mailFolders', async (request) => {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const response = await request
       .filter('displayName eq \'Archive\'')
       .select('id')
