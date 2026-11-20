@@ -22,6 +22,15 @@
     "func-style": [
       "error",
       "declaration"
+    ],
+    "no-magic-numbers": [
+      "error",
+      {
+        "ignore": [
+          0,
+          1
+        ]
+      }
     ]
   }
 }
