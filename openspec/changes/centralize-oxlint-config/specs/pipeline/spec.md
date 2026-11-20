@@ -42,14 +42,14 @@ The web application, assistant, WhatsApp bridge and Wichteln SHALL be linted aga
 - **WHEN** the assistant or the WhatsApp bridge is linted
 - **THEN** React and Storybook rules are not applied to its files
 
-### Requirement: Linting checks code style
+### Requirement: Linting checks code formatting
 
-The linting task SHALL report code that violates the project's formatting conventions: 2-space indentation, single quotes, no semicolons, no trailing whitespace, a final newline and consistent spacing. Locally the linting task SHALL fix such violations automatically; for CI it SHALL fail on them.
+The linting task SHALL check that code and style files follow the project's formatting conventions (2-space indentation, single quotes, no semicolons, a maximum line width, consistent whitespace and wrapping). Locally the linting task SHALL reformat non-conforming files; for CI it SHALL fail on them without changing files.
 
-#### Scenario: A style violation fails CI lint
+#### Scenario: A formatting violation fails CI lint
 - **WHEN** a changed file uses double quotes or a wrong indentation and the linting task runs for CI
-- **THEN** the lint job fails and reports the violation
+- **THEN** the lint job fails and reports the file
 
-#### Scenario: A style violation is fixed locally
+#### Scenario: A formatting violation is fixed locally
 - **WHEN** the linting task runs locally on a file with such a violation
 - **THEN** the file is rewritten to conform
