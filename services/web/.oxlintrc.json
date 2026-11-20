@@ -55,7 +55,11 @@
         ]
       }
     ],
-    "max-params": "warn"
+    "max-params": "warn",
+    "logical-assignment-operators": [
+      "error",
+      "never"
+    ]
   },
   "overrides": [
     {
