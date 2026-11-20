@@ -57,7 +57,11 @@
         "prefer": "parameter-property"
       }
     ],
-    "id-length": "warn"
+    "id-length": "warn",
+    "typescript/method-signature-style": [
+      "error",
+      "method"
+    ]
   },
   "overrides": [
     {
