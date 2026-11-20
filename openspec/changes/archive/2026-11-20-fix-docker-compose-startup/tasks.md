@@ -9,5 +9,5 @@
 
 - [x] 2.1 Add the `stack-start` job to `.github/workflows/pipeline.yml` (infrastructure changed, after all service jobs, GHCR login, `.env` from `env.example`, `docker compose up -d --wait --wait-timeout 300`, diagnostics on failure, `down -v` always)
 - [x] 2.2 Add `stack-start` to the `needs` of `deploy-infrastructure` and `quality-gate`
-- [ ] 2.3 Run the pipeline script tests (`node --test '.github/scripts/*.test.mjs'`) and validate the compose file with `docker compose config`
+- [x] 2.3 Run the pipeline script tests (`node --test '.github/scripts/*.test.mjs'`) and validate the compose file with `docker compose config`
 - [ ] 2.4 Verify the stage on the pull request; adjust placeholder values only if a container is unhealthy for configuration reasons
