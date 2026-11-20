@@ -37,7 +37,7 @@
     "@storybook/addon-a11y": "^10.6.5",
     "@storybook/addon-docs": "^10.6.5",
     "@storybook/addon-vitest": "^10.6.5",
-    "@storybook/nextjs-vite": "^10.6.5",
+    "@storybook/nextjs-vite": "^10.6.7",
     "@storybook/react": "^10.6.5",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@testing-library/dom": "^10.4.2",
