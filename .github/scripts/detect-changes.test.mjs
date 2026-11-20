@@ -42,8 +42,7 @@ test("changes outside services, infrastructure, workspace files and the pipeline
   const changed = detectChanges([
     "openspec/specs/pipeline/spec.md",
     "CLAUDE.md",
-    ".github/workflows/dependabot-auto-merge.yml",
-    ".github/dependabot.yml",
+    ".github/renovate.json5",
     "services/README.md",
   ]);
 
