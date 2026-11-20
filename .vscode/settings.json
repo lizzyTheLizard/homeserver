@@ -1,12 +1,5 @@
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "always"
-  },
-  "eslint.validate": [
-    "javascript",
-    "typescript",
-    "javascriptreact",
-  	"typescriptreact"
-  ],
-  "eslint.format.enable": true
- }
+    "source.fixAll.oxc": "always"
+  }
+}

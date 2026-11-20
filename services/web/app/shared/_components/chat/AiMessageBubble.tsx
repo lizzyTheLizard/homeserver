@@ -20,7 +20,7 @@ export function AiMessageBubble({ role, content, generating, stalled, editable, 
 
   function codeComponent({ className, children }: React.ComponentPropsWithoutRef<'code'>) {
     if (!className?.includes('language-input')) return <code className={className}>{children}</code>
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    // oxlint-disable-next-line typescript/no-base-to-string
     const text = String(Array.isArray(children) ? children.join('') : children ?? '')
     const response = role === 'user'
     return <EditableBlock key={'input_' + text} content={text} onEdit={onEdit} editable={editable} response={response} />

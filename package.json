@@ -13,7 +13,7 @@
     "lint:ci": "pnpm -r lint:ci",
     "test": "pnpm -r test",
     "test:watch": "pnpm -r test:watch",
-    "clean": "pnpm -r clean && rimraf node_modules dist .eslintcache",
+    "clean": "pnpm -r clean && rimraf node_modules dist",
     "build-storybook": "pnpm --filter @homeserver/web build-storybook"
   },
   "devDependencies": {

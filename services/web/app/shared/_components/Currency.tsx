@@ -10,7 +10,7 @@ export interface CurrencyProps {
 
 // useSyncExternalStore avoids hydration mismatch by returning false on the server and true on the client
 // see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+// oxlint-disable-next-line typescript/no-empty-function
 const subscribe = () => () => {}
 
 export function Currency({ amount }: CurrencyProps) {

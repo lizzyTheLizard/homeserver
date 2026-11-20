@@ -13,7 +13,7 @@ export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLA
 
   // Push history entry when sidebar transitions from closed to open
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    // oxlint-disable-next-line typescript/no-unsafe-assignment, typescript/no-unsafe-member-access
     const sidebarId: string = history.state?.id
     if (activeId && !sidebarId) {
       history.pushState({ id: activeId }, '')
@@ -29,7 +29,7 @@ export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLA
   // Handle browser back button: close sidebar and consume the sentinel entry
   useEffect(() => {
     function onPopstate() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    // oxlint-disable-next-line typescript/no-unsafe-assignment, typescript/no-unsafe-member-access
       const sidebarId: string = history.state?.id
       setActiveId(sidebarId)
     }

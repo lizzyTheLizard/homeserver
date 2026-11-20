@@ -27,7 +27,10 @@ RUN apk add --no-cache ca-certificates curl tar \
  && chmod +x /usr/local/bin/wacli
 
 # ---- Stage 2: base + deps ----------------------------------------------
-FROM node:24.22.3-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
+# Node 25+ no longer bundles corepack. This installs only a bootstrap pnpm; inside the
+# workspace it switches to the exact version pinned in the root package.json `packageManager`.
+RUN npm install -g pnpm
 
 FROM base AS deps
 # https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine
@@ -40,7 +43,7 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
 COPY services/whatsapp/package.json ./services/whatsapp/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN pnpm i --frozen-lockfile
 
 # ---- Stage 3: build -----------------------------------------------------
 FROM base AS builder
@@ -51,7 +54,7 @@ COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
 COPY services/whatsapp/ ./services/whatsapp
 
-RUN corepack enable pnpm && pnpm --filter @homeserver/whatsapp build
+RUN pnpm --filter @homeserver/whatsapp build
 
 # ---- Stage 4: production dependencies only ------------------------------
 # Express, winston and async-mutex (and their transitive deps) are pure
@@ -62,11 +65,11 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
 COPY services/whatsapp/package.json ./services/whatsapp/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp
+RUN pnpm i --frozen-lockfile --prod --filter @homeserver/whatsapp
 
 # ---- Stage 5: runtime ---------------------------------------------------
 # We need slim here as wacli needs glibc
-FROM node:24.22.3-slim AS runner
+FROM node:26.13.1-slim AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/*

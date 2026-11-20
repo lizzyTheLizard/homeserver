@@ -9,5 +9,4 @@ dist
 .env
 .next
 .ms-playwright
-.eslintcache
 *.tsbuildinfo

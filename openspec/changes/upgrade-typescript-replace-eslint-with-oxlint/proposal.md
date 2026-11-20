@@ -10,6 +10,7 @@ TypeScript is on three different lines (`@typescript/typescript6` 6.x in web, as
 - Replace ESLint with Oxlint in web, assistant, whatsapp and wichteln: add `oxlint` (and `oxlint-tsgolint` for type-aware rules), add an `.oxlintrc.json` per package carrying over the current rule intent (recommended + strict/stylistic type-aware, react-hooks, no-extraneous-class off), and switch the `lint` / `lint:ci` scripts.
 - Remove `eslint`, `@eslint/js`, `typescript-eslint`, `@stylistic/eslint-plugin`, `eslint-plugin-*`, `globals` and all `eslint.config.mjs` files.
 - Convert `eslint-disable` comments in source to `oxlint-disable` equivalents (or drop them where the rule no longer applies).
+- Bump the Node base image from `24.22.3` to `26.13.1` in every Dockerfile (web, assistant, whatsapp, wichteln, dev-machine, db-backup) and align wichteln's `@types/node` with the other packages. Node 25+ no longer bundles corepack (Dependabot PR #428 failed with `corepack: not found`), so the Dockerfiles drop corepack and install pnpm with `npm install -g pnpm`; pnpm then switches itself to the version pinned in `packageManager`.
 - Update `.vscode` (Oxc extension instead of ESLint), `.gitignore`/`.dockerignore`/`clean` scripts (`.eslintcache`) and `CLAUDE.md`.
 - **BREAKING (tooling only):** `@stylistic` formatting rules (indentation, quotes, semicolons, `max-statements-per-line`) are no longer enforced, as Oxlint has no stylistic rules. No formatter is added in this change.
 
@@ -26,5 +27,6 @@ None. This is a tooling and dependency change; the pipeline still lints, tests a
 ## Impact
 
 - `services/{web,assistant,whatsapp,wichteln}`: `package.json`, `tsconfig*.json` (if TS 7 requires adjustments), lint config, source files with disable comments, any code that TS 7 or the new lint rules flag.
+- All Dockerfiles, `infrastructure/README.md`, `infrastructure/db-backup/restore-backup.mjs` (comment).
 - Root: `pnpm-lock.yaml`, `CLAUDE.md`, `.gitignore`, `.dockerignore`, `.vscode/`.
 - CI runs the same `pnpm lint:ci`; Docker builds use the new TypeScript. Next.js, Storybook and Vitest must work with TypeScript 7.

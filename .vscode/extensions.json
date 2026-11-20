@@ -1,6 +1,6 @@
 {
     "recommendations": [
-        "dbaeumer.vscode-eslint",
+        "oxc.oxc-vscode",
         "github.vscode-github-actions",
         "vitest.explorer",
         "4ops.terraform",

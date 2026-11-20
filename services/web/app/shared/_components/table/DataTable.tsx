@@ -8,7 +8,7 @@ import style from './DataTable.module.css'
 
 export interface DataTableProps<T extends { id: string }> extends TableHTMLAttributes<HTMLTableElement> {
   data: T[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line typescript/no-explicit-any
   columns: ColumnDefinition<any>[]
   initialSortingOrder?: SortingOrder[]
   searchLabel?: string

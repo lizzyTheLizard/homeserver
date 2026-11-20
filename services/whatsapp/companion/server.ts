@@ -124,7 +124,7 @@ function requestTracing(req: Request, res: Response, next: NextFunction): void {
   next()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// oxlint-disable-next-line typescript/no-unused-vars
 function errorHandler(err: Error, _req: SessionRequest, res: Response, _next: NextFunction) {
   logger.warn('Error while serving request', err)
   res.status(500).json({ message: err.message })

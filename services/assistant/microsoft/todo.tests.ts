@@ -15,7 +15,7 @@ async function waitForData(worker: MicrosoftTodoWorker): Promise<void> {
 }
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
-  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // eslint-disable-line
+  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
   let user: UserSession
   let worker: MicrosoftTodoWorker
 

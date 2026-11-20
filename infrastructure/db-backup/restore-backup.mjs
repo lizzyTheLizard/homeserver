@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Restores a database backup into the DEV or PROD database.
-// Runs inside the `backup` container (node:24-alpine + postgresql16-client),
+// Runs inside the `backup` container (node:26-alpine + postgresql16-client),
 // so it cannot be a pnpm script on the dev-machine. Invoke it with:
 //   docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev|prod> [--yes]
 // No npm dependencies - plain Node.js (>= 20) only.

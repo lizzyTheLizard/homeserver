@@ -112,7 +112,7 @@ export const EditableAfterEdit: StoryObj<typeof meta> = {
     await new Promise(resolve => setTimeout(resolve, 150))
     const textarea = canvasElement.querySelector<HTMLTextAreaElement>('textarea')
     if (textarea) {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+      // oxlint-disable-next-line typescript/unbound-method
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
       nativeInputValueSetter?.call(textarea, 'Hey Thomas! Yes, I\'ll be there Saturday at 19:00. Let me know if you need me to bring anything!')
       textarea.dispatchEvent(new Event('input', { bubbles: true }))

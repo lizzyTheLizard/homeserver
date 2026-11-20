@@ -1,6 +1,9 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:24.22.3-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
+# Node 25+ no longer bundles corepack. This installs only a bootstrap pnpm; inside the
+# workspace it switches to the exact version pinned in the root package.json `packageManager`.
+RUN npm install -g pnpm
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -12,7 +15,7 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
 COPY services/web/package.json ./services/web/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -25,7 +28,7 @@ COPY ./services/web ./services/web
 COPY ./services/assistant/microsoft/types.ts ./services/assistant/microsoft/types.ts
 COPY ./services/assistant/whatsapp/types.ts ./services/assistant/whatsapp/types.ts
 
-RUN corepack enable pnpm && pnpm --filter @homeserver/web build
+RUN pnpm --filter @homeserver/web build
 
 # Production image, copy the standalone output and run the standalone server
 FROM base AS runner

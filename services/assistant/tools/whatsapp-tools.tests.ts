@@ -27,7 +27,7 @@ function message(id: string, messageTimestamp: string) {
 
 async function getMessages(chatId: string): Promise<{ id: string }[]> {
   const tools = getTools(user)
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  // oxlint-disable-next-line typescript/no-non-null-assertion
   return (await tools.get_whatsapp_messages.execute!({ chatId }, { toolCallId: '1', messages: [], context: {} })) as { id: string }[]
 }
 

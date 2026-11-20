@@ -16,8 +16,11 @@
 5. **Scripts** keep their names: `lint` = `oxlint --type-aware --fix`, `lint:ci` = `oxlint --type-aware` (fail on warnings with `--deny-warnings`). Root scripts, pipeline and `service.yml` stay unchanged.
 6. **Disable comments** are converted to `oxlint-disable[-next-line|-line]`; Oxlint also honors `eslint-disable`, but we convert so no ESLint naming remains. Comments for rules Oxlint lacks are removed.
 
+7. **Node 26 images, no corepack.** All Dockerfiles move to `26.13.1` (alpine3.24, slim, bookworm-slim variants). Node 25+ dropped bundled corepack, which broke Dependabot PR #428 (`/bin/sh: corepack: not found`). Corepack was only used to get pnpm, so it is dropped: each `base` stage (web, assistant, whatsapp, wichteln) and the dev-machine run `npm install -g pnpm`, and the `corepack enable pnpm &&` prefixes are removed. This installs a bootstrap pnpm only; inside the workspace pnpm switches to the exact version in the root `packageManager` field (verified locally: a globally installed pnpm 10 reports 11.7.0 in the repo), so the version stays pinned in one place. db-backup does not use pnpm and only needs the tag bump.
+
 ## Risks / Trade-offs
 
 - Next.js, Storybook, Vitest, `@types/*` or other tooling may not yet support TS 7 (e.g. API-dependent tools). Mitigation: verify `build`, `test`, Storybook; if one blocks, report it as a blocker rather than pinning silently.
 - Oxlint's type-aware rule coverage is smaller than typescript-eslint's; some checks (e.g. `no-unsafe-*`) may be weaker or absent. Accepted trade-off.
+- Docker image builds could not be run locally (no Docker in the dev container); they are verified by the pipeline on the PR.
 - Loss of style enforcement (see decision 3).
