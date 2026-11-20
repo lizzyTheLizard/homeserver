@@ -14,4 +14,5 @@
 - [x] 2.3 Run the pipeline script tests (`node --test '.github/scripts/*.test.mjs'`) and validate the compose file with `docker compose config`
 - [x] 2.5 Add the missing `MICROSOFT_GRAPH_ISSUER` placeholder to `infrastructure/env.example`, found by the stack start-up stage
 - [x] 2.6 Pass `SKIP_GITHUB_BOOTSTRAP` to the development machine in the compose file (default `0`) and set it to `1` in the pipeline's placeholder `.env`, found by the stack start-up stage
+- [x] 2.7 Create self-signed placeholder TLS certificates for the four hostnames in the pipeline before starting the stack, found by the stack start-up stage
 - [ ] 2.4 Verify the stage on the pull request; adjust placeholder values only if a container is unhealthy for configuration reasons

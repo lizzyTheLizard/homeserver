@@ -173,6 +173,15 @@ jobs:
           cp infrastructure/env.example infrastructure/.env
           # The development machine would otherwise exit without a GitHub SSH key
           echo "SKIP_GITHUB_BOOTSTRAP=1" >> infrastructure/.env
+      - name: Create placeholder TLS certificates
+        # nginx refuses to start without the certificates that certbot issues on the real host
+        run: |
+          for host in dev logs www wichteln; do
+            dir="infrastructure/certbot/conf/live/$host.gutschi.site"
+            mkdir -p "$dir"
+            openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=$host.gutschi.site" \
+              -keyout "$dir/privkey.pem" -out "$dir/fullchain.pem"
+          done
       - name: Start the stack and wait until every container is healthy
         working-directory: infrastructure
         run: |
