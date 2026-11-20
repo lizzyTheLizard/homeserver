@@ -62,7 +62,8 @@
     "typescript/method-signature-style": [
       "error",
       "method"
-    ]
+    ],
+    "no-continue": "off"
   },
   "overrides": [
     {
