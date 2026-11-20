@@ -157,9 +157,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Free port 53 for the name server
-        # The runner's local resolver listens on port 53, which the stack publishes
+        # The runner's local resolver stub listens on port 53, which the stack publishes.
+        # Only the stub listener is turned off; name resolution keeps working through the upstream servers.
         run: |
-          sudo systemctl stop systemd-resolved
+          sudo mkdir -p /etc/systemd/resolved.conf.d
+          printf '[Resolve]\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/no-stub.conf
+          sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+          sudo systemctl restart systemd-resolved
+          getent hosts registry-1.docker.io
           sudo ss -lntup | grep ':53 ' || true
       - name: Use the placeholder configuration
         run: cp infrastructure/env.example infrastructure/.env
