@@ -53,6 +53,7 @@ export async function loadData(projectId: string, period: MonthlyPeriod): Promis
   })
 }
 
+// oxlint-disable-next-line typescript/consistent-return
 function getCurrentAccountIdForMonthly(monthly: Monthly | undefined): string | undefined {
   switch (monthly?.state) {
     case undefined:

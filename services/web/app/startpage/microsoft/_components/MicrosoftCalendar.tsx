@@ -13,6 +13,7 @@ export function MicrosoftCalendar({ events }: { events: SerializedCalendarEvent[
   const [eventSidebarId, openEventSidebar] = useSidebar()
 
   function showEventDetails(event: CalendarPlus) {
+    // oxlint-disable-next-line eslint/no-underscore-dangle
     setSelectedEvent(event._original)
     openEventSidebar()
   }

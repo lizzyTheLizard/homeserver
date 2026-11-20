@@ -35,7 +35,7 @@ export function SidebarContainer({ children, ...props }: PropsWithChildren<HTMLA
     }
     window.addEventListener('popstate', onPopstate)
     return () => { window.removeEventListener('popstate', onPopstate) }
-  }, [close])
+  }, [])
 
   const contextValue = useMemo(() => ({ open, close, isOpen }), [open, close, isOpen])
 

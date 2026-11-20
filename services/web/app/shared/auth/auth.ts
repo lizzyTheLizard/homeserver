@@ -59,9 +59,9 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   })
   const claims = tokenSet.claims()
   if (!claims) throw authenticationFailed(`No claims found in token set during callback`)
-  const email = claims.email as string
-  if (!email) throw authenticationFailed(`No email claim found in token set during callback`)
-  const name = (claims.given_name as string | undefined) ?? email
+  const email = claims.email
+  if (typeof email !== 'string' || !email) throw authenticationFailed(`No email claim found in token set during callback`)
+  const name = typeof claims.given_name === 'string' ? claims.given_name : email
   const applications = await getApplications(email)
   const result = session.originalUrlRelative ?? '/'
   const user = { name, email, applications }

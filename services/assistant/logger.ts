@@ -28,8 +28,8 @@ function createLogger() {
 }
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
-  let message = `${info.timestamp as string} ${info.level}: ${info.message as string}`
-  if (info.stack) message = message + '\n' + (info.stack as string)
+  let message = `${String(info.timestamp)} ${info.level}: ${String(info.message)}`
+  if (typeof info.stack === 'string' && info.stack) message = message + '\n' + info.stack
   return message
 }
 

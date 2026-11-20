@@ -30,6 +30,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       webSocketRef.current?.terminate()
       webSocketRef.current = undefined
     }
+  // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [])
 
   function connectWebSocket(): AiChatWebSocket {

@@ -5,28 +5,30 @@ import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { MicrosoftConnectionStatus, MicrosoftStatus, SerializedMessageFull } from '@assistant/microsoft/types'
+import { z } from 'zod'
+import { connectionStatusSchema, loginUrlSchema, messageFullSchema, statusSchema } from './schemas'
 
 const MICROSOFT_CALLBACK_PATH = '/startpage/microsoft/callback'
 
 export async function loadMicrosoftStatus(): Promise<MicrosoftStatus> {
   await getAuthenticatedUserSession('startpage')
-  return assistantGet('/microsoft/status') as Promise<MicrosoftStatus>
+  return assistantGet('/microsoft/status', statusSchema)
 }
 
 export async function checkMicrosoftStatus(): Promise<MicrosoftConnectionStatus> {
   await getAuthenticatedUserSession('startpage')
-  return assistantGet('/microsoft/check-status') as Promise<MicrosoftConnectionStatus>
+  return assistantGet('/microsoft/check-status', connectionStatusSchema)
 }
 
 export async function loadMessage(messageId: string): Promise<SerializedMessageFull | undefined> {
   await getAuthenticatedUserSession('startpage')
-  return assistantGet(`/microsoft/mail/messages?id=${encodeURIComponent(messageId)}`) as Promise<SerializedMessageFull | undefined>
+  return assistantGet(`/microsoft/mail/messages?id=${encodeURIComponent(messageId)}`, messageFullSchema.optional())
 }
 
 export async function connectMicrosoft(): Promise<ActionResponse<string>> {
   await getAuthenticatedUserSession('startpage')
   const callbackUrl = config.APP_URL + MICROSOFT_CALLBACK_PATH
-  return toResponse(assistantGet(`/microsoft/login-url?callbackUrl=${encodeURIComponent(callbackUrl)}`) as Promise<{ url: string }>)
+  return toResponse(assistantGet(`/microsoft/login-url?callbackUrl=${encodeURIComponent(callbackUrl)}`, loginUrlSchema))
     .then((response) => {
       if (!response.success) return response
       return { success: true as const, data: response.data.url }
@@ -38,8 +40,8 @@ export async function disconnectMicrosoft(): Promise<ActionResponse<void>> {
   return toResponse(assistantPost('/microsoft/disconnect', {}).then(() => undefined))
 }
 
-async function assistantGet(path: string): Promise<unknown> {
-  return assistantFetch(path, { headers: { Cookie: await getCookieHeader() } })
+async function assistantGet<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+  return schema.parse(await assistantFetch(path, { headers: { Cookie: await getCookieHeader() } }))
 }
 
 async function assistantPost(path: string, body: Record<string, unknown>): Promise<unknown> {

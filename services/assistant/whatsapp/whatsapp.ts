@@ -1,5 +1,6 @@
 import { Chat, Message, SyncStatus } from './types'
 import { config } from '../config'
+import { z } from 'zod'
 
 export type { Chat, Message, SyncStatus }
 
@@ -22,7 +23,7 @@ export async function startWhatsapp(userId: string): Promise<SyncStatus> {
     const text = await response.text()
     throw new Error(`Failed to start WhatsApp: ${response.status.toString()} ${text}`)
   }
-  return response.json() as Promise<SyncStatus>
+  return syncStatusSchema.parse(await response.json())
 }
 
 export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
@@ -32,7 +33,7 @@ export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
     const text = await response.text()
     throw new Error(`Failed to get WhatsApp status: ${response.status.toString()} ${text}`)
   }
-  return response.json() as Promise<SyncStatus>
+  return syncStatusSchema.parse(await response.json())
 }
 
 export async function getWhatsappChats(userId: string): Promise<Chat[]> {
@@ -41,7 +42,7 @@ export async function getWhatsappChats(userId: string): Promise<Chat[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch chats: ${response.status.toString()} ${await response.text()}`)
   }
-  return response.json() as Promise<Chat[]>
+  return z.array(chatSchema).parse(await response.json())
 }
 
 export async function getWhatsappMessages(userId: string, chatId: string): Promise<Message[]> {
@@ -51,7 +52,7 @@ export async function getWhatsappMessages(userId: string, chatId: string): Promi
   if (!response.ok) {
     throw new Error(`Failed to fetch messages: ${response.status.toString()} ${await response.text()}`)
   }
-  return response.json() as Promise<Message[]>
+  return z.array(messageSchema).parse(await response.json())
 }
 
 export async function sendWhatsappMessage(userId: string, chatId: string, message: string): Promise<void> {
@@ -105,3 +106,26 @@ export async function disconnectWhatsapp(userId: string): Promise<void> {
 function bridgeUrl(userId: string): string {
   return `${config.WHATSAPP_BRIDGE_URL}/sessions/${encodeURIComponent(userId)}`
 }
+
+const syncStatusSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('needAuth'), qr: z.string() }),
+  z.object({ type: z.literal('connected') }),
+  z.object({ type: z.literal('fullsync') }),
+  z.object({ type: z.literal('closed') }),
+]) satisfies z.ZodType<SyncStatus>
+
+const messageSchema = z.object({
+  id: z.string(),
+  fromMe: z.boolean(),
+  fromName: z.string(),
+  content: z.string(),
+  messageTimestamp: z.string(),
+}) satisfies z.ZodType<Message>
+
+const chatSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  isArchived: z.boolean(),
+  isGroup: z.boolean(),
+  lastMessageTimestamp: z.string(),
+}) satisfies z.ZodType<Chat>

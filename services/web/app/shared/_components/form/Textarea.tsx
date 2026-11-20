@@ -41,13 +41,13 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
 
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInternalValue(e.target.value)
-    updateSelection(e)
+    updateSelection(e.currentTarget)
     props.onChange?.(e)
   }
 
   function handleBlur(e: React.FocusEvent<HTMLTextAreaElement>) {
     setFocused(false)
-    if (keepSelection) updateSelection(e)
+    if (keepSelection) updateSelection(e.currentTarget)
     else {
       setSelection(undefined)
       onSelectionChange?.(undefined)
@@ -57,27 +57,29 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
 
   function handleFocus(e: React.FocusEvent<HTMLTextAreaElement>) {
     setFocused(true)
-    updateSelection(e)
+    updateSelection(e.currentTarget)
     props.onFocus?.(e)
   }
 
   function handleMouseUp(e: React.MouseEvent<HTMLTextAreaElement>) {
-    setTimeout(() => { updateSelection(e) }, 10)
+    const target = e.currentTarget
+    setTimeout(() => { updateSelection(target) }, 10)
     props.onMouseUp?.(e)
   }
 
   function handleMouseLeave(e: React.MouseEvent<HTMLTextAreaElement>) {
-    setTimeout(() => { updateSelection(e) }, 10)
+    const target = e.currentTarget
+    setTimeout(() => { updateSelection(target) }, 10)
     props.onMouseLeave?.(e)
   }
 
   function handleKeyUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    setTimeout(() => { updateSelection(e) }, 10)
+    const target = e.currentTarget
+    setTimeout(() => { updateSelection(target) }, 10)
     props.onKeyUp?.(e)
   }
 
-  function updateSelection(e: React.SyntheticEvent<HTMLTextAreaElement>) {
-    const target = e.target as HTMLTextAreaElement
+  function updateSelection(target: HTMLTextAreaElement) {
     const start = target.selectionStart
     const end = target.selectionEnd
     const text = target.value.substring(start, end)

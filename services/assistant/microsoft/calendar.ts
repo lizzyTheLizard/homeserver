@@ -1,8 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { Mutex } from 'async-mutex'
-import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant } from './graph'
+import { deltaResponseSchema, graphApiRequest, toGraphDateTime, toInstant } from './graph'
 import type { UserSession } from '../session'
 import { logger } from '../logger'
+import { z } from 'zod'
 
 export interface MicrosoftCalendar {
   id: string
@@ -152,7 +153,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
       if (body) eventBody.body = { contentType: 'text', content: body }
       if (location) eventBody.location = { displayName: location }
       const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async (request) => {
-        return await request.post(eventBody) as RawCalendarEvent
+        return rawCalendarEventSchema.parse(await request.post(eventBody))
       })
       const event = convertCalendarEvent(response)
       const windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
@@ -169,7 +170,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
 
   async function doInitialFetch(): Promise<void> {
     calendars = await graphApiRequest(user, '/me/calendars', async (request) => {
-      const response = await request.get() as { value: MicrosoftCalendar[] }
+      const response = calendarsSchema.parse(await request.get())
       return response.value
     })
     events.clear()
@@ -196,20 +197,20 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     let queryOnFirstCall = queryParams
 
     while (currentUrl) {
-      const deltaResult: DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }> = await graphApiRequest(user, currentUrl, async (request) => {
+      const deltaResult: z.infer<typeof calendarDeltaSchema> = await graphApiRequest(user, currentUrl, async (request) => {
         if (queryOnFirstCall) {
           const params = queryOnFirstCall
           queryOnFirstCall = undefined
-          return await request
+          return calendarDeltaSchema.parse(await request
             .query(params)
             .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')
-            .get() as DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }>
+            .get())
         }
-        return await request.get() as DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }>
+        return calendarDeltaSchema.parse(await request.get())
       })
 
       for (const item of deltaResult.value) {
-        if (item['@removed']) {
+        if ('@removed' in item) {
           events.delete(item.id)
         }
         else {
@@ -258,24 +259,44 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
   return { getCalendars, getAllEvents, getEventCount, getStatus, createEvent, touch }
 }
 
-interface RawCalendarEvent {
-  id: string
-  subject?: string
-  bodyPreview?: string
-  body?: { contentType: 'text' | 'html', content: string }
-  start: { dateTime: string, timeZone: string }
-  end: { dateTime: string, timeZone: string }
-  location?: { displayName: string, uniqueIdType: string }
-  isAllDay?: boolean
-  isCancelled?: boolean
-  showAs?: 'free' | 'tentative' | 'busy' | 'oof' | 'workingElsewhere' | 'unknown'
-  importance?: 'low' | 'normal' | 'high'
-  sensitivity?: 'normal' | 'private' | 'personal' | 'confidential'
-  createdDateTime?: string
-  lastModifiedDateTime?: string
-  organizer?: { emailAddress: { name: string, address: string } }
-  calendarName?: string
-}
+const dateTimeTimeZoneSchema = z.object({ dateTime: z.string(), timeZone: z.string() })
+
+const rawCalendarEventSchema = z.object({
+  id: z.string(),
+  subject: z.string().optional(),
+  bodyPreview: z.string().optional(),
+  body: z.object({ contentType: z.enum(['text', 'html']), content: z.string() }).optional(),
+  start: dateTimeTimeZoneSchema,
+  end: dateTimeTimeZoneSchema,
+  location: z.object({ displayName: z.string(), uniqueIdType: z.string() }).optional(),
+  isAllDay: z.boolean().optional(),
+  isCancelled: z.boolean().optional(),
+  showAs: z.enum(['free', 'tentative', 'busy', 'oof', 'workingElsewhere', 'unknown']).optional(),
+  importance: z.enum(['low', 'normal', 'high']).optional(),
+  sensitivity: z.enum(['normal', 'private', 'personal', 'confidential']).optional(),
+  createdDateTime: z.string().optional(),
+  lastModifiedDateTime: z.string().optional(),
+  organizer: z.object({ emailAddress: z.object({ name: z.string(), address: z.string() }) }).optional(),
+  calendarName: z.string().optional(),
+})
+
+const calendarsSchema = z.object({
+  value: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string(),
+    hexColor: z.string(),
+    isDefaultCalendar: z.boolean(),
+    canEdit: z.boolean(),
+    canShare: z.boolean(),
+    canViewPrivateItems: z.boolean(),
+    owner: z.object({ name: z.string(), address: z.string() }),
+  }) satisfies z.ZodType<MicrosoftCalendar>),
+})
+
+const calendarDeltaSchema = deltaResponseSchema(rawCalendarEventSchema)
+
+type RawCalendarEvent = z.infer<typeof rawCalendarEventSchema>
 
 function convertCalendarEvent(raw: RawCalendarEvent): MicrosoftCalendarEvent {
   return {

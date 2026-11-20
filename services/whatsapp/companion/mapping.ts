@@ -17,8 +17,10 @@ export interface Message {
 
 export function mapChats(data: unknown): Chat[] {
   if (!Array.isArray(data)) return []
-  const chats = data as WacliChat[]
+  const chats = (typeof data === 'object' && data !== null && Array.isArray(data) ? data : []) as unknown[]
   return chats
+    .filter(chat => typeof chat === 'object' && chat !== null)
+    .map(chat => chat as {jid?: string})
     .filter(chat => chat.jid !== 'status@broadcast')
     .map(mapChat)
     .sort((a, b) => {
@@ -49,7 +51,7 @@ interface WacliChat {
 }
 
 export function mapAuthenticated(data: unknown): boolean {
-  const obj = (typeof data === 'object' && data !== null ? data : {}) as Record<string, unknown>
+  const obj = (typeof data === 'object' && data !== null ? data : {}) as {authenticated?: boolean}
   return obj.authenticated === true
 }
 
@@ -59,7 +61,7 @@ export function mapChatArchived(data: unknown): boolean {
 }
 
 export function mapMessages(data: unknown): Message[] {
-  const result = data as { messages?: WacliMessage[] } | undefined
+  const result = (typeof data === 'object' && data !== null ? data : {}) as { messages?: WacliMessage[] } | undefined
   if (!Array.isArray(result?.messages)) return []
   return result.messages.map(mapMessage).filter(m => m.content.length > 0)
 }

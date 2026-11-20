@@ -1,5 +1,7 @@
+const NODE_ENVS = ['development', 'production', 'test'] as const
+
 export interface Config {
-  NODE_ENV: 'development' | 'production' | 'test'
+  NODE_ENV: typeof NODE_ENVS[number]
   LOG_LEVEL: string
   AI: {
     API_KEY: string
@@ -37,7 +39,7 @@ function optional(name: string, defaultValue: string): string {
 }
 
 export const config: Config = {
-  NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
+  NODE_ENV: toNodeEnv(required('NODE_ENV', 'development')),
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
   DB_CONNECTION_STRING: required('DB_CONNECTION_STRING', 'postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable'),
   AI: {
@@ -54,4 +56,10 @@ export const config: Config = {
     ISSUER: required('MICROSOFT_GRAPH_ISSUER', 'https://login.microsoftonline.com/dev-only-tenant-id/v2.0'),
   },
   WHATSAPP_BRIDGE_URL: required('WHATSAPP_BRIDGE_URL', 'http://localhost:8400'),
+}
+
+function toNodeEnv(value: string): Config['NODE_ENV'] {
+  const nodeEnv = NODE_ENVS.find(env => env === value)
+  if (!nodeEnv) throw new Error(`Invalid NODE_ENV: ${value}`)
+  return nodeEnv
 }

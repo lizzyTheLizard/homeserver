@@ -41,7 +41,7 @@ function optionalNumber(name: string, defaultValue: number): number {
 }
 
 export const config: Config = {
-  NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
+  NODE_ENV: toNodeEnv(required('NODE_ENV', 'development')),
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
   PORT: optionalNumber('PORT', 8400),
   WHATSAPP_DATA_DIR: optional('WHATSAPP_DATA_DIR', './data'),
@@ -53,4 +53,11 @@ export const config: Config = {
   WHATSAPP_MESSAGES_LIMIT: optionalNumber('WHATSAPP_MESSAGES_LIMIT', 5_000),
   WACLI_SYNC_MAX_MESSAGES: optional('WACLI_SYNC_MAX_MESSAGES', '10000'),
   WACLI_SYNC_MAX_DB_SIZE: optional('WACLI_SYNC_MAX_DB_SIZE', '100mb'),
+}
+
+function toNodeEnv(value: string): Config['NODE_ENV'] {
+  if(value === 'development') return value
+  if(value ==='production') return value
+  if(value === 'test') return value
+  throw new Error(`Invalid NODE_ENV: ${value}`)
 }

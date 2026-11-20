@@ -1,8 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { Mutex } from 'async-mutex'
 import type { UserSession } from '../session'
-import { DeltaResponse, graphApiRequest, toInstant } from './graph'
+import { deltaResponseSchema, graphApiRequest, toInstant } from './graph'
 import { logger } from '../logger'
+import { z } from 'zod'
 
 export type InferenceClassification = 'focused' | 'other'
 
@@ -96,9 +97,9 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
 
   async function getMessage(messageId: string): Promise<MicrosoftMessageFull | undefined> {
     return await graphApiRequest(user, `/me/messages/${messageId}`, async (request) => {
-      const response = await request
+      const response = rawMessageFullSchema.parse(await request
         .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,body')
-        .get() as RawMessageFull
+        .get())
       return convertMessageFull(response)
     })
   }
@@ -190,11 +191,11 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   async function syncMessages(url: string): Promise<void> {
     let currentUrl: string | undefined = url
     while (currentUrl) {
-      const deltaResult: DeltaResponse<RawMessageListItem> = await graphApiRequest(user, currentUrl, async (request) => {
-        return await request.get() as DeltaResponse<RawMessageListItem>
+      const deltaResult: z.infer<typeof messageDeltaSchema> = await graphApiRequest(user, currentUrl, async (request) => {
+        return messageDeltaSchema.parse(await request.get())
       })
       for (const item of deltaResult.value) {
-        if (item['@removed']) messages.delete(item.id)
+        if ('@removed' in item) messages.delete(item.id)
         else messages.set(item.id, convertMessageListItem(item))
       }
       if (deltaResult['@odata.nextLink']) {
@@ -234,29 +235,37 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
 
 async function getArchiveFolder(user: UserSession): Promise<string | undefined> {
   return await graphApiRequest(user, '/me/mailFolders', async (request) => {
-    const response = await request
+    const response = archiveFolderSchema.parse(await request
       .filter('displayName eq \'Archive\'')
       .select('id')
-      .get() as { value: { id: string }[] }
+      .get())
     return response.value[0]?.id
   })
 }
 
-interface RawMessageListItem {
-  'id': string
-  'subject': string
-  'from': { emailAddress: { address: string, name?: string } }
-  'toRecipients': { emailAddress: { address: string, name?: string } }[]
-  'receivedDateTime': string
-  'isRead': boolean
-  'bodyPreview': string
-  'inferenceClassification'?: InferenceClassification
-  '@removed'?: { reason: string }
-}
+const archiveFolderSchema = z.object({ value: z.array(z.object({ id: z.string() })) })
 
-interface RawMessageFull extends RawMessageListItem {
-  body: { contentType: string, content: string }
-}
+const emailAddressSchema = z.object({ emailAddress: z.object({ address: z.string(), name: z.string().optional() }) })
+
+const rawMessageListItemSchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  from: emailAddressSchema,
+  toRecipients: z.array(emailAddressSchema),
+  receivedDateTime: z.string(),
+  isRead: z.boolean(),
+  bodyPreview: z.string(),
+  inferenceClassification: z.enum(['focused', 'other']).optional(),
+})
+
+const rawMessageFullSchema = rawMessageListItemSchema.extend({
+  body: z.object({ contentType: z.string(), content: z.string() }),
+})
+
+const messageDeltaSchema = deltaResponseSchema(rawMessageListItemSchema)
+
+type RawMessageListItem = z.infer<typeof rawMessageListItemSchema>
+type RawMessageFull = z.infer<typeof rawMessageFullSchema>
 
 function convertMessageListItem(raw: RawMessageListItem): MicrosoftMessageListItem {
   return {

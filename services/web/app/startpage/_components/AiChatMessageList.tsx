@@ -30,6 +30,7 @@ export function AiChatMessageList({ messages, state, incomingMessage, hasActions
       listRef.current.scrollTop = listRef.current.scrollHeight
     else
       window.scrollTo(0, document.body.scrollHeight)
+  // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [messages, incomingMessage, incomming, stalled, hasActions])
 
   return (

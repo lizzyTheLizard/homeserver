@@ -1,8 +1,9 @@
 import { Mutex } from 'async-mutex'
 import { Temporal } from '@js-temporal/polyfill'
-import { DeltaResponse, graphApiRequest, toGraphDateTime, toInstant, toPlainDate } from './graph'
+import { deltaResponseSchema, graphApiRequest, toGraphDateTime, toInstant, toPlainDate } from './graph'
 import type { UserSession } from '../session'
 import { logger } from '../logger'
+import { z } from 'zod'
 
 export interface MicrosoftTodoList {
   id: string
@@ -149,7 +150,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       if (!list) throw new Error(`List with ID ${listId} not found`)
       logger.debug(`Create task in list ${listId} with body ${JSON.stringify(taskBody)}`)
       const result = await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks`, async (request) => {
-        const response = await request.post(taskBody) as RawTodoTask
+        const response = rawTodoTaskSchema.parse(await request.post(taskBody))
         return { ...convertTask(response), listName: list.displayName }
       })
       addTaskToMemory(result, listId)
@@ -172,7 +173,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       if (updates.reminderDateTime !== undefined) patchBody.reminderDateTime = toGraphDateTime(updates.reminderDateTime)
       logger.debug(`Update task ${taskId} with ${JSON.stringify(patchBody)}`)
       const result = await graphApiRequest(requestUser, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async (request) => {
-        const response = await request.patch(patchBody) as RawTodoTask
+        const response = rawTodoTaskSchema.parse(await request.patch(patchBody))
         return { ...convertTask(response), listName: list.displayName }
       })
       if (targetListId !== listId) removeTaskFromMemory(taskId, listId)
@@ -219,7 +220,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
 
   async function doInitialFetch(): Promise<void> {
     lists = await graphApiRequest(user, '/me/todo/lists', async (request) => {
-      const response = await request.get() as { value: MicrosoftTodoList[] }
+      const response = todoListsSchema.parse(await request.get())
       return response.value
     })
     tasks.clear()
@@ -244,11 +245,11 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   async function syncListTasks(list: MicrosoftTodoList, url: string): Promise<void> {
     let currentUrl: string | undefined = url
     while (currentUrl) {
-      const deltaResult: DeltaResponse<RawTodoTask> = await graphApiRequest(user, currentUrl, async (request) => {
-        return await request.get() as DeltaResponse<RawTodoTask>
+      const deltaResult: z.infer<typeof todoDeltaSchema> = await graphApiRequest(user, currentUrl, async (request) => {
+        return todoDeltaSchema.parse(await request.get())
       })
       for (const rawTask of deltaResult.value) {
-        if (rawTask['@removed']) removeTaskFromMemory(rawTask.id, list.id)
+        if ('@removed' in rawTask) removeTaskFromMemory(rawTask.id, list.id)
         else addTaskToMemory({ ...convertTask(rawTask), listName: list.displayName }, list.id)
       }
       if (deltaResult['@odata.nextLink']) {
@@ -286,18 +287,32 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   return { getTodoCount, getTodoLists, getTasks, getAllTasks, getStatus, createTask, updateTask, completeTask, deleteTask, touch }
 }
 
-interface RawTodoTask {
-  'id': string
-  'title': string
-  'status': 'notStarted' | 'inProgress' | 'completed' | 'waitingOnOthers' | 'deferred'
-  'body'?: { content: string, contentType: 'text' | 'html' }
-  'dueDateTime'?: { dateTime: string, timeZone: string }
-  'reminderDateTime'?: { dateTime: string, timeZone: string }
-  'createdDateTime': string
-  'lastModifiedDateTime': string
-  'importance': 'low' | 'normal' | 'high'
-  '@removed'?: { reason: string }
-}
+const dateTimeTimeZoneSchema = z.object({ dateTime: z.string(), timeZone: z.string() })
+
+const rawTodoTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  status: z.enum(['notStarted', 'inProgress', 'completed', 'waitingOnOthers', 'deferred']),
+  body: z.object({ content: z.string(), contentType: z.enum(['text', 'html']) }).optional(),
+  dueDateTime: dateTimeTimeZoneSchema.optional(),
+  reminderDateTime: dateTimeTimeZoneSchema.optional(),
+  createdDateTime: z.string(),
+  lastModifiedDateTime: z.string(),
+  importance: z.enum(['low', 'normal', 'high']),
+})
+
+const todoListsSchema = z.object({
+  value: z.array(z.object({
+    id: z.string(),
+    displayName: z.string(),
+    isOwner: z.boolean(),
+    isShared: z.boolean(),
+  }) satisfies z.ZodType<MicrosoftTodoList>),
+})
+
+const todoDeltaSchema = deltaResponseSchema(rawTodoTaskSchema)
+
+type RawTodoTask = z.infer<typeof rawTodoTaskSchema>
 
 function convertTask(raw: RawTodoTask): Omit<MicrosoftTodoTask, 'listName'> {
   return {

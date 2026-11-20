@@ -1,6 +1,8 @@
 import { logger } from '../logger'
+import { z } from 'zod'
 
 const CACHE_TTL_MS = 10 * 60 * 1000
+const forecastSchema = z.object({ hourly: z.unknown().optional(), daily: z.unknown().optional() })
 const cache = new Map<string, { data: unknown, timestamp: number }>()
 
 export async function openmeteoRequest(lat: number, lon: number, params: Record<string, string>): Promise<{ hourly?: unknown, daily?: unknown }> {
@@ -12,7 +14,7 @@ export async function openmeteoRequest(lat: number, lon: number, params: Record<
     urlParams.append(key, value)
   }
   const url = `https://api.open-meteo.com/v1/forecast?${urlParams}`
-  return await cachedFetch(url) as { hourly?: unknown, daily?: unknown }
+  return forecastSchema.parse(await cachedFetch(url))
 }
 
 async function cachedFetch(url: string): Promise<unknown> {
@@ -45,7 +47,7 @@ export function parseOpenMeteoData(hourlyOrDaily: unknown): Record<string, Recor
       if (!Array.isArray(value)) throw new Error(`Invalid Open-Meteo data format for key ${key}`)
       if (key === 'temperature_2m') timeResult.temperature = value[index]
       else if (key === 'weather_code') {
-        timeResult.weather_condition = getWmoCondition(value[index] as number)
+        timeResult.weather_condition = getWmoCondition(z.number().parse(value[index]))
       }
       else timeResult[key] = value[index]
     }

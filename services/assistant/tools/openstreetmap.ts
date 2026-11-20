@@ -1,12 +1,15 @@
 import { logger } from '../logger'
+import { z } from 'zod'
 
 const CACHE_TTL_MS = 10 * 60 * 1000
+const reverseSchema = z.object({ address: z.object({ city: z.string() }) })
+const searchSchema = z.array(z.object({ lat: z.string(), lon: z.string() })).min(1)
 const cache = new Map<string, { data: unknown, timestamp: number }>()
 
 export async function getLocationDescription(location: { lat: number, lon: number }): Promise<string> {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat.toString()}&lon=${location.lon.toString()}`
-    const data = await cachedFetch(url) as { address: { city: string } }
+    const data = reverseSchema.parse(await cachedFetch(url))
     return data.address.city
   }
   catch (error) {
@@ -18,7 +21,7 @@ export async function getLocationDescription(location: { lat: number, lon: numbe
 export async function getLocationByName(placeName: string): Promise<{ lat: number, lon: number }> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${placeName}&format=jsonv2`
-    const data = await cachedFetch(url) as { lat: string, lon: string }[]
+    const data = searchSchema.parse(await cachedFetch(url))
     return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }
   }
   catch (error) {

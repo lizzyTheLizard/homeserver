@@ -69,7 +69,7 @@ export type StoreResult<T = undefined> = StoreSuccess<T> | StoreFailure
 interface GroupRow {
   id: string
   name: string
-  phase: string
+  phase: Phase
   invite_token: string
   created_at: Date | string
 }
@@ -368,7 +368,7 @@ function mapGroup(row: GroupRow, users: UserRow[]): Group {
   return {
     id: row.id,
     name: row.name,
-    phase: row.phase as Phase,
+    phase: row.phase,
     inviteToken: row.invite_token,
     createdAt: toIso(row.created_at),
     users: users.map(mapUser),

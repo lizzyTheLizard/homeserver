@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { isRecord } from './isRecord'
 import { logger } from './logger'
 import type { Supervisor } from './supervisor'
 
@@ -11,7 +12,7 @@ const inflightUnarchive = new Set<string>()
 // archived chat.
 export async function handleInternalWebhook(supervisor: Supervisor, body: unknown, signatureHeader: string | undefined): Promise<void> {
   const payload = parseWebhookPayload(supervisor.getWebhookSecret(), body, signatureHeader)
-  const message = (typeof payload === 'object' && payload !== null ? payload : {}) as Record<string, unknown>
+  const message = isRecord(payload) ? payload : {}
   if (message.FromMe === true || message.FromMe === 1) return
   const chatId = typeof message.Chat === 'string' ? message.Chat : ''
   if (!chatId || inflightUnarchive.has(chatId)) return

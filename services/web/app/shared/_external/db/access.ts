@@ -68,21 +68,14 @@ export type Entity<T> = T & {
  * @param input The initial object (might be null itself)
  * @returns The input with all nulls replaced with undefined
  */
-export const removeNull = <T>(input: T): T => {
-  if (input === null)
-    return undefined as T
-  if (Array.isArray(input)) {
-    // Process each array element recursively
-    // oxlint-disable-next-line typescript/no-unsafe-return
-    return input.map(item => removeNull(item)) as T
-  }
+export function removeNull<T>(input: T): T
+export function removeNull(input: unknown): unknown {
+  if (input === null) return undefined
+  // Process each array element recursively
+  if (Array.isArray(input)) return input.map((item: unknown) => removeNull(item))
   if (typeof input === 'object') {
     // Process object entries recursively
-    return Object.entries(input).reduce((acc, [key, value]) => {
-      // oxlint-disable-next-line typescript/no-unsafe-assignment, typescript/no-explicit-any, typescript/no-unsafe-member-access
-      (acc as any)[key] = removeNull(value)
-      return acc
-    }, {}) as T
+    return Object.fromEntries(Object.entries(input).map(([key, value]) => [key, removeNull(value)]))
   }
   // Return primitives as-is
   return input

@@ -1,15 +1,17 @@
+import { z } from 'zod'
+
 const FALLBACK_LAT = 46.948
 const FALLBACK_LON = 7.4474
 const LOCAL_STORAGE_KEY = 'geolocation'
+
+const storedLocationSchema = z.object({ lon: z.number(), lat: z.number() })
 
 function getStoredLocation(): { lon: number, lat: number } {
   try {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (stored) {
-      const parsed = JSON.parse(stored) as { lon: number, lat: number }
-      if (typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
-        return parsed
-      }
+      const parsed = storedLocationSchema.safeParse(JSON.parse(stored))
+      if (parsed.success) return parsed.data
     }
   }
   catch (error) {

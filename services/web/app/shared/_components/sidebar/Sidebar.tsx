@@ -52,6 +52,7 @@ function SidebarInner<T>({ children, id, title, type, onDelete, onSave, onAfterD
   useEffect(() => {
     document.addEventListener('scroll', () => { adjustHeight(ref.current) })
     adjustHeight(ref.current)
+  // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [ref, isOpen])
 
   function execute<R>(response: () => ActionResponse<R>, onSuccess: ((result: R) => void) | undefined) {

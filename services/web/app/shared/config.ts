@@ -34,6 +34,14 @@ const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
 const isStorybook = Object.keys(process.env).length === 0
 const allowDefaults = isDev || isTest || isBuild || isStorybook
 
+const NODE_ENVS = ['development', 'production', 'test'] as const
+
+function toNodeEnv(value: string): typeof NODE_ENVS[number] {
+  const nodeEnv = NODE_ENVS.find(env => env === value)
+  if (!nodeEnv) throw new Error(`Invalid NODE_ENV: ${value}`)
+  return nodeEnv
+}
+
 function required(name: string, devDefault?: string): string {
   const value = process.env[name]
   if (value && value.length > 0) return value
@@ -47,7 +55,7 @@ function optional(name: string, defaultValue: string): string {
 }
 
 export const config: Config = {
-  NODE_ENV: required('NODE_ENV', 'development') as 'development' | 'production' | 'test',
+  NODE_ENV: toNodeEnv(required('NODE_ENV', 'development')),
   LOG_LEVEL: optional('LOG_LEVEL', isDev ? 'debug' : 'info'),
   LOG_URL: required('LOG_URL', 'http://localhost:4000'),
   APP_URL: required('APP_URL', 'http://localhost:3000'),

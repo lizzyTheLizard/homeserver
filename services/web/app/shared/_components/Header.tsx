@@ -62,7 +62,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                     .filter(app => accessibleApplications.includes(app.key))
                     .map(app => (
                       <Link key={app.key} href={app.link} className={appLinkClass(app.link)}>
-                        <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ width: '1rem', height: '1rem' }} />
+                        <Icon name={app.icon} style={{ width: '1rem', height: '1rem' }} />
                         <span>{app.name}</span>
                       </Link>
                     ))}
@@ -80,7 +80,7 @@ export function Header({ accessibleApplications, hasSession, path }: HeaderProps
                   .filter(app => accessibleApplications.includes(app.key))
                   .map(app => (
                     <Link key={app.key} href={app.link} className={tabLinkClass(app.link)}>
-                      <Icon name={app.icon as 'startpage' | 'cash' | 'admin' | 'coeditor'} style={{ width: '1.1rem', height: '1.1rem' }} />
+                      <Icon name={app.icon} style={{ width: '1.1rem', height: '1.1rem' }} />
                       <span>{app.name}</span>
                     </Link>
                   ))}
