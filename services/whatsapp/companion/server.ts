@@ -1,3 +1,4 @@
+// oxlint-disable no-magic-numbers
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { Supervisor } from './supervisor'
 import { config } from './config'
@@ -9,6 +10,7 @@ type SessionRequest = Request<{ userId: string }>
 main()
 
 // Sets up and starts the REST API the Next.js app and the assistant call.
+// oxlint-disable-next-line max-statements
 function main(): void {
   // One supervisor per user, created lazily on first use.
   const supervisors = new Map<string, Supervisor>(),
@@ -123,7 +125,7 @@ function requestTracing(req: Request, res: Response, next: NextFunction): void {
   next()
 }
 
-// oxlint-disable-next-line typescript/no-unused-vars
+// oxlint-disable-next-line typescript/no-unused-vars max-params
 function errorHandler(err: Error, _req: SessionRequest, res: Response, _next: NextFunction) {
   logger.warn('Error while serving request', err)
   res.status(500).json({ message: err.message })

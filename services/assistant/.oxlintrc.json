@@ -36,6 +36,12 @@
     "logical-assignment-operators": [
       "error",
       "never"
+    ],
+    "typescript/parameter-properties": [
+      "error",
+      {
+        "prefer": "parameter-property"
+      }
     ]
   },
   "overrides": [
