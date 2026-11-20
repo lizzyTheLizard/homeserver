@@ -40,7 +40,8 @@
       "error",
       "method"
     ],
-    "no-continue": "off"
+    "no-continue": "off",
+    "init-declarations": "off"
   },
   "overrides": [
     {
