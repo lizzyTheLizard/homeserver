@@ -28,7 +28,7 @@ The repository SHALL have exactly one build-and-deploy pipeline. It SHALL run wh
 
 ### Requirement: Renovate keeps dependencies and Docker images up to date
 
-Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file weekly and open one pull request per dependency update, only for versions at least one day old. Major-version updates of `postgres` SHALL be ignored because they need a data migration and must match the PostgreSQL client of the backup image. Dependabot SHALL NOT open version-update pull requests.
+Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily (before 6 a.m. Zurich time) and open one pull request per dependency update, only for versions at least one day old. Major-version updates of `postgres` SHALL be ignored because they need a data migration and must match the PostgreSQL client of the backup image. Dependabot SHALL NOT open version-update pull requests.
 
 #### Scenario: Every Dockerfile is covered
 - **WHEN** a Dockerfile exists in `services/web`, `services/assistant`, `services/whatsapp`, `services/wichteln`, `services/dev-machine` or `infrastructure/db-backup`

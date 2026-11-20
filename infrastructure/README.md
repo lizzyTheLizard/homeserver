@@ -426,13 +426,19 @@ only do this if you have a reason to.
   `docker compose up -d --force-recreate --remove-orphans`, so every service is
   recreated and containers of services no longer in the compose file are
   removed. Deploys on the host are serialised with `flock`.
-* **Dependabot auto-merge:** `.github/workflows/dependabot-auto-merge.yml`
-  approves and turns on auto-merge for Dependabot patch and minor updates. It
-  does so with a token of a dedicated GitHub App (Contents and Pull requests
-  read/write, installed on this repository), because a merge made with
-  `GITHUB_TOKEN` starts no workflow run and the pipeline would then never build
-  or deploy the update. The app's client ID and private key are stored as
-  **Dependabot** secrets `AUTOMERGE_APP_CLIENT_ID` and
-  `AUTOMERGE_APP_PRIVATE_KEY` (`pull_request` runs started by Dependabot cannot
-  read Actions secrets). Without them the token step fails and the pull request stays open.
+* **Dependency updates (Renovate):** the hosted Renovate GitHub App, installed
+  on this repository by the owner, is configured by `.github/renovate.json5`.
+  Every day before 6 a.m. (Zurich time) it opens one pull request per outdated
+  dependency (pnpm, GitHub Actions, Dockerfile and compose images) once the new
+  version is a day old. Patch and minor updates use GitHub auto-merge and merge
+  after "Quality Gate" passed; major updates stay open for manual review, and
+  `postgres` major updates are ignored (they need a data migration and a
+  matching client in `infrastructure/db-backup`). The `main` ruleset requires
+  branches to be up to date, so Renovate rebases a pull request whenever it is
+  behind `main` or conflicts with it; at most 5 pull requests are open at a time
+  to keep the re-runs after each merge small. Nothing else may push to a
+  `renovate/*` branch, or Renovate stops rebasing it. A stuck pull request is
+  rebased with the rebase checkbox in its description (or the Dependency
+  Dashboard issue), or closed so that Renovate recreates it. Merges and pushes
+  of the app start the pipeline, unlike those made with `GITHUB_TOKEN`.
 

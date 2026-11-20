@@ -6,7 +6,7 @@ The ruleset on `main` requires every pull request to be up to date with `main` (
 
 ## What Changes
 
-- Replace Dependabot version updates by Renovate: add a Renovate configuration with one pull request per dependency for npm/pnpm, GitHub Actions, Dockerfiles and the docker-compose file, a weekly schedule, a one-day minimum release age, and the existing `postgres` major-version ignore rule.
+- Replace Dependabot version updates by Renovate: add a Renovate configuration with one pull request per dependency for npm/pnpm, GitHub Actions, Dockerfiles and the docker-compose file, a daily schedule (before 6 a.m. Zurich time), a one-day minimum release age, and the existing `postgres` major-version ignore rule.
 - Patch and minor updates are merged automatically with GitHub's auto-merge once "Quality Gate" passed; major updates stay open for manual review.
 - Renovate keeps its pull requests up to date with `main` (rebase when behind or conflicting). The number of open Renovate pull requests is limited so that the rebase rounds after each merge stay small.
 - Delete `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` and `.github/workflows/dependabot-update-branch.yml`. The `main` ruleset is not changed.

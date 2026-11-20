@@ -1,0 +1,25 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  timezone: "Europe/Zurich",
+  schedule: ["before 6am"],
+  minimumReleaseAge: "1 day",
+  // Every merge must be tested on top of the current main (strict ruleset), so a pull request is rebased as soon as it is behind
+  rebaseWhen: "behind-base-branch",
+  platformAutomerge: true,
+  // Each merge makes the other open pull requests behind and they are re-tested; the limit bounds that
+  prConcurrentLimit: 5,
+  prHourlyLimit: 0,
+  packageRules: [
+    {
+      matchUpdateTypes: ["minor", "patch"],
+      automerge: true,
+    },
+    {
+      // A major upgrade needs a data migration and a matching postgresql client in infrastructure/db-backup
+      matchPackageNames: ["postgres"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
+  ],
+}

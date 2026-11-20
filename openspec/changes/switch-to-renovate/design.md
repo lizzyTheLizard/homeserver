@@ -25,7 +25,7 @@
 **2. Hosted Mend Renovate app, not a self-hosted workflow.** No secrets, tokens or workflow to maintain; the app pushes and enables auto-merge as an app identity, so branch pushes and merges start the pipeline (unlike `GITHUB_TOKEN`). Fallback if hosted is unwanted: run `renovatebot/github-action` on a schedule with a token generated from the existing GitHub App (the app would then also need the permissions Renovate requires).
 
 **3. Configuration (`.github/renovate.json5`).**
-- `extends: ["config:recommended"]`, `timezone: "Europe/Zurich"`, `schedule: ["before 6am on monday"]` (weekly, as today), `minimumReleaseAge: "1 day"` (replaces the Dependabot cooldown).
+- `extends: ["config:recommended"]`, `timezone: "Europe/Zurich"`, `schedule: ["before 6am"]` (daily, before 6 a.m. Zurich time), `minimumReleaseAge: "1 day"` (replaces the Dependabot cooldown).
 - `rebaseWhen: "behind-base-branch"` explicit, `platformAutomerge: true` (GitHub auto-merge, merges only after required checks), `automerge: true` for `minor` and `patch` update types via a package rule, so majors stay open.
 - `prConcurrentLimit: 5` and `prHourlyLimit: 0`. Under the strict policy every merge makes the other open pull requests behind, and each gets rebased and re-tested; the limit bounds that cost (assumption, tune after observing).
 - Package rule disabling `major` updates of `postgres` (same reason as today: data migration and matching client in `infrastructure/db-backup`).
