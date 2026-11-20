@@ -229,3 +229,51 @@ Dependabot SHALL check the Docker images referenced by every Dockerfile and by t
 #### Scenario: PostgreSQL major upgrades are not proposed
 - **WHEN** a new major version of `postgres` is released
 - **THEN** Dependabot does not open a pull request for it
+
+### Requirement: The stack is started in the pipeline when the infrastructure changed
+
+When the infrastructure is reported as changed, the pipeline SHALL start the whole docker-compose stack with `docker compose up` on a pipeline runner, using placeholder configuration values, and SHALL pass only when every container of the stack is running and, where it defines a health check, healthy within a bounded time. This stage SHALL perform no other check: no request to a service and no query to the name server. It SHALL run after the changed services' images were built and published, and SHALL be skipped when the infrastructure did not change. On main, the infrastructure deploy SHALL NOT run unless this stage passed, and a failure of this stage SHALL make the "Quality Gate" fail.
+
+#### Scenario: A healthy stack passes
+- **WHEN** the infrastructure changed and every container of the stack reaches the running and healthy state in time
+- **THEN** the stack start-up stage passes
+
+#### Scenario: A failing container fails the stage
+- **WHEN** the infrastructure changed and a container exits or does not become healthy in time
+- **THEN** the stage fails, the infrastructure deploy does not run and the "Quality Gate" fails
+
+#### Scenario: Unchanged infrastructure skips the stage
+- **WHEN** the infrastructure is not reported as changed
+- **THEN** the stack start-up stage is skipped and does not block the "Quality Gate"
+
+#### Scenario: A pull request starts the stack without deploying
+- **WHEN** the pipeline runs for a pull request that changes the infrastructure
+- **THEN** the stack is started on the runner and nothing is deployed
+
+### Requirement: Dependabot pull requests with armed auto-merge are kept up to date
+
+After every push to the main branch, and when dispatched by hand, a workflow SHALL bring an open Dependabot pull request that is behind main and has auto-merge armed up to date with main, using the GitHub App identity so that the update starts the pipeline. It SHALL update at most one pull request per run, the oldest eligible one.
+
+#### Scenario: A pull request that is behind is updated
+- **WHEN** a commit reaches main and a Dependabot pull request with armed auto-merge is behind main
+- **THEN** the workflow merges main into that pull request's branch and the pipeline runs for it
+
+#### Scenario: Only the oldest eligible pull request is updated
+- **WHEN** several Dependabot pull requests with armed auto-merge are behind main
+- **THEN** only the oldest of them is updated in this run
+
+#### Scenario: The next pull request follows after a merge
+- **WHEN** the updated pull request passes its "Quality Gate" and auto-merge merges it into main
+- **THEN** the resulting push to main updates the next eligible pull request
+
+#### Scenario: An update that is already waiting is not followed by another
+- **WHEN** a Dependabot pull request with armed auto-merge is up to date and its checks have not failed
+- **THEN** the workflow updates no other pull request in this run
+
+#### Scenario: A failing pull request does not block the others
+- **WHEN** the up-to-date pull request with armed auto-merge has a failed check
+- **THEN** the workflow still updates the oldest eligible behind pull request
+
+#### Scenario: Other pull requests are left alone
+- **WHEN** a pull request is not from Dependabot, has no armed auto-merge, or is not behind main
+- **THEN** the workflow does not update it

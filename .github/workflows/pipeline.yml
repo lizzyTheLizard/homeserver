@@ -134,10 +134,73 @@ jobs:
       compose-service: dev-machine
       lint: false
       deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.infrastructure != 'true' }}
+  stack-start:
+    name: Start stack
+    runs-on: ubuntu-latest
+    needs: [changes, web, assistant, whatsapp, wichteln, dev-machine]
+    # Waits for skipped services, but never starts the stack after a failed or cancelled publish
+    if: >-
+      ${{ always()
+      && needs.changes.outputs.infrastructure == 'true'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled') }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Free port 53 for the name server
+        # The runner's local resolver stub listens on port 53, which the stack publishes.
+        # Only the stub listener is turned off; name resolution keeps working through the upstream servers.
+        run: |
+          sudo mkdir -p /etc/systemd/resolved.conf.d
+          printf '[Resolve]\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/no-stub.conf
+          sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+          sudo systemctl restart systemd-resolved
+          # The Docker daemon keeps the old 127.0.0.53 resolver until it is restarted
+          sudo systemctl restart docker
+          getent hosts registry-1.docker.io
+          sudo ss -lntup | grep ':53 ' || true
+      - name: Use the placeholder configuration
+        run: |
+          cp infrastructure/env.example infrastructure/.env
+          # The development machine would otherwise exit without a GitHub SSH key
+          echo "SKIP_GITHUB_BOOTSTRAP=1" >> infrastructure/.env
+      - name: Create placeholder TLS certificates
+        # nginx refuses to start without the certificates that certbot issues on the real host
+        run: |
+          for host in dev logs www wichteln; do
+            dir="infrastructure/certbot/conf/live/$host.gutschi.site"
+            mkdir -p "$dir"
+            openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=$host.gutschi.site" \
+              -keyout "$dir/privkey.pem" -out "$dir/fullchain.pem"
+          done
+      - name: Start the stack and wait until every container is healthy
+        working-directory: infrastructure
+        run: |
+          docker compose pull --ignore-buildable
+          docker compose up -d --build --wait --wait-timeout 300
+      - name: Show container state and logs
+        if: ${{ failure() }}
+        working-directory: infrastructure
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail 100
+      - name: Stop the stack
+        if: ${{ always() }}
+        working-directory: infrastructure
+        run: docker compose down -v --remove-orphans
   deploy-infrastructure:
     name: Deploy infrastructure
     runs-on: ubuntu-latest
-    needs: [changes, web, assistant, whatsapp, wichteln, dev-machine]
+    needs: [changes, web, assistant, whatsapp, wichteln, dev-machine, stack-start]
     # Waits for skipped services, but never deploys after a failed or cancelled publish
     if: >-
       ${{ always()
@@ -174,7 +237,7 @@ jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    needs: [changes, change-guard, web, assistant, whatsapp, wichteln, dev-machine, deploy-infrastructure]
+    needs: [changes, change-guard, web, assistant, whatsapp, wichteln, dev-machine, stack-start, deploy-infrastructure]
     # Always runs, even when every earlier job failed, was cancelled or was skipped
     if: always()
     steps:

@@ -16,7 +16,7 @@ ARG WACLI_VERSION=0.17.1
 # ---- Stage 1: fetch the prebuilt wacli binary ---------------------------
 # wacli ships release tarballs per OS/arch. TARGETARCH is supplied by buildx
 # (linux/amd64, linux/arm64, ...) and defaults to amd64 for plain builds.
-FROM alpine:3.20.10 AS wacli
+FROM alpine:3.24.4 AS wacli
 ARG WACLI_VERSION
 ARG TARGETARCH=amd64
 RUN apk add --no-cache ca-certificates curl tar \
