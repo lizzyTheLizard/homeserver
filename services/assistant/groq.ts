@@ -65,7 +65,7 @@ async function loggingFetch(resource: string | URL | Request, init: RequestInit 
 
 function logRequest(init: RequestInit | undefined) {
   if (!config.AI.LOG_REQUEST_RESPONSE) return
-  const bodyString = init?.body ? String(init.body) : ''// eslint-disable-line @typescript-eslint/no-base-to-string
+  const bodyString = init?.body ? String(init.body) : ''// oxlint-disable-line typescript/no-base-to-string
   const requestSize = bodyString.length
   logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
   console.log(bodyString)

@@ -63,7 +63,7 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 * **`dozzle`** gives live container logs at `https://logs.gutschi.site`.
 * **`pgwebprod`** is a web UI for the prod DB at `https://www.gutschi.site:8443`
   (admin auth).
-* **`dev-machine`** is a full Linux dev environment (node:24-bookworm-slim) with Node 24,
+* **`dev-machine`** is a full Linux dev environment (node:26-bookworm-slim) with Node 26,
   pnpm, Go, the GitHub CLI, PostgreSQL client tools, `wacli` (WhatsApp CLI),
   **code-server** and **Claude Code**, managed by `supervisord`. Access:
   * VS Code Remote SSH → `ssh dev@<host> -p 2222`

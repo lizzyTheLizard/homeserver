@@ -6,11 +6,11 @@
     "dev": "dotenv run -f ../.env -- next dev --hostname 0.0.0.0 --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --fix --cache",
-    "lint:ci": "eslint",
+    "lint": "oxlint --type-aware --fix",
+    "lint:ci": "oxlint --type-aware --deny-warnings",
     "test": "vitest --run",
     "test:watch": "vitest --watch",
-    "clean": "rimraf .next .eslintcache next-env.d.ts"
+    "clean": "rimraf .next next-env.d.ts"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -21,20 +21,16 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "@eslint/js": "^10.0.1",
-    "@stylistic/eslint-plugin": "^5.10.0",
-    "@types/node": "^22",
+    "@types/node": "^26.6.2",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^18.0.9",
-    "eslint": "^10.11.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.7",
-    "globals": "^17.14.0",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "oxlint": "^1.94.0",
+    "oxlint-tsgolint": "^7.0.2007",
     "rimraf": "^6.1.3",
-    "typescript": "5.9.3",
-    "typescript-eslint": "^8.71.0",
+    "typescript": "^7.0.2",
     "vitest": "^5.1.1"
   }
 }

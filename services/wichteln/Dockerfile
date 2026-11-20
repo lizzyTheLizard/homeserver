@@ -1,6 +1,9 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:24.22.3-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
+# Node 25+ no longer bundles corepack. Install pnpm directly; the root package.json
+# `devEngines.packageManager` range decides the exact version (pnpm downloads it if needed).
+RUN npm install -g pnpm@12
 
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
@@ -10,7 +13,7 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
 COPY services/wichteln/package.json ./services/wichteln/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN pnpm i --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
@@ -20,7 +23,7 @@ COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
 COPY ./services/wichteln ./services/wichteln
 
-RUN corepack enable pnpm && pnpm --filter @homeserver/wichteln build
+RUN pnpm --filter @homeserver/wichteln build
 
 FROM base AS runner
 WORKDIR /app

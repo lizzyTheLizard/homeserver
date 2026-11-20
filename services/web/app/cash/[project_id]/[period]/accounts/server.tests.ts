@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* oxlint-disable typescript/no-explicit-any */
+/* oxlint-disable typescript/no-unsafe-assignment */
 import { describe, expect, test, vi, beforeEach } from 'vitest'
 import { transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'

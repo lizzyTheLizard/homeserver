@@ -1,5 +1,5 @@
 # Syntax=docker/dockerfile:1
-FROM node:24.22.3-bookworm-slim
+FROM node:26.13.1-bookworm-slim
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -35,9 +35,9 @@ RUN mkdir -p -m 0755 /etc/apt/keyrings \
     && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
 
-# 3. Enable Corepack (pnpm)
-RUN corepack enable \
-    && corepack prepare pnpm@latest --activate
+# 3. Install pnpm (Node 25+ no longer bundles corepack; the `devEngines.packageManager`
+#    range in package.json decides the exact version)
+RUN npm install -g pnpm@12
 
 # 4. Install Playwright browser OS dependencies. The browser binaries themselves
 #    are fetched at runtime (see AGENTS.md) via `pnpm exec playwright install --with-deps`.

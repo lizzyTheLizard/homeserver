@@ -1,6 +1,9 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:24.22.3-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
+# Node 25+ no longer bundles corepack. Install pnpm directly; the root package.json
+# `devEngines.packageManager` range decides the exact version (pnpm downloads it if needed).
+RUN npm install -g pnpm@12
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -12,7 +15,7 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
 COPY services/assistant/package.json ./services/assistant/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -23,7 +26,7 @@ COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
 COPY services/assistant/ ./services/assistant
 
-RUN corepack enable pnpm && pnpm --filter @homeserver/assistant build
+RUN pnpm --filter @homeserver/assistant build
 
 # Production dependencies only, so the runtime image does not carry the full
 # dev tree. Mirrors the whatsapp image's prod-deps stage.
@@ -32,7 +35,7 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY pnpm* ./
 COPY services/assistant/package.json ./services/assistant/package.json
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --filter @homeserver/assistant
+RUN pnpm i --frozen-lockfile --prod --filter @homeserver/assistant
 
 # Production image, copy all the files and run the assistant server
 FROM base AS runner

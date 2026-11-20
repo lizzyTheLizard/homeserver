@@ -8,7 +8,7 @@ import type { UserSession } from '../session'
 const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
-  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // eslint-disable-line
+  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
   let user: UserSession
 
   beforeAll(async () => {

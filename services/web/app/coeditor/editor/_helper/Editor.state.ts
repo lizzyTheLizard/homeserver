@@ -120,7 +120,7 @@ function updateParameter(obj: Record<string, string>, key: string, value: string
 }
 
 function removeKey<T>(obj: Record<string, T>, key: string): Record<string, T> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // oxlint-disable-next-line typescript/no-unused-vars
   const { [key]: _, ...rest } = obj
   return rest
 }

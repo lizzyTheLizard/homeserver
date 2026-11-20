@@ -1,6 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:24.22.3-alpine3.24
+FROM node:26.13.1-alpine3.24
 
 # pg_dump must match the major version of the database server (postgres:16 in docker-compose.yml);
 # keep postgresql16-client in step with that major (Dependabot ignores postgres major updates)

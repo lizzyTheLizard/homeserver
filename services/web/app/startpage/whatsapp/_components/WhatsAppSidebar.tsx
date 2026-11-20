@@ -27,7 +27,7 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
   useEffect(() => {
     if (!selectedChat) return
     void loadMessages(selectedChat.id).then(setMessages).finally(() => { setMessagesLoading(false) })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
