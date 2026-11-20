@@ -65,6 +65,17 @@
       {
         "prefer": "parameter-property"
       }
+    ],
+    "id-length": [
+      "error",
+      {
+        "exceptions": [
+          "a",
+          "b",
+          "i",
+          "j"
+        ]
+      }
     ]
   },
   "overrides": [

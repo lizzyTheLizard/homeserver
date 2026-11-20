@@ -61,7 +61,7 @@ export function mapChatArchived(data: unknown): boolean {
 export function mapMessages(data: unknown): Message[] {
   const result = data as { messages?: WacliMessage[] } | undefined
   if (!Array.isArray(result?.messages)) {return []}
-  return result.messages.map(mapMessage).filter(m => m.content.length > 0)
+  return result.messages.map(mapMessage).filter(i => i.content.length > 0)
 }
 
 function mapMessage(message: WacliMessage): Message {
