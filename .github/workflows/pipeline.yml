@@ -156,6 +156,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Free port 53 for the name server
+        # The runner's local resolver listens on port 53, which the stack publishes
+        run: |
+          sudo systemctl stop systemd-resolved
+          sudo ss -lntup | grep ':53 ' || true
       - name: Use the placeholder configuration
         run: cp infrastructure/env.example infrastructure/.env
       - name: Start the stack and wait until every container is healthy
