@@ -1,13 +1,7 @@
 {
     "recommendations": [
         "oxc.oxc-vscode",
-        "github.vscode-github-actions",
         "vitest.explorer",
-        "4ops.terraform",
-        "cweijan.vscode-postgresql-client2",
-        "cweijan.dbclient-jdbc",
-        "github.codespaces",
-        "golang.go",
         "davidanson.vscode-markdownlint"
     ]
 }
