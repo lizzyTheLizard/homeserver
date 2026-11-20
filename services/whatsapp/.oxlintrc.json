@@ -18,6 +18,10 @@
   "rules": {
     "one-var": "off",
     "no-ternary": "off",
-    "max-statements": "warn"
+    "max-statements": "warn",
+    "func-style": [
+      "error",
+      "declaration"
+    ]
   }
 }

@@ -40,6 +40,10 @@
     "react/react-in-jsx-scope": "off",
     "one-var": "off",
     "no-ternary": "off",
-    "max-statements": "warn"
+    "max-statements": "warn",
+    "func-style": [
+      "error",
+      "declaration"
+    ]
   }
 }
