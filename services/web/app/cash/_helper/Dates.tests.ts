@@ -1,5 +1,4 @@
-import { afterEach, vi } from 'vitest'
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { get24HoursAgo, get30DaysAgo, getStartOfMonth } from './Dates'
 
 describe('Dates', () => {

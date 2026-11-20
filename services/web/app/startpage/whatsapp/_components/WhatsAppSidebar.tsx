@@ -1,13 +1,13 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import { Button } from '@/app/shared/_components/form/Button'
-import { archiveChat, loadMessages, sendChatMessage } from '../server'
-import { MessageBubble } from './MessageBubble'
-import styles from './WhatsAppSidebar.module.css'
 import type { Chat, Message } from '@assistant/whatsapp/types'
+import { archiveChat, loadMessages, sendChatMessage } from '../server'
+import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/app/shared/_components/form/Button'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { MessageBubble } from './MessageBubble'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import styles from './WhatsAppSidebar.module.css'
+import { useRouter } from 'next/navigation'
 
 interface WhatsAppSidebarProps {
   selectedChat: Chat | null

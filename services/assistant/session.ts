@@ -1,5 +1,5 @@
-import { getIronSession } from 'iron-session'
 import { config } from './config'
+import { getIronSession } from 'iron-session'
 
 export interface UserSession {
   name: string

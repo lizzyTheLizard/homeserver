@@ -1,15 +1,14 @@
 'use client'
-import type { PropsWithChildren} from 'react';
-import { useContext, useEffect, useRef, useState } from 'react'
-import { Icon } from '../Icon'
-import { createPortal } from 'react-dom'
-import { LoadingSpinner } from '../LoadingSpinner'
-import style from './Sidebar.module.css'
-import containerStyle from './SidebarContainer.module.css'
-import { Button } from '../form/Button'
-import { useIsClient } from '../../_helper/useIsClient'
-import { SidebarContext } from './SidebarContext'
+import { type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react'
 import type { ActionResponse } from '../../_helper/ActionResponse'
+import { Button } from '../form/Button'
+import { Icon } from '../Icon'
+import { LoadingSpinner } from '../LoadingSpinner'
+import { SidebarContext } from './SidebarContext'
+import containerStyle from './SidebarContainer.module.css'
+import { createPortal } from 'react-dom'
+import style from './Sidebar.module.css'
+import { useIsClient } from '../../_helper/useIsClient'
 
 export interface SidebarProps<T> {
   id: string

@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
+import { describe, expect, test } from 'vitest'
 import { useListState } from './ListState'
 
 describe.concurrent('Initialize State', () => {

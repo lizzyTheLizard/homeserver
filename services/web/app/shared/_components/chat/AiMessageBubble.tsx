@@ -1,7 +1,7 @@
 'use client'
 
-import Markdown from 'react-markdown'
 import { EditableBlock } from './EditableBlock'
+import Markdown from 'react-markdown'
 import styles from './AiMessageBubble.module.css'
 
 export interface AiMessageBubbleProps {

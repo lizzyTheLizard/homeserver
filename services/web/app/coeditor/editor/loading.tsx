@@ -1,8 +1,8 @@
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Editor } from './_components/Editor'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import type { Template } from '../_data/Template'
-import { Editor } from './_components/Editor'
 import { Temporal } from '@js-temporal/polyfill'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export default function Loading() {
   const dummyTemplate: Template = {

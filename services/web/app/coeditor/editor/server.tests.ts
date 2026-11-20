@@ -1,17 +1,14 @@
-import type { Mock} from 'vitest';
-import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/shared/auth/session'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import type { CommandInput} from '../_data/Command';
-import { createCommand } from '../_data/Command'
-import type { ExecuteCommandInput } from './server'
-import { createOrModifyTemplate } from '../_data/Template'
-import { createOrModifyProfile } from '../_data/Profile'
-import { executeCommand, loadEditorData } from './server'
-import { aiPort } from '../_external/AiPort'
+import { type CommandInput, createCommand } from '../_data/Command';
+import { type ExecuteCommandInput, executeCommand, loadEditorData } from './server'
+import { type Mock, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createDiscussion, findDiscussionByOwner } from '../_data/Discussion'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
+import type { UserSession } from '@/app/shared/auth/session'
+import { aiPort } from '../_external/AiPort'
+import { createOrModifyProfile } from '../_data/Profile'
+import { createOrModifyTemplate } from '../_data/Template'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { v4 as randomUUID } from 'uuid'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {

@@ -1,7 +1,7 @@
+import { SidebarContext, useSidebar } from './SidebarContext'
 import { act, renderHook } from '@testing-library/react'
 import { createElement, useContext } from 'react'
 import { describe, expect, test } from 'vitest'
-import { SidebarContext, useSidebar } from './SidebarContext'
 import { SidebarContainer } from './SidebarContainer'
 
 function wrapper({ children }: { children: React.ReactNode }) {

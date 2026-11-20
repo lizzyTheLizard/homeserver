@@ -1,6 +1,5 @@
 'use client'
-import type { HTMLAttributes, PropsWithChildren} from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { type HTMLAttributes, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import { SidebarContext } from './SidebarContext'
 import style from './SidebarContainer.module.css'
 

@@ -1,6 +1,6 @@
+import type { Group, User } from './store'
 import { describe, expect, test } from 'vitest'
 import { selectableWishOwners } from './matching'
-import type { Group, User } from './store'
 
 function makeUser(id: string, hasWish = true): User {
   return {

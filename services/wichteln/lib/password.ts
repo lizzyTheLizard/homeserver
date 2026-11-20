@@ -1,5 +1,4 @@
-import { randomBytes, scrypt, timingSafeEqual } from 'crypto'
-import type { ScryptOptions } from 'crypto'
+import { type ScryptOptions, randomBytes, scrypt, timingSafeEqual } from 'crypto'
 
 const N = 16384,
  R = 8,

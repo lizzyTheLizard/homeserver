@@ -1,19 +1,17 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
-import { createHash } from 'node:crypto'
-import { promises as fs } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { type Mock, afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ChildProcess } from 'node:child_process'
-import type { Mock } from 'vitest'
 import { Supervisor } from './supervisor'
 import type { WacliEvent } from './wacli'
+import { createHash } from 'node:crypto'
+import { promises as fs } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 
 const { mockRunWacli, mockSpawnWacli } = vi.hoisted(() => ({
   mockRunWacli: vi.fn(),
   mockSpawnWacli: vi.fn(),
 }))
 
-// oxlint-disable-next-line one-var -- vi.hoisted calls must not share a declaration
 const testConfig = vi.hoisted(() => ({
   LOG_LEVEL: 'info',
   NODE_ENV: 'test',

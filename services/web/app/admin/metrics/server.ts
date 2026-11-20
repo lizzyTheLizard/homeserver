@@ -1,15 +1,14 @@
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import type { LineItem } from '../_components/DashboardCard'
-import { nontransactional } from '@/app/shared/_external/db/access'
-import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
-import { findNumberOfDiscussions } from '@/app/coeditor/_data/Discussion'
+import { findNumberOfProjects, findNumberOfUsersWithProjects } from '@/app/cash/_data/Project'
 import { get24HoursAgo, get30DaysAgo, getStartOfMonth } from '@/app/cash/_helper/Dates'
-import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
+import type { LineItem } from '../_components/DashboardCard'
 import { findNumberOfAccounts } from '@/app/cash/_data/Account'
-import { findNumberOfProjects } from '@/app/cash/_data/Project'
-import { findNumberOfUsersWithProjects } from '@/app/cash/_data/Project'
+import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
+import { findNumberOfDiscussions } from '@/app/coeditor/_data/Discussion'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
+import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { getDbPhaseTimings } from '@/app/shared/_external/db/setup'
+import { nontransactional } from '@/app/shared/_external/db/access'
 
 function formatUptime(seconds: number): string {
   const h = Math.floor(seconds / 3600),

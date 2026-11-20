@@ -1,9 +1,8 @@
-import type { ToolSet } from 'ai';
-import { tool } from 'ai'
-import { z } from 'zod/v4'
+import { type ToolSet, tool } from 'ai';
+import { openmeteoRequest, parseOpenMeteoData } from './openmeteo'
 import { Temporal } from '@js-temporal/polyfill'
 import { logger } from '../logger'
-import { openmeteoRequest, parseOpenMeteoData } from './openmeteo'
+import { z } from 'zod/v4'
 
 export default function getTools(): ToolSet {
   return {

@@ -1,8 +1,8 @@
 'use client'
 
+import type { ChatState } from './AiChatState'
 import { Icon } from '../Icon'
 import styles from './AiConnectionStatusIndicator.module.css'
-import type { ChatState } from './AiChatState'
 
 export interface AiConnectionStatusIndicatorProps {
   state: ChatState

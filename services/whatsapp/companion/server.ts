@@ -1,9 +1,8 @@
-import express from 'express'
-import type { NextFunction, Request, Response } from 'express'
-import { config } from './config'
-import { logger } from './logger'
-import { handleInternalWebhook } from './internalWebhook'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import { Supervisor } from './supervisor'
+import { config } from './config'
+import { handleInternalWebhook } from './internalWebhook'
+import { logger } from './logger'
 
 type SessionRequest = Request<{ userId: string }>
 

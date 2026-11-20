@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useIsClient } from '../../shared/_helper/useIsClient'
 import styles from './Clock.module.css'
+import { useIsClient } from '../../shared/_helper/useIsClient'
 
 function useClock() {
   const [now, setNow] = useState(new Date())

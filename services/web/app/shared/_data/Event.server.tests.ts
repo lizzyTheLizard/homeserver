@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { findRecentEvents, logEvent } from './Event'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 
 describe('logEvent', () => {
   test('writes an event that findRecentEvents returns', async () => {

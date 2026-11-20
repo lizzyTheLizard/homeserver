@@ -1,12 +1,12 @@
 'use client'
-import { useState } from 'react'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { DateTime } from '@/app/shared/_components/DateTime'
-import styles from './MicrosoftTodo.module.css'
 import type { SerializedTodoTask } from '@assistant/microsoft/types'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import styles from './MicrosoftTodo.module.css'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { useState } from 'react'
 
 export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
   const [selectedTodo, setSelectedTodo] = useState<SerializedTodoTask | null>(null),

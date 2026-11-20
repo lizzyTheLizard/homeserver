@@ -1,11 +1,11 @@
 import { type ChangeEvent } from 'react'
-import style from './EditorContext.module.css'
-import type { Template } from '../../_data/Template'
-import { Input } from '@/app/shared/_components/form/Input'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { Collapse } from '@/app/shared/_components/Collapse'
+import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
+import type { Template } from '../../_data/Template'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { notFound } from '@/app/shared/_helper/BackendError'
+import style from './EditorContext.module.css'
 
 interface Props {
   templates: Template[]

@@ -1,14 +1,13 @@
-import { findProjectsByOwner } from '@/app/cash/_data/Project'
+import * as client from 'openid-client'
+import { type CookieStore, type UserSession, getSession } from './session';
 import { authenticationFailed } from '@/app/shared/_helper/BackendError'
 import { config } from '@/app/shared/config'
-import { nontransactional } from '@/app/shared/_external/db/access'
-import { logger } from '@/app/shared/logger'
-import { logEvent } from '@/app/shared/_data/Event'
-import { cookies as nextCookies } from 'next/headers'
-import * as client from 'openid-client'
+import { findProjectsByOwner } from '@/app/cash/_data/Project'
 import { getActualUrl } from '../_helper/UrlHelper'
-import type { CookieStore, UserSession } from './session';
-import { getSession } from './session'
+import { logEvent } from '@/app/shared/_data/Event'
+import { logger } from '@/app/shared/logger'
+import { cookies as nextCookies } from 'next/headers'
+import { nontransactional } from '@/app/shared/_external/db/access'
 
 export async function getUserSession(alreadyParsedCookies?: CookieStore): Promise<UserSession | undefined> {
   const cookiesList = alreadyParsedCookies ?? await nextCookies(),

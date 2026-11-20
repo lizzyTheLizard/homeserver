@@ -1,8 +1,7 @@
-import { Temporal } from '@js-temporal/polyfill'
+import { type DeltaResponse, graphApiRequest, toInstant } from './graph'
 import { Mutex } from 'async-mutex'
+import { Temporal } from '@js-temporal/polyfill'
 import type { UserSession } from '../session'
-import type { DeltaResponse} from './graph';
-import { graphApiRequest, toInstant } from './graph'
 import { logger } from '../logger'
 
 export type InferenceClassification = 'focused' | 'other'

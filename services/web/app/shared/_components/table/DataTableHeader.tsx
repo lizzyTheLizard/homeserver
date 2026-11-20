@@ -1,7 +1,7 @@
+import type { ColumnDefinition } from './DataTable'
+import { Icon } from '../Icon'
 import type { SortingOrder } from './sortAndFilter'
 import style from './DataTableHeader.module.css'
-import { Icon } from '../Icon'
-import type { ColumnDefinition } from './DataTable'
 
 export interface DataTableHeaderProps<FieldType> {
   sortingOrder: SortingOrder[]

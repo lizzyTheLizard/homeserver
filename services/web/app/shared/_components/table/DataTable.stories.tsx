@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { DataTable } from './DataTable'
 import { boolColumn, dateColumn, enumColumn, textColumn } from './DataTableColumnBuilders'
+import { DataTable } from './DataTable'
 import { Temporal } from '@js-temporal/polyfill'
 
 const meta = {

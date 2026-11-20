@@ -1,14 +1,14 @@
 'use client'
-import { useState } from 'react'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
+import type { SerializedMessageFull, SerializedMessageListItem } from '@assistant/microsoft/types'
 import { boolColumn, dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
+import { DateTime } from '@/app/shared/_components/DateTime'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { loadMessage } from '../server'
-import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MicrosoftMail.module.css'
-import type { SerializedMessageFull, SerializedMessageListItem } from '@assistant/microsoft/types'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
+import { useState } from 'react'
 
 export function MicrosoftMail({ messages }: { messages: SerializedMessageListItem[] }) {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null),

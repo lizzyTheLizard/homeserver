@@ -1,6 +1,6 @@
 'use client'
-import style from './SearchBar.module.css'
 import { Input } from '../form/Input'
+import style from './SearchBar.module.css'
 import { useActionTitle } from '../ActionTitleHelpers'
 
 export interface SearchBarProps {

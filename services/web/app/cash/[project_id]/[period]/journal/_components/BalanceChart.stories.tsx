@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, waitFor } from 'storybook/test'
-import { BalanceChart } from './BalanceChart'
 import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { BalanceChart } from './BalanceChart'
 import type { Period } from '@/app/cash/_helper/Period'
 
 function transaction(date: string, total_balance: number, ordering = 0): AccountTransaction {

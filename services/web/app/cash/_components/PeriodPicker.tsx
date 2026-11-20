@@ -1,7 +1,6 @@
 'use client'
+import { type Period, toUrlString } from '../_helper/Period';
 import { Select } from '@/app/shared/_components/form/Select'
-import type { Period} from '../_helper/Period';
-import { toUrlString } from '../_helper/Period'
 import { Temporal } from '@js-temporal/polyfill'
 import { useActionTitle } from '@/app/shared/_components/ActionTitleHelpers'
 

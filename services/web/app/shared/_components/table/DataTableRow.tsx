@@ -1,5 +1,5 @@
-import type { MouseEvent } from 'react'
 import type { ColumnDefinition } from './DataTable'
+import type { MouseEvent } from 'react'
 import style from './DataTableRow.module.css'
 
 export interface DataTableRowProps<DataType> {

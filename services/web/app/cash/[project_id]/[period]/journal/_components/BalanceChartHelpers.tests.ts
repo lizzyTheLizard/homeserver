@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import { buildBalancePoints, chartKindForAccount, formatDateLabel, formatGranularityLabel, granularityForPeriod, labelFor, niceTicks, prepareBalanceDeltas, prepareBalancePoints, toTimestamp } from './BalanceChartHelpers'
+import { describe, expect, it } from 'vitest'
 import type { Period } from '@/app/cash/_helper/Period'
 
 const monthPeriod: Period = { current: false, month: 4, year: 2026 },

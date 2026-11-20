@@ -1,20 +1,18 @@
 /* oxlint-disable typescript/no-explicit-any */
 /* oxlint-disable typescript/no-unsafe-assignment */
+import { type AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account';
+import { type ProjectInput, createOrModifyProject } from '@/app/cash/_data/Project';
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { v4 as randomUUID } from 'uuid'
 import { deleteTransaction, loadAccountJournal, loadJournal, saveTransaction } from './server'
-import type { ProjectInput } from '@/app/cash/_data/Project';
-import { createOrModifyProject } from '@/app/cash/_data/Project'
-import type { AccountInput} from '@/app/cash/_data/Account';
-import { createOrModifyAccount } from '@/app/cash/_data/Account'
-import { createTransaction } from '@/app/cash/_data/Transaction'
-import type { UserSession } from '@/app/shared/auth/session'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { createClosing } from '@/app/cash/_data/Closing'
-import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
-import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { Temporal } from '@js-temporal/polyfill'
+import type { UserSession } from '@/app/shared/auth/session'
+import { createClosing } from '@/app/cash/_data/Closing'
+import { createTransaction } from '@/app/cash/_data/Transaction'
+import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { v4 as randomUUID } from 'uuid'
+import { recalculateTransactions } from '@/app/cash/_helper/RecalculateAccountTransactions'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {

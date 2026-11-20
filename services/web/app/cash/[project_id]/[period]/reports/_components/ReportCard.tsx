@@ -1,13 +1,12 @@
+import { type Period, toUrlString } from '@/app/cash/_helper/Period';
 import type { Account } from '@/app/cash/_data/Account'
 import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import type { AccountType } from '@/app/cash/_data/AccountType'
 import { Card } from '@/app/shared/_components/Card'
 import { Currency } from '@/app/shared/_components/Currency'
-import { useMemo } from 'react'
-import styles from './ReportCard.module.css'
-import type { Period} from '@/app/cash/_helper/Period';
-import { toUrlString } from '@/app/cash/_helper/Period'
 import { getTotalForAccount } from '@/app/cash/_helper/AccountTotal'
+import styles from './ReportCard.module.css'
+import { useMemo } from 'react'
 
 export interface ReportCardProps {
   accounts: Account[]

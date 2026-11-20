@@ -1,23 +1,17 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import type { Discussion, DiscussionInput} from '../_data/Discussion';
-import { createDiscussion, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
-import type { Template } from '../_data/Template';
-import { findTemplateById, findTemplatesByOwner } from '../_data/Template'
+import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
+import { type AiPortInput, aiPort } from '../_external/AiPort';
+import { type CommandInput, type CommandResult, PREDEFINED_COMMAND_TYPES, type PredefinedCommandType, createCommand, findCommandsByDiscussion } from '../_data/Command';
+import { type Discussion, type DiscussionInput, createDiscussion, findDiscussionById, modifyDiscussion } from '../_data/Discussion';
+import { type Profile, findProfileByOwnerAndLanguage } from '../_data/Profile';
+import { type Template, findTemplateById, findTemplatesByOwner } from '../_data/Template'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import notFound from './not-found'
-import { logger } from '@/app/shared/logger'
-import { logEvent } from '@/app/shared/_data/Event'
-import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
-import { toResponse } from '@/app/shared/_helper/ActionResponse'
-import type { CommandInput, CommandResult, PredefinedCommandType } from '../_data/Command';
-import { PREDEFINED_COMMAND_TYPES, createCommand, findCommandsByDiscussion } from '../_data/Command'
-import { validateObject } from '@/app/shared/_helper/validation'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
-import type { Profile } from '../_data/Profile';
-import { findProfileByOwnerAndLanguage } from '../_data/Profile'
-import type { AiPortInput } from '../_external/AiPort';
-import { aiPort } from '../_external/AiPort'
+import { logEvent } from '@/app/shared/_data/Event'
+import { logger } from '@/app/shared/logger'
+import notFound from './not-found'
+import { validateObject } from '@/app/shared/_helper/validation'
 import z from 'zod'
 
 export interface EditorData {

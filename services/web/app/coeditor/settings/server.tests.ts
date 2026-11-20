@@ -1,11 +1,11 @@
-import { describe, expect, test, vi } from 'vitest'
-import { v4 as randomUUID } from 'uuid'
-import type { UserSession } from '@/app/shared/auth/session'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { createOrModifyProfile, findProfileByOwnerAndLanguage } from '../_data/Profile'
 import { createOrModifyTemplate, findTemplateById } from '../_data/Template'
 import { deleteProfile, deleteTemplate, loadSettings, saveProfile, saveTemplate } from './server'
+import { describe, expect, test, vi } from 'vitest'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { createOrModifyProfile, findProfileByOwnerAndLanguage } from '../_data/Profile'
+import type { UserSession } from '@/app/shared/auth/session'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { v4 as randomUUID } from 'uuid'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {

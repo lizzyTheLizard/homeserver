@@ -1,9 +1,9 @@
 import type { Pool, PoolClient } from 'pg'
-import { logger } from '../../logger'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { createHash } from 'crypto'
 import { databaseError } from '../../_helper/BackendError'
+import { promises as fs } from 'fs'
+import { logger } from '../../logger'
+import path from 'path'
 import { splitSql } from './splitSql'
 
 /**

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { promises as fs, readFileSync } from 'fs'
-import { join } from 'path'
 import { getSkillTools } from './skills-tools'
+import { join } from 'path'
 import { tmpdir } from 'os'
 
 const SKILL_NAME = 'test-skill',

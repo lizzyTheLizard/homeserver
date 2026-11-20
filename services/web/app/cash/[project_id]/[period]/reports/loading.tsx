@@ -1,7 +1,7 @@
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { Reports } from './_components/Reports'
 import { all } from '@/app/cash/_helper/Period'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Cash - Reports',

@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/_external/db/access'
-import { v4 as randomUUID } from 'uuid'
 import { deleteProject, loadProjects, saveProject } from './server'
-import { createOrModifyProject } from '@/app/cash/_data/Project'
 import type { UserSession } from '@/app/shared/auth/session'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { v4 as randomUUID } from 'uuid'
+import { transactional } from '@/app/shared/_external/db/access'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {

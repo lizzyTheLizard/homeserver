@@ -1,10 +1,8 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { type CookieStore, getSession } from '@/app/shared/auth/session';
+import { type NextRequest, NextResponse } from 'next/server'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
-import type { CookieStore } from '@/app/shared/auth/session';
-import { getSession } from '@/app/shared/auth/session'
-import { startLogin } from '@/app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
+import { startLogin } from '@/app/shared/auth/auth'
 
 const PUBLIC_DO_NOT_LOG_PATHS = [
   '/_next/',

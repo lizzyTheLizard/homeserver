@@ -1,9 +1,9 @@
 import { beforeAll, vi } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
-import { promises as fs } from 'fs'
-import path from 'path'
 import type { PoolClient } from 'pg'
 import { TYPE_MAPPINGS } from './app/shared/_external/db/setup'
+import { promises as fs } from 'fs'
+import path from 'path'
 import { splitSql } from './app/shared/_external/db/splitSql'
 
 const pglite = await PGlite.create({

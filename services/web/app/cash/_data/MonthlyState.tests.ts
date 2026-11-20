@@ -1,7 +1,6 @@
+import { MONTHLY_STATES, type MonthlyState } from './MonthlyState'
 import { describe, expect, test } from 'vitest'
 import { z } from 'zod'
-import type { MonthlyState } from './MonthlyState';
-import { MONTHLY_STATES } from './MonthlyState'
 
 describe('MonthlyState', () => {
   const StateSchema = z.enum(MONTHLY_STATES)

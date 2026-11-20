@@ -1,8 +1,8 @@
+import { loadCashMetrics, loadCoeditorMetrics, loadGeneralMetrics } from './server'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { DashboardCard } from '../_components/DashboardCard'
 import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
-import { loadCashMetrics, loadCoeditorMetrics, loadGeneralMetrics } from './server'
 import styles from './Metrics.module.css'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export const metadata = {
   title: 'Admin - Metrics',

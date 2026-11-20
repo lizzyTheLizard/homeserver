@@ -1,8 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import type { UserSession } from '../session';
-import { getUserSession, parseCookieHeader } from '../session'
-import { logger } from '../logger'
+import { type UserSession, getUserSession, parseCookieHeader } from '../session'
 import { archiveWhatsappChat, disconnectWhatsapp, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, startWhatsapp, triggerWhatsappFullSync } from './whatsapp'
+import { logger } from '../logger'
 
 export async function handleWhatsappApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/whatsapp')) {return false}

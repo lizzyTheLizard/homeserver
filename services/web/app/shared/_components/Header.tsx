@@ -1,11 +1,10 @@
 'use client'
 
-import style from './Header.module.css'
-import type { Application} from '@/app/shared/Application';
-import { applications } from '@/app/shared/Application'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { type Application, applications } from '@/app/shared/Application';
 import { Icon } from '@/app/shared/_components/Icon'
+import Link from 'next/link'
+import style from './Header.module.css'
+import { usePathname } from 'next/navigation'
 
 function startWithIgnoreCase(path: string, app: Application) {
   const split = app.link.split('/'),

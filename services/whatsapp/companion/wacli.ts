@@ -1,7 +1,7 @@
 import { type ChildProcess, spawn } from 'node:child_process'
+import type { Readable } from 'node:stream'
 import { config } from './config'
 import { logger } from './logger'
-import type { Readable } from 'node:stream'
 
 export type WacliEvent = { event: 'qr_code', data: { code: string } }
   | { event: 'error', data: { message: string } }

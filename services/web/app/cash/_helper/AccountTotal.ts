@@ -1,6 +1,6 @@
+import { isCreditAccount, isSummationAccount } from '../_data/AccountType'
 import type { Account } from '../_data/Account'
 import type { AccountTransaction } from '../_data/AccountTransaction'
-import { isCreditAccount, isSummationAccount } from '../_data/AccountType'
 
 export function getTotalForAccounts(accounts: Account[], beforeTransactions: AccountTransaction[], currentTransactions: AccountTransaction[]): number {
   return accounts.map(a => getTotalForAccount(a, beforeTransactions, currentTransactions)).reduce((sum, value) => sum + value, 0)

@@ -1,17 +1,14 @@
 'use server'
 
-import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
-import { toResponse } from '@/app/shared/_helper/ActionResponse'
-import type { Profile, ProfileInput} from '../_data/Profile';
-import { createOrModifyProfile, findProfilesByOwner, removeProfile } from '../_data/Profile'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
+import { type Profile, type ProfileInput, createOrModifyProfile, findProfilesByOwner, removeProfile } from '../_data/Profile';
+import { type Template, type TemplateInput, createOrModifyTemplate, findTemplatesByOwner, removeTemplate } from '../_data/Template';
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
-import { z } from 'zod'
-import type { Template, TemplateInput } from '../_data/Template';
-import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate } from '../_data/Template'
-import { logger } from '@/app/shared/logger'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { logEvent } from '@/app/shared/_data/Event'
+import { logger } from '@/app/shared/logger'
+import { z } from 'zod'
 
 export interface SettingsData {
   profiles: Profile[]

@@ -1,6 +1,5 @@
+import { type Mock, beforeEach, describe, expect, test, vi } from 'vitest'
 import { PassThrough, Readable } from 'node:stream'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
-import type { Mock } from 'vitest'
 import { type WacliEvent, attachEventParser, runWacli, spawnWacli } from './wacli'
 
 const { mockDebug, mockWarn, mockSpawn } = vi.hoisted(() => ({

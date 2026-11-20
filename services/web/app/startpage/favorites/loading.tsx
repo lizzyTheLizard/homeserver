@@ -1,6 +1,6 @@
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { FavoritesContent } from './_components/FavoritesContent'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { FavoritesContent } from './_components/FavoritesContent'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 
 export default function Loading() {
   return (

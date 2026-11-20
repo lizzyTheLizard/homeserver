@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { logger } from './logger'
 import type { Supervisor } from './supervisor'
+import { logger } from './logger'
 
 // Chats with an unarchive in flight, so concurrent webhook deliveries for the
 // Same chat coalesce into a single unarchive.

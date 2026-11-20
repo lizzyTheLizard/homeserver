@@ -1,9 +1,8 @@
-import type { ToolSet } from 'ai';
-import { tool } from 'ai'
-import { z } from 'zod/v4'
-import type { UserSession } from '../session'
 import { type MicrosoftCalendarEvent, getMicrosoftCalendarWorker } from '../microsoft/calendar'
+import { type ToolSet, tool } from 'ai';
+import type { UserSession } from '../session'
 import { toInstant } from '../microsoft/graph'
+import { z } from 'zod/v4'
 
 export default function getTools(user: UserSession): ToolSet {
   const listCalendars = tool({

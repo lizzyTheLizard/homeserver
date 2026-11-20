@@ -1,6 +1,6 @@
-import winston from 'winston'
 import { Console } from 'winston/lib/winston/transports'
 import { config } from './config'
+import winston from 'winston'
 
 function createLogger() {
   const isDev = config.NODE_ENV === 'development',

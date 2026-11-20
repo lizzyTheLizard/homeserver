@@ -1,9 +1,8 @@
-import type { ToolSet } from 'ai';
-import { tool } from 'ai'
-import { z } from 'zod/v4'
-import type { UserSession } from '../session'
+import { type ToolSet, tool } from 'ai';
 import { archiveWhatsappChat, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage } from '../whatsapp/whatsapp'
+import type { UserSession } from '../session'
 import { logger } from '../logger'
+import { z } from 'zod/v4'
 
 export default function getTools(user: UserSession): ToolSet {
   const getWhatsappOverview = tool({

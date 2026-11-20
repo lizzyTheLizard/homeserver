@@ -1,11 +1,11 @@
 import 'server-only'
+import { findParticipant, getAccount } from './store'
+import { changePasswordPath } from './continuePath'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import crypto from 'crypto'
 import { getConfig } from './config'
 import { getDb } from './db'
-import { findParticipant, getAccount } from './store'
-import { changePasswordPath } from './continuePath'
+import { redirect } from 'next/navigation'
 
 export type Session = { role: 'admin' } | { role: 'user', accountId: string }
 

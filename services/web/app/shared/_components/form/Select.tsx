@@ -1,5 +1,5 @@
-import { useId } from 'react'
 import style from './Select.module.css'
+import { useId } from 'react'
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string

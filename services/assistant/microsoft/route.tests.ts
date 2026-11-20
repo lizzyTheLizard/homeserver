@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { EventEmitter } from 'events'
 import { Temporal } from '@js-temporal/polyfill'
-import { handleMicrosoftApi } from './route'
 import type { UserSession } from '../session'
+import { handleMicrosoftApi } from './route'
 
 const { mockGetSession, mockGetUserInfo, mockGetMicrosoftMailWorker, mockGetMicrosoftTodoWorker, mockGetMicrosoftCalendarWorker } = vi.hoisted(() => ({
   mockGetMicrosoftCalendarWorker: vi.fn(),

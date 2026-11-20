@@ -1,6 +1,6 @@
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { Cash } from './_components/Cash'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { Cash } from './_components/Cash'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 
 export default function Loading() {
   return (

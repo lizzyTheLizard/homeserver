@@ -1,10 +1,9 @@
-import { logger } from '@/app/shared/logger'
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server';
 import { config } from '@/app/shared/config'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { getActualUrl } from '@/app/shared/_helper/UrlHelper'
 import { cookies } from 'next/headers'
+import { getActualUrl } from '@/app/shared/_helper/UrlHelper'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { logger } from '@/app/shared/logger'
 
 export async function GET(request: NextRequest) {
   await getAuthenticatedUserSession('startpage')

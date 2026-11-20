@@ -1,11 +1,10 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { cookies } from 'next/headers'
-import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
-import { toResponse } from '@/app/shared/_helper/ActionResponse'
-import { config } from '@/app/shared/config'
-import { logger } from '@/app/shared/logger'
+import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
 import type { MicrosoftConnectionStatus, MicrosoftStatus, SerializedMessageFull } from '@assistant/microsoft/types'
+import { config } from '@/app/shared/config'
+import { cookies } from 'next/headers'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { logger } from '@/app/shared/logger'
 
 const MICROSOFT_CALLBACK_PATH = '/startpage/microsoft/callback'
 

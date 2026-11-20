@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import type { AccountType } from '../_data/AccountType'
 import { AccountBadgeIcon, AccountBadgeIconColor } from './AccountBadgeIcons'
+import type { AccountType } from '../_data/AccountType'
+import Link from 'next/link'
 
 export function AccountBadge({ type, name, link, tabIndex }: { type: AccountType, name: string, link?: string, tabIndex?: number }) {
   const content = (

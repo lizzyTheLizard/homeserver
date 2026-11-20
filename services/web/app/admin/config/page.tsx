@@ -1,6 +1,6 @@
 import { Config } from './_components/Config'
-import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 import { loadConfig } from './server'
+import { serverPageFunction } from '@/app/shared/_helper/PageFunction'
 
 export const metadata = {
   title: 'Admin - Configuration',

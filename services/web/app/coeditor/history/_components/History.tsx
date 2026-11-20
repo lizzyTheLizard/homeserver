@@ -1,11 +1,11 @@
 'use client'
-import type { ReactNode } from 'react'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { DateTime } from '@/app/shared/_components/DateTime'
-import { useRouter } from 'next/navigation'
 import type { Discussion } from '../../_data/Discussion'
+import type { ReactNode } from 'react'
 import style from './History.module.css'
+import { useRouter } from 'next/navigation'
 
 const columns = [
   textColumn('title', { header: 'Title' }),

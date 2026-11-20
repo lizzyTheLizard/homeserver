@@ -1,14 +1,13 @@
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { config } from '@/app/shared/config'
-import { v4 as randomUUID } from 'uuid'
+import { type Event, findRecentEvents } from '@/app/shared/_data/Event';
+import { get24HoursAgo, get30DaysAgo } from '@/app/cash/_helper/Dates'
 import type { LineItem } from '../_components/DashboardCard'
-import { nontransactional } from '@/app/shared/_external/db/access'
+import { Temporal } from '@js-temporal/polyfill'
+import { config } from '@/app/shared/config'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
-import { get24HoursAgo, get30DaysAgo } from '@/app/cash/_helper/Dates'
-import { Temporal } from '@js-temporal/polyfill'
-import type { Event} from '@/app/shared/_data/Event';
-import { findRecentEvents } from '@/app/shared/_data/Event'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { nontransactional } from '@/app/shared/_external/db/access'
+import { v4 as randomUUID } from 'uuid'
 
 const DB_CONSOLE_URL_TEMPLATE = 'https://console.scaleway.com/serverless-db/fr-par/databases/{id}/overview',
  ENTRA_PORTAL_URL_TEMPLATE = 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/{clientId}/isMSAApp~/false',

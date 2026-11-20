@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import { invalidInput } from './BackendError'
+import { z } from 'zod'
 
 export function validateObject<T extends z.ZodType>(input: unknown, schema: T): z.infer<T> {
   const result = schema.safeParse(input)

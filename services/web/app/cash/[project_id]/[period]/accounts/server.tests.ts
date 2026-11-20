@@ -1,14 +1,13 @@
 /* oxlint-disable typescript/no-explicit-any */
 /* oxlint-disable typescript/no-unsafe-assignment */
+import { type AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/_external/db/access'
-import { v4 as randomUUID } from 'uuid'
 import { deleteAccount, loadAccounts, saveAccount } from './server'
-import { createOrModifyProject } from '@/app/cash/_data/Project'
-import { createOrModifyAccount } from '@/app/cash/_data/Account'
-import type { AccountInput } from '@/app/cash/_data/Account'
 import type { UserSession } from '@/app/shared/auth/session'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { v4 as randomUUID } from 'uuid'
+import { transactional } from '@/app/shared/_external/db/access'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {

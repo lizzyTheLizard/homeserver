@@ -10,8 +10,8 @@ vi.mock('ai', async (importOriginal) => {
   return { ...actual, generateText: mockGenerateText, streamText: mockStreamText }
 })
 
-import { send } from './groq'
 import { type ModelMessage, type ToolSet, tool } from 'ai'
+import { send } from './groq'
 import { z } from 'zod/v4'
 
 const assistantMsg = (content: string): ModelMessage => ({ content: [{ text: content, type: 'text' }], role: 'assistant' })

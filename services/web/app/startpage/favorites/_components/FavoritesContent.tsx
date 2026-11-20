@@ -1,19 +1,18 @@
 'use client'
 
-import type { ReactNode} from 'react';
-import { useState } from 'react'
-import type { Favorite } from '@/app/startpage/_data/Favorite'
+import { type ReactNode, useState } from 'react';
 import { deleteFavorite, saveFavorite } from '../server'
-import { Input } from '@/app/shared/_components/form/Input'
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
-import styles from './FavoritesContent.module.css'
+import { numberColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { numberColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { useListState } from '@/app/shared/_helper/ListState'
+import type { Favorite } from '@/app/startpage/_data/Favorite'
+import { Input } from '@/app/shared/_components/form/Input'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { v4 as randomUUID } from 'uuid'
+import styles from './FavoritesContent.module.css'
+import { useListState } from '@/app/shared/_helper/ListState'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 
 const columns = [
   numberColumn('position', { header: '#', style: { width: '5%' } }),

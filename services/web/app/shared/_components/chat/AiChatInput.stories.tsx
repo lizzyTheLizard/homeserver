@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { useState } from 'react'
 import { expect, fireEvent, fn, waitFor, within } from 'storybook/test'
 import { AiChatInput } from './AiChatInput'
+import { useState } from 'react'
 
 const PLACEHOLDER = 'Ask me anything…'
 

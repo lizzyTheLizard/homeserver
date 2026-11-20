@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import style from './Collapse.module.css'
 import { Icon } from './Icon'
+import style from './Collapse.module.css'
+import { useState } from 'react'
 
 export interface CollapseProps {
   header: string

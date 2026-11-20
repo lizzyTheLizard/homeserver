@@ -1,8 +1,7 @@
 import 'server-only'
-import { Pool } from 'pg'
-import type { PoolClient } from 'pg'
-import { getConfig } from './config'
 import { MIGRATION_LOCK_ID, applyMigrations } from './migrate'
+import { Pool, type PoolClient } from 'pg'
+import { getConfig } from './config'
 
 /** Minimal query interface shared by the pg pool, a transaction client and PGlite. */
 export interface Queryable {

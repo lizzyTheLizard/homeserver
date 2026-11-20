@@ -1,8 +1,8 @@
+import { ChangePasswordForm } from '../components'
 import Link from 'next/link'
+import { logout } from '../actions'
 import { requireAccount } from '@/lib/session'
 import { safeContinuePath } from '@/lib/continuePath'
-import { logout } from '../actions'
-import { ChangePasswordForm } from '../components'
 
 export const dynamic = 'force-dynamic'
 

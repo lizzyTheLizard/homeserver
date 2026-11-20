@@ -14,5 +14,10 @@
   },
   "ignorePatterns": [
     "dist/**"
-  ]
+  ],
+  "rules": {
+    "one-var": "off",
+    "no-ternary": "off",
+    "max-statements": "warn"
+  }
 }

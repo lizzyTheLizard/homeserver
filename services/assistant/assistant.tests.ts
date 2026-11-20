@@ -10,9 +10,9 @@ vi.mock('./groq', () => ({ send: mockDeepseekSend }))
 vi.mock('./tools', () => ({ getTools: mockGetTools }))
 vi.mock('./initial', () => ({ generateInitialMessages: mockGenerateInitialMessages }))
 
-import { createAssistantInstance } from './assistant'
 import type { AssistantEvent } from './types'
 import type { SendOptions } from './groq'
+import { createAssistantInstance } from './assistant'
 
 const user = { applications: ['startpage'], email: 'test@test.com', name: 'Test User' }
 

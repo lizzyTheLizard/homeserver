@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from 'react'
-import style from './Currency.module.css'
 import { config } from '../config'
+import style from './Currency.module.css'
+import { useSyncExternalStore } from 'react'
 
 export interface CurrencyProps {
   amount: number

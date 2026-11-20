@@ -1,10 +1,9 @@
-import type { Temporal } from '@js-temporal/polyfill'
-import type { ToolSet } from 'ai';
-import { tool } from 'ai'
-import { z } from 'zod/v4'
-import type { UserSession } from '../session'
 import { type MicrosoftTodoTask, getMicrosoftTodoWorker } from '../microsoft/todo'
+import { type ToolSet, tool } from 'ai';
+import type { Temporal } from '@js-temporal/polyfill'
+import type { UserSession } from '../session'
 import { toInstant } from '../microsoft/graph'
+import { z } from 'zod/v4'
 
 export default function getTools(user: UserSession): ToolSet {
   const listTodoLists = tool({

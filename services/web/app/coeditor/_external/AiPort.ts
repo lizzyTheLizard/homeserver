@@ -1,12 +1,10 @@
 import type { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
+import { type GroqLanguageModelChatOptions, createGroq } from '@ai-sdk/groq';
+import { type ModelMessage, Output, generateText } from 'ai'
 import { config } from '@/app/shared/config'
-import { logger } from '@/app/shared/logger'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
+import { logger } from '@/app/shared/logger'
 import { validateObject } from '@/app/shared/_helper/validation'
-import type { ModelMessage} from 'ai';
-import { Output, generateText } from 'ai'
-import type { GroqLanguageModelChatOptions } from '@ai-sdk/groq';
-import { createGroq } from '@ai-sdk/groq'
 import { z } from 'zod'
 
 const GROQ_MODEL = 'openai/gpt-oss-120b',

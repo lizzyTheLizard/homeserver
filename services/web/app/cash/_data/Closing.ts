@@ -1,7 +1,5 @@
-import type { Period} from '../_helper/Period';
-import { endDate, startDate, toString } from '../_helper/Period'
-import type { Entity, Queryable} from '@/app/shared/_external/db/access';
-import { removeNull } from '@/app/shared/_external/db/access'
+import { type Entity, type Queryable, removeNull } from '@/app/shared/_external/db/access';
+import { type Period, endDate, startDate, toString } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
 
 export interface ClosingInput {

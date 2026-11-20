@@ -1,7 +1,7 @@
 import PG, { Pool } from 'pg'
-import { logger } from '../../logger'
-import { config } from '../../config'
 import { databaseError, isBackendError } from '../../_helper/BackendError'
+import { config } from '../../config'
+import { logger } from '../../logger'
 import { migrateDatabase } from './migrate'
 
 export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {

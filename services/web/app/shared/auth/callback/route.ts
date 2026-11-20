@@ -1,7 +1,7 @@
-import { logger } from '@/app/shared/logger'
-import { callback } from '../auth'
 import type { NextRequest } from 'next/server'
+import { callback } from '../auth'
 import { config } from '@/app/shared/config'
+import { logger } from '@/app/shared/logger'
 
 export async function GET(request: NextRequest) {
   try {

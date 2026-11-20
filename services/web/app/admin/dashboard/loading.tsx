@@ -1,9 +1,9 @@
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 import { DashboardCard } from '../_components/DashboardCard'
 import { EventsCard } from './_components/EventsCard'
-import styles from './Dashboard.module.css'
-import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { config } from '@/app/shared/config'
+import styles from './Dashboard.module.css'
 
 export default function Loading() {
   return (

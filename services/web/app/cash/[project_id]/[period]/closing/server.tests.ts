@@ -1,21 +1,16 @@
+import { type Account, type AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account';
+import { type AccountTransaction, type AccountTransactionInput, createAccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { type Closing, createClosing } from '@/app/cash/_data/Closing';
+import { type Monthly, type MonthlyInput, type SharedTransaction, createMonthlyClosing, findForPeriod } from '@/app/cash/_data/Monthly'
+import { type NeonTransactionInput, addNeonTransactions, addSharedTransactions, initialize, loadData, markAsChecked } from './server'
 import { describe, expect, test, vi } from 'vitest'
-import { transactional } from '@/app/shared/_external/db/access'
-import { v4 as randomUUID } from 'uuid'
-import type { NeonTransactionInput} from './server';
-import { addNeonTransactions, addSharedTransactions, initialize, loadData, markAsChecked } from './server'
-import type { Account, AccountInput} from '@/app/cash/_data/Account';
-import { createOrModifyAccount } from '@/app/cash/_data/Account'
+import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import type { UserSession } from '@/app/shared/auth/session'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import type { Monthly} from '@/app/cash/_data/Monthly';
-import { type MonthlyInput, type SharedTransaction, createMonthlyClosing, findForPeriod } from '@/app/cash/_data/Monthly'
 import { createOrModifyProject } from '@/app/cash/_data/Project'
 import { findAllTransactions } from '@/app/cash/_data/Transaction'
-import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
-import type { Closing} from '@/app/cash/_data/Closing';
-import { createClosing } from '@/app/cash/_data/Closing'
-import type { AccountTransaction} from '@/app/cash/_data/AccountTransaction';
-import { type AccountTransactionInput, createAccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { v4 as randomUUID } from 'uuid'
+import { transactional } from '@/app/shared/_external/db/access'
 
 // Mock the auth module
 vi.mock('@/app/shared/auth/auth', async () => {

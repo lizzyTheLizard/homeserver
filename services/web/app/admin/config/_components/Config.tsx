@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import styles from './Config.module.css'
-import type { ConfigSection } from '../server'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
+import type { ConfigSection } from '../server'
+import styles from './Config.module.css'
+import { useState } from 'react'
 
 export interface ConfigProps {
   data?: ConfigSection[]

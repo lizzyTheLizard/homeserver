@@ -1,7 +1,6 @@
+import { type DeltaResponse, graphApiRequest, toGraphDateTime, toInstant, toPlainDate } from './graph'
 import { Mutex } from 'async-mutex'
 import { Temporal } from '@js-temporal/polyfill'
-import type { DeltaResponse} from './graph';
-import { graphApiRequest, toGraphDateTime, toInstant, toPlainDate } from './graph'
 import type { UserSession } from '../session'
 import { logger } from '../logger'
 

@@ -1,12 +1,12 @@
 'use client'
-import { useState } from 'react'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { Button } from '@/app/shared/_components/form/Button'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { connectMicrosoft, disconnectMicrosoft } from '../server'
-import { useSearchParams } from 'next/navigation'
-import styles from './MicrosoftUserInfo.module.css'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { Button } from '@/app/shared/_components/form/Button'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import type { MicrosoftUserInfo } from '@assistant/microsoft/types'
+import styles from './MicrosoftUserInfo.module.css'
+import { useSearchParams } from 'next/navigation'
+import { useState } from 'react'
 
 interface MicrosoftUserInfoParam {
   connected: boolean

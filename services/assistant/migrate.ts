@@ -1,7 +1,7 @@
+import type { Pool, PoolClient } from 'pg'
 import { createHash } from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
-import type { Pool, PoolClient } from 'pg'
 import { splitSql } from './splitSql'
 
 const MIGRATIONS_DIR = path.join(process.cwd(), 'db'),

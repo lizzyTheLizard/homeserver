@@ -1,13 +1,13 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
-import { adminCredentials, clearSession, requireAccount, requireParticipant, setSession } from '@/lib/session'
 import * as store from '@/lib/store'
+import { adminCredentials, clearSession, requireAccount, requireParticipant, setSession } from '@/lib/session'
 import { getDb, withTransaction } from '@/lib/db'
+import { passwordError, registrationError } from '@/lib/registration'
 import { formString } from '@/lib/form'
 import { hashPassword } from '@/lib/password'
-import { passwordError, registrationError } from '@/lib/registration'
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { safeContinuePath } from '@/lib/continuePath'
 
 export type FormState = { error?: string, ok?: string } | undefined

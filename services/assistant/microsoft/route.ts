@@ -1,18 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { Temporal } from '@js-temporal/polyfill'
-import type { UserSession } from '../session';
-import { getUserSession, parseCookieHeader } from '../session'
-import { logger } from '../logger'
-import { getUserInfo, handleMicrosoftLoginCallback } from './graph'
-import type { MicrosoftMessageFull, MicrosoftMessageListItem } from './mail';
-import { getMicrosoftMailWorker } from './mail'
-import type { MicrosoftTodoTask } from './todo';
-import { getMicrosoftTodoWorker } from './todo'
-import type { MicrosoftCalendarEvent } from './calendar';
-import { getMicrosoftCalendarWorker } from './calendar'
-import { deleteMicrosoftToken } from './data'
-import { transactional } from '../db'
+import { type MicrosoftCalendarEvent, getMicrosoftCalendarWorker } from './calendar';
+import { type MicrosoftMessageFull, type MicrosoftMessageListItem, getMicrosoftMailWorker } from './mail';
 import type { MicrosoftStatus, SerializedCalendarEvent, SerializedMessageFull, SerializedMessageListItem, SerializedTodoTask } from './types'
+import { type MicrosoftTodoTask, getMicrosoftTodoWorker } from './todo';
+import { type UserSession, getUserSession, parseCookieHeader } from '../session'
+import { getUserInfo, handleMicrosoftLoginCallback } from './graph'
+import { Temporal } from '@js-temporal/polyfill'
+import { deleteMicrosoftToken } from './data'
+import { logger } from '../logger'
+import { transactional } from '../db'
 
 export async function handleMicrosoftApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/microsoft')) {return false}

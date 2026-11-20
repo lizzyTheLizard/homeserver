@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { PeriodPicker } from './PeriodPicker'
-import type { Period } from '../_helper/Period';
-import { all } from '../_helper/Period'
-import { useState } from 'react'
+import { type Period, all } from '../_helper/Period';
 import { expect, fn } from 'storybook/test'
+import { PeriodPicker } from './PeriodPicker'
+import { useState } from 'react'
 
 const meta = {
   args: {

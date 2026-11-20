@@ -1,5 +1,4 @@
-import type { Entity, Queryable} from '@/app/shared/_external/db/access';
-import { removeNull } from '@/app/shared/_external/db/access'
+import { type Entity, type Queryable, removeNull } from '@/app/shared/_external/db/access';
 import { logger } from '@/app/shared/logger'
 
 export interface FavoriteInput {

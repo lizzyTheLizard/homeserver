@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import { type MouseEvent, type ReactNode, useState } from 'react';
+import { Button } from '../form/Button'
 import { Sidebar } from './Sidebar'
 import { SidebarContainer } from './SidebarContainer'
 import { useSidebar } from './SidebarContext'
-import type { MouseEvent, ReactNode} from 'react';
-import { useState } from 'react'
-import { Button } from '../form/Button'
 
 function SidebarStoryContent({ args, container }: { args: { title: string, type: string, mainContent: ReactNode }, container: HTMLDivElement | undefined }) {
   const [sidebarId, openSidebar] = useSidebar()

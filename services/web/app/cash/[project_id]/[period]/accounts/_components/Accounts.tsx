@@ -1,23 +1,21 @@
 'use client'
-import type { Account } from '@/app/cash/_data/Account'
-import type { AccountType } from '@/app/cash/_data/AccountType';
-import { ACCOUNT_TYPES } from '@/app/cash/_data/AccountType'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { v4 as randomUUID } from 'uuid'
+import { ACCOUNT_TYPES, type AccountType } from '@/app/cash/_data/AccountType'
+import { AccountBadgeIcon, AccountBadgeIconColor } from '@/app/cash/_components/AccountBadgeIcons'
+import { type ReactNode, useState } from 'react';
 import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { deleteAccount, saveAccount } from '../server'
-import { useListState } from '@/app/shared/_helper/ListState'
-import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
-import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import type { Account } from '@/app/cash/_data/Account'
+import { AccountBadge } from '@/app/cash/_components/AccountBadge'
+import { ActionButton } from '@/app/shared/_components/ActionButton'
+import { Checkbox } from '@/app/shared/_components/form/Checkbox'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
-import { Checkbox } from '@/app/shared/_components/form/Checkbox'
-import type { ReactNode} from 'react';
-import { useState } from 'react'
-import { ActionButton } from '@/app/shared/_components/ActionButton'
-import { AccountBadge } from '@/app/cash/_components/AccountBadge'
+import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
+import { v4 as randomUUID } from 'uuid'
 import style from './Accounts.module.css'
-import { AccountBadgeIcon, AccountBadgeIconColor } from '@/app/cash/_components/AccountBadgeIcons'
+import { useListState } from '@/app/shared/_helper/ListState'
+import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 
 export interface AccountsProps {
   accounts: Account[]

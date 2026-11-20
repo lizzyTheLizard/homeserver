@@ -1,20 +1,19 @@
 'use client'
 
-import { useCallback, useReducer, useState } from 'react'
+import { type Selection, Textarea } from '@/app/shared/_components/form/Textarea';
 import { editorStateReducer, initialState } from '../_helper/Editor.state'
-import type { PredefinedCommandType } from '../../_data/Command'
-import type { Discussion } from '../../_data/Discussion'
-import type { Selection } from '@/app/shared/_components/form/Textarea';
-import { Textarea } from '@/app/shared/_components/form/Textarea'
-import type { Template } from '../../_data/Template'
-import { v4 as randomUUID } from 'uuid'
-import { useRouter } from 'next/navigation'
-import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { Icon } from '@/app/shared/_components/Icon'
-import { EditorContext } from './EditorContext'
+import { useCallback, useReducer, useState } from 'react'
 import { AiChatInput } from '@/app/shared/_components/chat/AiChatInput'
+import type { Discussion } from '../../_data/Discussion'
+import { EditorContext } from './EditorContext'
+import { Icon } from '@/app/shared/_components/Icon'
+import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
+import type { PredefinedCommandType } from '../../_data/Command'
+import type { Template } from '../../_data/Template'
 import { executeCommand } from '../server'
+import { v4 as randomUUID } from 'uuid'
 import style from './Editor.module.css'
+import { useRouter } from 'next/navigation'
 
 const PROPOSED_ACTIONS: PredefinedCommandType[] = ['IMPROVE', 'REFORMULATE', 'SUMMARIZE', 'EXTEND']
 

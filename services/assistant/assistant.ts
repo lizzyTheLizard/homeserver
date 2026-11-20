@@ -1,10 +1,10 @@
+import type { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
 import type { ModelMessage, ToolSet } from 'ai'
-import { send as groqSend } from './groq'
 import type { UserSession } from './session'
 import { generateInitialMessages } from './initial'
-import { logger } from './logger'
 import { getTools } from './tools'
-import type { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
+import { send as groqSend } from './groq'
+import { logger } from './logger'
 
 export function createAssistantInstance(user: UserSession): Assistant {
   const listeners: AssistantEventListener[] = [],

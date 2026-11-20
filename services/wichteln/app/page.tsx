@@ -1,12 +1,11 @@
+import { type Account, getAccount, listAccountGroups } from '@/lib/store'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/session'
-import { getAccount, listAccountGroups } from '@/lib/store'
-import type { Account } from '@/lib/store'
-import { getDb } from '@/lib/db'
-import { changePasswordPath } from '@/lib/continuePath'
-import { logout } from './actions'
 import { LoginForm } from './components'
+import { changePasswordPath } from '@/lib/continuePath'
+import { getDb } from '@/lib/db'
+import { getSession } from '@/lib/session'
+import { logout } from './actions'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 

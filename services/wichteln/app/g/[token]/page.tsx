@@ -1,11 +1,10 @@
-import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
-import { getSession } from '@/lib/session'
-import { getAccount, getGroupByInviteToken, joinGroup } from '@/lib/store'
-import type { Account, Group } from '@/lib/store'
-import { getDb, withTransaction } from '@/lib/db'
-import { changePasswordPath } from '@/lib/continuePath'
+import { type Account, type Group, getAccount, getGroupByInviteToken, joinGroup } from '@/lib/store'
 import { GroupLoginForm, RegisterForm } from '../../components'
+import { getDb, withTransaction } from '@/lib/db'
+import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
+import { changePasswordPath } from '@/lib/continuePath'
+import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 

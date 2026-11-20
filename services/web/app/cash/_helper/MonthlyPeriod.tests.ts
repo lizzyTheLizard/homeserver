@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest'
 import { compare, first, from, last, next } from './MonthlyPeriod'
+import { describe, expect, test } from 'vitest'
 import type { Period } from './Period'
 
 const basePeriod = (overrides: Partial<Period>): Period => ({

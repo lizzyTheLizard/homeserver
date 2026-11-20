@@ -1,8 +1,7 @@
-import { createHmac } from 'node:crypto'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
-import type { Mock } from 'vitest'
-import { handleInternalWebhook } from './internalWebhook'
+import { type Mock, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { Supervisor } from './supervisor'
+import { createHmac } from 'node:crypto'
+import { handleInternalWebhook } from './internalWebhook'
 
 const { mockWarn } = vi.hoisted(() => ({ mockWarn: vi.fn<(message: string, err?: unknown) => void>() }))
 

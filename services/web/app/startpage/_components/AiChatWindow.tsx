@@ -1,14 +1,12 @@
 'use client'
 
+import { AiChatMessageList, type Message } from './AiChatMessageList'
+import { AiChatWebSocket, type ChatState } from './AiChatWebSocket'
 import { useEffect, useRef, useState } from 'react'
-import type { Message } from './AiChatMessageList';
-import { AiChatMessageList } from './AiChatMessageList'
 import { AiChatInput } from '@/app/shared/_components/chat/AiChatInput'
 import { Icon } from '@/app/shared/_components/Icon'
-import type { ChatState } from './AiChatWebSocket';
-import { AiChatWebSocket } from './AiChatWebSocket'
-import styles from './AiChatWindow.module.css'
 import { getLocation } from '../_helper/location'
+import styles from './AiChatWindow.module.css'
 
 export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]),

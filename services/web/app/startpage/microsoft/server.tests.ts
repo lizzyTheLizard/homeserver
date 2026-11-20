@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { connectMicrosoft, disconnectMicrosoft, loadMicrosoftStatus } from './server'
 import type { UserSession } from '@/app/shared/auth/session'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { cookies } from 'next/headers'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 
 vi.mock('@/app/shared/auth/auth', async () => {
   const actual = await vi.importActual('@/app/shared/auth/auth')

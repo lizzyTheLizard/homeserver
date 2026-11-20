@@ -1,11 +1,10 @@
+import { type Group, type User, type Wish, listAccountGroups } from '@/lib/store'
+import { WishForm, WishPicker } from '../../components'
 import Link from 'next/link'
-import { requireParticipant } from '@/lib/session'
-import { selectableWishOwners } from '@/lib/matching'
-import { listAccountGroups } from '@/lib/store'
-import type { Group, User, Wish } from '@/lib/store'
 import { getDb } from '@/lib/db'
 import { logout } from '../../actions'
-import { WishForm, WishPicker } from '../../components'
+import { requireParticipant } from '@/lib/session'
+import { selectableWishOwners } from '@/lib/matching'
 
 export const dynamic = 'force-dynamic'
 

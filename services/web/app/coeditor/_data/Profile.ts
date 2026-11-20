@@ -1,7 +1,6 @@
+import { type Entity, type Queryable, removeNull } from '@/app/shared/_external/db/access';
 import { invalidInput } from '../../shared/_helper/BackendError'
 import { logger } from '@/app/shared/logger'
-import type { Entity, Queryable} from '@/app/shared/_external/db/access';
-import { removeNull } from '@/app/shared/_external/db/access'
 
 export interface ProfileInput {
   id: string

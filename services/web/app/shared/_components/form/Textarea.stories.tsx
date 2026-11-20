@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import { expect, fn } from 'storybook/test'
 import { Textarea } from './Textarea'
 import { useState } from 'react'
-import { expect, fn } from 'storybook/test'
 
 const meta = {
   args: {

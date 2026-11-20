@@ -1,15 +1,13 @@
-import type { GraphRequest } from '@microsoft/microsoft-graph-client';
-import { Client } from '@microsoft/microsoft-graph-client'
-import { Temporal } from '@js-temporal/polyfill'
-import type { MicrosoftToken} from './data';
-import { getMicrosoftToken, setMicrosoftToken } from './data'
-import * as oidc from 'openid-client'
-import type { UserSession } from '../session'
-import { logger } from '../logger'
 import * as client from 'openid-client'
-import { transactional } from '../db'
+import * as oidc from 'openid-client'
+import { Client, type GraphRequest } from '@microsoft/microsoft-graph-client'
+import { type MicrosoftToken, getMicrosoftToken, setMicrosoftToken } from './data'
 import { Mutex } from 'async-mutex'
+import { Temporal } from '@js-temporal/polyfill'
+import type { UserSession } from '../session'
 import { config } from '../config'
+import { logger } from '../logger'
+import { transactional } from '../db'
 
 export interface MicrosoftUserInfo {
   id: string

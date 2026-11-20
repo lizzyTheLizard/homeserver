@@ -1,5 +1,4 @@
-import type { PoolClient } from 'pg';
-import { Pool } from 'pg'
+import { Pool, type PoolClient } from 'pg'
 import { config } from './config'
 import { runMigrations } from './migrate'
 

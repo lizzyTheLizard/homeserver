@@ -1,7 +1,6 @@
+import { type AiPortInput, getFullNewText, mapToChatMessages, parseOutput } from './AiPort'
 import { describe, expect, test } from 'vitest'
 import type { Command } from '../_data/Command'
-import type { AiPortInput} from './AiPort';
-import { getFullNewText, mapToChatMessages, parseOutput } from './AiPort'
 
 describe('mapToChatMessages', () => {
   test('predefined command maps to a user message', () => {

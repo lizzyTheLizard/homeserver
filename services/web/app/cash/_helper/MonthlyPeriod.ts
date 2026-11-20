@@ -1,5 +1,5 @@
-import { Temporal } from '@js-temporal/polyfill'
 import type { Period } from './Period'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface MonthlyPeriod extends Period {
   year: number

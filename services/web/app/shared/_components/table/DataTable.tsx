@@ -1,8 +1,6 @@
 'use client'
-import type { CSSProperties, ReactNode, TableHTMLAttributes} from 'react';
-import { useMemo, useState } from 'react'
-import type { SortingOrder } from './sortAndFilter';
-import { sortAndFilter } from './sortAndFilter'
+import { type CSSProperties, type ReactNode, type TableHTMLAttributes, useMemo, useState } from 'react';
+import { type SortingOrder, sortAndFilter } from './sortAndFilter';
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
 import { SearchBar } from './SearchBar'

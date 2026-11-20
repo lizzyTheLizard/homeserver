@@ -28,3 +28,8 @@ See proposal.md for motivation. Current state: every package has its own `.oxlin
 - [Weaker checks: stylistic and strict rules disappear] → Accepted per goal; essential ones can be re-listed under decision 2.
 - [Standard set reports many new findings] → Apply measures the count first; if it is large, report to the user before disabling anything broadly.
 - [Category membership differs by oxlint version] → Verified against the installed version during apply; a later oxlint upgrade may shift findings, caught by `lint:ci`.
+
+## Adjustments during apply
+
+- After measuring the `style` category (see Risks), these rules are configured explicitly in every package: `one-var` off, `no-ternary` off, `max-statements` warn. Imports are ordered per the `sort-imports` defaults (side-effect, namespace, multi-member, then single-member imports, each alphabetical, case-sensitive) and duplicate imports are merged.
+- `max-statements` as `warn` still fails CI because `lint:ci` uses `--deny-warnings`.

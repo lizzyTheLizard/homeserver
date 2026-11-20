@@ -1,11 +1,10 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
-import { toResponse } from '@/app/shared/_helper/ActionResponse'
-import { config } from '@/app/shared/config'
-import { logger } from '@/app/shared/logger'
-import { cookies } from 'next/headers'
+import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
 import type { Chat, Message, SyncStatus } from '@assistant/whatsapp/types'
+import { config } from '@/app/shared/config'
+import { cookies } from 'next/headers'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { logger } from '@/app/shared/logger'
 
 export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, error?: string }> {
   await getAuthenticatedUserSession('startpage')

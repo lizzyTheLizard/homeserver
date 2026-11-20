@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { EventEmitter } from 'events'
-import { handleWhatsappApi } from './route'
 import type { UserSession } from '../session'
+import { handleWhatsappApi } from './route'
 
 const { mockGetSession, mockGetWhatsappStatus, mockGetWhatsappChats } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),

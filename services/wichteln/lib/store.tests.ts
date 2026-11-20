@@ -1,12 +1,12 @@
-import { PGlite } from '@electric-sql/pglite'
-import { randomUUID } from 'crypto'
+import * as store from './store'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { NAME_TAKEN } from './registration'
+import { PGlite } from '@electric-sql/pglite'
 import type { Queryable } from './db'
 import { applyMigrations } from './migrate'
-import * as store from './store'
-import { selectableWishOwners } from './matching'
 import { hashPassword } from './password'
-import { NAME_TAKEN } from './registration'
+import { randomUUID } from 'crypto'
+import { selectableWishOwners } from './matching'
 
 function pgliteQueryable(db: PGlite): Queryable {
   return {

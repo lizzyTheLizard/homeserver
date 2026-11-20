@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { Temporal } from '@js-temporal/polyfill'
 import { openmeteoRequest, parseOpenMeteoData } from './openmeteo'
+import { Temporal } from '@js-temporal/polyfill'
 
 describe('parseOpenMeteoData', () => {
   test('parses daily data', () => {

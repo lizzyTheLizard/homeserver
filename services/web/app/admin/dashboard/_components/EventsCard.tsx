@@ -1,10 +1,10 @@
 'use client'
-import type { Event } from '@/app/shared/_data/Event'
-import styles from './EventsCard.module.css'
-import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, enumColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import type { ReactNode } from 'react'
+import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { DateTime } from '@/app/shared/_components/DateTime'
+import type { Event } from '@/app/shared/_data/Event'
+import type { ReactNode } from 'react'
+import styles from './EventsCard.module.css'
 
 interface Props {
   events: Event[]

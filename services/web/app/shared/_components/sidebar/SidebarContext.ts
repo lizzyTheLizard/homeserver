@@ -1,5 +1,5 @@
-import { v4 as randomUUID } from 'uuid'
 import { createContext, useContext, useState } from 'react'
+import { v4 as randomUUID } from 'uuid'
 
 export interface SidebarContextValue {
   open: (id: string) => void

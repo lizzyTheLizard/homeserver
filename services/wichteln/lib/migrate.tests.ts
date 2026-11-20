@@ -1,10 +1,10 @@
-import { createHash, randomUUID } from 'crypto'
-import { promises as fs } from 'fs'
-import path from 'path'
-import { PGlite } from '@electric-sql/pglite'
 import { afterEach, describe, expect, test } from 'vitest'
+import { createHash, randomUUID } from 'crypto'
+import { PGlite } from '@electric-sql/pglite'
 import type { Queryable } from './db'
 import { applyMigrations } from './migrate'
+import { promises as fs } from 'fs'
+import path from 'path'
 import { splitSql } from './splitSql'
 
 function pgliteQueryable(db: PGlite): Queryable {

@@ -1,13 +1,12 @@
-import { Mutex } from 'async-mutex'
-import { promises as fs } from 'node:fs'
-import type { ChildProcess } from 'node:child_process'
-import { logger } from './logger'
 import { type Chat, type Message, mapAuthenticated, mapChatArchived, mapChats, mapMessages } from './mapping'
-import type { WacliEvent } from './wacli';
-import { runWacli, spawnWacli } from './wacli'
-import { config } from './config'
+import { type WacliEvent, runWacli, spawnWacli } from './wacli'
 import { createHash, randomBytes } from 'node:crypto'
+import type { ChildProcess } from 'node:child_process'
+import { Mutex } from 'async-mutex'
+import { config } from './config'
+import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
+import { logger } from './logger'
 
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
 export type Status = { type: 'needAuth', qr: string } | { type: 'connected' }

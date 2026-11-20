@@ -38,7 +38,10 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
     "react/purity": "off",
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "one-var": "off",
+    "no-ternary": "off",
+    "max-statements": "warn"
   },
   "overrides": [
     {

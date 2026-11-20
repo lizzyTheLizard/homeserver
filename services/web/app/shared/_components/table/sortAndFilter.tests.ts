@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { sortAndFilter } from './sortAndFilter'
 import { numberColumn, textColumn } from './DataTableColumnBuilders'
 import type { ColumnDefinition } from './DataTable'
+import { sortAndFilter } from './sortAndFilter'
 
 interface TestRow {
   id: string

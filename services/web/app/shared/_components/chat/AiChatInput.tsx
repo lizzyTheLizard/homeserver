@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
 import { AiActionList } from './AiActionList'
-import { Icon } from '../Icon'
+import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
 import type { ChatState } from './AiChatState'
+import { Icon } from '../Icon'
 import styles from './AiChatInput.module.css'
 
 export interface AiChatInputAction {

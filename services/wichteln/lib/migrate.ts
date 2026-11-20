@@ -1,7 +1,7 @@
+import type { Queryable } from './db'
 import { createHash } from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
-import type { Queryable } from './db'
 import { splitSql } from './splitSql'
 
 const MIGRATIONS_DIR = path.join(process.cwd(), 'db')

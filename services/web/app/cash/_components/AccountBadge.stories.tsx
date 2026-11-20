@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { AccountBadge } from './AccountBadge'
 import { ACCOUNT_TYPES } from '../_data/AccountType'
+import { AccountBadge } from './AccountBadge'
 
 const meta = {
   args: { name: 'Bank Account', type: 'Cash' },

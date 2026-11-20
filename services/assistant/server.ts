@@ -1,16 +1,13 @@
-import type { IncomingMessage, Server, ServerResponse } from 'http';
-import { createServer } from 'http'
-import type { Duplex } from 'stream'
-import type { WebSocket } from 'ws';
-import { WebSocketServer } from 'ws'
-import type { UserSession } from './session';
-import { getUserSession, parseCookieHeader } from './session'
-import { logger } from './logger'
-import { createAssistantInstance } from './assistant'
 import type { Assistant, AssistantEvent, InitialContext } from './types'
+import { type IncomingMessage, type Server, type ServerResponse, createServer } from 'http';
+import { type UserSession, getUserSession, parseCookieHeader } from './session'
+import { type WebSocket, WebSocketServer } from 'ws';
+import type { Duplex } from 'stream'
+import { createAssistantInstance } from './assistant'
 import { handleMicrosoftApi } from './microsoft/route'
 import { handleWhatsappApi } from './whatsapp/route'
 import { initializeDatabase } from './db'
+import { logger } from './logger'
 import z from 'zod'
 
 interface ActiveAssistant {

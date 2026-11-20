@@ -1,11 +1,9 @@
 'use server'
-import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
+import { type ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse';
+import { type Favorite, type FavoriteInput, createOrModifyFavorite, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite';
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
-import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
-import type { Favorite, FavoriteInput} from '@/app/startpage/_data/Favorite';
-import { createOrModifyFavorite, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite'
+import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { logEvent } from '@/app/shared/_data/Event'
 import { z } from 'zod'
 
