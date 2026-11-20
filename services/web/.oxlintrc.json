@@ -100,7 +100,8 @@
         "**/*.tests.tsx"
       ],
       "rules": {
-        "typescript/no-unsafe-type-assertion": "off"
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/consistent-return": "off"
       }
     }
   ]
