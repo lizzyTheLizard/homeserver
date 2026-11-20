@@ -51,6 +51,7 @@ export async function getWhatsappMessages(userId: string, chatId: string): Promi
   if (!response.ok) {
     throw new Error(`Failed to fetch messages: ${response.status.toString()} ${await response.text()}`)
   }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return response.json() as Promise<Message[]>
 }
 

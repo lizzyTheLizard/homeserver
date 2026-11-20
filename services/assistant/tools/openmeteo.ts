@@ -12,6 +12,7 @@ export async function openmeteoRequest(lat: number, lon: number, params: Record<
     urlParams.append(key, value)
   }
   const url = `https://api.open-meteo.com/v1/forecast?${urlParams}`
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return await cachedFetch(url) as { hourly?: unknown, daily?: unknown }
 }
 
@@ -45,6 +46,7 @@ export function parseOpenMeteoData(hourlyOrDaily: unknown): Record<string, Recor
       if (!Array.isArray(value)) {throw new Error(`Invalid Open-Meteo data format for key ${key}`)}
       if (key === 'temperature_2m') {timeResult.temperature = value[index]}
       else if (key === 'weather_code') {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         timeResult.weather_condition = getWmoCondition(value[index] as number)
       }
       else {timeResult[key] = value[index]}

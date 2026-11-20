@@ -118,10 +118,10 @@ export class Supervisor {
   }
 
   public async stop(): Promise<void> {
-    return this.mutex.runExclusive(() => this._stop())
+    return this.mutex.runExclusive(() => this.#stop())
   }
 
-  private async _stop(): Promise<void> {
+  async #stop(): Promise<void> {
     if (this.status.type === 'closed') {
       if (this.child === null) {
         logger.debug(`[${this.userId}] wacli is already closed, nothing to stop`)
@@ -162,7 +162,7 @@ export class Supervisor {
 
   public async disconnect(): Promise<void> {
     return this.mutex.runExclusive(async () => {
-      await this._stop()
+      await this.#stop()
       logger.info(`[${this.userId}] disconnect wacli session`)
       // Ignore errors if already logged out
       await runWacli(this.storeDir, ['auth', 'logout'], false)
@@ -209,7 +209,7 @@ export class Supervisor {
 
   public async archiveChat(chatId: string, archived: boolean): Promise<void> {
     return this.mutex.runExclusive(async () => {
-      await this._stop()
+      await this.#stop()
       logger.info(`[${this.userId}] archive chat`)
       await runWacli(this.storeDir, ['chats', archived ? 'archive' : 'unarchive', '--chat', chatId], false)
     })
@@ -227,7 +227,7 @@ export class Supervisor {
         logger.debug(`[${this.userId}] fullsync alredy running`)
         return
       }
-      await this._stop()
+      await this.#stop()
       logger.info(`[${this.userId}] run full sync`)
       this.status = { type: 'fullsync' }
       runWacli(this.storeDir, ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'], false, 5 * 60 * 1000)

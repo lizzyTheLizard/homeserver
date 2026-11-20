@@ -51,6 +51,7 @@ function main(): void {
   })
 
   app.post('/sessions/:userId/send-message', async (req: SessionRequest, res) => {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const body = (req.body ?? {}) as Record<string, unknown>
     if (typeof body.to !== 'string' || !body.to || typeof body.text !== 'string' || !body.text) {
       res.status(400).json({ error: 'send_message: missing \'to\' or \'text\'' })
@@ -61,6 +62,7 @@ function main(): void {
   })
 
   app.post('/sessions/:userId/archive-chat', async (req: SessionRequest, res) => {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const body = (req.body ?? {}) as Record<string, unknown>
     if (typeof body.id !== 'string' || !body.id) {
       res.status(400).json({ error: 'archive_chat: missing \'id\'' })

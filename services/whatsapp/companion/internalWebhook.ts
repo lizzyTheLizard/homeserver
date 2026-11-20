@@ -11,6 +11,7 @@ const inflightUnarchive = new Set<string>()
 // Archived chat.
 export async function handleInternalWebhook(supervisor: Supervisor, body: unknown, signatureHeader: string | undefined): Promise<void> {
   const payload = parseWebhookPayload(supervisor.getWebhookSecret(), body, signatureHeader),
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
    message = (typeof payload === 'object' && payload !== null ? payload : {}) as Record<string, unknown>
   if (message.FromMe === true || message.FromMe === 1) {return}
   const chatId = typeof message.Chat === 'string' ? message.Chat : ''

@@ -90,12 +90,13 @@ export function attachEventParser(stream: Readable | null, onEvent: (event: Wacl
   stream.setEncoding('utf8')
   stream.on('data', (chunk: string) => {
     buffer += chunk
-    let newlineIndex: number
+    let newlineIndex = 0
     while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
       const line = buffer.slice(0, newlineIndex).trim()
       buffer = buffer.slice(newlineIndex + 1)
       if (!line) {continue}
       try {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         const event = JSON.parse(line) as WacliEvent
         onEvent(event)
       }
