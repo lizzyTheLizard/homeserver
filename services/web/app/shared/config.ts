@@ -28,16 +28,16 @@ export interface Config {
   BUILD_TIME: string
 }
 
-const isDev = process.env.NODE_ENV === 'development'
-const isTest = process.env.NODE_ENV === 'test'
-const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
-const isStorybook = Object.keys(process.env).length === 0
-const allowDefaults = isDev || isTest || isBuild || isStorybook
+const isDev = process.env.NODE_ENV === 'development',
+ isTest = process.env.NODE_ENV === 'test',
+ isBuild = process.env.NEXT_PHASE === 'phase-production-build',
+ isStorybook = Object.keys(process.env).length === 0,
+ allowDefaults = isDev || isTest || isBuild || isStorybook
 
 function required(name: string, devDefault?: string): string {
   const value = process.env[name]
-  if (value && value.length > 0) return value
-  if (allowDefaults && devDefault !== undefined) return devDefault
+  if (value && value.length > 0) {return value}
+  if (allowDefaults && devDefault !== undefined) {return devDefault}
   throw new Error(`Missing required environment variable: ${name}`)
 }
 
@@ -59,8 +59,8 @@ export const config: Config = {
   },
   OIDC: {
     CLIENT_ID: required('CLIENT_ID', 'coeditor-client'),
-    ISSUER: required('LOGIN_ISSUER', 'http://localhost:8080/realms/coeditor'),
     CLIENT_SECRET: required('CLIENT_SECRET', 'dev-only-client-secret'),
+    ISSUER: required('LOGIN_ISSUER', 'http://localhost:8080/realms/coeditor'),
   },
   SESSION: {
     COOKIE_NAME: required('COOKIE_NAME', 'homeserver-session'),
@@ -70,10 +70,10 @@ export const config: Config = {
   NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),
   WHATSAPP_BRIDGE_URL: required('WHATSAPP_BRIDGE_URL', 'http://localhost:8400'),
   // In the dev-machine container the assistant runs as a local process and binds
-  // the container's own address, so "localhost" (127.0.0.1) is not reachable.
+  // The container's own address, so "localhost" (127.0.0.1) is not reachable.
   ASSISTANT_INTERNAL_URL: required('ASSISTANT_INTERNAL_URL', 'http://dev-machine:8500'),
   GIT_BRANCH: required('GIT_BRANCH', 'DEVELOPMENT'),
   GIT_COMMIT_HASH: required('GIT_COMMIT_HASH', 'DEVELOPMENT'),
-  GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // not required, no default
+  GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // Not required, no default
   BUILD_TIME: required('BUILD_TIME', new Date().toISOString()),
 }

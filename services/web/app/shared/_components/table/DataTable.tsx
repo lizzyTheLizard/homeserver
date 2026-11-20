@@ -1,6 +1,8 @@
 'use client'
-import { CSSProperties, ReactNode, TableHTMLAttributes, useMemo, useState } from 'react'
-import { sortAndFilter, SortingOrder } from './sortAndFilter'
+import type { CSSProperties, ReactNode, TableHTMLAttributes} from 'react';
+import { useMemo, useState } from 'react'
+import type { SortingOrder } from './sortAndFilter';
+import { sortAndFilter } from './sortAndFilter'
 import { DataTableHeader } from './DataTableHeader'
 import { DataTableRow } from './DataTableRow'
 import { SearchBar } from './SearchBar'
@@ -28,16 +30,16 @@ export interface ColumnDefinition<FieldType> {
 }
 
 export function DataTable<T extends { id: string }>({ columns, onRowClick, data, initialSortingOrder, searchLabel, activeId, renderMobile, ...props }: DataTableProps<T>) {
-  const classNames = style.dataTable + (props.className ? ' ' + props.className : '')
-  const [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? [])
-  const [searchTerm, setSearchTerm] = useState('')
+  const classNames = style.dataTable + (props.className ? ` ${  props.className}` : ''),
+   [sortingOrder, setSortingOrder] = useState<SortingOrder[]>(initialSortingOrder ?? []),
+   [searchTerm, setSearchTerm] = useState('')
 
   function onSort(oldSort: SortingOrder | undefined, key: string) {
     const newOrder = sortingOrder.filter(f => f.key !== key)
     if (oldSort?.direction !== 'DESC') {
       newOrder.push(oldSort
-        ? { key: key, direction: 'DESC' }
-        : { key: key, direction: 'ASC' })
+        ? { direction: 'DESC', key }
+        : { direction: 'ASC', key })
     }
     setSortingOrder(newOrder)
   }
@@ -45,9 +47,9 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
   const sortedAndFilteredData = useMemo(
     () => sortAndFilter<T>(data, sortingOrder, searchTerm, columns),
     [data, sortingOrder, searchTerm, columns],
-  )
+  ),
 
-  const table = (
+   table = (
     <table {...props} className={classNames}>
       <thead>
         <tr>
@@ -80,12 +82,12 @@ export function DataTable<T extends { id: string }>({ columns, onRowClick, data,
     </table>
   )
 
-  if (!renderMobile) return (
+  if (!renderMobile) {return (
     <>
       {searchLabel && <SearchBar label={searchLabel} value={searchTerm} onChange={setSearchTerm} />}
       {table}
     </>
-  )
+  )}
   return (
     <div className={style.container}>
       {searchLabel && <SearchBar label={searchLabel} value={searchTerm} onChange={setSearchTerm} />}

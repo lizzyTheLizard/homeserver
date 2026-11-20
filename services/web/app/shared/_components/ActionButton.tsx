@@ -1,5 +1,6 @@
 'use client'
-import { Button, ButtonProps } from './form/Button'
+import type { ButtonProps } from './form/Button';
+import { Button } from './form/Button'
 import { useActionTitle } from './ActionTitleHelpers'
 
 export function ActionButton({ children, ...props }: ButtonProps) {

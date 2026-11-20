@@ -1,12 +1,12 @@
-import { describe, expect, test, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { promises as fs, readFileSync } from 'fs'
 import { join } from 'path'
 import { getSkillTools } from './skills-tools'
 import { tmpdir } from 'os'
 
-const SKILL_NAME = 'test-skill'
-const SKILL_DESCRIPTION = 'A test skill'
-const SKILL_CONTENT = `
+const SKILL_NAME = 'test-skill',
+ SKILL_DESCRIPTION = 'A test skill',
+ SKILL_CONTENT = `
     ---
     name: ${SKILL_NAME}
     description: ${SKILL_DESCRIPTION}
@@ -22,7 +22,7 @@ describe('skill loading from filesystem', () => {
   })
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true })
+    await fs.rm(tmpDir, { force: true, recursive: true })
   })
 
   test('empty dir', () => {
@@ -31,8 +31,8 @@ describe('skill loading from filesystem', () => {
   })
 
   test('should load a skill tool from a skill directory', async () => {
-    const skillDir = join(tmpDir, SKILL_NAME)
-    const skillFile = join(skillDir, 'SKILL.md')
+    const skillDir = join(tmpDir, SKILL_NAME),
+     skillFile = join(skillDir, 'SKILL.md')
     await fs.mkdir(skillDir, { recursive: true })
     await fs.writeFile(skillFile, SKILL_CONTENT)
 
@@ -43,14 +43,14 @@ describe('skill loading from filesystem', () => {
   })
 
   test('should load skill.MD', async () => {
-    const skillDir = join(tmpDir, SKILL_NAME)
-    const skillFile = join(skillDir, 'SKILL.md')
+    const skillDir = join(tmpDir, SKILL_NAME),
+     skillFile = join(skillDir, 'SKILL.md')
     await fs.mkdir(skillDir, { recursive: true })
     await fs.writeFile(skillFile, SKILL_CONTENT)
 
-    const tools = getSkillTools(tmpDir)
+    const tools = getSkillTools(tmpDir),
     // oxlint-disable-next-line typescript/no-non-null-assertion
-    const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
+     result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { context: {}, messages: [], toolCallId: '123' })) as string
     expect(result).toContain(`These are the instructions for the skill test-skill. 
   The main file is SKILL.MD, it contains the description and instructions for the skill. 
   The other files in the skill directory are additional resources that may be needed to execute the skill. 
@@ -62,8 +62,8 @@ describe('skill loading from filesystem', () => {
   })
 
   test('should include additional files when executing skill', async () => {
-    const skillDir = join(tmpDir, SKILL_NAME)
-    const skillFile = join(skillDir, 'SKILL.md')
+    const skillDir = join(tmpDir, SKILL_NAME),
+     skillFile = join(skillDir, 'SKILL.md')
     await fs.mkdir(skillDir, { recursive: true })
     await fs.writeFile(skillFile, SKILL_CONTENT)
     const extraFile = join(skillDir, 'template.md')
@@ -71,11 +71,11 @@ describe('skill loading from filesystem', () => {
     const dataFile = join(skillDir, 'data.json')
     await fs.writeFile(dataFile, JSON.stringify({ key: 'value' }))
 
-    const tools = getSkillTools(tmpDir)
+    const tools = getSkillTools(tmpDir),
     // oxlint-disable-next-line typescript/no-non-null-assertion
-    const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
+     result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { context: {}, messages: [], toolCallId: '123' })) as string,
     // oxlint-disable-next-line typescript/no-non-null-assertion
-    const fileContent = JSON.parse(/(\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
+     fileContent = JSON.parse(/(\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
     expect(fileContent['SKILL.md']).toBe(SKILL_CONTENT)
     expect(fileContent['template.md']).toBe('# Template\nThis is a template file.')
     expect(fileContent['data.json']).toBe(JSON.stringify({ key: 'value' }))

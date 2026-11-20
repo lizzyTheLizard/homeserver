@@ -1,5 +1,5 @@
-import { describe, expect, test, vi, afterEach } from 'vitest'
-import { loadMicrosoftStatus, connectMicrosoft, disconnectMicrosoft } from './server'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { connectMicrosoft, disconnectMicrosoft, loadMicrosoftStatus } from './server'
 import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { cookies } from 'next/headers'
@@ -18,27 +18,27 @@ vi.mock('next/headers', () => ({ cookies: vi.fn() }))
 
 const { mockWarn } = vi.hoisted(() => ({ mockWarn: vi.fn<(message: string) => void>() }))
 
-vi.mock('@/app/shared/logger', () => ({ logger: { warn: mockWarn, error: vi.fn(), info: vi.fn(), debug: vi.fn() } }))
+vi.mock('@/app/shared/logger', () => ({ logger: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: mockWarn } }))
 
 const mockUserInfo = {
-  id: 'user-123',
-  userPrincipalName: 'user@example.com',
   displayName: 'Test User',
+  id: 'user-123',
   mail: 'user@example.com',
-}
+  userPrincipalName: 'user@example.com',
+},
 
-const mockStatus = {
-  connected: true,
-  userInfo: mockUserInfo,
-  mailStatus: 'connected',
-  todoStatus: 'connected',
+ mockStatus = {
   calendarStatus: 'connected',
-  messages: [],
-  todos: [],
+  connected: true,
   events: [],
-}
+  mailStatus: 'connected',
+  messages: [],
+  todoStatus: 'connected',
+  todos: [],
+  userInfo: mockUserInfo,
+},
 
-const originalFetch = globalThis.fetch
+ originalFetch = globalThis.fetch
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -47,10 +47,10 @@ afterEach(() => {
 
 describe('loadMicrosoftStatus', () => {
   test('returns status from assistant API', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
-    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockStatus) })
+    globalThis.fetch = vi.fn().mockResolvedValue({ json: () => Promise.resolve(mockStatus), ok: true })
 
     const result = await loadMicrosoftStatus()
 
@@ -61,7 +61,7 @@ describe('loadMicrosoftStatus', () => {
 
 describe('assistant call logging', () => {
   test('logs the assistant URL when the assistant is unreachable', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
     const cause = new Error('connect ECONNREFUSED 127.0.0.1:8500')
@@ -77,33 +77,33 @@ describe('assistant call logging', () => {
 
 describe('connectMicrosoft', () => {
   test('returns the login redirect URL from assistant API', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
-    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ url: 'https://login.microsoftonline.com/authorize' }) })
+    globalThis.fetch = vi.fn().mockResolvedValue({ json: () => Promise.resolve({ url: 'https://login.microsoftonline.com/authorize' }), ok: true })
 
     const result = await connectMicrosoft()
 
     expect(result.success).toBe(true)
-    if (!result.success) return
+    if (!result.success) {return}
     expect(result.data).toBe('https://login.microsoftonline.com/authorize')
   })
 })
 
 describe('disconnectMicrosoft', () => {
   test('calls assistant disconnect endpoint', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
-    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ success: true }) })
+    globalThis.fetch = vi.fn().mockResolvedValue({ json: () => Promise.resolve({ success: true }), ok: true })
 
     const result = await disconnectMicrosoft()
 
     expect(result.success).toBe(true)
     expect(fetch).toHaveBeenCalledWith('http://dev-machine:8500/microsoft/disconnect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Cookie': 'homeserver-session=abc' },
       body: '{}',
+      headers: { 'Content-Type': 'application/json', 'Cookie': 'homeserver-session=abc' },
+      method: 'POST',
     })
   })
 })

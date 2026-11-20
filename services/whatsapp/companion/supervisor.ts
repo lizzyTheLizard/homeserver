@@ -2,8 +2,9 @@ import { Mutex } from 'async-mutex'
 import { promises as fs } from 'node:fs'
 import type { ChildProcess } from 'node:child_process'
 import { logger } from './logger'
-import { mapAuthenticated, mapChatArchived, mapChats, mapMessages, type Chat, type Message } from './mapping'
-import { runWacli, spawnWacli, WacliEvent } from './wacli'
+import { type Chat, type Message, mapAuthenticated, mapChatArchived, mapChats, mapMessages } from './mapping'
+import type { WacliEvent } from './wacli';
+import { runWacli, spawnWacli } from './wacli'
 import { config } from './config'
 import { createHash, randomBytes } from 'node:crypto'
 import { join } from 'node:path'
@@ -32,10 +33,10 @@ export class Supervisor {
         logger.debug(`[${this.userId}] wacli is already in state ${this.status.type}, so no start needed`)
         return this.status
       }
-      if (this.child) throw new Error(`A child process already exists but state is ${this.status.type}`)
+      if (this.child) {throw new Error(`A child process already exists but state is ${this.status.type}`)}
       logger.debug(`[${this.userId}] Check if authenticated`)
-      const result = await runWacli(this.storeDir, ['auth', 'status'], true)
-      const isAuthenticated = mapAuthenticated(result)
+      const result = await runWacli(this.storeDir, ['auth', 'status'], true),
+       isAuthenticated = mapAuthenticated(result)
       return isAuthenticated ? this.startSync() : this.startAuthentication()
     })
   }
@@ -83,17 +84,17 @@ export class Supervisor {
         rej(new Error('Could not start wacli'))
         break
       case 'error':
-        if (this.isStopping) break
-        logger.warn(`[${this.userId}] wacli session had an error: ` + event.data.message)
+        if (this.isStopping) {break}
+        logger.warn(`[${this.userId}] wacli session had an error: ${  event.data.message}`)
         rej(new Error('Could not start wacli'))
         break
       case 'warning':
-        if (this.isStopping) break
-        logger.warn(`[${this.userId}] wacli warning: ` + event.data.message)
-        if (event.data.message.includes('hit an LTHash mismatch')) rej(new Error('Could not start wacli'))
+        if (this.isStopping) {break}
+        logger.warn(`[${this.userId}] wacli warning: ${  event.data.message}`)
+        if (event.data.message.includes('hit an LTHash mismatch')) {rej(new Error('Could not start wacli'))}
         break
       case 'qr_code':
-        this.status = { type: 'needAuth', qr: event.data.code }
+        this.status = { qr: event.data.code, type: 'needAuth' }
         logger.info(`[${this.userId}] started wacli sync, but needs auth`)
         res(this.status)
         break
@@ -129,9 +130,9 @@ export class Supervisor {
       }
       logger.warn(`[${this.userId}] wacli session is closed but a process is still running, stopping it`)
     }
-    const child = this.child
-    if (!child) throw new Error('Cannot stop a process that has not been started')
-    if (child.exitCode !== null || child.signalCode !== null) throw new Error('The wacli process has already exited')
+    const {child} = this
+    if (!child) {throw new Error('Cannot stop a process that has not been started')}
+    if (child.exitCode !== null || child.signalCode !== null) {throw new Error('The wacli process has already exited')}
     this.child = null
     this.isStopping = true
     logger.debug(`[${this.userId}] stop wacli sync`)
@@ -164,13 +165,13 @@ export class Supervisor {
     return this.mutex.runExclusive(async () => {
       await this._stop()
       logger.info(`[${this.userId}] disconnect wacli session`)
-      // ignore errors if already logged out
+      // Ignore errors if already logged out
       await runWacli(this.storeDir, ['auth', 'logout'], false)
         .catch ((err: unknown) => {
           const error = err instanceof Error ? err : Error(String(err))
           logger.warn(`[${this.userId}] Could not log out`, error)
         })
-      await fs.rm(this.storeDir, { recursive: true, force: true })
+      await fs.rm(this.storeDir, { force: true, recursive: true })
       this.status = { type: 'closed' }
     })
   }
@@ -178,10 +179,10 @@ export class Supervisor {
   public async getChats(): Promise<Chat[]> {
     await this.ensureStarted()
     logger.debug(`[${this.userId}] get chats`)
-    const result1 = await runWacli(this.storeDir, ['chats', 'list', '--limit', String(config.WHATSAPP_CHATS_LIMIT)], true)
-    const chats = mapChats(result1)
-    const result2 = await runWacli(this.storeDir, ['messages', 'list', '--asc', '--limit', String(config.WHATSAPP_MESSAGES_LIMIT)], true)
-    const messages = mapMessages(result2)
+    const result1 = await runWacli(this.storeDir, ['chats', 'list', '--limit', String(config.WHATSAPP_CHATS_LIMIT)], true),
+     chats = mapChats(result1),
+     result2 = await runWacli(this.storeDir, ['messages', 'list', '--asc', '--limit', String(config.WHATSAPP_MESSAGES_LIMIT)], true),
+     messages = mapMessages(result2)
     return chats.filter(c => messages.some(m => m.chatId === c.id))
   }
 
@@ -242,7 +243,7 @@ export class Supervisor {
 
   private async ensureStarted() {
     await this.start()
-    if (this.status.type === 'fullsync') throw new Error('Sync is running')
-    if (this.status.type !== 'connected') throw new Error('Not connected')
+    if (this.status.type === 'fullsync') {throw new Error('Sync is running')}
+    if (this.status.type !== 'connected') {throw new Error('Not connected')}
   }
 }

@@ -1,4 +1,4 @@
-import { PoolClient } from 'pg'
+import type { PoolClient } from 'pg'
 
 export interface MicrosoftToken {
   access_token: string
@@ -11,8 +11,8 @@ export async function getMicrosoftToken(client: PoolClient, ownerEmail: string):
     'SELECT access_token, refresh_token, expires_at FROM assistant_microsoft_token WHERE owner_email = $1',
     [ownerEmail],
   )
-  if (result.rows.length === 0) return undefined
-  return { access_token: result.rows[0].access_token, refresh_token: result.rows[0].refresh_token, expires_at: result.rows[0].expires_at }
+  if (result.rows.length === 0) {return undefined}
+  return { access_token: result.rows[0].access_token, expires_at: result.rows[0].expires_at, refresh_token: result.rows[0].refresh_token }
 }
 
 export async function setMicrosoftToken(client: PoolClient, ownerEmail: string, token: MicrosoftToken): Promise<void> {

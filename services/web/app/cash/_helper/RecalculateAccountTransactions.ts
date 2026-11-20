@@ -1,15 +1,19 @@
 import { logger } from '@/app/shared/logger'
-import { findAllTransactionsByAccount, Transaction } from '../_data/Transaction'
-import { Queryable } from '@/app/shared/_external/db/access'
-import { Period, toString } from './Period'
-import { AccountTransaction, AccountTransactionInput, createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
+import type { Transaction } from '../_data/Transaction';
+import { findAllTransactionsByAccount } from '../_data/Transaction'
+import type { Queryable } from '@/app/shared/_external/db/access'
+import type { Period} from './Period';
+import { toString } from './Period'
+import type { AccountTransaction, AccountTransactionInput} from '../_data/AccountTransaction';
+import { createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
 import { v4 as randomUUID } from 'uuid'
-import { Closing, findAllClosingsByAccount } from '../_data/Closing'
+import type { Closing} from '../_data/Closing';
+import { findAllClosingsByAccount } from '../_data/Closing'
 import { Temporal } from '@js-temporal/polyfill'
 
 export async function recalculateTransactions(client: Queryable, owner: string, projectId: string, from: Temporal.PlainDate, accountIds: string[]): Promise<void> {
-  const uniqueAccountIds = Array.from(new Set(accountIds))
-  const period: Period = { year: from.year, month: from.month, day: from.day, openEnded: true }
+  const uniqueAccountIds = Array.from(new Set(accountIds)),
+   period: Period = { day: from.day, month: from.month, openEnded: true, year: from.year }
   for (const accountId of uniqueAccountIds) {
     await recalculateTransactionsForAccount(client, owner, projectId, accountId, period)
   }
@@ -18,12 +22,12 @@ export async function recalculateTransactions(client: Queryable, owner: string, 
 async function recalculateTransactionsForAccount(client: Queryable, owner: string, projectId: string, accountId: string, period: Period): Promise<void> {
   logger.debug(`Recalculating transactions for account ${accountId} for ${toString(period)}`)
   await deleteAccountTransactions(client, owner, accountId, period)
-  const transactions = await findAllTransactionsByAccount(client, owner, projectId, accountId, period)
-  const closings = await findAllClosingsByAccount(client, owner, accountId, period)
-  const items = [...transactions, ...closings].sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
+  const transactions = await findAllTransactionsByAccount(client, owner, projectId, accountId, period),
+   closings = await findAllClosingsByAccount(client, owner, accountId, period),
+   items = [...transactions, ...closings].sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
   let previous = await findLatestAccountTransactionBefore(client, owner, accountId, period)
   for (const item of items) {
-    const c = { client, owner, accountId, period, previous, item }
+    const c = { accountId, client, item, owner, period, previous }
     previous = await recalculateSingleTransaction(c)
   }
 }
@@ -31,46 +35,46 @@ async function recalculateTransactionsForAccount(client: Queryable, owner: strin
 async function recalculateSingleTransaction(c: Context): Promise<AccountTransaction> {
   const details = 'credit_account_id' in c.item
     ? getTransactionDetails(c as Context<Transaction>)
-    : getClosingDetails(c as Context<Closing>)
+    : getClosingDetails(c as Context<Closing>),
 
-  const accountTransaction: AccountTransactionInput = {
-    id: randomUUID(),
+   accountTransaction: AccountTransactionInput = {
     account_id: c.accountId,
-    project_id: c.item.project_id,
     date: c.item.date,
+    id: randomUUID(),
     ordering: (c.previous?.ordering ?? 0) + 1,
+    project_id: c.item.project_id,
     ...details,
   }
   return await createAccountTransaction(c.client, c.owner, accountTransaction)
 }
 
 function getTransactionDetails(c: Context<Transaction>) {
-  const sameAccountTransaction = c.item.credit_account_id === c.item.debit_account_id
-  const isCredit = c.item.credit_account_id === c.accountId
-  const other_account_id = isCredit ? c.item.debit_account_id : c.item.credit_account_id
-  const amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.amount : c.item.amount)
-  const total_balance = c.previous ? c.previous.total_balance + amount : amount
+  const sameAccountTransaction = c.item.credit_account_id === c.item.debit_account_id,
+   isCredit = c.item.credit_account_id === c.accountId,
+   other_account_id = isCredit ? c.item.debit_account_id : c.item.credit_account_id,
+   amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.amount : c.item.amount),
+   total_balance = c.previous ? c.previous.total_balance + amount : amount
 
   return {
-    description: c.item.description,
-    transaction_id: c.item.id,
-    other_account_id,
     amount,
+    description: c.item.description,
+    other_account_id,
     total_balance,
+    transaction_id: c.item.id,
   }
 }
 
 function getClosingDetails(c: Context<Closing>) {
-  const sameAccountTransaction = c.item.capital_account_id === c.item.profit_account_id
-  const isCredit = c.item.capital_account_id === c.accountId
-  const other_account_id = isCredit ? c.item.profit_account_id : c.item.capital_account_id
-  const amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.profit : c.item.profit)
-  const total_balance = c.previous ? c.previous.total_balance + amount : amount
-  const description = 'Closing ' + Temporal.PlainDate.from(c.item.date).toPlainYearMonth().toString()
+  const sameAccountTransaction = c.item.capital_account_id === c.item.profit_account_id,
+   isCredit = c.item.capital_account_id === c.accountId,
+   other_account_id = isCredit ? c.item.profit_account_id : c.item.capital_account_id,
+   amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.profit : c.item.profit),
+   total_balance = c.previous ? c.previous.total_balance + amount : amount,
+   description = `Closing ${  Temporal.PlainDate.from(c.item.date).toPlainYearMonth().toString()}`
   return {
+    amount,
     description,
     other_account_id,
-    amount,
     total_balance,
   }
 }

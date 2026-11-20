@@ -9,18 +9,18 @@ import { changePasswordPath } from './continuePath'
 
 export type Session = { role: 'admin' } | { role: 'user', accountId: string }
 
-const COOKIE = 'wichtel_session'
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const COOKIE = 'wichtel_session',
+ UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function setSession(session: Session) {
-  const payload = Buffer.from(JSON.stringify(session)).toString('base64url')
-  const jar = await cookies()
+  const payload = Buffer.from(JSON.stringify(session)).toString('base64url'),
+   jar = await cookies()
   jar.set(COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true,
+    maxAge: 60 * 60 * 24 * 60,
+    path: '/',
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 60,
   })
 }
 
@@ -30,9 +30,9 @@ export async function clearSession() {
 
 export async function getSession(): Promise<Session | null> {
   const raw = (await cookies()).get(COOKIE)?.value
-  if (!raw) return null
+  if (!raw) {return null}
   const [payload, sig] = raw.split('.')
-  if (!payload || !sig) return null
+  if (!payload || !sig) {return null}
   const expected = sign(payload)
   if (sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
     return null
@@ -47,7 +47,7 @@ export async function getSession(): Promise<Session | null> {
 
 export async function requireAdmin() {
   const s = await getSession()
-  if (s?.role !== 'admin') redirect('/')
+  if (s?.role !== 'admin') {redirect('/')}
 }
 
 /**
@@ -57,25 +57,25 @@ export async function requireAdmin() {
  */
 export async function requireAccount(options: { continueTo?: string, allowPendingChange?: boolean } = {}) {
   const s = await getSession()
-  if (s?.role !== 'user') redirect('/')
+  if (s?.role !== 'user') {redirect('/')}
   const account = await getAccount(await getDb(), s.accountId)
-  if (!account) redirect('/')
-  if (account.mustChangePassword && !options.allowPendingChange) redirect(changePasswordPath(options.continueTo ?? '/'))
+  if (!account) {redirect('/')}
+  if (account.mustChangePassword && !options.allowPendingChange) {redirect(changePasswordPath(options.continueTo ?? '/'))}
   return account
 }
 
 /** Returns the signed-in account's participation in the group, or redirects to the start page. */
 export async function requireParticipant(groupId: string) {
   const account = await requireAccount({ continueTo: `/gruppen/${groupId}` })
-  if (!UUID.test(groupId)) redirect('/')
+  if (!UUID.test(groupId)) {redirect('/')}
   const found = await findParticipant(await getDb(), groupId, account.id)
-  if (!found) redirect('/')
+  if (!found) {redirect('/')}
   return { account, ...found }
 }
 
 export function adminCredentials() {
   const config = getConfig()
-  return { user: config.adminUser, password: config.adminPassword }
+  return { password: config.adminPassword, user: config.adminUser }
 }
 
 function sign(value: string): string {
@@ -84,9 +84,9 @@ function sign(value: string): string {
 
 /** Accepts only the current cookie shapes; older participant cookies count as signed out. */
 function parseSession(value: unknown): Session | null {
-  if (typeof value !== 'object' || value === null) return null
+  if (typeof value !== 'object' || value === null) {return null}
   const candidate = value as { role?: unknown, accountId?: unknown }
-  if (candidate.role === 'admin') return { role: 'admin' }
-  if (candidate.role === 'user' && typeof candidate.accountId === 'string') return { role: 'user', accountId: candidate.accountId }
+  if (candidate.role === 'admin') {return { role: 'admin' }}
+  if (candidate.role === 'user' && typeof candidate.accountId === 'string') {return { accountId: candidate.accountId, role: 'user' }}
   return null
 }

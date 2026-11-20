@@ -1,15 +1,15 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { EventEmitter } from 'events'
 import { handleWhatsappApi } from './route'
 import type { UserSession } from '../session'
 
 const { mockGetSession, mockGetWhatsappStatus, mockGetWhatsappChats } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
-  mockGetWhatsappStatus: vi.fn(),
   mockGetWhatsappChats: vi.fn(),
-}))
+  mockGetWhatsappStatus: vi.fn(),
+})),
 
-const mockUser: UserSession = { name: 'Test', email: 'test@test.com', applications: ['startpage'] }
+ mockUser: UserSession = { applications: ['startpage'], email: 'test@test.com', name: 'Test' }
 
 vi.mock('../session', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../session')>()
@@ -20,11 +20,11 @@ vi.mock('../session', async (importOriginal) => {
 })
 
 vi.mock('./whatsapp', () => ({
-  getWhatsappStatus: mockGetWhatsappStatus as typeof import('./whatsapp').getWhatsappStatus,
+  archiveWhatsappChat: vi.fn(),
   getWhatsappChats: mockGetWhatsappChats as typeof import('./whatsapp').getWhatsappChats,
   getWhatsappMessages: vi.fn(),
+  getWhatsappStatus: mockGetWhatsappStatus as typeof import('./whatsapp').getWhatsappStatus,
   sendWhatsappMessage: vi.fn(),
-  archiveWhatsappChat: vi.fn(),
   triggerWhatsappFullSync: vi.fn(),
 }))
 
@@ -59,24 +59,24 @@ describe('handleWhatsappApi', () => {
   })
 
   test('returns false for non-whatsapp paths', async () => {
-    const req = createRequest('GET', '/health')
-    const res = createResponse()
-    const handled = await handleWhatsappApi(req as never, res as never, '/health')
+    const req = createRequest('GET', '/health'),
+     res = createResponse(),
+     handled = await handleWhatsappApi(req as never, res as never, '/health')
     expect(handled).toBe(false)
   })
 
   test('GET /whatsapp/status returns status', async () => {
     mockGetWhatsappStatus.mockResolvedValue({ type: 'connected' })
-    const req = createRequest('GET', '/whatsapp/status')
-    const res = createResponse()
+    const req = createRequest('GET', '/whatsapp/status'),
+     res = createResponse()
     await handleWhatsappApi(req as never, res as never, '/whatsapp/status')
     expect(res.writeHead).toHaveBeenCalledWith(200, { 'Content-Type': 'application/json' })
   })
 
   test('GET /whatsapp/chats returns chats', async () => {
     mockGetWhatsappChats.mockResolvedValue([])
-    const req = createRequest('GET', '/whatsapp/chats')
-    const res = createResponse()
+    const req = createRequest('GET', '/whatsapp/chats'),
+     res = createResponse()
     await handleWhatsappApi(req as never, res as never, '/whatsapp/chats')
     expect(res.writeHead).toHaveBeenCalledWith(200, { 'Content-Type': 'application/json' })
   })

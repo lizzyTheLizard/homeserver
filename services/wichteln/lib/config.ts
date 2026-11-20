@@ -11,10 +11,10 @@ interface AppConfig {
  */
 export function getConfig(): AppConfig {
   return {
+    adminPassword: required('ADMIN_PASSWORD'),
+    adminUser: required('ADMIN_USER'),
     dbConnectionString: required('DB_CONNECTION_STRING'),
     sessionSecret: required('SESSION_SECRET'),
-    adminUser: required('ADMIN_USER'),
-    adminPassword: required('ADMIN_PASSWORD'),
   }
 }
 

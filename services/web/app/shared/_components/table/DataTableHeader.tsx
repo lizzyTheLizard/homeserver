@@ -1,7 +1,7 @@
-import { SortingOrder } from './sortAndFilter'
+import type { SortingOrder } from './sortAndFilter'
 import style from './DataTableHeader.module.css'
 import { Icon } from '../Icon'
-import { ColumnDefinition } from './DataTable'
+import type { ColumnDefinition } from './DataTable'
 
 export interface DataTableHeaderProps<FieldType> {
   sortingOrder: SortingOrder[]
@@ -10,9 +10,9 @@ export interface DataTableHeaderProps<FieldType> {
 }
 
 export function DataTableHeader<FieldType>({ column, sortingOrder, onSort }: DataTableHeaderProps<FieldType>) {
-  const sort = sortingOrder.find(f => f.key === column.key)
-  const icon = sort ? (sort.direction === 'ASC' ? 'up' : 'down') : 'updown'
-  const thClass = [style.th, column.sort ? style.sortable : '', column.className ?? ''].join(' ')
+  const sort = sortingOrder.find(f => f.key === column.key),
+   icon = sort ? (sort.direction === 'ASC' ? 'up' : 'down') : 'updown',
+   thClass = [style.th, column.sort ? style.sortable : '', column.className ?? ''].join(' ')
 
   return (
     <th

@@ -18,8 +18,8 @@ function pgliteQueryable(db: PGlite): Queryable {
 }
 
 describe('store', () => {
-  let db: PGlite | undefined
-  let queryable: Queryable
+  let db: PGlite | undefined,
+   queryable: Queryable
 
   beforeEach(async () => {
     db = new PGlite()
@@ -34,40 +34,40 @@ describe('store', () => {
 
   async function createTestGroup(names = ['Anna', 'Ben', 'Cara']) {
     const created = await store.createGroup(queryable, 'Team')
-    if (!created.ok) throw new Error(created.error)
+    if (!created.ok) {throw new Error(created.error)}
     for (const name of names) {
       await register(created.value.id, name)
     }
     const group = await store.getGroup(queryable, created.value.id)
-    if (!group) throw new Error('Group disappeared')
+    if (!group) {throw new Error('Group disappeared')}
     return group
   }
 
   async function register(groupId: string, name: string, password = `${name}-password`) {
     const result = await store.registerAccount(queryable, groupId, name, await hashPassword(password))
-    if (!result.ok) throw new Error(result.error)
+    if (!result.ok) {throw new Error(result.error)}
     return result.value
   }
 
   async function participant(groupId: string, accountId: string) {
     const found = await store.findParticipant(queryable, groupId, accountId)
-    if (!found) throw new Error('Participant is missing')
+    if (!found) {throw new Error('Participant is missing')}
     return found.user
   }
 
   async function addWishes(group: store.Group) {
     for (const user of group.users) {
       const result = await store.saveWish(queryable, group.id, user.id, {
-        title: `Wish ${user.name}`,
         description: `Description ${user.name}`,
+        title: `Wish ${user.name}`,
       })
-      if (!result.ok) throw new Error(result.error)
+      if (!result.ok) {throw new Error(result.error)}
     }
   }
 
   test('creates a group with an invite token and no participants', async () => {
     const result = await store.createGroup(queryable, 'Team')
-    if (!result.ok) throw new Error(result.error)
+    if (!result.ok) {throw new Error(result.error)}
 
     expect(result.value.phase).toBe('wishes')
     expect(result.value.users).toEqual([])
@@ -75,19 +75,19 @@ describe('store', () => {
     expect(await store.listGroups(queryable)).toHaveLength(1)
 
     const other = await store.createGroup(queryable, 'Other')
-    if (!other.ok) throw new Error(other.error)
+    if (!other.ok) {throw new Error(other.error)}
     expect(other.value.inviteToken).not.toBe(result.value.inviteToken)
   })
 
   test('rejects a group without a name', async () => {
-    expect(await store.createGroup(queryable, '')).toEqual({ ok: false, error: 'Bitte einen Gruppennamen eingeben.' })
+    expect(await store.createGroup(queryable, '')).toEqual({ error: 'Bitte einen Gruppennamen eingeben.', ok: false })
     expect(await store.listGroups(queryable)).toHaveLength(0)
   })
 
   test('finds a group by its invite token', async () => {
-    const group = await createTestGroup()
+    const group = await createTestGroup(),
 
-    const found = await store.getGroupByInviteToken(queryable, group.inviteToken)
+     found = await store.getGroupByInviteToken(queryable, group.inviteToken)
     expect(found?.id).toBe(group.id)
     expect(found?.users).toHaveLength(3)
     expect(await store.getGroupByInviteToken(queryable, 'unknown')).toBeNull()
@@ -95,13 +95,13 @@ describe('store', () => {
   })
 
   test('registers accounts with names unique across all groups, ignoring case', async () => {
-    const group = await createTestGroup(['Anna'])
-    const other = await createTestGroup([])
+    const group = await createTestGroup(['Anna']),
+     other = await createTestGroup([]),
 
-    const sameGroup = await store.registerAccount(queryable, group.id, 'ANNA', await hashPassword('whatever1'))
-    expect(sameGroup).toEqual({ ok: false, error: NAME_TAKEN })
+     sameGroup = await store.registerAccount(queryable, group.id, 'ANNA', await hashPassword('whatever1'))
+    expect(sameGroup).toEqual({ error: NAME_TAKEN, ok: false })
     const otherGroup = await store.registerAccount(queryable, other.id, 'anna', await hashPassword('whatever1'))
-    expect(otherGroup).toEqual({ ok: false, error: NAME_TAKEN })
+    expect(otherGroup).toEqual({ error: NAME_TAKEN, ok: false })
 
     expect((await store.getGroup(queryable, group.id))?.users).toHaveLength(1)
     expect((await store.getGroup(queryable, other.id))?.users).toHaveLength(0)
@@ -109,20 +109,20 @@ describe('store', () => {
   })
 
   test('lets one account take part in several groups with separate wishes', async () => {
-    const first = await createTestGroup(['Ben'])
-    const second = await createTestGroup(['Cara'])
-    const anna = await register(first.id, 'Anna')
+    const first = await createTestGroup(['Ben']),
+     second = await createTestGroup(['Cara']),
+     anna = await register(first.id, 'Anna')
 
     expect((await store.joinGroup(queryable, second.id, anna.id)).ok).toBe(true)
     expect((await store.joinGroup(queryable, second.id, anna.id)).ok).toBe(true)
     expect((await store.getGroup(queryable, second.id))?.users.filter(u => u.accountId === anna.id)).toHaveLength(1)
 
-    const inFirst = await participant(first.id, anna.id)
-    const inSecond = await participant(second.id, anna.id)
+    const inFirst = await participant(first.id, anna.id),
+     inSecond = await participant(second.id, anna.id)
     expect(inFirst.id).not.toBe(inSecond.id)
     expect(inSecond.name).toBe('Anna')
 
-    await store.saveWish(queryable, first.id, inFirst.id, { title: 'Book', description: 'A good one' })
+    await store.saveWish(queryable, first.id, inFirst.id, { description: 'A good one', title: 'Book' })
     expect((await participant(first.id, anna.id)).wish?.title).toBe('Book')
     expect((await participant(second.id, anna.id)).wish).toBeNull()
 
@@ -141,7 +141,7 @@ describe('store', () => {
     expect(await store.findParticipant(queryable, group.id, dora.id)).toBeNull()
 
     const anna = group.users.find(user => user.name === 'Anna')
-    if (!anna) throw new Error('Anna is missing')
+    if (!anna) {throw new Error('Anna is missing')}
     expect((await store.joinGroup(queryable, group.id, anna.accountId)).ok).toBe(true)
   })
 
@@ -156,9 +156,9 @@ describe('store', () => {
   })
 
   test('removes only the membership during the wish phase', async () => {
-    const group = await createTestGroup()
-    const other = await createTestGroup([])
-    const dora = await register(group.id, 'Dora')
+    const group = await createTestGroup(),
+     other = await createTestGroup([]),
+     dora = await register(group.id, 'Dora')
     await store.joinGroup(queryable, other.id, dora.id)
 
     await store.removeParticipant(queryable, group.id, (await participant(group.id, dora.id)).id)
@@ -180,8 +180,8 @@ describe('store', () => {
     expect(updated?.phase).toBe('selection')
 
     const first = group.users.at(0)
-    if (!first) throw new Error('Group has no participants')
-    expect((await store.saveWish(queryable, group.id, first.id, { title: 'Late', description: 'Too late' })).ok).toBe(false)
+    if (!first) {throw new Error('Group has no participants')}
+    expect((await store.saveWish(queryable, group.id, first.id, { description: 'Too late', title: 'Late' })).ok).toBe(false)
   })
 
   test('never assigns the same wish twice and leaves everyone with a foreign wish', async () => {
@@ -189,31 +189,31 @@ describe('store', () => {
     await addWishes(group)
     await store.startSelection(queryable, group.id)
 
-    const first = group.users.at(0)
-    const second = group.users.at(1)
-    if (!first || !second) throw new Error('Group has too few participants')
+    const first = group.users.at(0),
+     second = group.users.at(1)
+    if (!first || !second) {throw new Error('Group has too few participants')}
 
     let current = await store.getGroup(queryable, group.id)
-    if (!current) throw new Error('Group disappeared')
+    if (!current) {throw new Error('Group disappeared')}
     const firstPick = selectableWishOwners(current, first.id)[0]
-    if (!firstPick) throw new Error('First participant has nothing to select')
+    if (!firstPick) {throw new Error('First participant has nothing to select')}
     expect((await store.selectWish(queryable, group.id, first.id, firstPick)).ok).toBe(true)
 
     expect((await store.selectWish(queryable, group.id, second.id, firstPick)).ok).toBe(false)
 
     for (const user of group.users) {
       current = await store.getGroup(queryable, group.id)
-      if (!current) throw new Error('Group disappeared')
+      if (!current) {throw new Error('Group disappeared')}
       const currentUser = current.users.find(candidate => candidate.id === user.id)
-      if (currentUser?.selectedWishOf) continue
+      if (currentUser?.selectedWishOf) {continue}
 
       const pick = selectableWishOwners(current, user.id)[0]
-      if (!pick) throw new Error(`${user.name} has nothing to select`)
+      if (!pick) {throw new Error(`${user.name} has nothing to select`)}
       expect((await store.selectWish(queryable, group.id, user.id, pick)).ok).toBe(true)
     }
 
     const final = await store.getGroup(queryable, group.id)
-    if (!final) throw new Error('Group disappeared')
+    if (!final) {throw new Error('Group disappeared')}
     for (const user of final.users) {
       expect(user.selectedWishOf).not.toBeNull()
       expect(user.selectedWishOf).not.toBe(user.id)
@@ -238,20 +238,20 @@ describe('store', () => {
 
     const rows = await queryable.query<{ name: string, password_hash: string }>(
       'SELECT name, password_hash FROM wichteln_accounts',
-    )
-    const hashes = rows.map(row => row.password_hash)
+    ),
+     hashes = rows.map(row => row.password_hash)
     expect(hashes.every(hash => hash.startsWith('scrypt$'))).toBe(true)
     expect(hashes).not.toContain('same-password')
     expect(new Set(hashes).size).toBe(rows.length)
   })
 
   test('resets the account password to a generated one and forces a change', async () => {
-    const group = await createTestGroup(['Anna', 'Ben'])
-    const anna = group.users.find(user => user.name === 'Anna')
-    if (!anna) throw new Error('Anna is missing')
+    const group = await createTestGroup(['Anna', 'Ben']),
+     anna = group.users.find(user => user.name === 'Anna')
+    if (!anna) {throw new Error('Anna is missing')}
 
     const reset = await store.resetPassword(queryable, anna.accountId)
-    if (!reset.ok) throw new Error(reset.error)
+    if (!reset.ok) {throw new Error(reset.error)}
 
     expect(reset.value).toMatch(/^[a-zA-Z2-9]{10}$/)
     expect(await store.authenticateAccount(queryable, 'Anna', 'Anna-password')).toBeNull()
@@ -260,47 +260,47 @@ describe('store', () => {
     const rows = await queryable.query<{ password_hash: string }>('SELECT password_hash FROM wichteln_accounts WHERE id = $1', [anna.accountId])
     expect(rows[0]?.password_hash).not.toBe(reset.value)
 
-    expect(await store.resetPassword(queryable, randomUUID())).toEqual({ ok: false, error: 'Konto nicht gefunden.' })
+    expect(await store.resetPassword(queryable, randomUUID())).toEqual({ error: 'Konto nicht gefunden.', ok: false })
   })
 
   test('resets the password of an account that belongs to no group', async () => {
-    const group = await createTestGroup(['Anna', 'Ben'])
-    const anna = group.users.find(user => user.name === 'Anna')
-    if (!anna) throw new Error('Anna is missing')
+    const group = await createTestGroup(['Anna', 'Ben']),
+     anna = group.users.find(user => user.name === 'Anna')
+    if (!anna) {throw new Error('Anna is missing')}
     await store.removeParticipant(queryable, group.id, anna.id)
     expect(await store.listAccountGroups(queryable, anna.accountId)).toEqual([])
 
     const reset = await store.resetPassword(queryable, anna.accountId)
-    if (!reset.ok) throw new Error(reset.error)
+    if (!reset.ok) {throw new Error(reset.error)}
 
     expect(await store.authenticateAccount(queryable, 'Anna', 'Anna-password')).toBeNull()
     expect((await store.authenticateAccount(queryable, 'Anna', reset.value))?.mustChangePassword).toBe(true)
   })
 
   test('lists every account with its groups, ordered by name ignoring case', async () => {
-    const team = await createTestGroup(['ben', 'Anna'])
-    const family = await store.createGroup(queryable, 'Familie')
-    if (!family.ok) throw new Error(family.error)
-    const anna = team.users.find(user => user.name === 'Anna')
-    const ben = team.users.find(user => user.name === 'ben')
-    if (!anna || !ben) throw new Error('Participant is missing')
+    const team = await createTestGroup(['ben', 'Anna']),
+     family = await store.createGroup(queryable, 'Familie')
+    if (!family.ok) {throw new Error(family.error)}
+    const anna = team.users.find(user => user.name === 'Anna'),
+     ben = team.users.find(user => user.name === 'ben')
+    if (!anna || !ben) {throw new Error('Participant is missing')}
     expect((await store.joinGroup(queryable, family.value.id, anna.accountId)).ok).toBe(true)
     const cara = await register(family.value.id, 'Cara')
     await store.removeParticipant(queryable, family.value.id, (await participant(family.value.id, cara.id)).id)
 
     expect(await store.listAccounts(queryable)).toEqual([
-      { id: anna.accountId, name: 'Anna', groups: ['Familie', 'Team'] },
-      { id: ben.accountId, name: 'ben', groups: ['Team'] },
-      { id: cara.id, name: 'Cara', groups: [] },
+      { groups: ['Familie', 'Team'], id: anna.accountId, name: 'Anna' },
+      { groups: ['Team'], id: ben.accountId, name: 'ben' },
+      { groups: [], id: cara.id, name: 'Cara' },
     ])
   })
 
   test('changes a password and ends a forced change', async () => {
-    const group = await createTestGroup(['Anna', 'Ben'])
-    const anna = group.users.find(user => user.name === 'Anna')
-    if (!anna) throw new Error('Anna is missing')
+    const group = await createTestGroup(['Anna', 'Ben']),
+     anna = group.users.find(user => user.name === 'Anna')
+    if (!anna) {throw new Error('Anna is missing')}
     const reset = await store.resetPassword(queryable, anna.accountId)
-    if (!reset.ok) throw new Error(reset.error)
+    if (!reset.ok) {throw new Error(reset.error)}
 
     expect((await store.changePassword(queryable, anna.accountId, await hashPassword('new-password'))).ok).toBe(true)
 
@@ -311,9 +311,9 @@ describe('store', () => {
   })
 
   test('deletes a group with its memberships but keeps the accounts', async () => {
-    const group = await createTestGroup()
-    const anna = group.users.find(user => user.name === 'Anna')
-    if (!anna) throw new Error('Anna is missing')
+    const group = await createTestGroup(),
+     anna = group.users.find(user => user.name === 'Anna')
+    if (!anna) {throw new Error('Anna is missing')}
 
     await store.deleteGroup(queryable, group.id)
 

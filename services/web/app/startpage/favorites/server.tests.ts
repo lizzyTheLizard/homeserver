@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/_external/db/access'
-import { loadFavorites, saveFavorite, deleteFavorite } from './server'
+import { deleteFavorite, loadFavorites, saveFavorite } from './server'
 import { createOrModifyFavorite } from '@/app/startpage/_data/Favorite'
 import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
@@ -13,11 +13,11 @@ vi.mock('@/app/shared/auth/auth', async () => {
   }
 })
 
-const makeInput = (id = crypto.randomUUID()) => ({ id, position: 1, name: 'GitHub', url: 'https://github.com', description: 'Source code' })
+const makeInput = (id = crypto.randomUUID()) => ({ description: 'Source code', id, name: 'GitHub', position: 1, url: 'https://github.com' })
 
 describe('loadFavorites', () => {
   test('returns empty list when no favorites', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const result = await loadFavorites()
@@ -26,7 +26,7 @@ describe('loadFavorites', () => {
   })
 
   test('returns favorites for authenticated user', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     await transactional(tx => createOrModifyFavorite(tx, task.id, makeInput()))
@@ -34,14 +34,14 @@ describe('loadFavorites', () => {
     const result = await loadFavorites()
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({ name: 'GitHub', url: 'https://github.com', owner_email: task.id })
+    expect(result[0]).toMatchObject({ name: 'GitHub', owner_email: task.id, url: 'https://github.com' })
   })
 
   test('does not return other users favorites', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    await transactional(tx => createOrModifyFavorite(tx, task.id + '_other', { ...makeInput(), name: 'Other' }))
+    await transactional(tx => createOrModifyFavorite(tx, `${task.id  }_other`, { ...makeInput(), name: 'Other' }))
 
     const result = await loadFavorites()
 
@@ -51,19 +51,19 @@ describe('loadFavorites', () => {
 
 describe('saveFavorite', () => {
   test('creates a new favorite', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const input = makeInput()
-    const result = await saveFavorite(input)
+    const input = makeInput(),
+     result = await saveFavorite(input)
 
     expect(result.success).toBe(true)
-    if (!result.success) return
-    expect(result.data).toMatchObject({ id: input.id, name: 'GitHub', url: 'https://github.com', owner_email: task.id })
+    if (!result.success) {return}
+    expect(result.data).toMatchObject({ id: input.id, name: 'GitHub', owner_email: task.id, url: 'https://github.com' })
   })
 
   test('updates an existing favorite', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const input = makeInput()
@@ -71,18 +71,18 @@ describe('saveFavorite', () => {
     const result = await saveFavorite({ ...input, name: 'GitLab', url: 'https://gitlab.com' })
 
     expect(result.success).toBe(true)
-    if (!result.success) return
+    if (!result.success) {return}
     expect(result.data).toMatchObject({ id: input.id, name: 'GitLab', url: 'https://gitlab.com' })
   })
 })
 
 describe('deleteFavorite', () => {
   test('deletes an existing favorite', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const created = await transactional(tx => createOrModifyFavorite(tx, task.id, makeInput()))
-    const result = await deleteFavorite(created.id)
+    const created = await transactional(tx => createOrModifyFavorite(tx, task.id, makeInput())),
+     result = await deleteFavorite(created.id)
 
     expect(result.success).toBe(true)
 
@@ -91,11 +91,11 @@ describe('deleteFavorite', () => {
   })
 
   test('cannot delete another users favorite', async ({ task }) => {
-    const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
+    const user: UserSession = { applications: ['startpage'], email: task.id, name: 'Test User' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const otherId = task.id + '_other'
-    const created = await transactional(tx => createOrModifyFavorite(tx, otherId, makeInput()))
+    const otherId = `${task.id  }_other`,
+     created = await transactional(tx => createOrModifyFavorite(tx, otherId, makeInput()))
     await deleteFavorite(created.id)
 
     const result = await transactional(async (tx) => {

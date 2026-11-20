@@ -1,34 +1,34 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const { mockGetWhatsappStatus, mockGetWhatsappMessages } = vi.hoisted(() => ({
-  mockGetWhatsappStatus: vi.fn(),
   mockGetWhatsappMessages: vi.fn(),
+  mockGetWhatsappStatus: vi.fn(),
 }))
 
 vi.mock('../whatsapp/whatsapp', () => ({
+  archiveWhatsappChat: vi.fn(),
   getWhatsappChats: vi.fn(),
   getWhatsappMessages: mockGetWhatsappMessages,
   getWhatsappStatus: mockGetWhatsappStatus,
   sendWhatsappMessage: vi.fn(),
-  archiveWhatsappChat: vi.fn(),
 }))
 
 import getTools from './whatsapp-tools'
 
-const user = { name: 'Test User', email: 'test@test.com', applications: ['startpage'] }
+const user = { applications: ['startpage'], email: 'test@test.com', name: 'Test User' },
 
-const now = Date.now()
-const hoursAgo = (h: number) => new Date(now - h * 60 * 60 * 1000).toISOString()
-const daysAgo = (d: number) => new Date(now - d * 24 * 60 * 60 * 1000).toISOString()
+ now = Date.now(),
+ hoursAgo = (h: number) => new Date(now - h * 60 * 60 * 1000).toISOString(),
+ daysAgo = (d: number) => new Date(now - d * 24 * 60 * 60 * 1000).toISOString()
 
 function message(id: string, messageTimestamp: string) {
-  return { id, fromMe: false, fromName: 'Alex', content: `content ${id}`, messageTimestamp }
+  return { content: `content ${id}`, fromMe: false, fromName: 'Alex', id, messageTimestamp }
 }
 
 async function getMessages(chatId: string): Promise<{ id: string }[]> {
   const tools = getTools(user)
   // oxlint-disable-next-line typescript/no-non-null-assertion
-  return (await tools.get_whatsapp_messages.execute!({ chatId }, { toolCallId: '1', messages: [], context: {} })) as { id: string }[]
+  return (await tools.get_whatsapp_messages.execute!({ chatId }, { context: {}, messages: [], toolCallId: '1' })) as { id: string }[]
 }
 
 describe('get_whatsapp_messages', () => {

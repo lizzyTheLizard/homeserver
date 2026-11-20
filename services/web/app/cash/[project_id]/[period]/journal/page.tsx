@@ -20,9 +20,9 @@ export interface JournalPageProps {
 
 export default async function Page({ params, searchParams }: JournalPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const period = fromUrlString((await params).period)
-    const projectId = (await params).project_id
-    const accountId = (await searchParams).accountId
+    const period = fromUrlString((await params).period),
+     projectId = (await params).project_id,
+     {accountId} = (await searchParams)
     if (accountId) {
       const journalData = await loadAccountJournal(period, projectId, accountId)
       return (

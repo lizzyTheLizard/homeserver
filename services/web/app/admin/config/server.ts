@@ -19,30 +19,30 @@ function makeEntry(key: string): ConfigEntry {
   const value = process.env[key]
   return {
     key,
-    value,
     secret: SECRET_PATTERN.test(key),
     truncate: (value?.length ?? 0) > 80,
+    value,
   }
 }
 
 export async function loadConfig(): Promise<ConfigSection[]> {
   await getAuthenticatedUserSession('admin')
 
-  const allKeys = Object.keys(process.env).sort()
-  const runtimeKeys = allKeys.filter(k => /^(NODE_|HOME|PORT|PWD|SHELL|USER|APP_URL)/.test(k) || ['HOSTNAME', 'RAM', 'TZ', 'PATH'].includes(k))
-  const authKeys = allKeys.filter(k => /^(CLIENT_|ISSUER|SESSION_|OID_|OPLN_|COOKIE_NAME|ADMIN_)/.test(k) || k.endsWith('_API_KEY'))
-  const dbKeys = allKeys.filter(k => k.startsWith('DB_'))
-  const devKeys = allKeys.filter(k => k.startsWith('WSL'))
-  const nodeKeys = allKeys.filter(k => /^(npm_|NODE_|NVM_|NODE|pnpm|COREPACK|PNPM)/.test(k))
-  const categorized = new Set([...runtimeKeys, ...authKeys, ...dbKeys, ...devKeys, ...nodeKeys])
-  const appKeys = allKeys.filter(k => !categorized.has(k))
+  const allKeys = Object.keys(process.env).sort(),
+   runtimeKeys = allKeys.filter(k => /^(NODE_|HOME|PORT|PWD|SHELL|USER|APP_URL)/.test(k) || ['HOSTNAME', 'RAM', 'TZ', 'PATH'].includes(k)),
+   authKeys = allKeys.filter(k => /^(CLIENT_|ISSUER|SESSION_|OID_|OPLN_|COOKIE_NAME|ADMIN_)/.test(k) || k.endsWith('_API_KEY')),
+   dbKeys = allKeys.filter(k => k.startsWith('DB_')),
+   devKeys = allKeys.filter(k => k.startsWith('WSL')),
+   nodeKeys = allKeys.filter(k => /^(npm_|NODE_|NVM_|NODE|pnpm|COREPACK|PNPM)/.test(k)),
+   categorized = new Set([...runtimeKeys, ...authKeys, ...dbKeys, ...devKeys, ...nodeKeys]),
+   appKeys = allKeys.filter(k => !categorized.has(k))
 
   return [
-    { id: 'runtime', label: 'Runtime', entries: runtimeKeys.map(makeEntry) },
-    { id: 'auth', label: 'Auth / OIDC', entries: authKeys.map(makeEntry) },
-    { id: 'db', label: 'Database', entries: dbKeys.map(makeEntry) },
-    { id: 'dev', label: 'Development', entries: devKeys.map(makeEntry) },
-    { id: 'node', label: 'Node / NPM', entries: nodeKeys.map(makeEntry) },
-    { id: 'app', label: 'Various', entries: appKeys.map(makeEntry) },
+    { entries: runtimeKeys.map(makeEntry), id: 'runtime', label: 'Runtime' },
+    { entries: authKeys.map(makeEntry), id: 'auth', label: 'Auth / OIDC' },
+    { entries: dbKeys.map(makeEntry), id: 'db', label: 'Database' },
+    { entries: devKeys.map(makeEntry), id: 'dev', label: 'Development' },
+    { entries: nodeKeys.map(makeEntry), id: 'node', label: 'Node / NPM' },
+    { entries: appKeys.map(makeEntry), id: 'app', label: 'Various' },
   ].filter(s => s.entries.length > 0)
 }

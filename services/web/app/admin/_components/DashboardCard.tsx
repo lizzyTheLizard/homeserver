@@ -1,4 +1,4 @@
-import { Temporal } from '@js-temporal/polyfill'
+import type { Temporal } from '@js-temporal/polyfill'
 import styles from './DashboardCard.module.css'
 import Link from 'next/link'
 import { DateTime } from '@/app/shared/_components/DateTime'
@@ -39,8 +39,8 @@ function Line({ item }: { item: LineItem }) {
     inner = <DateTime date={{ epochMilliseconds: item.date.epochMilliseconds }} />
   }
   else {
-    const text = item.value !== undefined ? String(item.value) : '-'
-    const colorStyle = item.accent ? { color: item.accent } : undefined
+    const text = item.value !== undefined ? String(item.value) : '-',
+     colorStyle = item.accent ? { color: item.accent } : undefined
     inner = item.url
       ? <a href={item.url} className={styles.link} style={colorStyle}>{text}</a>
       : <span style={colorStyle}>{text}</span>

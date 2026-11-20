@@ -3,9 +3,9 @@ import { expect, fireEvent, fn, within } from 'storybook/test'
 import { AiActionList } from './AiActionList'
 
 const meta = {
-  title: 'Shared/Chat/AiActionList',
   component: AiActionList,
   tags: ['autodocs'],
+  title: 'Shared/Chat/AiActionList',
 } satisfies Meta<typeof AiActionList>
 export default meta
 
@@ -22,8 +22,8 @@ export const Normal: StoryObj<typeof meta> = {
 
 export const Disabled: StoryObj<typeof meta> = {
   args: {
-    disabled: true,
     actions: [{ label: 'Extend', onSelect: fn() }],
+    disabled: true,
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByRole('button', { name: 'Extend' })).toBeDisabled()

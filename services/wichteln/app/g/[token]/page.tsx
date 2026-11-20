@@ -10,14 +10,14 @@ import { GroupLoginForm, RegisterForm } from '../../components'
 export const dynamic = 'force-dynamic'
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params
-  const db = await getDb()
-  const group = await getGroupByInviteToken(db, token)
-  if (!group) notFound()
+  const { token } = await params,
+   db = await getDb(),
+   group = await getGroupByInviteToken(db, token)
+  if (!group) {notFound()}
 
-  const s = await getSession()
-  const account = s?.role === 'user' ? await getAccount(db, s.accountId) : null
-  if (account) return <SignedInInvite group={group} account={account} />
+  const s = await getSession(),
+   account = s?.role === 'user' ? await getAccount(db, s.accountId) : null
+  if (account) {return <SignedInInvite group={group} account={account} />}
 
   return (
     <div className="login stack">
@@ -55,10 +55,10 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
 /** Joins the signed-in account during the wish phase (idempotent) and opens the group. */
 async function SignedInInvite({ group, account }: { group: Group, account: Account }) {
-  if (account.mustChangePassword) redirect(changePasswordPath(`/g/${group.inviteToken}`))
+  if (account.mustChangePassword) {redirect(changePasswordPath(`/g/${group.inviteToken}`))}
 
   const joined = await withTransaction(db => joinGroup(db, group.id, account.id))
-  if (joined.ok) redirect(`/gruppen/${group.id}`)
+  if (joined.ok) {redirect(`/gruppen/${group.id}`)}
 
   return (
     <div className="card login">

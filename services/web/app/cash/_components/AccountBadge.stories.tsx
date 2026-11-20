@@ -3,10 +3,10 @@ import { AccountBadge } from './AccountBadge'
 import { ACCOUNT_TYPES } from '../_data/AccountType'
 
 const meta = {
-  title: 'Cash/AccountBadge',
+  args: { name: 'Bank Account', type: 'Cash' },
   component: AccountBadge,
   tags: ['autodocs'],
-  args: { name: 'Bank Account', type: 'Cash' },
+  title: 'Cash/AccountBadge',
 } satisfies Meta<typeof AccountBadge>
 export default meta
 

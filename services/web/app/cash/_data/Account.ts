@@ -1,6 +1,7 @@
 import { logger } from '@/app/shared/logger'
-import { AccountType } from './AccountType'
-import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { AccountType } from './AccountType'
+import type { Entity, Queryable} from '@/app/shared/_external/db/access';
+import { count, removeNull } from '@/app/shared/_external/db/access'
 
 export interface AccountInput {
   id: string
@@ -33,12 +34,12 @@ export async function createOrModifyAccount(client: Queryable, ownerId: string, 
   const result1 = await client.query<Account>(
     'SELECT * FROM account WHERE id = $1 AND owner_email = $2',
     [input.id, ownerId],
-  )
-  const query = result1.rows[0]
+  ),
+   query = result1.rows[0]
     ? 'UPDATE account SET name = $3, type = $4, archived = $6, updated_at = NOW() WHERE id = $1 AND owner_email = $5 AND project_id=$2 RETURNING *'
-    : 'INSERT INTO account (id, project_id, name, type, owner_email, archived, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *'
-  const result = await client.query<Account>(query, [input.id, input.project_id, input.name, input.type, ownerId, input.archived])
-  if (!result.rows[0]) throw new Error('Failed to modify account')
+    : 'INSERT INTO account (id, project_id, name, type, owner_email, archived, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *',
+   result = await client.query<Account>(query, [input.id, input.project_id, input.name, input.type, ownerId, input.archived])
+  if (!result.rows[0]) {throw new Error('Failed to modify account')}
   logger.debug(`Modified account '${input.name}' for owner ${ownerId}`)
   return removeNull(result.rows[0])
 }

@@ -1,7 +1,7 @@
 'use client'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Profile } from '../../_data/Profile'
+import type { Profile } from '../../_data/Profile'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
@@ -25,13 +25,13 @@ const profileColumns = [
 ]
 
 export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
-  const [profiles, addProfile, removeProfile] = useListState(profilesIn)
-  const [title, setTitle] = useState<string>('New Profile')
-  const [sidebarId, openSidebar] = useSidebar()
-  const [id, setId] = useState('')
-  const [language, setLanguage] = useState('')
-  const [text, setText] = useState('')
-  const [noDelete, setNoDelete] = useState(false)
+  const [profiles, addProfile, removeProfile] = useListState(profilesIn),
+   [title, setTitle] = useState<string>('New Profile'),
+   [sidebarId, openSidebar] = useSidebar(),
+   [id, setId] = useState(''),
+   [language, setLanguage] = useState(''),
+   [text, setText] = useState(''),
+   [noDelete, setNoDelete] = useState(false)
 
   function showProfile(profile?: Profile) {
     setId(profile?.id ?? randomUUID())
@@ -59,7 +59,7 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
         onRowClick={(profile) => { showProfile(profile) }}
         columns={profileColumns}
         data={profiles}
-        initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        initialSortingOrder={[{ direction: 'ASC', key: 'language' }]}
         renderMobile={renderMobile}
       />
       <Sidebar

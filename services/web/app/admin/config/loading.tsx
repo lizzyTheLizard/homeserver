@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <main>
       <Config data={[]} />
-      <LoadingSpinner></LoadingSpinner>
+      <LoadingSpinner />
     </main>
   )
 }

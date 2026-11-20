@@ -1,22 +1,22 @@
-import { describe, expect, test, beforeAll, vi } from 'vitest'
+import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '../db'
 import { setMicrosoftToken } from './data'
 import { getMicrosoftCalendarWorker } from './calendar'
 import type { UserSession } from '../session'
 
-const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
+const {TEST_MICROSOFT_REFRESH_TOKEN} = process.env
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-calendar', () => {
   const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
   let user: UserSession
 
   beforeAll(async () => {
-    user = { name: 'Test', email: 'calendar-test@test.com', applications: ['startpage'] }
+    user = { applications: ['startpage'], email: 'calendar-test@test.com', name: 'Test' }
     await transactional(db => setMicrosoftToken(db, user.email, {
       access_token: '',
-      refresh_token: token,
       expires_at: 0,
+      refresh_token: token,
     }))
   })
 
@@ -33,8 +33,8 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-calendar', () => {
   })
 
   test('getAllEvents returns events with Temporal types', async () => {
-    const worker = await getMicrosoftCalendarWorker(user)
-    const events = worker.getAllEvents()
+    const worker = await getMicrosoftCalendarWorker(user),
+     events = worker.getAllEvents()
 
     expect(Array.isArray(events)).toBe(true)
     for (const event of events) {
@@ -47,10 +47,10 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-calendar', () => {
   })
 
   test('getAllEvents accepts optional date range', async () => {
-    const now = Temporal.Now.instant()
-    const nextWeek = now.add({ hours: 7 * 24 })
-    const worker = await getMicrosoftCalendarWorker(user)
-    const events = worker.getAllEvents(now, nextWeek)
+    const now = Temporal.Now.instant(),
+     nextWeek = now.add({ hours: 7 * 24 }),
+     worker = await getMicrosoftCalendarWorker(user),
+     events = worker.getAllEvents(now, nextWeek)
 
     expect(Array.isArray(events)).toBe(true)
   })

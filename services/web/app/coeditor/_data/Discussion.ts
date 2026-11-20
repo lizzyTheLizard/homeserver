@@ -1,5 +1,6 @@
 import { logger } from '@/app/shared/logger'
-import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Entity, Queryable} from '@/app/shared/_external/db/access';
+import { count, removeNull } from '@/app/shared/_external/db/access'
 
 export interface DiscussionInput {
   id: string
@@ -41,7 +42,7 @@ export async function createDiscussion(client: Queryable, owner: string, input: 
     'INSERT INTO discussion (id, text, title, owner_email, template_id, context, parameters) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
     [input.id, input.text, input.title, owner, input.template_id, input.context, JSON.stringify(input.parameters)],
   )
-  if (!result.rows[0]) throw new Error('Failed to create discussion')
+  if (!result.rows[0]) {throw new Error('Failed to create discussion')}
   logger.debug(`Started new discussion ${result.rows[0].id} for owner ${owner}`)
   return removeNull(result.rows[0])
 }
@@ -49,7 +50,7 @@ export async function createDiscussion(client: Queryable, owner: string, input: 
 export async function modifyDiscussion(client: Queryable, owner: string, input: DiscussionInput): Promise<Discussion> {
   const result = await client.query<Discussion>('UPDATE discussion SET text = $2, title = $3, template_id = $4, context = $5, parameters = $6, updated_at = NOW() WHERE id = $1 AND owner_email = $7 RETURNING *',
     [input.id, input.text, input.title, input.template_id, input.context, JSON.stringify(input.parameters), owner])
-  if (!result.rows[0]) throw new Error('Failed to modify discussion')
+  if (!result.rows[0]) {throw new Error('Failed to modify discussion')}
   logger.debug(`Modified discussion ${result.rows[0].id} for owner ${owner}`)
   return removeNull(result.rows[0])
 }

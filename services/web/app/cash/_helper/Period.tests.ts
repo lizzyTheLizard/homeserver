@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { endDate, lastDay, toUrlString, startDate, fromUrlString, todayOrInPeriod } from './Period'
+import { endDate, fromUrlString, lastDay, startDate, toUrlString, todayOrInPeriod } from './Period'
 import { Temporal } from '@js-temporal/polyfill'
 
 describe('Period', () => {

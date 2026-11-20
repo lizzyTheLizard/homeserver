@@ -3,8 +3,8 @@
 export type ErrorPageProps = { error: Error } | { message: string, name: string }
 
 export function ErrorPage(props: ErrorPageProps) {
-  const name = 'name' in props ? props.name : props.error.name
-  const message = 'error' in props ? props.error.message : props.message
+  const name = 'name' in props ? props.name : props.error.name,
+   message = 'error' in props ? props.error.message : props.message
   return (
     <main>
       <h1>{name}</h1>
@@ -18,7 +18,7 @@ export function ErrorPage(props: ErrorPageProps) {
         {' '}
         <a href="#" onClick={(e) => { history.back(); e.preventDefault() }}>go back to the last page</a>
       </p>
-      {'error' in props && (<div style={{ whiteSpace: 'pre-wrap', color: 'red', fontSize: 'small' }}>{props.error.stack}</div>)}
+      {'error' in props && (<div style={{ color: 'red', fontSize: 'small', whiteSpace: 'pre-wrap' }}>{props.error.stack}</div>)}
     </main>
   )
 }

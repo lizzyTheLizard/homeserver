@@ -1,7 +1,7 @@
 'use client'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Template } from '../../_data/Template'
+import type { Template } from '../../_data/Template'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
@@ -25,14 +25,14 @@ const templateColumns = [
 ]
 
 export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
-  const [templates, addTemplate, removeTemplate] = useListState(templatesIn)
-  const [title, setTitle] = useState<string>('New Template')
-  const [sidebarId, openSidebar] = useSidebar()
-  const [id, setId] = useState('')
-  const [language, setLanguage] = useState('')
-  const [text, setText] = useState('')
-  const [name, setName] = useState('')
-  const [noDelete, setNoDelete] = useState(false)
+  const [templates, addTemplate, removeTemplate] = useListState(templatesIn),
+   [title, setTitle] = useState<string>('New Template'),
+   [sidebarId, openSidebar] = useSidebar(),
+   [id, setId] = useState(''),
+   [language, setLanguage] = useState(''),
+   [text, setText] = useState(''),
+   [name, setName] = useState(''),
+   [noDelete, setNoDelete] = useState(false)
 
   function showTemplate(template?: Template) {
     setId(template?.id ?? randomUUID())
@@ -62,14 +62,14 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
         onRowClick={(template) => { showTemplate(template) }}
         columns={templateColumns}
         data={templates}
-        initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
+        initialSortingOrder={[{ direction: 'ASC', key: 'language' }]}
         renderMobile={renderMobile}
       />
       <Sidebar
         id={sidebarId}
         title={title}
         type="Template"
-        onSave={() => saveTemplate({ id, language, text, name })}
+        onSave={() => saveTemplate({ id, language, name, text })}
         onAfterSave={addTemplate}
         onDelete={() => deleteTemplate(id)}
         onAfterDelete={() => { removeTemplate(id) }}

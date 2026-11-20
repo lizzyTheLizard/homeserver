@@ -12,8 +12,8 @@ main()
 // Sets up and starts the REST API the Next.js app and the assistant call.
 function main(): void {
   // One supervisor per user, created lazily on first use.
-  const supervisors = new Map<string, Supervisor>()
-  const app = express()
+  const supervisors = new Map<string, Supervisor>(),
+   app = express()
 
   function supervisorFor(userId: string): Supervisor {
     let supervisor = supervisors.get(userId)
@@ -26,8 +26,8 @@ function main(): void {
 
   app.use(requestTracing)
   // The wacli webhook needs the raw body to verify the HMAC signature, so it is
-  // mounted before the JSON parser that the rest of the API relies on.
-  app.post('/sessions/:userId/webhook', express.raw({ type: '*/*', limit: '1mb' }), async (req: SessionRequest, res) => {
+  // Mounted before the JSON parser that the rest of the API relies on.
+  app.post('/sessions/:userId/webhook', express.raw({ limit: '1mb', type: '*/*' }), async (req: SessionRequest, res) => {
     const supervisor = supervisors.get(req.params.userId)
     if (!supervisor) {
       res.status(404).json({ error: 'webhook: no session' })
@@ -76,7 +76,7 @@ function main(): void {
 
   app.post('/sessions/:userId/disconnect', async (req: SessionRequest, res) => {
     const existing = supervisors.get(req.params.userId)
-    if (existing) await existing.disconnect()
+    if (existing) {await existing.disconnect()}
     res.status(204).end()
   })
 
@@ -86,7 +86,7 @@ function main(): void {
   })
 
   app.get('/sessions/:userId/messages', async (req: SessionRequest, res) => {
-    const chatId = req.query.chatId
+    const {chatId} = req.query
     if (typeof chatId !== 'string' || !chatId) {
       res.status(400).json({ error: 'missing chatId query parameter' })
       return

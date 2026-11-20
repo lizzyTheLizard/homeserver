@@ -4,9 +4,6 @@ import { boolColumn, dateColumn, enumColumn, textColumn } from './DataTableColum
 import { Temporal } from '@js-temporal/polyfill'
 
 const meta = {
-  title: 'Shared/DataTable',
-  component: DataTable,
-  tags: ['autodocs'],
   args: {
     columns: [textColumn('row1', { header: 'Header 1', sort: false }), textColumn('row2', { header: 'Header 2', sort: false })],
     data: [
@@ -14,6 +11,9 @@ const meta = {
       { id: '2', row1: 'Row 2, Cell 1', row2: 'Row 2, Cell 2' },
     ],
   },
+  component: DataTable,
+  tags: ['autodocs'],
+  title: 'Shared/DataTable',
 } satisfies Meta<typeof DataTable<{ id: string, row1: string, row2: string }>>
 export default meta
 
@@ -28,16 +28,16 @@ export const Empty: StoryObj<typeof meta> = {
 
 export const Mobile: StoryObj<typeof meta> = {
   globals: {
-    viewport: { value: 'mobile1', isRotated: false },
+    viewport: { isRotated: false, value: 'mobile1' },
   },
 }
 
 export const MobileEmpty: StoryObj<typeof meta> = {
-  globals: {
-    viewport: { value: 'mobile1', isRotated: false },
-  },
   args: {
     data: [],
+  },
+  globals: {
+    viewport: { isRotated: false, value: 'mobile1' },
   },
 }
 
@@ -52,7 +52,7 @@ export const Sorting: StoryObj<Complicated> = {
       dateColumn('date', { header: 'Date' }),
       boolColumn('bool', { header: 'Boolean' }),
     ],
-    data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }), bool: i % 2 === 0 })),
+    data: [...Array(200).keys()].map(i => ({ bool: i % 2 === 0, date: Temporal.PlainDate.from({ day: (i % 30) + 1, month: 1, year: 2020 }), id: i.toString(), select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, text: `This is text number ${i.toString()}` })),
   },
 }
 
@@ -64,7 +64,7 @@ export const Search: StoryObj<Complicated> = {
       dateColumn('date', { header: 'Date' }),
       boolColumn('bool', { header: 'Boolean' }),
     ],
-    data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }), bool: i % 2 === 0 })),
+    data: [...Array(200).keys()].map(i => ({ bool: i % 2 === 0, date: Temporal.PlainDate.from({ day: (i % 30) + 1, month: 1, year: 2020 }), id: i.toString(), select: `A${((i % 3) + 1).toString()}` as ComplicatedEnum, text: `This is text number ${i.toString()}` })),
     searchLabel: 'Search…',
   },
 }

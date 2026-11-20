@@ -2,7 +2,7 @@ import 'server-only'
 import { Pool } from 'pg'
 import type { PoolClient } from 'pg'
 import { getConfig } from './config'
-import { applyMigrations, MIGRATION_LOCK_ID } from './migrate'
+import { MIGRATION_LOCK_ID, applyMigrations } from './migrate'
 
 /** Minimal query interface shared by the pg pool, a transaction client and PGlite. */
 export interface Queryable {
@@ -48,8 +48,8 @@ export async function query<T>(sql: string, params: unknown[] = []): Promise<T[]
 
 /** Runs `fn` inside a transaction, rolling back when it throws. */
 export async function withTransaction<T>(fn: (db: Queryable) => Promise<T>): Promise<T> {
-  const pool = await getPool()
-  const client = await pool.connect()
+  const pool = await getPool(),
+   client = await pool.connect()
   try {
     await client.query('BEGIN')
     const result = await fn(new PgQueryable(client))

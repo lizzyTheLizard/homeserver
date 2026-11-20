@@ -2,16 +2,16 @@
 
 import { Icon } from '../Icon'
 import styles from './AiConnectionStatusIndicator.module.css'
-import { ChatState } from './AiChatState'
+import type { ChatState } from './AiChatState'
 
 export interface AiConnectionStatusIndicatorProps {
   state: ChatState
 }
 
 export function AiConnectionStatusIndicator({ state }: AiConnectionStatusIndicatorProps) {
-  let iconName: 'error' | 'fatal' | 'reconnect'
-  let textContent: string
-  let warn = false
+  let iconName: 'error' | 'fatal' | 'reconnect',
+   textContent: string,
+   warn = false
 
   switch (state.type) {
     case 'wait-for-reconnecting':
@@ -36,14 +36,14 @@ export function AiConnectionStatusIndicator({ state }: AiConnectionStatusIndicat
       return null
   }
 
-  const textClass = warn ? styles.textAmber : styles.textRed
-  const iconClass = warn ? styles.iconAmber : styles.iconRed
-  const bubbleColorClass = warn ? styles.bubbleAmber : styles.bubbleRed
+  const textClass = warn ? styles.textAmber : styles.textRed,
+   iconClass = warn ? styles.iconAmber : styles.iconRed,
+   bubbleColorClass = warn ? styles.bubbleAmber : styles.bubbleRed
 
   return (
     <div className={styles.container}>
       <div className={styles.message}>
-        <div className={styles.bubble + ' ' + bubbleColorClass}>
+        <div className={`${styles.bubble  } ${  bubbleColorClass}`}>
           <div className={styles.iconWrapper}>
             <Icon name={iconName} className={iconClass} />
           </div>

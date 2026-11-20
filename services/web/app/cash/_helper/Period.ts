@@ -11,28 +11,28 @@ export interface Period {
 export const all: Period = { }
 
 export function fromUrlString(s: string): Period {
-  if (s === 'ALL') return all
+  if (s === 'ALL') {return all}
   if (s === 'CURRENT') {
     const date = Temporal.Now.plainDateISO().subtract({ months: 1 })
-    return { current: true, year: date.year, month: date.month }
+    return { current: true, month: date.month, year: date.year }
   }
   const parts = s.split('-').map(part => parseInt(part))
-  return { current: false, year: parts[0], month: parts[1], day: parts[2], openEnded: s.endsWith('+') }
+  return { current: false, day: parts[2], month: parts[1], openEnded: s.endsWith('+'), year: parts[0] }
 }
 
 export function toUrlString(period: Period): string {
-  if (period.current) return 'CURRENT'
+  if (period.current) {return 'CURRENT'}
   return toString(period)
 }
 
 export function toString(period: Period): string {
-  if (period.year === undefined) return 'ALL'
+  if (period.year === undefined) {return 'ALL'}
   let result = period.year.toString().padStart(4, '0')
   if (period.month === undefined)
-    return `${result}${period.openEnded ? '+' : ''}`
+    {return `${result}${period.openEnded ? '+' : ''}`}
   result += `-${period.month.toString().padStart(2, '0')}`
   if (period.day === undefined)
-    return `${result}${period.openEnded ? '+' : ''}`
+    {return `${result}${period.openEnded ? '+' : ''}`}
   result += `-${period.day.toString().padStart(2, '0')}`
   return `${result}${period.openEnded ? '+' : ''}`
 }
@@ -42,34 +42,34 @@ export function startDate(period: Period): string {
 }
 
 export function endDate(period: Period): string {
-  if (period.year === undefined || period.openEnded) return '9999-12-31'
+  if (period.year === undefined || period.openEnded) {return '9999-12-31'}
   const start = temporalFromPeriod(period)
-  if (period.month === undefined) return start.add({ years: 1 }).toString()
-  if (period.day === undefined) return start.add({ months: 1 }).toString()
+  if (period.month === undefined) {return start.add({ years: 1 }).toString()}
+  if (period.day === undefined) {return start.add({ months: 1 }).toString()}
   return start.add({ days: 1 }).toString()
 }
 
 export function lastDay(period: Period): string {
-  if (period.year === undefined || period.openEnded) return '9999-12-31'
+  if (period.year === undefined || period.openEnded) {return '9999-12-31'}
   const start = temporalFromPeriod(period)
-  if (period.month === undefined) return start.add({ years: 1 }).subtract({ days: 1 }).toString()
-  if (period.day === undefined) return start.add({ months: 1 }).subtract({ days: 1 }).toString()
+  if (period.month === undefined) {return start.add({ years: 1 }).subtract({ days: 1 }).toString()}
+  if (period.day === undefined) {return start.add({ months: 1 }).subtract({ days: 1 }).toString()}
   return start.toString()
 }
 
 export function todayOrInPeriod(period: Period): string {
-  const today = Temporal.Now.plainDateISO()
-  const start = Temporal.PlainDate.from(startDate(period))
-  const end = Temporal.PlainDate.from(lastDay(period))
-  if (Temporal.PlainDate.compare(today, start) < 0) return start.toString()
-  if (Temporal.PlainDate.compare(today, end) > 0) return end.toString()
+  const today = Temporal.Now.plainDateISO(),
+   start = Temporal.PlainDate.from(startDate(period)),
+   end = Temporal.PlainDate.from(lastDay(period))
+  if (Temporal.PlainDate.compare(today, start) < 0) {return start.toString()}
+  if (Temporal.PlainDate.compare(today, end) > 0) {return end.toString()}
   return today.toString()
 }
 
 function temporalFromPeriod(period: Period): Temporal.PlainDate {
   return Temporal.PlainDate.from({
-    year: period.year ?? 1,
+    day: period.day ?? 1,
     month: period.month ?? 1,
-    day: period.day ?? 1 },
+    year: period.year ?? 1 },
   )
 }

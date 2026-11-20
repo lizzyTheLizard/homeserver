@@ -1,4 +1,4 @@
-import { ColumnDefinition } from './DataTable'
+import type { ColumnDefinition } from './DataTable'
 
 export interface SortingOrder {
   key: string
@@ -15,7 +15,7 @@ export function sortAndFilter<Data>(data: Data[], sortingOrder: SortingOrder[], 
   }
   sortingOrder.forEach((sorting) => {
     const sort = columns.find(c => c.key === sorting.key)?.sort
-    if (!sort) return
+    if (!sort) {return}
     const multiplier = sorting.direction === 'DESC' ? -1 : 1
     result = result.sort((a, b) => multiplier * sort(a[sorting.key as keyof Data], b[sorting.key as keyof Data]))
   })

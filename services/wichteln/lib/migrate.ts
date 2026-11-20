@@ -34,8 +34,8 @@ export async function applyMigrations(db: Queryable): Promise<void> {
     )
   `)
 
-  const planned = await readPlannedMigrations()
-  const applied = new Map(
+  const planned = await readPlannedMigrations(),
+   applied = new Map(
     (await db.query<AppliedMigration>('SELECT name, hash FROM wichteln_migrations')).map(m => [m.name, m.hash]),
   )
   let seenUnapplied = false
@@ -64,15 +64,15 @@ export async function applyMigrations(db: Queryable): Promise<void> {
 async function readPlannedMigrations(): Promise<PlannedMigration[]> {
   const names = (await fs.readdir(MIGRATIONS_DIR))
     .filter(name => name.endsWith('.sql'))
-    .sort()
+    .sort(),
 
-  const migrations: PlannedMigration[] = []
+   migrations: PlannedMigration[] = []
   for (const name of names) {
     const content = (await fs.readFile(path.join(MIGRATIONS_DIR, name), 'utf8')).replaceAll(/\r\n/g, '\n')
     migrations.push({
-      name,
       content,
       hash: createHash('sha256').update(content).digest('hex'),
+      name,
     })
   }
   return migrations

@@ -1,17 +1,19 @@
-import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
+import type { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { validateObject } from '@/app/shared/_helper/validation'
-import { generateText, ModelMessage, Output } from 'ai'
-import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import type { ModelMessage} from 'ai';
+import { Output, generateText } from 'ai'
+import type { GroqLanguageModelChatOptions } from '@ai-sdk/groq';
+import { createGroq } from '@ai-sdk/groq'
 import { z } from 'zod'
 
-const GROQ_MODEL = 'openai/gpt-oss-120b'
-const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
-const model = provider(GROQ_MODEL)
-const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: false, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
-const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
+const GROQ_MODEL = 'openai/gpt-oss-120b',
+ provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch }),
+ model = provider(GROQ_MODEL),
+ groqOptions = { parallelToolCalls: false, reasoningEffort: 'low', reasoningFormat: 'hidden' } satisfies GroqLanguageModelChatOptions,
+ agentSettings = { allowSystemInMessages: true, model, providerOptions: { groq: groqOptions }, temperature: 0.2 }
 
 export interface AiPortInput {
   text?: string
@@ -31,27 +33,27 @@ interface ChatMessage {
 }
 
 export async function aiPort(input: AiPortInput, commandsSoFar: Command[]): Promise<CommandResult> {
-  const messagesSoFar = commandsSoFar.flatMap(command => mapToChatMessages(command))
-  const systemMessage = createSystemMessage(input)
-  const nextMessage = mapToChatMessages(input)[0]
-  const content = await chatCompletion(systemMessage, [...messagesSoFar, nextMessage])
-  const output = parseOutput(content)
-  if (output.error) throw new Error(`AI Communication Error: ${output.error}`)
+  const messagesSoFar = commandsSoFar.flatMap(command => mapToChatMessages(command)),
+   systemMessage = createSystemMessage(input),
+   nextMessage = mapToChatMessages(input)[0],
+   content = await chatCompletion(systemMessage, [...messagesSoFar, nextMessage]),
+   output = parseOutput(content)
+  if (output.error) {throw new Error(`AI Communication Error: ${output.error}`)}
   const newText = getFullNewText(input, output.text)
-  return { title: output.title, text: newText }
+  return { text: newText, title: output.title }
 }
 
 function toModelMessage(message: ChatMessage): ModelMessage {
   return message.role === 'assistant'
-    ? { role: 'assistant', content: [{ type: 'text', text: message.content }] }
+    ? { content: [{ text: message.content, type: 'text' }], role: 'assistant' }
     : message
 }
 
 function createSystemMessage(input: AiPortInput): string {
   const context = {
-    profile: input.profile ?? 'No profile given',
     context: input.context,
     language: input.language,
+    profile: input.profile ?? 'No profile given',
   }
   return `You are an AI editor that helps users to edit text documents.
     You can edit texts based on a given profile and context. You will get your input in the form of a JSON object with the following fields:
@@ -84,29 +86,29 @@ export function mapToChatMessages(input: AiPortInput | Command): ChatMessage[] {
   }
 
   const message = {
-    title: input.title,
-    text: input.text,
-    selection,
     command,
+    selection,
+    text: input.text,
+    title: input.title,
   }
 
   if (!('result' in input)) {
-    return [{ role: 'user', content: JSON.stringify(message) }]
+    return [{ content: JSON.stringify(message), role: 'user' }]
   }
 
   const response = { text: input.result.text, title: input.result.title }
   return [
-    { role: 'user', content: JSON.stringify(message) },
-    { role: 'assistant', content: JSON.stringify(response) },
+    { content: JSON.stringify(message), role: 'user' },
+    { content: JSON.stringify(response), role: 'assistant' },
   ]
 }
 
 async function chatCompletion(systemMessage: string, chatMessages: ChatMessage[]): Promise<string> {
   const messages: ModelMessage[] = [
-    { role: 'system', content: systemMessage },
+    { content: systemMessage, role: 'system' },
     ...chatMessages.map(toModelMessage),
-  ]
-  const result = await generateText({
+  ],
+   result = await generateText({
     ...agentSettings,
     messages,
     output: Output.json(),
@@ -127,11 +129,11 @@ export function parseOutput(content: string): z.infer<typeof AiResponseSchema> {
 
 export function getFullNewText(input: AiPortInput, newText: string): string {
   if (input.selection_end === undefined)
-    return newText
+    {return newText}
   if (input.selection_start === undefined)
-    return newText
+    {return newText}
   if (input.text === undefined)
-    return newText
+    {return newText}
 
   return input.text.substring(0, input.selection_start) + newText + input.text.substring(input.selection_end)
 }
@@ -145,9 +147,9 @@ async function loggingFetch(resource: string | URL | Request, init: RequestInit 
 }
 
 function logRequest(init: RequestInit | undefined) {
-  if (!config.AI.LOG_REQUEST_RESPONSE) return
-  const bodyString = init?.body ? String(init.body) : ''// oxlint-disable-line typescript/no-base-to-string
-  const requestSize = bodyString.length
+  if (!config.AI.LOG_REQUEST_RESPONSE) {return}
+  const bodyString = init?.body ? String(init.body) : '',// oxlint-disable-line typescript/no-base-to-string
+   requestSize = bodyString.length
   logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
   console.log(bodyString)
 }
@@ -157,8 +159,8 @@ async function logResponse(res: Response, requestStartTime: number) {
     logger.warn(`LLM API request failed with status ${res.status.toString()} ${res.statusText}`)
     return
   }
-  const cloned = res.clone()
-  const text = await cloned.text()
+  const cloned = res.clone(),
+   text = await cloned.text()
   if (config.AI.LOG_REQUEST_RESPONSE) {
     const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
     logger.debug(`LLM  response of size ${text.length.toString()} bytes received in ${timeToFirstTokenInS}s`)
@@ -169,15 +171,15 @@ async function logResponse(res: Response, requestStartTime: number) {
 }
 
 const commands: Record<PredefinedCommandType, string> = {
-  INITIALIZE: 'I want to create a new text. Create an initial draft based on the profile and the context of the whole text.',
+  EXTEND: 'I want to extend the text. Add more information and details to the text.',
   IMPROVE: 'I want to improve the text based on the profile and the context. Remove any spelling or grammar mistakes, improve the style and the readability of the text. Do not change the meaning of the text.',
+  INITIALIZE: 'I want to create a new text. Create an initial draft based on the profile and the context of the whole text.',
   REFORMULATE: 'I want to reformulate the text based on the profile and the context. Do not change the meaning of the text, but make it more concise or more elaborate as needed.',
   SUMMARIZE: 'I want to summarize the text. Make it shorter while keeping the meaning.',
-  EXTEND: 'I want to extend the text. Add more information and details to the text.',
-}
+},
 
-const AiResponseSchema = z.object({
+ AiResponseSchema = z.object({
+  error: z.string().describe('An optional error message if an error occurred').optional(),
   text: z.string().min(1).describe('The edited text or the replacement for the selected text'),
   title: z.string().min(1).describe('The new title of the document'),
-  error: z.string().describe('An optional error message if an error occurred').optional(),
 })

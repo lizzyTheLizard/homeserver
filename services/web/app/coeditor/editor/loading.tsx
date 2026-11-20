@@ -1,19 +1,19 @@
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
-import { Template } from '../_data/Template'
+import type { Template } from '../_data/Template'
 import { Editor } from './_components/Editor'
 import { Temporal } from '@js-temporal/polyfill'
 import { ActionTitle } from '@/app/shared/_components/ActionTitle'
 
 export default function Loading() {
   const dummyTemplate: Template = {
-    id: 'dummy-template',
-    name: '',
     created_at: Temporal.Now.instant().toString(),
-    updated_at: Temporal.Now.instant().toString(),
+    id: 'dummy-template',
     language: '',
-    text: 'This is a dummy template used during loading state.',
-    parameters: [],
+    name: '',
     owner_email: 'system',
+    parameters: [],
+    text: 'This is a dummy template used during loading state.',
+    updated_at: Temporal.Now.instant().toString(),
   }
 
   return (
@@ -21,7 +21,7 @@ export default function Loading() {
       <ActionTitle>
         <h1>CoEditor</h1>
       </ActionTitle>
-      <LoadingSpinner></LoadingSpinner>
+      <LoadingSpinner />
       <Editor templates={[dummyTemplate]} />
     </>
   )

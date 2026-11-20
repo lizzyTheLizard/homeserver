@@ -13,8 +13,8 @@ export const metadata = {
 
 export default function Page() {
   return serverPageFunction(metadata.title, async () => {
-    const status = await loadMicrosoftStatus()
-    const allConnected = status.mailStatus === 'connected' && status.todoStatus === 'connected' && status.calendarStatus === 'connected'
+    const status = await loadMicrosoftStatus(),
+     allConnected = status.mailStatus === 'connected' && status.todoStatus === 'connected' && status.calendarStatus === 'connected'
     return (
       <main>
         <ActionTitle>

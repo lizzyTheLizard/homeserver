@@ -16,8 +16,8 @@ export interface AccountPageProps {
 
 export default async function Page({ params }: AccountPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const paramsResolved = await params
-    const accounts = await loadAccounts(paramsResolved.project_id)
+    const paramsResolved = await params,
+     accounts = await loadAccounts(paramsResolved.project_id)
     return (
       <main>
         <ActionTitle>

@@ -12,19 +12,19 @@ export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputE
 /** An input component styled
  */
 export function Checkbox({ label, small, center, ...props }: CheckboxProps) {
-  const [internalValue, setInternalValue] = useState(false)
-  const fallbackId = useId()
-  const id = props.id ?? fallbackId
-  const inputClasses = [
+  const [internalValue, setInternalValue] = useState(false),
+   fallbackId = useId(),
+   id = props.id ?? fallbackId,
+   inputClasses = [
     style.input, props.className ?? '',
     label ? '' : style.noLabel,
     small ? style.small : '',
-  ].join(' ')
-  const containerClasses = [
+  ].join(' '),
+   containerClasses = [
     style.container,
     center ? style.center : '',
-  ].join(' ')
-  const value = props.checked ?? internalValue
+  ].join(' '),
+   value = props.checked ?? internalValue
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInternalValue(e.target.checked)

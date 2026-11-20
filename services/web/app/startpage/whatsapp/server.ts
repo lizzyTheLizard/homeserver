@@ -1,6 +1,7 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { cookies } from 'next/headers'
@@ -13,14 +14,14 @@ export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, e
     status = await assistantGet('/whatsapp/start') as SyncStatus
   }
   catch (error: unknown) {
-    return { chats: [], status: { type: 'closed' }, error: errorMessage(error) }
+    return { chats: [], error: errorMessage(error), status: { type: 'closed' } }
   }
-  if (status.type !== 'connected') return { chats: [], status }
+  if (status.type !== 'connected') {return { chats: [], status }}
   try {
     return { chats: await assistantGet('/whatsapp/chats') as Chat[], status }
   }
   catch (error: unknown) {
-    return { chats: [], status, error: errorMessage(error) }
+    return { chats: [], error: errorMessage(error), status }
   }
 }
 
@@ -34,7 +35,7 @@ export async function getStatus(): ActionResponse<SyncStatus> {
 }
 
 export async function archiveChat(chatJid: string, archived: boolean): ActionResponse<void> {
-  return toResponse(assistantPost('/whatsapp/archive-chat', { chatId: chatJid, archived }).then(() => undefined))
+  return toResponse(assistantPost('/whatsapp/archive-chat', { archived, chatId: chatJid }).then(() => undefined))
 }
 
 export async function sendChatMessage(chatJid: string, text: string): ActionResponse<void> {
@@ -55,14 +56,14 @@ async function assistantGet(path: string): Promise<unknown> {
 
 async function assistantPost(path: string, body: Record<string, unknown>): Promise<unknown> {
   return assistantFetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Cookie': await getCookieHeader() },
     body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json', 'Cookie': await getCookieHeader() },
+    method: 'POST',
   })
 }
 
 // Logs the target URL whenever an assistant call fails, so a refused
-// connection (ECONNREFUSED) is distinguishable from an assistant error.
+// Connection (ECONNREFUSED) is distinguishable from an assistant error.
 async function assistantFetch(path: string, init: RequestInit): Promise<unknown> {
   const url = `${config.ASSISTANT_INTERNAL_URL}${path}`
   let response: Response
@@ -87,20 +88,20 @@ async function getCookieHeader(): Promise<string> {
 }
 
 // Node reports a fetch connection failure as "fetch failed" and puts the
-// useful part (e.g. ECONNREFUSED) into `cause`.
+// Useful part (e.g. ECONNREFUSED) into `cause`.
 function describeError(error: unknown): string {
-  if (!(error instanceof Error)) return String(error)
-  const cause = error.cause
+  if (!(error instanceof Error)) {return String(error)}
+  const {cause} = error
   return cause instanceof Error ? `${error.message}: ${cause.message}` : error.message
 }
 
 function errorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error)
-  const match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
-  if (!match) return message
+  const message = error instanceof Error ? error.message : String(error),
+   match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
+  if (!match) {return message}
   try {
     const body = JSON.parse(match[1]) as { error?: unknown }
-    if (typeof body.error === 'string' && body.error.length > 0) return body.error
+    if (typeof body.error === 'string' && body.error.length > 0) {return body.error}
   }
   catch {
     // The assistant did not answer with a JSON error body, keep the raw message.

@@ -1,9 +1,9 @@
 import { randomBytes } from 'crypto'
 
-const SLUG_MAX = 40
-const SUFFIX_LENGTH = 10
+const SLUG_MAX = 40,
+ SUFFIX_LENGTH = 10,
 // Lowercase without look-alikes (0/o, 1/l/i), so links stay easy to read out
-const SUFFIX_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789'
+ SUFFIX_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789'
 
 /**
  * Builds an invite token from a readable slug of the group name and a random

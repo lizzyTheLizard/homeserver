@@ -10,22 +10,22 @@ const basePeriod = (overrides: Partial<Period>): Period => ({
 describe('MonthlyPeriod', () => {
   test('first uses January when month missing', () => {
     const period = basePeriod({ year: 2023 })
-    expect(first(period)).toEqual({ year: 2023, month: 1, openEnded: false, day: undefined })
+    expect(first(period)).toEqual({ day: undefined, month: 1, openEnded: false, year: 2023 })
   })
 
   test('first keeps provided month', () => {
-    const period = basePeriod({ year: 2023, month: 5 })
-    expect(first(period)).toEqual({ year: 2023, month: 5, openEnded: false, day: undefined })
+    const period = basePeriod({ month: 5, year: 2023 })
+    expect(first(period)).toEqual({ day: undefined, month: 5, openEnded: false, year: 2023 })
   })
 
   test('last uses December when month missing', () => {
     const period = basePeriod({ year: 2023 })
-    expect(last(period)).toEqual({ year: 2023, month: 12, openEnded: false, day: undefined })
+    expect(last(period)).toEqual({ day: undefined, month: 12, openEnded: false, year: 2023 })
   })
 
   test('last keeps provided month', () => {
-    const period = basePeriod({ year: 2023, month: 8 })
-    expect(last(period)).toEqual({ year: 2023, month: 8, openEnded: false, day: undefined })
+    const period = basePeriod({ month: 8, year: 2023 })
+    expect(last(period)).toEqual({ day: undefined, month: 8, openEnded: false, year: 2023 })
   })
 
   test('first/last reject ALL period', () => {
@@ -35,34 +35,34 @@ describe('MonthlyPeriod', () => {
   })
 
   test('first/last reject open-ended period', () => {
-    const period = basePeriod({ year: 2023, openEnded: true })
+    const period = basePeriod({ openEnded: true, year: 2023 })
     expect(() => first(period)).toThrow('Cannot reopen or close open-ended period')
     expect(() => last(period)).toThrow('Cannot reopen or close open-ended period')
   })
 
   test('first/last reject daily period', () => {
-    const period = basePeriod({ year: 2023, month: 5, day: 12 })
+    const period = basePeriod({ day: 12, month: 5, year: 2023 })
     expect(() => first(period)).toThrow('Cannot reopen or close daily period')
     expect(() => last(period)).toThrow('Cannot reopen or close daily period')
   })
 
   test('from builds monthly period from date', () => {
-    expect(from('2024-02-29')).toEqual({ year: 2024, month: 2, openEnded: false, day: undefined })
+    expect(from('2024-02-29')).toEqual({ day: undefined, month: 2, openEnded: false, year: 2024 })
   })
 
   test('next advances to next month', () => {
-    expect(next({ year: 2023, month: 5, openEnded: false, day: undefined }))
-      .toEqual({ year: 2023, month: 6, openEnded: false, day: undefined })
+    expect(next({ day: undefined, month: 5, openEnded: false, year: 2023 }))
+      .toEqual({ day: undefined, month: 6, openEnded: false, year: 2023 })
   })
 
   test('next wraps December to January', () => {
-    expect(next({ year: 2023, month: 12, openEnded: false, day: undefined }))
-      .toEqual({ year: 2024, month: 1, openEnded: false, day: undefined })
+    expect(next({ day: undefined, month: 12, openEnded: false, year: 2023 }))
+      .toEqual({ day: undefined, month: 1, openEnded: false, year: 2024 })
   })
 
   test('compare orders by year then month', () => {
-    expect(compare({ year: 2023, month: 5, openEnded: false, day: undefined }, { year: 2023, month: 7, openEnded: false, day: undefined })).toBeLessThan(0)
-    expect(compare({ year: 2024, month: 1, openEnded: false, day: undefined }, { year: 2023, month: 12, openEnded: false, day: undefined })).toBeGreaterThan(0)
-    expect(compare({ year: 2023, month: 7, openEnded: false, day: undefined }, { year: 2023, month: 7, openEnded: false, day: undefined })).toBe(0)
+    expect(compare({ day: undefined, month: 5, openEnded: false, year: 2023 }, { day: undefined, month: 7, openEnded: false, year: 2023 })).toBeLessThan(0)
+    expect(compare({ day: undefined, month: 1, openEnded: false, year: 2024 }, { day: undefined, month: 12, openEnded: false, year: 2023 })).toBeGreaterThan(0)
+    expect(compare({ day: undefined, month: 7, openEnded: false, year: 2023 }, { day: undefined, month: 7, openEnded: false, year: 2023 })).toBe(0)
   })
 })

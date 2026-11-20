@@ -1,5 +1,5 @@
 'use client'
-import { Project } from '@/app/cash/_data/Project'
+import type { Project } from '@/app/cash/_data/Project'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
@@ -18,19 +18,19 @@ export interface CashProps {
 
 const columns = [
   textColumn('name', { header: 'Name' }),
-  textColumn('owner_email', { style: { overflow: 'clip' }, header: 'Owner' }),
+  textColumn('owner_email', { header: 'Owner', style: { overflow: 'clip' } }),
   boolColumn('archived', { header: 'Archived' }),
 ]
 
 export function Cash({ projects: projectsIn = [] }: CashProps) {
-  const [id, setId] = useState(randomUUID())
-  const [name, setName] = useState('')
-  const [archived, setArchived] = useState(false)
-  const [owner_email, setOwnerEmail] = useState('')
-  const [projects, addProject, removeProject] = useListState<Project>(projectsIn)
-  const [title, setTitle] = useState<string>('New Project')
-  const [sidebarId, openSidebar] = useSidebar()
-  const [noDelete, setNoDelete] = useState(false)
+  const [id, setId] = useState(randomUUID()),
+   [name, setName] = useState(''),
+   [archived, setArchived] = useState(false),
+   [owner_email, setOwnerEmail] = useState(''),
+   [projects, addProject, removeProject] = useListState<Project>(projectsIn),
+   [title, setTitle] = useState<string>('New Project'),
+   [sidebarId, openSidebar] = useSidebar(),
+   [noDelete, setNoDelete] = useState(false)
 
   function showProject(project?: Project) {
     setId(project?.id ?? randomUUID())
@@ -47,7 +47,7 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
       <ActionButton onClick={() => { showProject() }}>Add Project</ActionButton>
       <DataTable
         columns={columns}
-        initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
+        initialSortingOrder={[{ direction: 'ASC', key: 'name' }]}
         data={projects}
         onRowClick={(project) => { showProject(project) }}
       />
@@ -55,7 +55,7 @@ export function Cash({ projects: projectsIn = [] }: CashProps) {
         id={sidebarId}
         title={title}
         type="Project"
-        onSave={() => saveProject({ id, name, owner_email, archived })}
+        onSave={() => saveProject({ archived, id, name, owner_email })}
         onAfterSave={addProject}
         onDelete={() => deleteProject(id)}
         onAfterDelete={() => { removeProject(id) }}

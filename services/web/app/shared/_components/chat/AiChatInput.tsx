@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
 import { AiActionList } from './AiActionList'
 import { Icon } from '../Icon'
-import { ChatState } from './AiChatState'
+import type { ChatState } from './AiChatState'
 import styles from './AiChatInput.module.css'
 
 export interface AiChatInputAction {
@@ -33,17 +33,17 @@ export function AiChatInput({
   actions,
   status,
 }: AiChatInputProps) {
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const sentMessagesRef = useRef<string[]>([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
-  const editedHistoryRef = useRef<string | null>(null)
-  const pendingCaretRef = useRef<number | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null),
+   sentMessagesRef = useRef<string[]>([]),
+   [historyIndex, setHistoryIndex] = useState(-1),
+   editedHistoryRef = useRef<string | null>(null),
+   pendingCaretRef = useRef<number | null>(null),
 
-  const canSend = !disabled && value.trim().length > 0
+   canSend = !disabled && value.trim().length > 0
 
   useEffect(() => {
     const el = textareaRef.current
-    if (!el) return
+    if (!el) {return}
     el.style.height = 'auto'
     el.style.height = `${String(el.scrollHeight)}px`
     const caret = pendingCaretRef.current
@@ -56,7 +56,7 @@ export function AiChatInput({
 
   function submit(text: string) {
     const trimmed = text.trim()
-    if (!trimmed) return
+    if (!trimmed) {return}
     sentMessagesRef.current = [...sentMessagesRef.current, trimmed]
     setHistoryIndex(-1)
     editedHistoryRef.current = null
@@ -78,12 +78,12 @@ export function AiChatInput({
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter') {
-      if (e.nativeEvent.isComposing) return
+      if (e.nativeEvent.isComposing) {return}
       if (e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault()
-        const el = e.currentTarget
-        const start = el.selectionStart
-        const end = el.selectionEnd
+        const el = e.currentTarget,
+         start = el.selectionStart,
+         end = el.selectionEnd
         pendingCaretRef.current = start + 1
         onChange(`${value.slice(0, start)}\n${value.slice(end)}`)
         return
@@ -96,11 +96,11 @@ export function AiChatInput({
     const el = textareaRef.current
     if (e.key === 'ArrowUp') {
       // Entering history mode requires the caret at the start; once navigating the history,
-      // further presses keep navigating so scrolling through entries needs no extra presses.
-      if (historyIndex === -1 && (el?.selectionStart !== 0 || el.selectionEnd !== 0)) return
+      // Further presses keep navigating so scrolling through entries needs no extra presses.
+      if (historyIndex === -1 && (el?.selectionStart !== 0 || el.selectionEnd !== 0)) {return}
       e.preventDefault()
       const history = sentMessagesRef.current
-      if (history.length === 0) return
+      if (history.length === 0) {return}
       if (historyIndex === -1) {
         editedHistoryRef.current = value
       }
@@ -110,9 +110,9 @@ export function AiChatInput({
       onChange(history[history.length - 1 - nextIndex])
     }
     else if (e.key === 'ArrowDown') {
-      if (historyIndex === -1 && (el?.selectionStart !== value.length || el.selectionEnd !== value.length)) return
+      if (historyIndex === -1 && (el?.selectionStart !== value.length || el.selectionEnd !== value.length)) {return}
       e.preventDefault()
-      if (historyIndex === -1) return
+      if (historyIndex === -1) {return}
       if (historyIndex === 0) {
         setHistoryIndex(-1)
         pendingCaretRef.current = 0
@@ -160,7 +160,7 @@ export function AiChatInput({
           aria-label={placeholder}
         />
         <button type="submit" disabled={!canSend} className={styles.sendButton} aria-label="Send" title="Send">
-          <Icon name="send" className={styles.sendIcon} style={{ width: 13, height: 13 }} />
+          <Icon name="send" className={styles.sendIcon} style={{ height: 13, width: 13 }} />
         </button>
       </form>
     </div>
@@ -168,10 +168,10 @@ export function AiChatInput({
 }
 
 function scrollCaretIntoView(el: HTMLTextAreaElement): void {
-  if (el.scrollHeight <= el.clientHeight) return
-  const caret = el.selectionStart
-  const style = getComputedStyle(el)
-  const mirror = document.createElement('div')
+  if (el.scrollHeight <= el.clientHeight) {return}
+  const caret = el.selectionStart,
+   style = getComputedStyle(el),
+   mirror = document.createElement('div')
   mirror.textContent = el.value.slice(0, caret) || ' '
   mirror.style.cssText = [
     'position: absolute',
@@ -188,11 +188,11 @@ function scrollCaretIntoView(el: HTMLTextAreaElement): void {
     'box-sizing: border-box',
   ].join(';')
   document.body.appendChild(mirror)
-  const paddingBottom = parseFloat(style.paddingBottom) || 0
-  const lineHeight = parseFloat(style.lineHeight) || 16
-  const caretBottom = mirror.clientHeight - paddingBottom
+  const paddingBottom = parseFloat(style.paddingBottom) || 0,
+   lineHeight = parseFloat(style.lineHeight) || 16,
+   caretBottom = mirror.clientHeight - paddingBottom
   document.body.removeChild(mirror)
-  const maxScroll = el.scrollHeight - el.clientHeight
-  const target = caretBottom - el.clientHeight + lineHeight
+  const maxScroll = el.scrollHeight - el.clientHeight,
+   target = caretBottom - el.clientHeight + lineHeight
   el.scrollTop = Math.min(maxScroll, Math.max(0, target))
 }

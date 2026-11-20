@@ -8,18 +8,18 @@ export interface CurrencyProps {
   currency?: string
 }
 
-// useSyncExternalStore avoids hydration mismatch by returning false on the server and true on the client
-// see https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
+// UseSyncExternalStore avoids hydration mismatch by returning false on the server and true on the client
+// See https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
 // oxlint-disable-next-line typescript/no-empty-function
 const subscribe = () => () => {}
 
 export function Currency({ amount }: CurrencyProps) {
   const isClient = useSyncExternalStore(subscribe, () => true, () => false)
-  if (!isClient) return null
+  if (!isClient) {return null}
 
   return (
     <span className={amount < 0 ? style.negative : style.positive}>
-      {amount.toLocaleString(config.NODE_PUBLIC_LOCALE, { style: 'currency', currency: config.NODE_PUBLIC_CURRENCY })}
+      {amount.toLocaleString(config.NODE_PUBLIC_LOCALE, { currency: config.NODE_PUBLIC_CURRENCY, style: 'currency' })}
     </span>
   )
 }

@@ -1,13 +1,15 @@
-import { generateText, isStepCount, ModelMessage, streamText, ToolSet } from 'ai'
+import type { ModelMessage, ToolSet } from 'ai';
+import { generateText, isStepCount, streamText } from 'ai'
 import { logger } from './logger'
-import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import type { GroqLanguageModelChatOptions } from '@ai-sdk/groq';
+import { createGroq } from '@ai-sdk/groq'
 import { config } from './config'
 
-const MAX_TOOL_ITERATIONS = 10
-const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
-const model = provider('openai/gpt-oss-120b')
-const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: true, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
-const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
+const MAX_TOOL_ITERATIONS = 10,
+ provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch }),
+ model = provider('openai/gpt-oss-120b'),
+ groqOptions = { parallelToolCalls: true, reasoningEffort: 'low', reasoningFormat: 'hidden' } satisfies GroqLanguageModelChatOptions,
+ agentSettings = { allowSystemInMessages: true, model, providerOptions: { groq: groqOptions }, temperature: 0.2 }
 
 export interface SendOptions {
   messages: ModelMessage[]
@@ -19,39 +21,39 @@ export interface SendOptions {
 export async function send(options: SendOptions): Promise<string> {
   const responseMessages = options.onChunk ? await stream(options) : await generate(options)
   responseMessages.forEach(m => options.messages.push(m))
-  if (responseMessages.length === 0) throw new Error('No response messages received from assistant')
+  if (responseMessages.length === 0) {throw new Error('No response messages received from assistant')}
   const lastMessage = responseMessages[responseMessages.length - 1].content
-  if (!Array.isArray(lastMessage)) throw new Error('Last message content is not an array')
-  if (lastMessage.length === 0) return ''
+  if (!Array.isArray(lastMessage)) {throw new Error('Last message content is not an array')}
+  if (lastMessage.length === 0) {return ''}
   const content = lastMessage.find(c => c.type === 'text')
-  if (content && 'text' in content) return content.text
+  if (content && 'text' in content) {return content.text}
   throw new Error('Last message content is not text')
 }
 
 async function stream(options: SendOptions): Promise<ModelMessage[]> {
-  const config = getConfig(options)
-  const result = streamText(config)
-  for await (const chunk of result.textStream) options.onChunk?.(chunk)
+  const config = getConfig(options),
+   result = streamText(config)
+  for await (const chunk of result.textStream) {options.onChunk?.(chunk)}
   return await result.responseMessages
 }
 
 async function generate(options: SendOptions): Promise<ModelMessage[]> {
-  const config = getConfig(options)
-  const result = await generateText(config)
+  const config = getConfig(options),
+   result = await generateText(config)
   return result.responseMessages
 }
 
 function getConfig({ messages, tools, onToolCall }: SendOptions): Parameters<typeof generateText>[0] {
   return {
     ...agentSettings,
-    messages,
-    tools,
-    toolChoice: tools ? 'auto' : 'none',
     maxOutputTokens: 2048,
-    stopWhen: isStepCount(MAX_TOOL_ITERATIONS),
-    onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) onToolCall?.() },
-    onToolExecutionStart: ({ toolCall }) => { logger.debug(`Tool execution started: ${toolCall.toolName}`) },
+    messages,
+    onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) {onToolCall?.()} },
     onToolExecutionEnd: ({ toolCall }) => { logger.debug(`Tool execution ended: ${toolCall.toolName}`) },
+    onToolExecutionStart: ({ toolCall }) => { logger.debug(`Tool execution started: ${toolCall.toolName}`) },
+    stopWhen: isStepCount(MAX_TOOL_ITERATIONS),
+    toolChoice: tools ? 'auto' : 'none',
+    tools,
   } satisfies Parameters<typeof generateText>[0]
 }
 
@@ -64,9 +66,9 @@ async function loggingFetch(resource: string | URL | Request, init: RequestInit 
 }
 
 function logRequest(init: RequestInit | undefined) {
-  if (!config.AI.LOG_REQUEST_RESPONSE) return
-  const bodyString = init?.body ? String(init.body) : ''// oxlint-disable-line typescript/no-base-to-string
-  const requestSize = bodyString.length
+  if (!config.AI.LOG_REQUEST_RESPONSE) {return}
+  const bodyString = init?.body ? String(init.body) : '',// oxlint-disable-line typescript/no-base-to-string
+   requestSize = bodyString.length
   logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
   console.log(bodyString)
 }
@@ -82,11 +84,11 @@ async function logResponse(res: Response, requestStartTime: number) {
     return
   }
   const decoder = new TextDecoder()
-  let responseSize = 0
-  let first = true
+  let responseSize = 0,
+   first = true
   for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
     const chunkText = decoder.decode(chunk.value, { stream: true })
-    if (!chunkText.startsWith('data:')) first = false
+    if (!chunkText.startsWith('data:')) {first = false}
     logResponseChunk(chunkText, first, requestStartTime)
     first = false
     responseSize += chunkText.length
@@ -95,7 +97,7 @@ async function logResponse(res: Response, requestStartTime: number) {
 }
 
 function logResponseChunk(chunkText: string, first: boolean, requestStartTime: number) {
-  if (!config.AI.LOG_REQUEST_RESPONSE) return
+  if (!config.AI.LOG_REQUEST_RESPONSE) {return}
   if (first) {
     const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
     logger.debug(`LLM first response of size ${chunkText.length.toString()} bytes received in ${timeToFirstTokenInS}s`)

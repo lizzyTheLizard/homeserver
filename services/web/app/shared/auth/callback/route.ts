@@ -1,6 +1,6 @@
 import { logger } from '@/app/shared/logger'
 import { callback } from '../auth'
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { config } from '@/app/shared/config'
 
 export async function GET(request: NextRequest) {
@@ -10,6 +10,6 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logger.warn('Error during login callback', error)
-    return Response.redirect(config.APP_URL + '/shared/auth/error')
+    return Response.redirect(`${config.APP_URL  }/shared/auth/error`)
   }
 }

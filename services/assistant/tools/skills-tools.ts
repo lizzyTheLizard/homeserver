@@ -1,4 +1,5 @@
-import { tool, ToolSet } from 'ai'
+import type { ToolSet } from 'ai';
+import { tool } from 'ai'
 import fs from 'fs'
 import { join } from 'path'
 import z from 'zod'
@@ -11,17 +12,17 @@ export default function getTools(): ToolSet {
 }
 
 export function getSkillTools(skillDir: string): ToolSet {
-  const skillTools: ToolSet = {}
-  const filesInSkillDir = fs.readdirSync(skillDir, { withFileTypes: true })
-  const dirs = filesInSkillDir.filter(f => !f.name.startsWith('.') && f.isDirectory())
+  const skillTools: ToolSet = {},
+   filesInSkillDir = fs.readdirSync(skillDir, { withFileTypes: true }),
+   dirs = filesInSkillDir.filter(f => !f.name.startsWith('.') && f.isDirectory())
   for (const dir of dirs) {
-    const skillPath = join(skillDir, dir.name)
-    const skill = loadSkillTool(skillPath)
-    if (!skill) continue
+    const skillPath = join(skillDir, dir.name),
+     skill = loadSkillTool(skillPath)
+    if (!skill) {continue}
     skillTools[`load_skill_${skill.name}`] = tool({
       description: skill.description,
-      inputSchema: z.object({}),
       execute: skill.execute,
+      inputSchema: z.object({}),
     })
   }
   logger.debug(`Loaded skills ${Object.keys(skillTools).map(s => s.substring(11)).join(', ')} from ${skillDir}`)
@@ -30,26 +31,26 @@ export function getSkillTools(skillDir: string): ToolSet {
 
 function loadSkillTool(skillDirPath: string): ParsedSkill | undefined {
   const metadata = parseMetadata(skillDirPath)
-  if (!metadata) return undefined
+  if (!metadata) {return undefined}
 
   return {
-    name: metadata.name,
     description: metadata.description,
     execute: () => loadSkill(metadata.name, skillDirPath),
+    name: metadata.name,
   }
 }
 
 function parseMetadata(skillDirPath: string): { name: string, description: string } | undefined {
-  const files = fs.readdirSync(skillDirPath)
-  const skillFile = files.find(f => f.toLowerCase() === 'skill.md')
+  const files = fs.readdirSync(skillDirPath),
+   skillFile = files.find(f => f.toLowerCase() === 'skill.md')
   if (!skillFile) {
     logger.warn(`Skill directory ${skillDirPath} does not contain SKILL.md, skipping`)
     return undefined
   }
-  const skillFilePath = join(skillDirPath, skillFile)
-  const content = fs.readFileSync(skillFilePath, 'utf-8')
+  const skillFilePath = join(skillDirPath, skillFile),
+   content = fs.readFileSync(skillFilePath, 'utf-8'),
 
-  const metadata = /---\r?\n([\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
+   metadata = /---\r?\n([\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
   if (!metadata) {
     logger.warn(`Skill file ${skillFilePath} has invalid frontmatter, metadata is missing`)
     return undefined
@@ -58,8 +59,8 @@ function parseMetadata(skillDirPath: string): { name: string, description: strin
   for (const line of metadata[1].split(/\r?\n/)) {
     const colonIndex = line.indexOf(':')
     if (colonIndex > 0) {
-      const key = line.slice(0, colonIndex).trim()
-      const value = line.slice(colonIndex + 1).trim()
+      const key = line.slice(0, colonIndex).trim(),
+       value = line.slice(colonIndex + 1).trim()
       frontmatter[key] = value
     }
   }
@@ -72,15 +73,15 @@ function parseMetadata(skillDirPath: string): { name: string, description: strin
     logger.warn(`Skill file ${skillFilePath} has missing description, skipping`)
     return undefined
   }
-  return { name: frontmatter.name, description: frontmatter.description }
+  return { description: frontmatter.description, name: frontmatter.name }
 }
 
 async function loadSkill(name: string, skillDirPath: string): Promise<string> {
-  const files = await fs.promises.readdir(skillDirPath)
-  const fileContents: Record<string, string> = {}
+  const files = await fs.promises.readdir(skillDirPath),
+   fileContents: Record<string, string> = {}
   for (const file of files) {
-    const filePath = join(skillDirPath, file)
-    const content = await fs.promises.readFile(filePath, 'utf-8')
+    const filePath = join(skillDirPath, file),
+     content = await fs.promises.readFile(filePath, 'utf-8')
     fileContents[file] = content
   }
   return `These are the instructions for the skill ${name}. 

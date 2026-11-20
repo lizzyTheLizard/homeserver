@@ -1,9 +1,9 @@
 'use client'
-import { Event } from '@/app/shared/_data/Event'
+import type { Event } from '@/app/shared/_data/Event'
 import styles from './EventsCard.module.css'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, enumColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { DateTime } from '@/app/shared/_components/DateTime'
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 const columns = [
   dateColumn('time', { header: 'Time', style: { width: '12rem' } }),
-  enumColumn('level', ['INFO', 'WARN', 'ERROR'], { header: 'Level', style: { width: '6rem' }, cell: value => <span className={styles.badge + ' ' + styles['badge' + value]}>{value}</span> }),
+  enumColumn('level', ['INFO', 'WARN', 'ERROR'], { cell: value => <span className={`${styles.badge  } ${  styles[`badge${  value}`]}`}>{value}</span>, header: 'Level', style: { width: '6rem' } }),
   textColumn('message', { header: 'Message' }),
 ]
 
@@ -24,7 +24,7 @@ function renderMobile(e: Event): ReactNode {
         <span className={styles.mobileTime}>
           <DateTime date={e.time} oneLine />
         </span>
-        <span className={styles.badge + ' ' + styles['badge' + e.level]}>
+        <span className={`${styles.badge  } ${  styles[`badge${  e.level}`]}`}>
           {e.level}
         </span>
       </div>
@@ -42,7 +42,7 @@ export function EventsCard({ events, logUrl }: Props) {
       </div>
       <DataTable
         columns={columns}
-        initialSortingOrder={[{ key: 'time', direction: 'DESC' }]}
+        initialSortingOrder={[{ direction: 'DESC', key: 'time' }]}
         renderMobile={renderMobile}
         data={events}
       />

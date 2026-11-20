@@ -3,12 +3,12 @@ import { Card } from './Card'
 import { Icon } from './Icon'
 
 const meta = {
-  title: 'Shared/Card',
-  component: Card,
-  tags: ['autodocs'],
   argTypes: {
     href: { control: 'text', description: 'If provided, the card will be rendered as a link to this URL', optional: true },
   },
+  component: Card,
+  tags: ['autodocs'],
+  title: 'Shared/Card',
 } satisfies Meta<typeof Card>
 export default meta
 
@@ -19,7 +19,7 @@ export const WithContent: StoryObj<typeof meta> = {
   argTypes: {},
   render: () => (
     <Card>
-      <Icon name="cash" style={{ width: '5rem', height: '5rem' }}></Icon>
+      <Icon name="cash" style={{ height: '5rem', width: '5rem' }} />
       <h2>Cash</h2>
       <span>This is some text</span>
     </Card>
@@ -30,7 +30,7 @@ export const WithLink: StoryObj<typeof meta> = {
   argTypes: {},
   render: () => (
     <Card href="#">
-      <Icon name="cash" style={{ width: '5rem', height: '5rem' }}></Icon>
+      <Icon name="cash" style={{ height: '5rem', width: '5rem' }} />
       <h2>Cash</h2>
       <span>This is some text</span>
     </Card>

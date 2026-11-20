@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Button } from './Button'
 
 const meta = {
-  title: 'Shared/Form/Button',
-  component: Button,
-  tags: ['autodocs'],
   args: {
     children: 'Click me',
   },
+  component: Button,
+  tags: ['autodocs'],
+  title: 'Shared/Form/Button',
 } satisfies Meta<typeof Button>
 export default meta
 

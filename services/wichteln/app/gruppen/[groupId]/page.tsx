@@ -10,9 +10,9 @@ import { WishForm, WishPicker } from '../../components'
 export const dynamic = 'force-dynamic'
 
 export default async function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
-  const { groupId } = await params
-  const { account, group, user } = await requireParticipant(groupId)
-  const groupCount = (await listAccountGroups(await getDb(), account.id)).length
+  const { groupId } = await params,
+   { account, group, user } = await requireParticipant(groupId),
+   groupCount = (await listAccountGroups(await getDb(), account.id)).length
 
   return (
     <>
@@ -87,8 +87,8 @@ function SelectionPhase({ group, user }: { group: Group, user: User }) {
 
   const wishes = selectableWishOwners(group, user.id).flatMap((ownerId) => {
     const w = group.users.find(u => u.id === ownerId)?.wish
-    if (!w) return []
-    return [{ ownerId, title: w.title, description: w.description }]
+    if (!w) {return []}
+    return [{ description: w.description, ownerId, title: w.title }]
   })
 
   return (

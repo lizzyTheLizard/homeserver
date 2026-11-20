@@ -1,6 +1,6 @@
-const FALLBACK_LAT = 46.948
-const FALLBACK_LON = 7.4474
-const LOCAL_STORAGE_KEY = 'geolocation'
+const FALLBACK_LAT = 46.948,
+ FALLBACK_LON = 7.4474,
+ LOCAL_STORAGE_KEY = 'geolocation'
 
 function getStoredLocation(): { lon: number, lat: number } {
   try {
@@ -26,7 +26,7 @@ function updateLocationInBackground() {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(pos))
       },
       (error) => { console.warn('Geolocation update failed:', error) },
-      { timeout: 5000, enableHighAccuracy: false, maximumAge: 3600000 },
+      { enableHighAccuracy: false, maximumAge: 3600000, timeout: 5000 },
     )
   }
   catch (error) {

@@ -3,8 +3,8 @@ import { Console } from 'winston/lib/winston/transports'
 import { config } from './config'
 
 function createLogger() {
-  const isDev = config.NODE_ENV === 'development'
-  const format = isDev
+  const isDev = config.NODE_ENV === 'development',
+   format = isDev
     ? winston.format.combine(
         winston.format.errors({ stack: true }),
         winston.format.timestamp({ format: 'DD.MM.YYYY HH:mm:ss.SSS' }),
@@ -19,9 +19,9 @@ function createLogger() {
     level: config.LOG_LEVEL,
     transports: [
       new Console({
+        format,
         handleExceptions: true,
         handleRejections: true,
-        format: format,
       }),
     ],
   })
@@ -29,7 +29,7 @@ function createLogger() {
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
   let message = `${info.timestamp as string} ${info.level}: ${info.message as string}`
-  if (info.stack) message = message + '\n' + (info.stack as string)
+  if (info.stack) {message = `${message  }\n${  info.stack as string}`}
   return message
 }
 

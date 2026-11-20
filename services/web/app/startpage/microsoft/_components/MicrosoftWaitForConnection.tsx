@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { checkMicrosoftStatus } from '../server'
 import styles from './MicrosoftWaitForConnection.module.css'
@@ -11,9 +11,9 @@ interface MicrosoftWaitForConnectionProps {
 }
 
 export function MicrosoftWaitForConnection({ initialMailStatus, initialTodoStatus, initialCalendarStatus }: MicrosoftWaitForConnectionProps) {
-  const [mailStatus, setMailStatus] = useState(initialMailStatus)
-  const [todoStatus, setTodoStatus] = useState(initialTodoStatus)
-  const [calendarStatus, setCalendarStatus] = useState(initialCalendarStatus)
+  const [mailStatus, setMailStatus] = useState(initialMailStatus),
+   [todoStatus, setTodoStatus] = useState(initialTodoStatus),
+   [calendarStatus, setCalendarStatus] = useState(initialCalendarStatus)
 
   useEffect(() => {
     const interval = setInterval(() => {

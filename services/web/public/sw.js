@@ -1,7 +1,7 @@
 /* global self, caches */
-const CACHE_NAME = 'pwa-cache-v1'
-const OFFLINE_URLS = ['/pwa.html', '/global.css']
-const HTML_TIMEOUT = 3000 // Time in milliseconds to wait for an HTML page to load before falling back to cache
+const CACHE_NAME = 'pwa-cache-v1',
+ OFFLINE_URLS = ['/pwa.html', '/global.css'],
+ HTML_TIMEOUT = 3000 // Time in milliseconds to wait for an HTML page to load before falling back to cache
 
 // A helper function that rejects after a set number of milliseconds
 function timeout(ms) {
@@ -40,8 +40,8 @@ self.addEventListener('install', (event) => {
  */
 self.addEventListener('activate', (event) => {
   // Ensuring old code doesn't break your updated site.
-  event.waitUntil(caches.keys().then((cacheNames) => {
-    return Promise.all(
+  event.waitUntil(caches.keys().then((cacheNames) => 
+    Promise.all(
       cacheNames.map((cache) => {
         // If a cache found in storage doesn't match our current CACHE_NAME, delete it
         if (cache !== CACHE_NAME) {
@@ -50,7 +50,7 @@ self.addEventListener('activate', (event) => {
         }
       }),
     )
-  }))
+  ))
   // Allows the service worker to immediately control all open tabs/pages
   self.clients.claim()
 })
@@ -60,10 +60,10 @@ self.addEventListener('activate', (event) => {
  */
 self.addEventListener('fetch', (event) => {
   // Only fetch GET requests, as other methods (POST, PUT, DELETE) may have side effects and should not be cached.
-  if (event.request.method !== 'GET') return
+  if (event.request.method !== 'GET') {return}
 
   // We only apply timeouts to navigation requests (HTML pages)
-  // so we don't break background API calls or huge image downloads.
+  // So we don't break background API calls or huge image downloads.
   const isHtmlPage = event.request.mode === 'navigate'
 
   event.respondWith((async () => {
@@ -72,10 +72,10 @@ self.addEventListener('fetch', (event) => {
       console.log(`PWA: Returning cached response for ${event.request.url}`)
       return cachedResponse
     }
-    if (!isHtmlPage) return fetch(event.request)
+    if (!isHtmlPage) {return fetch(event.request)}
     console.log(`PWA: Fetching HTML page ${event.request.url} with timeout of ${HTML_TIMEOUT}ms`)
     return Promise.race([fetch(event.request), timeout(HTML_TIMEOUT)])
-      .then(r => console.log(`PWA: Fetching HTML page ` + event.request.url + ` completed with status: ` + r.status) || r)
+      .then(r => console.log(`PWA: Fetching HTML page ${  event.request.url  } completed with status: ${  r.status}`) || r)
       .catch(error => requestFailed(event, error))
   })())
 })

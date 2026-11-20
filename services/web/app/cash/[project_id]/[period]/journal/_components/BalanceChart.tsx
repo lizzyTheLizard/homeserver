@@ -1,16 +1,17 @@
 'use client'
 import { useMemo } from 'react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from 'recharts'
-import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { AccountType } from '@/app/cash/_data/AccountType'
-import { Period } from '@/app/cash/_helper/Period'
-import { BalancePoint, chartKindForAccount, formatBalance, labelFor, niceTicks, prepareBalanceDeltas, prepareBalancePoints } from './BalanceChartHelpers'
+import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import type { AccountType } from '@/app/cash/_data/AccountType'
+import type { Period } from '@/app/cash/_helper/Period'
+import type { BalancePoint} from './BalanceChartHelpers';
+import { chartKindForAccount, formatBalance, labelFor, niceTicks, prepareBalanceDeltas, prepareBalancePoints } from './BalanceChartHelpers'
 import style from './BalanceChart.module.css'
 
-const LINE_COLOR = 'rgba(0, 0, 220, 1)'
-const GRID_COLOR = 'rgba(200, 200, 200, 1)'
-const AXIS_COLOR = 'rgba(0, 0, 0, 0.55)'
-const ZERO_LINE_COLOR = 'rgba(0, 0, 0, 0.75)'
+const LINE_COLOR = 'rgba(0, 0, 220, 1)',
+ GRID_COLOR = 'rgba(200, 200, 200, 1)',
+ AXIS_COLOR = 'rgba(0, 0, 0, 0.55)',
+ ZERO_LINE_COLOR = 'rgba(0, 0, 0, 0.75)'
 
 export interface BalanceChartProps {
   transactions: AccountTransaction[]
@@ -21,33 +22,33 @@ export interface BalanceChartProps {
 }
 
 export function BalanceChart({ transactions, lastBalance, accountType, period }: BalanceChartProps) {
-  const isBar = chartKindForAccount(accountType) === 'bar'
-  const data = useMemo(
+  const isBar = chartKindForAccount(accountType) === 'bar',
+   data = useMemo(
     () => isBar
       ? prepareBalanceDeltas(transactions, lastBalance, accountType, period)
       : prepareBalancePoints(transactions, lastBalance, accountType, period),
     [transactions, lastBalance, accountType, period, isBar],
   )
 
-  if (transactions.length === 0) return null
+  if (transactions.length === 0) {return null}
 
   // When the data contains negative entries, the 0 line is the main reference
-  // line on the y-axis — clearly visible but thinner than the bars.
-  const hasNegatives = data.some(point => point.balance < 0)
-  const zeroLine = hasNegatives && (
+  // Line on the y-axis — clearly visible but thinner than the bars.
+  const hasNegatives = data.some(point => point.balance < 0),
+   zeroLine = hasNegatives && (
     <ReferenceLine y={0} stroke={ZERO_LINE_COLOR} strokeWidth={1.5} />
-  )
+  ),
 
   // Cover the data plus 0 with "nice" ticks that always include 0, and pin the
-  // y-domain to those ticks so the bold zero line sits exactly on a grid line.
-  const balances = data.map(point => point.balance)
-  const dataMin = Math.min(0, ...balances)
-  const dataMax = Math.max(0, ...balances)
-  const yTicks = niceTicks(dataMin, dataMax)
-  const yDomain: [number, number] = [yTicks[0], yTicks[yTicks.length - 1]]
+  // Y-domain to those ticks so the bold zero line sits exactly on a grid line.
+   balances = data.map(point => point.balance),
+   dataMin = Math.min(0, ...balances),
+   dataMax = Math.max(0, ...balances),
+   yTicks = niceTicks(dataMin, dataMax),
+   yDomain: [number, number] = [yTicks[0], yTicks[yTicks.length - 1]],
 
-  const grid = <CartesianGrid stroke={GRID_COLOR} strokeDasharray="3 3" vertical={false} />
-  const barYAxis = (
+   grid = <CartesianGrid stroke={GRID_COLOR} strokeDasharray="3 3" vertical={false} />,
+   barYAxis = (
     <YAxis
       tick={{ fontSize: 12 }}
       stroke={AXIS_COLOR}
@@ -56,8 +57,8 @@ export function BalanceChart({ transactions, lastBalance, accountType, period }:
       domain={yDomain}
       ticks={yTicks}
     />
-  )
-  const yAxis = (
+  ),
+   yAxis = (
     <YAxis
       tick={{ fontSize: 12 }}
       stroke={AXIS_COLOR}
@@ -73,7 +74,7 @@ export function BalanceChart({ transactions, lastBalance, accountType, period }:
       <ResponsiveContainer width="100%" height="100%">
         {isBar
           ? (
-              <BarChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 8 }} accessibilityLayer={false}>
+              <BarChart data={data} margin={{ bottom: 0, left: 8, right: 16, top: 8 }} accessibilityLayer={false}>
                 {grid}
                 <XAxis dataKey="label" type="category" tick={{ fontSize: 12 }} stroke={AXIS_COLOR} />
                 {barYAxis}
@@ -82,7 +83,7 @@ export function BalanceChart({ transactions, lastBalance, accountType, period }:
               </BarChart>
             )
           : (
-              <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 8 }} accessibilityLayer={false}>
+              <LineChart data={data} margin={{ bottom: 0, left: 8, right: 16, top: 8 }} accessibilityLayer={false}>
                 {grid}
                 <XAxis
                   dataKey="x"

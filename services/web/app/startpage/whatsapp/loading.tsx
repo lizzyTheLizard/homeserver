@@ -6,7 +6,7 @@ export default function Loading() {
       <ActionTitle>
         <h1>WhatsApp</h1>
       </ActionTitle>
-      <LoadingSpinner></LoadingSpinner>
+      <LoadingSpinner />
     </main>
   )
 }

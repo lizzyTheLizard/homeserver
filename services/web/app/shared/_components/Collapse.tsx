@@ -17,7 +17,7 @@ export function Collapse({ children, header, initiallyExpanded }: React.PropsWit
     return (
       <div className={style.box} onClick={() => { setExpanded(true) }}>
         <button className={style.header} name="Collapse">
-          <Icon className={style.icon} name="caretRight"></Icon>
+          <Icon className={style.icon} name="caretRight" />
           {header}
         </button>
       </div>
@@ -26,7 +26,7 @@ export function Collapse({ children, header, initiallyExpanded }: React.PropsWit
   return (
     <div className={style.box} onClick={() => { setExpanded(false) }}>
       <button className={style.header} name="Collapse">
-        <Icon className={style.icon} name="caretDown"></Icon>
+        <Icon className={style.icon} name="caretDown" />
         {header}
       </button>
       <div className={style.content} onClick={(e) => { e.stopPropagation() }}>

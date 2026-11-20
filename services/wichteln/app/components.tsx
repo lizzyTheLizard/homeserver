@@ -2,12 +2,12 @@
 
 import { useActionState, useState, useSyncExternalStore } from 'react'
 import { useFormStatus } from 'react-dom'
-import { changePassword, groupLogin, login, register, saveWish, selectWish, type FormState } from './actions'
+import { type FormState, changePassword, groupLogin, login, register, saveWish, selectWish } from './actions'
 import { createGroup } from './admin/actions'
 
 function Message({ state }: { state: FormState }) {
-  if (state?.error) return <div className="alert error">{state.error}</div>
-  if (state?.ok) return <div className="alert ok">{state.ok}</div>
+  if (state?.error) {return <div className="alert error">{state.error}</div>}
+  if (state?.ok) {return <div className="alert ok">{state.ok}</div>}
   return null
 }
 
@@ -29,7 +29,7 @@ export function SubmitButton({
       className={className}
       disabled={pending || disabled}
       onClick={(e) => {
-        if (confirm && !window.confirm(confirm)) e.preventDefault()
+        if (confirm && !window.confirm(confirm)) {e.preventDefault()}
       }}
     >
       {pending ? 'Bitte warten…' : children}
@@ -224,9 +224,9 @@ export function ResetPasswordForm({
 }
 
 export function CopyInviteLink({ path }: { path: string }) {
-  const [copied, setCopied] = useState(false)
-  const origin = useSyncExternalStore(subscribeNever, () => window.location.origin, () => '')
-  const link = `${origin}${path}`
+  const [copied, setCopied] = useState(false),
+   origin = useSyncExternalStore(subscribeNever, () => window.location.origin, () => ''),
+   link = `${origin}${path}`
 
   async function copy() {
     try {
@@ -251,5 +251,5 @@ export function CopyInviteLink({ path }: { path: string }) {
 
 /** The page origin never changes, so there is nothing to subscribe to. */
 function subscribeNever() {
-  return () => { /* nothing to unsubscribe */ }
+  return () => { /* Nothing to unsubscribe */ }
 }

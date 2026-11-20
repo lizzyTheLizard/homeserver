@@ -11,10 +11,10 @@ vi.mock('ai', async (importOriginal) => {
 })
 
 import { send } from './groq'
-import { type ModelMessage, tool, type ToolSet } from 'ai'
+import { type ModelMessage, type ToolSet, tool } from 'ai'
 import { z } from 'zod/v4'
 
-const assistantMsg = (content: string): ModelMessage => ({ role: 'assistant', content: [{ type: 'text', text: content }] })
+const assistantMsg = (content: string): ModelMessage => ({ content: [{ text: content, type: 'text' }], role: 'assistant' })
 
 describe('send', () => {
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('send', () => {
   })
 
   test('non-streaming without tools', async () => {
-    const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Say hello exactly as: HELLO WORLD' }]
+    const messages: ModelMessage[] = [{ content: 'Say hello exactly as: HELLO WORLD', role: 'user' as const }]
     mockGenerateText.mockResolvedValue({ responseMessages: [assistantMsg('HELLO WORLD')], toolCalls: [] })
     await send({ messages })
     expect(messages.length).toBeGreaterThan(1)
@@ -32,7 +32,7 @@ describe('send', () => {
   })
 
   test('non-streaming returns assistant response', async () => {
-    const messages: ModelMessage[] = [{ role: 'system' as const, content: 'Reply with exactly: OK' }, { role: 'user' as const, content: 'ping' }]
+    const messages: ModelMessage[] = [{ content: 'Reply with exactly: OK', role: 'system' as const }, { content: 'ping', role: 'user' as const }]
     mockGenerateText.mockResolvedValue({ responseMessages: [assistantMsg('OK')], toolCalls: [] })
     await send({ messages })
     const found = messages.find(m => m.role === 'assistant')
@@ -40,9 +40,9 @@ describe('send', () => {
   })
 
   test('non-streaming with tools', async () => {
-    const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Echo: test123' }]
+    const messages: ModelMessage[] = [{ content: 'Echo: test123', role: 'user' as const }]
     mockGenerateText.mockResolvedValueOnce({
-      responseMessages: [assistantMsg(''), { role: 'tool', content: 'test123' }, assistantMsg('Done')],
+      responseMessages: [assistantMsg(''), { content: 'test123', role: 'tool' }, assistantMsg('Done')],
       toolCalls: [{}],
     })
     await send({ messages, tools: echoTool })
@@ -50,11 +50,11 @@ describe('send', () => {
   })
 
   test('streaming without tools', async () => {
-    const messages = [{ role: 'system' as const, content: 'Reply exactly: STREAMED' }, { role: 'user' as const, content: 'go' }]
-    const chunks: string[] = []
+    const messages = [{ content: 'Reply exactly: STREAMED', role: 'system' as const }, { content: 'go', role: 'user' as const }],
+     chunks: string[] = []
     mockStreamText.mockReturnValue({
-      textStream: (function* () { yield 'STREAMED' })() as unknown as AsyncIterable<string>,
       responseMessages: Promise.resolve([assistantMsg('STREAMED')]),
+      textStream: (function*  textStream() { yield 'STREAMED' })() as unknown as AsyncIterable<string>,
       toolCalls: Promise.resolve([]),
     })
     await send({ messages, onChunk: chunk => chunks.push(chunk) })
@@ -63,48 +63,48 @@ describe('send', () => {
   })
 
   test('streaming with tools', async () => {
-    const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Get weather for Berlin' }]
-    const chunks: string[] = []
+    const messages: ModelMessage[] = [{ content: 'Get weather for Berlin', role: 'user' as const }],
+     chunks: string[] = []
     mockStreamText.mockReturnValueOnce({
-      textStream: (function* () {
+      responseMessages: Promise.resolve([assistantMsg('Getting weather'), { content: 'Sunny', role: 'tool' }, assistantMsg('Sunny in Berlin')]),
+      textStream: (function*  textStream() {
         yield 'Checking'
         yield 'Sunny'
         yield ' in Berlin'
       })() as unknown as AsyncIterable<string>,
-      responseMessages: Promise.resolve([assistantMsg('Getting weather'), { role: 'tool', content: 'Sunny' }, assistantMsg('Sunny in Berlin')]),
       toolCalls: Promise.resolve([{}]),
     })
-    await send({ messages, tools: weatherTool, onChunk: chunk => chunks.push(chunk) })
+    await send({ messages, onChunk: chunk => chunks.push(chunk), tools: weatherTool })
     expect(chunks.length).toBeGreaterThan(0)
     expect(messages.some(m => m.role === 'tool')).toBe(true)
   })
 
   test('mutates input messages array', async () => {
-    const messages = [{ role: 'user' as const, content: 'Say: mutation test' }]
-    const originalLength = messages.length
+    const messages = [{ content: 'Say: mutation test', role: 'user' as const }],
+     originalLength = messages.length
     mockGenerateText.mockResolvedValue({ responseMessages: [assistantMsg('mutated')], toolCalls: [] })
     await send({ messages })
     expect(messages.length).toBeGreaterThan(originalLength)
   })
 
   test('non-streaming does not call onChunk', async () => {
-    const messages = [{ role: 'user' as const, content: 'Say: no stream' }]
-    const called = false
+    const messages = [{ content: 'Say: no stream', role: 'user' as const }],
+     called = false
     mockGenerateText.mockResolvedValue({ responseMessages: [assistantMsg('OK')], toolCalls: [] })
     await send({ messages, onChunk: undefined })
     expect(called).toBe(false)
   })
 
   test('streaming calls onChunk for each chunk', async () => {
-    const messages = [{ role: 'system' as const, content: 'Reply with a long sentence about artificial intelligence' }, { role: 'user' as const, content: 'go' }]
+    const messages = [{ content: 'Reply with a long sentence about artificial intelligence', role: 'system' as const }, { content: 'go', role: 'user' as const }]
     let callCount = 0
     mockStreamText.mockReturnValue({
-      textStream: (function* () {
+      responseMessages: Promise.resolve([assistantMsg('abc')]),
+      textStream: (function*  textStream() {
         yield 'a'
         yield 'b'
         yield 'c'
       })() as unknown as AsyncIterable<string>,
-      responseMessages: Promise.resolve([assistantMsg('abc')]),
       toolCalls: Promise.resolve([]),
     })
     await send({ messages, onChunk: () => { callCount++ } })
@@ -115,17 +115,17 @@ describe('send', () => {
 const echoTool: ToolSet = {
   echo: tool({
     description: 'Echoes the input back',
+    execute: ({ text }) => text,
     inputSchema: z.object({ text: z.string().describe('Text to echo back') }),
     outputSchema: z.string().describe('Echoed text'),
-    execute: ({ text }) => text,
   }),
-}
+},
 
-const weatherTool: ToolSet = {
+ weatherTool: ToolSet = {
   getWeather: tool({
     description: 'Get weather for a city',
+    execute: ({ city }) => `Sunny in ${city}`,
     inputSchema: z.object({ city: z.string().describe('City to get the weather for') }),
     outputSchema: z.string().describe('Weather information'),
-    execute: ({ city }) => `Sunny in ${city}`,
   }),
 }

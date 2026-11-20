@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { useListState } from './ListState'
 
 describe.concurrent('Initialize State', () => {
@@ -7,9 +7,9 @@ describe.concurrent('Initialize State', () => {
     const { result } = renderHook(() => useListState([
       { id: '1', name: 'Item 1' },
       { id: '2', name: 'Item 2' },
-    ]))
+    ])),
 
-    const [items] = result.current
+     [items] = result.current
     expect(items).toEqual([
       { id: '1', name: 'Item 1' },
       { id: '2', name: 'Item 2' },
@@ -17,9 +17,9 @@ describe.concurrent('Initialize State', () => {
   })
 
   test('Initial state with empty array', () => {
-    const { result } = renderHook(() => useListState([]))
+    const { result } = renderHook(() => useListState([])),
 
-    const [items] = result.current
+     [items] = result.current
     expect(items).toEqual([])
   })
 })
@@ -99,7 +99,7 @@ describe.concurrent('Remove Items', () => {
 
   test('Remove only item results in empty list', () => {
     const { result } = renderHook(() => useListState([
-      { id: '132', name: 'Existing', additional: 'field' },
+      { additional: 'field', id: '132', name: 'Existing' },
     ]))
 
     act(() => {

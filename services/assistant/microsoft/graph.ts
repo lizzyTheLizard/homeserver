@@ -1,6 +1,8 @@
-import { Client, GraphRequest } from '@microsoft/microsoft-graph-client'
+import type { GraphRequest } from '@microsoft/microsoft-graph-client';
+import { Client } from '@microsoft/microsoft-graph-client'
 import { Temporal } from '@js-temporal/polyfill'
-import { MicrosoftToken, getMicrosoftToken, setMicrosoftToken } from './data'
+import type { MicrosoftToken} from './data';
+import { getMicrosoftToken, setMicrosoftToken } from './data'
 import * as oidc from 'openid-client'
 import type { UserSession } from '../session'
 import { logger } from '../logger'
@@ -18,22 +20,22 @@ export interface MicrosoftUserInfo {
 
 export async function getLoginRedirectUrl(callbackUrl: string): Promise<URL> {
   const parameters: Record<string, string> = {
+    prompt: 'consent',
     redirect_uri: callbackUrl,
     scope: 'offline_access Mail.ReadWrite Mail.Send Tasks.ReadWrite User.Read Calendars.ReadWrite',
-    prompt: 'consent',
-  }
-  const clientConfig = await getClientConfig()
+  },
+   clientConfig = await getClientConfig()
   return client.buildAuthorizationUrl(clientConfig, parameters)
 }
 
 export async function handleMicrosoftLoginCallback(user: UserSession, currentUrl: URL): Promise<void> {
-  const clientConfig = await getClientConfig()
-  const tokenSet = await client.authorizationCodeGrant(clientConfig, currentUrl)
-  const accessToken = tokenSet.access_token
-  const refreshToken = tokenSet.refresh_token
-  const expiresAt = Number(tokenSet.expires_at) || Math.floor(Date.now() / 1000) + 3000
-  if (!accessToken || !refreshToken) throw new Error('Failed to obtain access or refresh token from Microsoft. Please try again.')
-  const token = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
+  const clientConfig = await getClientConfig(),
+   tokenSet = await client.authorizationCodeGrant(clientConfig, currentUrl),
+   accessToken = tokenSet.access_token,
+   refreshToken = tokenSet.refresh_token,
+   expiresAt = Number(tokenSet.expires_at) || Math.floor(Date.now() / 1000) + 3000
+  if (!accessToken || !refreshToken) {throw new Error('Failed to obtain access or refresh token from Microsoft. Please try again.')}
+  const token = { access_token: accessToken, expires_at: expiresAt, refresh_token: refreshToken }
   await transactional(async (db) => {
     await setMicrosoftToken(db, user.email, token)
   })
@@ -45,11 +47,11 @@ export async function getUserInfo(user: UserSession): Promise<MicrosoftUserInfo 
 
 export async function graphApiRequest<T>(user: UserSession, url: string, request: (c: GraphRequest) => Promise<T>): Promise<T> {
   const token = await getCurrentToken(user)
-  if (!token) throw new Error('No Microsoft Graph token available')
+  if (!token) {throw new Error('No Microsoft Graph token available')}
   const graphClient = Client.init({ authProvider: (done) => { done(null, token.access_token) } })
   logger.silly(`Fetch data from GraphAPI ${url}`)
-  const start = Date.now()
-  const result = await request(graphClient.api(url))
+  const start = Date.now(),
+   result = await request(graphClient.api(url))
   logger.silly(`GraphAPI request ${url} completed in ${(Date.now() - start).toString()}ms`)
   return result
 }
@@ -61,14 +63,14 @@ export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken
     const now = Math.floor(Date.now() / 1000)
     return transactional(async (db) => {
       const token = await transactional(db => getMicrosoftToken(db, user.email))
-      if (!token) return undefined
-      if (token.expires_at > now + 60) return token
-      const clientConfig = await getClientConfig()
-      const tokenSet = await oidc.refreshTokenGrant(clientConfig, token.refresh_token)
-      const accessToken = tokenSet.access_token
-      const expiresAt = Number(tokenSet.expires_at) || now + 3000
-      const refreshToken = tokenSet.refresh_token ?? token.refresh_token
-      const newToken = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
+      if (!token) {return undefined}
+      if (token.expires_at > now + 60) {return token}
+      const clientConfig = await getClientConfig(),
+       tokenSet = await oidc.refreshTokenGrant(clientConfig, token.refresh_token),
+       accessToken = tokenSet.access_token,
+       expiresAt = Number(tokenSet.expires_at) || now + 3000,
+       refreshToken = tokenSet.refresh_token ?? token.refresh_token,
+       newToken = { access_token: accessToken, expires_at: expiresAt, refresh_token: refreshToken }
       await setMicrosoftToken(db, user.email, newToken)
       logger.info(`Microsoft token for user ${user.email} refreshed`)
       return newToken
@@ -84,10 +86,10 @@ let clientConfigCache: Promise<client.Configuration> | undefined = undefined
 
 export function toInstant(dateTime: string, timeZone: string): Temporal.Instant {
   if (timeZone === 'UTC' || !timeZone) {
-    const normalized = dateTime.endsWith('Z') || dateTime.includes('+') || dateTime.includes('[') ? dateTime : dateTime + 'Z'
+    const normalized = dateTime.endsWith('Z') || dateTime.includes('+') || dateTime.includes('[') ? dateTime : `${dateTime  }Z`
     return Temporal.Instant.from(normalized)
   }
-  return Temporal.ZonedDateTime.from(dateTime + '[' + timeZone + ']').toInstant()
+  return Temporal.ZonedDateTime.from(`${dateTime  }[${  timeZone  }]`).toInstant()
 }
 
 export function toPlainDate(dateTime: string): Temporal.PlainDate {

@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
 declare global {
@@ -36,8 +36,8 @@ export async function nontransactional<T>(fn: (client: Queryable) => Promise<T>)
  * @returns The result of the function
  */
 export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const pool = await getPoolPromise()
-  const client = await pool.connect()
+  const pool = await getPoolPromise(),
+   client = await pool.connect()
   try {
     await client.query('BEGIN')
     const result = await fn(client)
@@ -70,7 +70,7 @@ export type Entity<T> = T & {
  */
 export const removeNull = <T>(input: T): T => {
   if (input === null)
-    return undefined as T
+    {return undefined as T}
   if (Array.isArray(input)) {
     // Process each array element recursively
     // oxlint-disable-next-line typescript/no-unsafe-return

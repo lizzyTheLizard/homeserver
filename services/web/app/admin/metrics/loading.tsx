@@ -11,9 +11,9 @@ export default function Loading() {
       </ActionTitle>
       <LoadingSpinner />
       <div className={styles.grid}>
-        <DashboardCard header="General" items={[]}></DashboardCard>
-        <DashboardCard header="CoEditor" items={[]}></DashboardCard>
-        <DashboardCard header="Cash" items={[]}></DashboardCard>
+        <DashboardCard header="General" items={[]} />
+        <DashboardCard header="CoEditor" items={[]} />
+        <DashboardCard header="Cash" items={[]} />
       </div>
     </main>
   )

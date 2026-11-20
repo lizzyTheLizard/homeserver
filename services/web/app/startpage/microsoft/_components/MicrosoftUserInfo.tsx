@@ -14,9 +14,9 @@ interface MicrosoftUserInfoParam {
 }
 
 export function MicrosoftUserInfo({ connected, userInfo }: MicrosoftUserInfoParam) {
-  const searchParams = useSearchParams()
-  const [error, setError] = useState<string | undefined>(searchParams.get('error') ?? undefined)
-  const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams(),
+   [error, setError] = useState<string | undefined>(searchParams.get('error') ?? undefined),
+   [loading, setLoading] = useState(false)
 
   async function handleConnect() {
     setLoading(true)
@@ -42,7 +42,7 @@ export function MicrosoftUserInfo({ connected, userInfo }: MicrosoftUserInfoPara
     window.location.reload()
   }
 
-  if (loading) return (<LoadingSpinner></LoadingSpinner>)
+  if (loading) {return (<LoadingSpinner />)}
 
   if (!connected) {
     return (

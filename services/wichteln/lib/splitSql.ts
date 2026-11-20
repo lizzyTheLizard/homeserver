@@ -9,13 +9,13 @@
  */
 export function splitSql(sql: string): string[] {
   const statements: string[] = []
-  let buf = ''
-  let i = 0
+  let buf = '',
+   i = 0
   const len = sql.length
 
   while (i < len) {
-    const c = sql[i]
-    const next = sql[i + 1]
+    const c = sql[i],
+     next = sql[i + 1]
 
     // Line comment
     if (c === '-' && next === '-') {
@@ -61,9 +61,9 @@ export function splitSql(sql: string): string[] {
     if (c === '$') {
       const tagMatch = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i))
       if (tagMatch) {
-        const tag = tagMatch[0]
-        const start = i + tag.length
-        const closeIdx = sql.indexOf(tag, start)
+        const tag = tagMatch[0],
+         start = i + tag.length,
+         closeIdx = sql.indexOf(tag, start)
         if (closeIdx === -1) {
           buf += sql.slice(i)
           break
@@ -76,7 +76,7 @@ export function splitSql(sql: string): string[] {
 
     if (c === ';') {
       const trimmed = buf.trim()
-      if (trimmed.length > 0) statements.push(trimmed)
+      if (trimmed.length > 0) {statements.push(trimmed)}
       buf = ''
       i++
       continue
@@ -87,7 +87,7 @@ export function splitSql(sql: string): string[] {
   }
 
   const trailing = buf.trim()
-  if (trailing.length > 0) statements.push(trailing)
+  if (trailing.length > 0) {statements.push(trailing)}
   return statements
 }
 
@@ -95,7 +95,7 @@ function readQuoted(sql: string, start: number, quote: string): number {
   let i = start + 1
   while (i < sql.length) {
     if (sql[i] === quote) {
-      // escaped quote
+      // Escaped quote
       if (sql[i + 1] === quote) {
         i += 2
         continue

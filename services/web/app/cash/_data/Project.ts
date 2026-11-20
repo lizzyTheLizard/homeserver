@@ -1,4 +1,5 @@
-import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Entity, Queryable} from '@/app/shared/_external/db/access';
+import { count, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface ProjectInput {
@@ -39,12 +40,12 @@ export async function createOrModifyProject(client: Queryable, project: ProjectI
   const result1 = await client.query<Project>(
     `SELECT * FROM project WHERE id = $1`,
     [project.id],
-  )
-  const query = result1.rows[0]
+  ),
+   query = result1.rows[0]
     ? 'UPDATE project SET name = $2, owner_email = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
-    : 'INSERT INTO project (id, name, owner_email, archived) VALUES ($1, $2, $3, $4) RETURNING *'
-  const result = await client.query<Project>(query, [project.id, project.name, project.owner_email, project.archived])
-  if (!result.rows[0]) throw new Error('Failed to modify project')
+    : 'INSERT INTO project (id, name, owner_email, archived) VALUES ($1, $2, $3, $4) RETURNING *',
+   result = await client.query<Project>(query, [project.id, project.name, project.owner_email, project.archived])
+  if (!result.rows[0]) {throw new Error('Failed to modify project')}
   logger.debug(`Modified project '${project.name}' for owner ${project.owner_email}`)
   return removeNull(result.rows[0])
 }

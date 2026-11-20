@@ -1,6 +1,6 @@
 import { type ChangeEvent } from 'react'
 import style from './EditorContext.module.css'
-import { Template } from '../../_data/Template'
+import type { Template } from '../../_data/Template'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { Collapse } from '@/app/shared/_components/Collapse'
@@ -18,8 +18,8 @@ interface Props {
 
 export function EditorContext({ templates, template, parameters, onParametersChange, onTemplateChange, onBlur }: Props) {
   function handleTemplateChange(e: ChangeEvent<HTMLSelectElement>) {
-    const id = e.currentTarget.value
-    const result = templates.find(t => t.id === id)
+    const id = e.currentTarget.value,
+     result = templates.find(t => t.id === id)
     if (result === undefined) {
       throw notFound(`Template with id "${id}" not found.`)
     }
@@ -27,8 +27,8 @@ export function EditorContext({ templates, template, parameters, onParametersCha
   }
 
   function handleLanguageChange(e: ChangeEvent<HTMLSelectElement>) {
-    const language = e.currentTarget.value
-    const result = templates.find(t => t.language === language)
+    const language = e.currentTarget.value,
+     result = templates.find(t => t.language === language)
     if (result === undefined) {
       throw notFound(`No template found for language "${language}".`)
     }
@@ -36,7 +36,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
   }
 
   return (
-    <Collapse header="Context" initiallyExpanded={true}>
+    <Collapse header="Context" initiallyExpanded>
       <div className={style.collapse}>
         <div className={`row ${style.row}`}>
           <Select value={template?.language} onChange={(e) => { handleLanguageChange(e) }} required label="Language">

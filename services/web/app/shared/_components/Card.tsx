@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import style from './Card.module.css'
-import { Url } from 'next/dist/shared/lib/router/router'
+import type { Url } from 'next/dist/shared/lib/router/router'
 
 export type CardProps = CardPropsWithLink | CardPropsWithoutLink
 interface CardPropsWithLink extends Omit<React.ComponentPropsWithoutRef<'a'>, 'href'> {

@@ -13,10 +13,10 @@ export default function Loading() {
       </ActionTitle>
       <LoadingSpinner />
       <div className={styles.grid}>
-        <DashboardCard header="Build" items={[]}></DashboardCard>
-        <DashboardCard header="Run" items={[]}></DashboardCard>
-        <DashboardCard header="Config" url="/admin/config" items={[]}></DashboardCard>
-        <DashboardCard header="Metrics" url="/admin/metrics" items={[]}></DashboardCard>
+        <DashboardCard header="Build" items={[]} />
+        <DashboardCard header="Run" items={[]} />
+        <DashboardCard header="Config" url="/admin/config" items={[]} />
+        <DashboardCard header="Metrics" url="/admin/metrics" items={[]} />
       </div>
       <EventsCard events={[]} logUrl={config.LOG_URL} />
     </main>

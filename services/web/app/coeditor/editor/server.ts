@@ -1,17 +1,23 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { createDiscussion, Discussion, DiscussionInput, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
-import { findTemplateById, findTemplatesByOwner, Template } from '../_data/Template'
+import type { Discussion, DiscussionInput} from '../_data/Discussion';
+import { createDiscussion, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
+import type { Template } from '../_data/Template';
+import { findTemplateById, findTemplatesByOwner } from '../_data/Template'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
 import { logEvent } from '@/app/shared/_data/Event'
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES, PredefinedCommandType } from '../_data/Command'
+import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { CommandInput, CommandResult, PredefinedCommandType } from '../_data/Command';
+import { PREDEFINED_COMMAND_TYPES, createCommand, findCommandsByDiscussion } from '../_data/Command'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
-import { findProfileByOwnerAndLanguage, Profile } from '../_data/Profile'
-import { aiPort, AiPortInput } from '../_external/AiPort'
+import type { Profile } from '../_data/Profile';
+import { findProfileByOwnerAndLanguage } from '../_data/Profile'
+import type { AiPortInput } from '../_external/AiPort';
+import { aiPort } from '../_external/AiPort'
 import z from 'zod'
 
 export interface EditorData {
@@ -20,8 +26,8 @@ export interface EditorData {
 }
 
 export async function loadEditorData(discussionId?: string): Promise<EditorData> {
-  const user = await getAuthenticatedUserSession('coeditor')
-  const [discussion, templates] = await nontransactional(c => Promise.all([
+  const user = await getAuthenticatedUserSession('coeditor'),
+   [discussion, templates] = await nontransactional(c => Promise.all([
     discussionId ? findDiscussionById(c, user.email, discussionId) : Promise.resolve(undefined),
     findTemplatesByOwner(c, user.email),
   ]))
@@ -55,18 +61,18 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
     if (!template) {
       throw invalidInput(`Given template ${input.template_id} not found`)
     }
-    const discussion = await findDiscussionById(tx, user.email, input.discussion_id)
-    const profile = await findProfileByOwnerAndLanguage(tx, user.email, template.language)
-    const aiPortInput = toAiPortInput(input, discussion, template, profile)
-    const pastCommands = await findCommandsByDiscussion(tx, input.discussion_id)
-    const commandResult = isNewRequestWithoutContext(input, discussion, aiPortInput.context)
+    const discussion = await findDiscussionById(tx, user.email, input.discussion_id),
+     profile = await findProfileByOwnerAndLanguage(tx, user.email, template.language),
+     aiPortInput = toAiPortInput(input, discussion, template, profile),
+     pastCommands = await findCommandsByDiscussion(tx, input.discussion_id),
+     commandResult = isNewRequestWithoutContext(input, discussion, aiPortInput.context)
       ? { text: '', title: '' }
-      : await aiPort(aiPortInput, pastCommands)
-    const updatedDiscussion = toDiscussionInput(input, aiPortInput.context, commandResult)
-    const result = discussion
+      : await aiPort(aiPortInput, pastCommands),
+     updatedDiscussion = toDiscussionInput(input, aiPortInput.context, commandResult),
+     result = discussion
       ? await modifyDiscussion(tx, user.email, updatedDiscussion)
-      : await createDiscussion(tx, user.email, updatedDiscussion)
-    const command = toCommand(input, aiPortInput, commandResult)
+      : await createDiscussion(tx, user.email, updatedDiscussion),
+     command = toCommand(input, aiPortInput, commandResult)
     await createCommand(tx, user.email, command)
     if (discussion) {
       logger.info(`Executed command for discussion ${result.id} by user ${user.email} with template ${template.name}`)
@@ -82,35 +88,35 @@ export async function executeCommand(input: ExecuteCommandInput): ActionResponse
 
 function toAiPortInput(input: ExecuteCommandInput, discussion: Discussion | undefined, template: Template, profile: Profile | undefined): AiPortInput {
   return {
+    context: createContextString(template, input.parameters),
+    custom_command: input.custom_command,
+    language: template.language,
+    predefined_command: input.predefined_command,
+    profile: profile?.text,
+    selection_end: input.selection_end,
+    selection_start: input.selection_start,
     text: input.text,
     title: discussion?.title,
-    context: createContextString(template, input.parameters),
-    language: template.language,
-    profile: profile?.text,
-    selection_start: input.selection_start,
-    selection_end: input.selection_end,
-    custom_command: input.custom_command,
-    predefined_command: input.predefined_command,
   }
 }
 
 function toDiscussionInput(input: ExecuteCommandInput, context: string, commandResult: CommandResult): DiscussionInput {
   return {
+    context,
     id: input.discussion_id,
+    parameters: input.parameters,
+    template_id: input.template_id,
     text: commandResult.text,
     title: commandResult.title,
-    template_id: input.template_id,
-    context: context,
-    parameters: input.parameters,
   }
 }
 
 function createContextString(template: Template, values: Record<string, string>): string {
-  let result = template.text
-  let offset = 0
+  let result = template.text,
+   offset = 0
   for (const param of template.parameters) {
     if (!(param.name in values))
-      throw invalidInput(`Value for parameter '${param.name}' is missing`)
+      {throw invalidInput(`Value for parameter '${param.name}' is missing`)}
     const value = values[param.name]
     result = result.substring(0, param.startPosition + offset) + value + result.substring(param.endPosition + offset)
     offset += value.length - (param.endPosition - param.startPosition)
@@ -122,8 +128,8 @@ function toCommand(input: ExecuteCommandInput, aiInput: AiPortInput, commandResu
   return {
     ...input,
     context: aiInput.context,
-    result: commandResult,
     language: aiInput.language,
+    result: commandResult,
   }
 }
 
@@ -132,13 +138,13 @@ function isNewRequestWithoutContext(input: ExecuteCommandInput, discussion: Disc
 }
 
 const ExecuteCommandInputSchema = z.object({
-  id: z.uuid(),
+  custom_command: z.string().optional(),
   discussion_id: z.uuid(),
+  id: z.uuid(),
+  parameters: z.record(z.string(), z.string()),
+  predefined_command: z.enum(PREDEFINED_COMMAND_TYPES).optional(),
+  selection_end: z.number().optional(),
+  selection_start: z.number().optional(),
   template_id: z.uuid(),
   text: z.string(),
-  parameters: z.record(z.string(), z.string()),
-  selection_start: z.number().optional(),
-  selection_end: z.number().optional(),
-  custom_command: z.string().optional(),
-  predefined_command: z.enum(PREDEFINED_COMMAND_TYPES).optional(),
 })

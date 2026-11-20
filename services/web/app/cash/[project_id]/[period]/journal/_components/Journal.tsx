@@ -1,14 +1,16 @@
 'use client'
-import { Account } from '@/app/cash/_data/Account'
+import type { Account } from '@/app/cash/_data/Account'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { lastDay, Period, startDate, todayOrInPeriod, toUrlString } from '@/app/cash/_helper/Period'
+import type { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
+import type { Period} from '@/app/cash/_helper/Period';
+import { lastDay, startDate, toUrlString, todayOrInPeriod } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
-import { ReactNode, useMemo, useState } from 'react'
+import type { ReactNode} from 'react';
+import { useMemo, useState } from 'react'
 import { Currency } from '@/app/shared/_components/Currency'
 import { AccountBadge } from '@/app/cash/_components/AccountBadge'
 import { deleteTransaction, saveTransaction } from '../server'
@@ -29,28 +31,28 @@ export interface JournalProps {
 }
 
 export function Journal({ accounts, transactions: transactionsIn, project_id, period }: JournalProps) {
-  const [transactions, addTransaction, removeTransaction] = useListState(transactionsIn)
-  const [title, setTitle] = useState<string>('New Transaction')
-  const [sidebarId, openSidebar] = useSidebar()
-  const [current, setCurrent] = useState(getInitialInput(period, project_id))
-  const [noDelete, setNoDelete] = useState(false)
+  const [transactions, addTransaction, removeTransaction] = useListState(transactionsIn),
+   [title, setTitle] = useState<string>('New Transaction'),
+   [sidebarId, openSidebar] = useSidebar(),
+   [current, setCurrent] = useState(getInitialInput(period, project_id)),
+   [noDelete, setNoDelete] = useState(false),
 
-  const creditAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.credit_account_id)))
+   creditAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.credit_account_id)))
     .map(accountId => accounts.find(a => a.id === accountId))
     .filter((a): a is Account => a !== undefined)
-    .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts])
+    .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts]),
 
-  const debitAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.debit_account_id)))
+   debitAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.debit_account_id)))
     .map(accountId => accounts.find(a => a.id === accountId))
     .filter((a): a is Account => a !== undefined)
-    .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts])
+    .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts]),
 
-  const columns = [
+   columns = [
     accountColumn('credit_account_id', creditAccounts, period, { className: style.account, header: 'Credit Account' }),
     accountColumn('debit_account_id', debitAccounts, period, { className: style.account, header: 'Debit Account' }),
     currencyColumn('amount', { className: style.amount, header: 'Amount' }),
     dateColumn('date', { className: style.date, header: 'Date' }),
-    textColumn('description', { header: 'Description', style: { whiteSpace: 'pre-wrap', overflow: 'hidden' } }),
+    textColumn('description', { header: 'Description', style: { overflow: 'hidden', whiteSpace: 'pre-wrap' } }),
   ]
 
   function showTransaction(transaction?: Transaction) {
@@ -61,8 +63,8 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
   }
 
   function renderMobile(item: Transaction): ReactNode {
-    const creditAccount = accounts.find(a => a.id === item.credit_account_id)
-    const debitAccount = accounts.find(a => a.id === item.debit_account_id)
+    const creditAccount = accounts.find(a => a.id === item.credit_account_id),
+     debitAccount = accounts.find(a => a.id === item.debit_account_id)
     return (
       <div key={item.id} className={style.mobileItem} onClick={() => { showTransaction(item) }}>
         <div className={style.mobileRow}>
@@ -86,7 +88,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
       <DataTable
         columns={columns}
         data={transactions}
-        initialSortingOrder={[{ key: 'date', direction: 'DESC' }]}
+        initialSortingOrder={[{ direction: 'DESC', key: 'date' }]}
         searchLabel="Search transactions…"
         onRowClick={(transaction) => { showTransaction(transaction) }}
         renderMobile={renderMobile}
@@ -119,12 +121,12 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
 
 function getInitialInput(period: Period, project_id: string): Omit<TransactionInput, 'amount'> & { amount: string } {
   return {
-    id: randomUUID(),
-    project_id: project_id,
-    credit_account_id: '',
-    debit_account_id: '',
     amount: '0',
+    credit_account_id: '',
     date: todayOrInPeriod(period),
+    debit_account_id: '',
     description: '',
+    id: randomUUID(),
+    project_id,
   }
 }

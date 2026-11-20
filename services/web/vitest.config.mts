@@ -24,29 +24,29 @@ export default defineConfig({
           configDir: path.join(dirname, '.storybook'),
         })],
       test: {
-        name: 'storybook',
         browser: {
           enabled: true,
           headless: true,
-          provider: playwright({}),
           instances: [{
             browser: 'chromium',
           }],
+          provider: playwright({}),
         },
+        name: 'storybook',
       },
     }, {
       extends: true,
       test: {
-        name: 'integration',
         include: ['**/server.tests.ts'],
+        name: 'integration',
         setupFiles: ['vitest.setup.ts'],
       },
     }, {
       extends: true,
       test: {
-        name: 'unit',
-        include: ['**/*.tests.ts'],
         exclude: ['**/server.tests.ts'],
+        include: ['**/*.tests.ts'],
+        name: 'unit',
         setupFiles: ['vitest.setup.ts'],
       },
     }],

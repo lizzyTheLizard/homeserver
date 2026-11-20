@@ -1,6 +1,7 @@
 'use client'
 import { Select } from '@/app/shared/_components/form/Select'
-import { Period, toUrlString } from '../_helper/Period'
+import type { Period} from '../_helper/Period';
+import { toUrlString } from '../_helper/Period'
 import { Temporal } from '@js-temporal/polyfill'
 import { useActionTitle } from '@/app/shared/_components/ActionTitleHelpers'
 
@@ -10,37 +11,37 @@ export interface PeriodPickerProps {
   project_id?: string
 }
 
-const maxYear = Temporal.Now.plainDateISO().year
-const minYear = 2020
+const maxYear = Temporal.Now.plainDateISO().year,
+ minYear = 2020
 
 export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPickerProps) {
   const renderInActionTitle = useActionTitle()
 
   function defaultOnPeriodChange(p: Period) {
-    const split = window.location.pathname.split('/')
-    const s = window.location.search
-    const href = `/cash/${project_id ?? ''}/${toUrlString(p)}` + '/' + split.slice(4).join('/') + s
+    const split = window.location.pathname.split('/'),
+     s = window.location.search,
+     href = `/cash/${project_id ?? ''}/${toUrlString(p)}/${  split.slice(4).join('/')  }${s}`
     window.location.href = href
   }
 
   function setYear(year: string | undefined) {
-    const newYear = year ? parseInt(year) : undefined
-    const newMonth = (year === period.year?.toString()) ? period.month : undefined
-    const newPeriod = { current: false, year: newYear, month: newMonth }
+    const newYear = year ? parseInt(year) : undefined,
+     newMonth = (year === period.year?.toString()) ? period.month : undefined,
+     newPeriod = { current: false, month: newMonth, year: newYear }
     if (onPeriodChange) { onPeriodChange(newPeriod) }
     else { defaultOnPeriodChange(newPeriod) }
   }
 
   function setMonth(month: string | undefined) {
-    const newYear = period.year
-    const newMonth = (period.year && month) ? parseInt(month) : undefined
-    const newPeriod = { current: false, year: newYear, month: newMonth }
+    const newYear = period.year,
+     newMonth = (period.year && month) ? parseInt(month) : undefined,
+     newPeriod = { current: false, month: newMonth, year: newYear }
     if (onPeriodChange) { onPeriodChange(newPeriod) }
     else { defaultOnPeriodChange(newPeriod) }
   }
 
-  const year = period.year?.toString() ?? ''
-  const month = period.month?.toString().padStart(2, '0') ?? ''
+  const year = period.year?.toString() ?? '',
+   month = period.month?.toString().padStart(2, '0') ?? ''
 
   return renderInActionTitle(
     <>

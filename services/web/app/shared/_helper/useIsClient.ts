@@ -6,5 +6,5 @@ import { useSyncExternalStore } from 'react'
  * For content that merely *differs* between server and client, use `suppressHydrationWarning` instead.
  */
 export function useIsClient(): boolean {
-  return useSyncExternalStore(() => () => { /* empty */ }, () => true, () => false)
+  return useSyncExternalStore(() => () => { /* Empty */ }, () => true, () => false)
 }

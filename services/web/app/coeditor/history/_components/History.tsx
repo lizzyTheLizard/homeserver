@@ -1,17 +1,17 @@
 'use client'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { DateTime } from '@/app/shared/_components/DateTime'
 import { useRouter } from 'next/navigation'
-import { Discussion } from '../../_data/Discussion'
+import type { Discussion } from '../../_data/Discussion'
 import style from './History.module.css'
 
 const columns = [
   textColumn('title', { header: 'Title' }),
   dateColumn('updated_at', { header: 'Last Updated' }),
   textColumn('context', { header: 'Context' }),
-  textColumn('text', { style: { whiteSpace: 'pre-wrap' }, header: 'Text' }),
+  textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } }),
 ]
 
 export interface HistoryProps {
@@ -49,7 +49,7 @@ export function History({ discussions = [] }: HistoryProps) {
       <DataTable
         columns={columns}
         data={discussions}
-        initialSortingOrder={[{ key: 'updated_at', direction: 'DESC' }]}
+        initialSortingOrder={[{ direction: 'DESC', key: 'updated_at' }]}
         searchLabel="Search history…"
         onRowClick={openDiscussion}
         renderMobile={renderMobile}

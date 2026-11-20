@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { useState } from 'react'
-import { fn, expect } from 'storybook/test'
+import { expect, fn } from 'storybook/test'
 import { Input } from './Input'
 
 const meta = {
-  title: 'Shared/Form/Input',
-  component: Input,
-  tags: ['autodocs'],
   args: {
   },
+  component: Input,
+  tags: ['autodocs'],
+  title: 'Shared/Form/Input',
 } satisfies Meta<typeof Input>
 export default meta
 
@@ -27,8 +27,8 @@ export const Disabled: StoryObj<typeof meta> = {
 
 export const Required: StoryObj<typeof meta> = {
   args: {
-    required: true,
     label: 'Required input',
+    required: true,
   },
 }
 
@@ -36,6 +36,12 @@ export const Filled: StoryObj<typeof meta> = {
   args: {
     label: 'Filled input',
     onChange: fn(),
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    const input = canvas.getByLabelText('Filled input')
+    await userEvent.click(input)
+    await userEvent.keyboard('Hello, World!')
+    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ value: 'Hello, World!' }) as HTMLTextAreaElement }))
   },
   render: (args) => {
     const [value, setValue] = useState(args.value)
@@ -47,39 +53,33 @@ export const Filled: StoryObj<typeof meta> = {
       />
     )
   },
-  play: async ({ args, canvas, userEvent }) => {
-    const input = canvas.getByLabelText('Filled input')
-    await userEvent.click(input)
-    await userEvent.keyboard('Hello, World!')
-    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ value: 'Hello, World!' }) as HTMLTextAreaElement }))
-  },
 }
 
 export const Number: StoryObj<typeof meta> = {
   args: {
-    type: 'number',
     label: 'Number input',
+    type: 'number',
   },
 }
 
 export const Date: StoryObj<typeof meta> = {
   args: {
-    type: 'date',
     label: 'Date input',
+    type: 'date',
   },
 }
 
 export const Email: StoryObj<typeof meta> = {
   args: {
-    type: 'email',
     label: 'Email input',
+    type: 'email',
   },
 }
 
 export const File: StoryObj<typeof meta> = {
   args: {
-    type: 'file',
     label: 'File input',
+    type: 'file',
   },
 }
 

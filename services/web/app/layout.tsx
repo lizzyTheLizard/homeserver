@@ -8,9 +8,9 @@ export const metadata = {
 }
 
 export const viewport = {
-  width: 'device-width',
   initialScale: 1,
   interactiveWidget: 'resizes-content',
+  width: 'device-width',
 }
 
 export default async function RootLayout({ children }: React.PropsWithChildren) {
@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
       <body>
         <link rel="stylesheet" href="/global.css" />
         <PwaManager />
-        <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
+        <Header accessibleApplications={user?.applications ?? []} hasSession={Boolean(user)} />
         <SidebarContainer>
           {children}
         </SidebarContainer>

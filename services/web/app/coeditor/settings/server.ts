@@ -1,12 +1,15 @@
 'use server'
 
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { createOrModifyProfile, findProfilesByOwner, Profile, ProfileInput, removeProfile } from '../_data/Profile'
+import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { Profile, ProfileInput} from '../_data/Profile';
+import { createOrModifyProfile, findProfilesByOwner, removeProfile } from '../_data/Profile'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { z } from 'zod'
-import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate, Template, TemplateInput } from '../_data/Template'
+import type { Template, TemplateInput } from '../_data/Template';
+import { createOrModifyTemplate, findTemplatesByOwner, removeTemplate } from '../_data/Template'
 import { logger } from '@/app/shared/logger'
 import { logEvent } from '@/app/shared/_data/Event'
 
@@ -16,8 +19,8 @@ export interface SettingsData {
 }
 
 export async function loadSettings(): Promise<SettingsData> {
-  const user = await getAuthenticatedUserSession('coeditor')
-  const [templates, profiles] = await nontransactional(c => Promise.all([
+  const user = await getAuthenticatedUserSession('coeditor'),
+   [templates, profiles] = await nontransactional(c => Promise.all([
     findTemplatesByOwner(c, user.email),
     findProfilesByOwner(c, user.email),
   ]))
@@ -79,12 +82,12 @@ export async function saveTemplate(input: TemplateInput): ActionResponse<Templat
 
 const TemplateInputSchema = z.object({
   id: z.uuid(),
-  name: z.string().min(1),
   language: z.string().min(1),
+  name: z.string().min(1),
   text: z.string(),
-})
+}),
 
-const ProfileInputSchema = z.object({
+ ProfileInputSchema = z.object({
   language: z.string().min(1),
   text: z.string().min(1),
 })

@@ -17,13 +17,13 @@ export interface ReportsPageProps {
 
 export default async function Page({ params }: ReportsPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const projectId = (await params).project_id
-    const period = fromUrlString((await params).period)
-    const data = await loadReports(period, projectId)
+    const projectId = (await params).project_id,
+     period = fromUrlString((await params).period),
+     data = await loadReports(period, projectId)
     return (
       <main>
         <ActionTitle>
-          <h1>{'Report ' + toString(period)}</h1>
+          <h1>{`Report ${  toString(period)}`}</h1>
         </ActionTitle>
         <Reports {...data} project_id={projectId} period={period} />
       </main>

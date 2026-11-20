@@ -1,5 +1,5 @@
-import { MouseEvent } from 'react'
-import { ColumnDefinition } from './DataTable'
+import type { MouseEvent } from 'react'
+import type { ColumnDefinition } from './DataTable'
 import style from './DataTableRow.module.css'
 
 export interface DataTableRowProps<DataType> {
@@ -11,7 +11,7 @@ export interface DataTableRowProps<DataType> {
 
 export function DataTableRow<DataType extends { id: string }>({ row, columns, onRowClick, isActive }: DataTableRowProps<DataType>) {
   function onClick(e: MouseEvent<HTMLTableRowElement>) {
-    if (!onRowClick) return
+    if (!onRowClick) {return}
     onRowClick(row)
     e.stopPropagation()
   }

@@ -8,10 +8,10 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
   1082: value => value, // DATE
   1114: value => value, // TIMESTAMP WITHOUT TIME ZONE
   1184: value => value, // TIMESTAMP WITH TIME ZONE
+  1700: value => parseFloat(value), // NUMERIC
+  20: value => parseInt(value, 10), // INT8
   21: value => parseInt(value, 10), // INT2
   23: value => parseInt(value, 10), // INT4
-  20: value => parseInt(value, 10), // INT8
-  1700: value => parseFloat(value), // NUMERIC
 }
 
 let phaseTimings: { connectionMs: number, migrationMs: number } | undefined = undefined
@@ -34,9 +34,9 @@ export async function setupPool(): Promise<Pool> {
 
     const connStart = Date.now()
     await testConnection(pool)
-    const connectionMs = Date.now() - connStart
+    const connectionMs = Date.now() - connStart,
 
-    const migrateStart = Date.now()
+     migrateStart = Date.now()
     await migrateDatabase(pool)
     const migrationMs = Date.now() - migrateStart
     phaseTimings = { connectionMs, migrationMs }

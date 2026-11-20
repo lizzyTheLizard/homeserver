@@ -1,10 +1,12 @@
 'use server'
 
-import { Account, AccountInput, createOrModifyAccount, findAllAccountsForProject, removeAccount } from '@/app/cash/_data/Account'
+import type { Account, AccountInput} from '@/app/cash/_data/Account';
+import { createOrModifyAccount, findAllAccountsForProject, removeAccount } from '@/app/cash/_data/Account'
 import { ACCOUNT_TYPES } from '@/app/cash/_data/AccountType'
 import { findProjectById } from '@/app/cash/_data/Project'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { ActionResponse} from '@/app/shared/_helper/ActionResponse';
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
 import { z } from 'zod'
@@ -13,8 +15,8 @@ import { logger } from '@/app/shared/logger'
 import { logEvent } from '@/app/shared/_data/Event'
 
 export async function loadAccounts(projectId: string) {
-  const user = await getAuthenticatedUserSession('cash')
-  const [project, accounts] = await nontransactional(c => Promise.all([
+  const user = await getAuthenticatedUserSession('cash'),
+   [project, accounts] = await nontransactional(c => Promise.all([
     findProjectById(c, user.email, projectId),
     findAllAccountsForProject(c, user.email, projectId),
   ]))
@@ -51,9 +53,9 @@ export async function saveAccount(input: AccountInput): ActionResponse<Account> 
 }
 
 const AccountInputSchema = z.object({
-  id: z.uuid(),
-  project_id: z.uuid(),
-  name: z.string().min(1),
-  type: z.enum(ACCOUNT_TYPES),
   archived: z.boolean(),
+  id: z.uuid(),
+  name: z.string().min(1),
+  project_id: z.uuid(),
+  type: z.enum(ACCOUNT_TYPES),
 })

@@ -24,10 +24,10 @@ export interface ClosingPageProps {
 
 export default async function Page({ params }: ClosingPageProps) {
   return serverPageFunction(metadata.title, async () => {
-    const projectId = (await params).project_id
-    const period = fromUrlString((await params).period)
+    const projectId = (await params).project_id,
+     period = fromUrlString((await params).period)
 
-    if (!isMonthlyPeriod(period)) return (
+    if (!isMonthlyPeriod(period)) {return (
       <main>
         <ActionTitle>
           <h1>Monthly Closing</h1>
@@ -36,7 +36,7 @@ export default async function Page({ params }: ClosingPageProps) {
         <ActionButton disabled variant="primary">Continue</ActionButton>
         <div>This period is not a valid monthly period.</div>
       </main>
-    )
+    )}
 
     const pageData = await loadData(projectId, period)
     switch (pageData.type) {

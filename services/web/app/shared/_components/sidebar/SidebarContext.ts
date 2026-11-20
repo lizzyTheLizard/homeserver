@@ -10,9 +10,9 @@ export interface SidebarContextValue {
 export const SidebarContext = createContext<SidebarContextValue | null>(null)
 
 export function useSidebar(): [string, () => void] {
-  const [sidebarId] = useState(randomUUID())
-  const sidebarContext = useContext(SidebarContext)
-  if (!sidebarContext) throw new Error('useSidebar must be used within a SidebarProvider')
+  const [sidebarId] = useState(randomUUID()),
+   sidebarContext = useContext(SidebarContext)
+  if (!sidebarContext) {throw new Error('useSidebar must be used within a SidebarProvider')}
   const openSidebar = () => { sidebarContext.open(sidebarId) }
   return [sidebarId, openSidebar]
 }

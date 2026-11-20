@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const { mockDeepseekSend, mockGetTools, mockGenerateInitialMessages } = vi.hoisted(() => ({
   mockDeepseekSend: vi.fn(),
-  mockGetTools: vi.fn(),
   mockGenerateInitialMessages: vi.fn(),
+  mockGetTools: vi.fn(),
 }))
 
 vi.mock('./groq', () => ({ send: mockDeepseekSend }))
@@ -11,10 +11,10 @@ vi.mock('./tools', () => ({ getTools: mockGetTools }))
 vi.mock('./initial', () => ({ generateInitialMessages: mockGenerateInitialMessages }))
 
 import { createAssistantInstance } from './assistant'
-import { AssistantEvent } from './types'
-import { SendOptions } from './groq'
+import type { AssistantEvent } from './types'
+import type { SendOptions } from './groq'
 
-const user = { name: 'Test User', email: 'test@test.com', applications: ['startpage'] }
+const user = { applications: ['startpage'], email: 'test@test.com', name: 'Test User' }
 
 describe('createAssistantInstance', () => {
   test('returns an assistant with on, off, init, send', () => {
@@ -26,8 +26,8 @@ describe('createAssistantInstance', () => {
   })
 
   test('on registers and off unregisters listener', () => {
-    const assistant = createAssistantInstance(user)
-    const listener = vi.fn()
+    const assistant = createAssistantInstance(user),
+     listener = vi.fn()
     assistant.on(listener)
     assistant.off(listener)
     assistant.off(listener)
@@ -37,7 +37,7 @@ describe('createAssistantInstance', () => {
   describe('init', () => {
     test('calls getTools and generateInitialMessages', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue([{ role: 'system', content: 'sys' }])
+      mockGenerateInitialMessages.mockResolvedValue([{ content: 'sys', role: 'system' }])
 
       const assistant = createAssistantInstance(user)
       await assistant.init({ location: { lat: 52, lon: 13 } })
@@ -49,32 +49,32 @@ describe('createAssistantInstance', () => {
     test('emits stream_response, finished_response and got_actions during init', async () => {
       mockGetTools.mockResolvedValue({})
       mockGenerateInitialMessages.mockImplementation((_user: unknown, _ctx: unknown, emit: (e: AssistantEvent) => void) => {
-        emit({ type: 'stream_response', chunk: 'Good morning!' })
+        emit({ chunk: 'Good morning!', type: 'stream_response' })
         emit({ type: 'finished_response' })
-        emit({ type: 'got_actions', actions: ['Action 1', 'Action 2'] })
-        return [{ role: 'system', content: 'instructions' }, { role: 'assistant', content: 'Good morning!' }]
+        emit({ actions: ['Action 1', 'Action 2'], type: 'got_actions' })
+        return [{ content: 'instructions', role: 'system' }, { content: 'Good morning!', role: 'assistant' }]
       })
 
-      const events: AssistantEvent[] = []
-      const assistant = createAssistantInstance(user)
+      const events: AssistantEvent[] = [],
+       assistant = createAssistantInstance(user)
       assistant.on(e => events.push(e))
       await assistant.init({ location: { lat: 52, lon: 13 } })
 
-      expect(events).toContainEqual({ type: 'stream_response', chunk: 'Good morning!' })
+      expect(events).toContainEqual({ chunk: 'Good morning!', type: 'stream_response' })
       expect(events).toContainEqual({ type: 'finished_response' })
-      expect(events).toContainEqual({ type: 'got_actions', actions: ['Action 1', 'Action 2'] })
+      expect(events).toContainEqual({ actions: ['Action 1', 'Action 2'], type: 'got_actions' })
     })
   })
 
   describe('send', () => {
     beforeEach(() => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue([{ role: 'system', content: 'sys' }])
+      mockGenerateInitialMessages.mockResolvedValue([{ content: 'sys', role: 'system' }])
       let callCount = 0
       mockDeepseekSend.mockImplementation((options: { messages: { role: string, content: string }[] }) => {
         callCount++
         if (callCount === 2) {
-          options.messages.push({ role: 'assistant', content: '[]' })
+          options.messages.push({ content: '[]', role: 'assistant' })
           return '[]'
         }
       })
@@ -90,7 +90,7 @@ describe('createAssistantInstance', () => {
 
     test('emits stream_response and tool_call via deepseekSend callbacks', async () => {
       mockGetTools.mockResolvedValue({})
-      mockGenerateInitialMessages.mockResolvedValue([{ role: 'system', content: 'sys' }])
+      mockGenerateInitialMessages.mockResolvedValue([{ content: 'sys', role: 'system' }])
 
       const assistant = createAssistantInstance(user)
       await assistant.init({ location: { lat: 52, lon: 13 } })
@@ -104,13 +104,13 @@ describe('createAssistantInstance', () => {
         options.onChunk?.('Hello')
         options.onChunk?.(' World')
         options.onToolCall?.()
-        if (callCount === 2) options.messages.push({ role: 'assistant', content: '[]' }); return '[]'
+        if (callCount === 2) {options.messages.push({ content: '[]', role: 'assistant' });} return '[]'
       })
 
       await assistant.send('test')
 
-      expect(events).toContainEqual({ type: 'stream_response', chunk: 'Hello' })
-      expect(events).toContainEqual({ type: 'stream_response', chunk: ' World' })
+      expect(events).toContainEqual({ chunk: 'Hello', type: 'stream_response' })
+      expect(events).toContainEqual({ chunk: ' World', type: 'stream_response' })
       expect(events).toContainEqual({ type: 'tool_call' })
     })
 
@@ -136,14 +136,14 @@ describe('createAssistantInstance', () => {
       mockDeepseekSend.mockImplementation(({ messages }: { messages: { role: string, content: string }[] }) => {
         callCount++
         if (callCount === 2) {
-          messages.push({ role: 'assistant', content: '["Action A", "Action B"]' })
+          messages.push({ content: '["Action A", "Action B"]', role: 'assistant' })
           return '["Action A", "Action B"]'
         }
       })
 
       await assistant.send('test')
 
-      expect(events).toContainEqual({ type: 'got_actions', actions: ['Action A', 'Action B'] })
+      expect(events).toContainEqual({ actions: ['Action A', 'Action B'], type: 'got_actions' })
     })
 
     test('emits got_actions with empty array when no actions', async () => {
@@ -157,14 +157,14 @@ describe('createAssistantInstance', () => {
       mockDeepseekSend.mockImplementation(({ messages }: { messages: { role: string, content: string }[] }) => {
         callCount++
         if (callCount === 2) {
-          messages.push({ role: 'assistant', content: '[]' })
+          messages.push({ content: '[]', role: 'assistant' })
           return '[]'
         }
       })
 
       await assistant.send('test')
 
-      expect(events).toContainEqual({ type: 'got_actions', actions: [] })
+      expect(events).toContainEqual({ actions: [], type: 'got_actions' })
     })
   })
 })
