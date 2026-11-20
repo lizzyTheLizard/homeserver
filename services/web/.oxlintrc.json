@@ -64,7 +64,10 @@
       "method"
     ],
     "no-continue": "off",
-    "init-declarations": "off"
+    "init-declarations": [
+      "error",
+      "never"
+    ]
   },
   "overrides": [
     {
