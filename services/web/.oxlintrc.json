@@ -54,7 +54,8 @@
           1
         ]
       }
-    ]
+    ],
+    "max-params": "warn"
   },
   "overrides": [
     {
