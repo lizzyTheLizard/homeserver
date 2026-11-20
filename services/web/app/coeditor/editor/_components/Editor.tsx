@@ -55,10 +55,10 @@ export function Editor({ discussion, templates }: EditorProps) {
       setExecutePending(false)
       if (result.data.id !== discussion?.id)
         router.replace(`/coeditor/editor?id=${result.data.id}`)
-    }).catch((error: unknown) => {
-      console.error('Error executing command:', error)
+    }).catch((caught: unknown) => {
+      console.error('Error executing command:', caught)
       setExecutePending(false)
-      setError(error instanceof Error ? error.message : String(error))
+      setError(caught instanceof Error ? caught.message : String(caught))
     })
   }
 

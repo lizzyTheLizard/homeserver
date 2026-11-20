@@ -140,7 +140,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     tasks.set(listId, listTasks.filter(t => t.id !== taskId))
   }
 
-  async function createTask(user: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask> {
+  async function createTask(requestUser: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask> {
     try {
       const taskBody: Record<string, unknown> = { title }
       if (body) taskBody.body = { content: body, contentType: 'text' }
@@ -148,7 +148,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       const list = lists.find(l => l.id === listId)
       if (!list) throw new Error(`List with ID ${listId} not found`)
       logger.debug(`Create task in list ${listId} with body ${JSON.stringify(taskBody)}`)
-      const result = await graphApiRequest(user, `/me/todo/lists/${listId}/tasks`, async (request) => {
+      const result = await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks`, async (request) => {
         const response = await request.post(taskBody) as RawTodoTask
         return { ...convertTask(response), listName: list.displayName }
       })
@@ -161,7 +161,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     }
   }
 
-  async function updateTask(user: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask> {
+  async function updateTask(requestUser: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask> {
     try {
       const targetListId = updates.listId ?? listId
       const list = lists.find(l => l.id === targetListId)
@@ -171,7 +171,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       if (updates.body !== undefined) patchBody.body = { content: updates.body, contentType: 'text' }
       if (updates.reminderDateTime !== undefined) patchBody.reminderDateTime = toGraphDateTime(updates.reminderDateTime)
       logger.debug(`Update task ${taskId} with ${JSON.stringify(patchBody)}`)
-      const result = await graphApiRequest(user, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async (request) => {
+      const result = await graphApiRequest(requestUser, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async (request) => {
         const response = await request.patch(patchBody) as RawTodoTask
         return { ...convertTask(response), listName: list.displayName }
       })
@@ -185,10 +185,10 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     }
   }
 
-  async function completeTask(user: UserSession, listId: string, taskId: string): Promise<void> {
+  async function completeTask(requestUser: UserSession, listId: string, taskId: string): Promise<void> {
     try {
       logger.debug(`Complete task ${taskId}`)
-      await graphApiRequest(user, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
+      await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
         await request.patch({ status: 'completed' })
       })
       const listTasks = tasks.get(listId)
@@ -203,10 +203,10 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     }
   }
 
-  async function deleteTask(user: UserSession, listId: string, taskId: string): Promise<void> {
+  async function deleteTask(requestUser: UserSession, listId: string, taskId: string): Promise<void> {
     try {
       logger.debug(`Delete task ${taskId}`)
-      await graphApiRequest(user, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
+      await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
         await request.delete()
       })
       removeTaskFromMemory(taskId, listId)
@@ -275,9 +275,9 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         status = 'connecting'
         doInitialFetch()
           .then(() => { status = 'connected' })
-          .catch((error: unknown) => {
+          .catch((refetchError: unknown) => {
             status = 'error'
-            logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+            logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
           })
       })
   }, deltaPollIntervalMs)

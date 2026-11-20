@@ -31,5 +31,6 @@ export async function deleteProject(id: string) {
     }
     logger.info(`Deleted project ${result.name} for user ${result.owner_email} with id ${id}`)
     await logEvent(tx, 'INFO', `Deleted project ${result.name} for user ${result.owner_email}`)
+    return undefined
   }))
 }

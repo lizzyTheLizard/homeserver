@@ -19,7 +19,7 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
   function defaultOnPeriodChange(p: Period) {
     const split = window.location.pathname.split('/')
     const s = window.location.search
-    const href = `/cash/${project_id ?? ''}/${toUrlString(p)}` + '/' + split.slice(4).join('/') + s
+    const href = `/cash/${project_id ?? ''}/${toUrlString(p)}/` + split.slice(4).join('/') + s
     window.location.href = href
   }
 

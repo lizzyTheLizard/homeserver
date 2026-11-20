@@ -16,7 +16,7 @@ See proposal.md for motivation. Current state: every package has its own `.oxlin
 
 ## Decisions
 
-1. **Categories over rules.** Use `correctness`, `suspicious` and `style` at `error`; `style` is the closest oxlint equivalent of the dropped typescript-eslint stylistic set (formatting rules stay out of scope; there is no formatter) (with `--deny-warnings` already in CI, `warn` would be equivalent but less honest). Not enabled: `restriction` (bans features; pick single rules by name if wanted), `nursery` (unstable, can break on upgrades) and `pedantic`. `perf` is enabled as `warn` (CI uses `--deny-warnings`, so it still fails the build). Alternative: keep `correctness` only — rejected because it drops common best-practice checks.
+1. **Categories over rules.** Use `correctness` and `suspicious` at `error`. Measured on the code base: adding `style` (and `perf`) produced about 1,750 findings in assistant alone, mostly opinionated rules (`no-magic-numbers`, `sort-keys`, `no-ternary`, `id-length`, ...), so those categories, `restriction` and `nursery` stay off. `pedantic` stays off as well.
 2. **Type-aware rules come via categories.** With `--type-aware`, type-aware rules that belong to the enabled categories (e.g. `no-floating-promises`, `no-misused-promises`) run without being listed. Any type-aware rule we still consider essential and that is not covered is listed individually with a one-line reason; the apply step checks this against the actual rule/category mapping of the installed oxlint.
 3. **One small override at most for JS files.** Drop the 60-line `"off"` block. If `oxlint --type-aware` reports type-aware findings in `.js/.cjs/.mjs`, add a single override disabling the specific failing rules, or ignore those files, instead of mirroring the whole list.
 4. **Keep project-specific config.** `env`, `ignorePatterns`, `react-refresh/only-export-components` with `allowExportNames`, react-hooks rules, storybook overrides and `react/purity: off` stay, since they encode framework conventions (Next.js route exports, Storybook files) rather than style preferences. `typescript/no-extraneous-class: off` stays only if it still reports.
@@ -29,7 +29,7 @@ See proposal.md for motivation. Current state: every package has its own `.oxlin
 - [Standard set reports many new findings] → Apply measures the count first; if it is large, report to the user before disabling anything broadly.
 - [Category membership differs by oxlint version] → Verified against the installed version during apply; a later oxlint upgrade may shift findings, caught by `lint:ci`.
 
-## Adjustments during apply
+## Outcome during apply
 
-- After measuring the `style` category (see Risks), these rules are configured explicitly in every package: `one-var` off, `no-ternary` off, `max-statements` warn. Imports are ordered per the `sort-imports` defaults (side-effect, namespace, multi-member, then single-member imports, each alphabetical, case-sensitive) and duplicate imports are merged.
-- `max-statements` as `warn` still fails CI because `lint:ci` uses `--deny-warnings`.
+- Source files are unchanged. Only the four `.oxlintrc.json` files and the root devDependencies (`oxlint`, `oxlint-tsgolint`, so the editor extension finds the binaries) change.
+- Remaining findings with this set are reported by `lint:ci` and fixed separately.

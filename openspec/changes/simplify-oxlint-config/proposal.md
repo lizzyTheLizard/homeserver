@@ -6,7 +6,7 @@ Each of the four packages carries a 165–215 line `.oxlintrc.json` that enables
 
 ## What Changes
 
-- Replace the per-rule lists in `services/{web,assistant,whatsapp,wichteln}/.oxlintrc.json` with a standard setup: relevant plugins plus the `correctness`, `suspicious` and `style` categories at error level and `perf` at warn level (`restriction` and `nursery` off), and no individually listed built-in rules except deliberate, commented exceptions.
+- Replace the per-rule lists in `services/{web,assistant,whatsapp,wichteln}/.oxlintrc.json` with a standard setup: relevant plugins plus the `correctness` and `suspicious` categories at error level (all other categories off), and no individually listed built-in rules except deliberate, commented exceptions.
 - Remove the large `"off"` override block for JS/CJS/MJS files; keep a minimal override only if type-aware rules still fail on those files.
 - Keep the project-specific parts: `env`, `ignorePatterns`, the `react-refresh` and `storybook` js plugins with their options and story/`.storybook` overrides, and the existing exceptions that are still needed (`react/purity`, `no-extraneous-class`).
 - Fix or explicitly disable (with a reason) any new findings the standard set produces.

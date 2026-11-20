@@ -33,7 +33,7 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
   const [noDelete, setNoDelete] = useState(false)
 
   function showFavorite(fav?: Favorite) {
-    const maxPosition = favorites.map(fav => fav.position).reduce((max, pos) => Math.max(max, pos), 0)
+    const maxPosition = favorites.map(item => item.position).reduce((max, pos) => Math.max(max, pos), 0)
     setId(fav?.id ?? randomUUID())
     setPosition(String(fav?.position ?? String(maxPosition + 1)))
     setName(fav?.name ?? '')

@@ -102,7 +102,7 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
   }, [])
 
   useEffect(() => {
-    if (!input.current) return
+    if (!input.current) return undefined
     const observer = new ResizeObserver(() => { updateSize(input.current) })
     observer.observe(input.current)
     setTimeout(() => { updateSize(input.current) }, 100)

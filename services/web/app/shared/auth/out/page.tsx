@@ -13,14 +13,12 @@ export default async function Page() {
     if (user) {
       redirect(config.APP_URL + '/shared/auth/logout')
     }
-    else {
-      return (
-        <main>
-          <h1>Logged Out</h1>
-          <p>You have successfully logged out of the application.</p>
-          <a href="/">Login</a>
-        </main>
-      )
-    }
+    return (
+      <main>
+        <h1>Logged Out</h1>
+        <p>You have successfully logged out of the application.</p>
+        <a href="/">Login</a>
+      </main>
+    )
   })
 }

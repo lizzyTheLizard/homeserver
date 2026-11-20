@@ -11,7 +11,7 @@ export function accountColumn(key: string, accounts: Account[], period: Period, 
     key,
     header: options?.header ?? key,
     cell: options?.cell ?? ((value) => {
-      const account = accounts.find(account => account.id === value)
+      const account = accounts.find(acc => acc.id === value)
       if (!account) return value
       return <AccountBadge type={account.type} name={account.name} tabIndex={options?.tabIndex} link={`/cash/${account.project_id}/${toUrlString(period)}/journal?accountId=${account.id}`}></AccountBadge>
     }),

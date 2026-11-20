@@ -6,7 +6,7 @@
 
 ## 2. Simplify the configs
 
-- [x] 2.1 Rewrite `services/assistant/.oxlintrc.json` and `services/whatsapp/.oxlintrc.json` to plugins `typescript`, categories `correctness` + `suspicious` + `style` as error and `perf` as warn, `env`, `ignorePatterns`; verify `pnpm --filter @homeserver/assistant lint:ci` and `pnpm --filter @homeserver/whatsapp lint:ci` run.
+- [x] 2.1 Rewrite `services/assistant/.oxlintrc.json` and `services/whatsapp/.oxlintrc.json` to plugins `typescript`, categories `correctness` + `suspicious` as error, `env`, `ignorePatterns`; verify `pnpm --filter @homeserver/assistant lint:ci` and `pnpm --filter @homeserver/whatsapp lint:ci` run.
 - [x] 2.2 Rewrite `services/web/.oxlintrc.json` and `services/wichteln/.oxlintrc.json` the same way, keeping `react` plugin, `react-refresh`/storybook js plugins and their overrides, react-hooks rules and `react/purity: off`; verify both `lint:ci` commands run.
 - [x] 2.3 Remove the JS/CJS/MJS `"off"` override blocks; add back only a minimal override if type-aware findings appear in those files. Verify no config lists more than a handful of built-in rules and each remaining exception has a reason.
 - [x] 2.4 Check that type-aware rules from the enabled categories actually run (e.g. introduce and revert a floating promise in a scratch file) and re-list individually any essential type-aware rule that does not.

@@ -54,7 +54,7 @@ function SidebarInner<T>({ children, id, title, type, onDelete, onSave, onAfterD
     adjustHeight(ref.current)
   }, [ref, isOpen])
 
-  function execute<T>(response: () => ActionResponse<T>, onSuccess: ((result: T) => void) | undefined) {
+  function execute<R>(response: () => ActionResponse<R>, onSuccess: ((result: R) => void) | undefined) {
     setPending(true)
     setError(undefined)
     response().then((result) => {
@@ -67,8 +67,8 @@ function SidebarInner<T>({ children, id, title, type, onDelete, onSave, onAfterD
         onSuccess(result.data)
       }
       sidebarContext?.close()
-    }).catch((error: unknown) => {
-      console.error(error)
+    }).catch((caught: unknown) => {
+      console.error(caught)
       setPending(false)
       setError('An unexpected error occurred.')
     })

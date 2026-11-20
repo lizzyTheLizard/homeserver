@@ -41,7 +41,7 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
   function onSave() {
     setLoading(true)
     setError(undefined)
-    const t = transactions.map(toSharedTransactionInput).filter(t => t !== undefined)
+    const t = transactions.map(toSharedTransactionInput).filter(item => item !== undefined)
     addSharedTransactions(project_id, period, t)
       .then((r) => {
         if (r.success) router.refresh()

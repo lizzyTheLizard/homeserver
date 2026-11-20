@@ -55,7 +55,7 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   }
 
   function onSave() {
-    const t = transactions.map(toNeonTransactionInput).filter(t => t !== undefined)
+    const t = transactions.map(toNeonTransactionInput).filter(item => item !== undefined)
     setLoading(true)
     setError(undefined)
     addNeonTransactions(project_id, period, t)

@@ -118,11 +118,11 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     return { focused, focusedUnread, other, otherUnread }
   }
 
-  async function sendMail(user: UserSession, to: string[], subject: string, body: string): Promise<void> {
+  async function sendMail(requestUser: UserSession, to: string[], subject: string, body: string): Promise<void> {
     try {
       const toRecipients = to.map(address => ({ emailAddress: { address } }))
       logger.debug(`Send mail to ${to.join(', ')}`)
-      await graphApiRequest(user, `/me/sendMail`, async (request) => {
+      await graphApiRequest(requestUser, `/me/sendMail`, async (request) => {
         await request.post({
           message: { subject, body: { contentType: 'Text', content: body }, toRecipients },
           saveToSentItems: 'true',
@@ -135,15 +135,15 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     }
   }
 
-  async function archiveMessage(user: UserSession, messageId: string): Promise<void> {
+  async function archiveMessage(requestUser: UserSession, messageId: string): Promise<void> {
     try {
       const message = messages.get(messageId)
       if (!message) throw new Error(`Message with ID ${messageId} not found in cache`)
       messages.delete(messageId)
-      const archiveFolder = await getArchiveFolder(user)
+      const archiveFolder = await getArchiveFolder(requestUser)
       if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
       logger.debug(`Archive mail ${messageId}`)
-      await graphApiRequest(user, `/me/messages/${messageId}/move`, async (request) => {
+      await graphApiRequest(requestUser, `/me/messages/${messageId}/move`, async (request) => {
         await request.post({ destinationId: archiveFolder })
       })
     }
@@ -154,17 +154,17 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     }
   }
 
-  async function archiveMessagesFromSender(user: UserSession, senderEmail: string): Promise<number> {
+  async function archiveMessagesFromSender(requestUser: UserSession, senderEmail: string): Promise<number> {
     return mutex.runExclusive(async () => {
       const matching = Array.from(messages.values())
         .filter(m => m.from.emailAddress.address === senderEmail)
       if (matching.length === 0) return 0
-      const archiveFolder = await getArchiveFolder(user)
+      const archiveFolder = await getArchiveFolder(requestUser)
       if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
       for (const msg of matching) {
         messages.delete(msg.id)
         logger.debug(`Archive mail ${msg.id}`)
-        await graphApiRequest(user, `/me/messages/${msg.id}/move`, async (request) => {
+        await graphApiRequest(requestUser, `/me/messages/${msg.id}/move`, async (request) => {
           await request.post({ destinationId: archiveFolder })
         })
       }
@@ -221,9 +221,9 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
         status = 'connecting'
         doInitialFetch()
           .then(() => { status = 'connected' })
-          .catch((error: unknown) => {
+          .catch((refetchError: unknown) => {
             status = 'error'
-            logger.warn(`[MicrosoftMailWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+            logger.warn(`[MicrosoftMailWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
           })
       })
   }, deltaPollIntervalMs)

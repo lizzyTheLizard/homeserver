@@ -60,7 +60,7 @@ export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken
   return tokenMutex.runExclusive(async () => {
     const now = Math.floor(Date.now() / 1000)
     return transactional(async (db) => {
-      const token = await transactional(db => getMicrosoftToken(db, user.email))
+      const token = await transactional(innerDb => getMicrosoftToken(innerDb, user.email))
       if (!token) return undefined
       if (token.expires_at > now + 60) return token
       const clientConfig = await getClientConfig()

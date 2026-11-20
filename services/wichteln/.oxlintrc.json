@@ -9,9 +9,7 @@
   ],
   "categories": {
     "correctness": "error",
-    "suspicious": "error",
-    "style": "error",
-    "perf": "warn"
+    "suspicious": "error"
   },
   "env": {
     "node": true,
@@ -37,34 +35,7 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
     "react/purity": "off",
-    "react/react-in-jsx-scope": "off",
-    "one-var": "off",
-    "no-ternary": "off",
-    "max-statements": "warn",
-    "func-style": [
-      "error",
-      "declaration"
-    ],
-    "no-magic-numbers": "warn",
-    "max-params": "warn",
-    "logical-assignment-operators": [
-      "error",
-      "never"
-    ],
-    "typescript/parameter-properties": [
-      "error",
-      {
-        "prefer": "parameter-property"
-      }
-    ],
-    "id-length": "warn",
-    "typescript/method-signature-style": [
-      "error",
-      "method"
-    ],
-    "no-continue": "off",
-    "init-declarations": "off",
-    "prefer-destructuring": "off"
+    "react/react-in-jsx-scope": "off"
   },
   "overrides": [
     {

@@ -247,9 +247,9 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
         status = 'connecting'
         doInitialFetch()
           .then(() => { status = 'connected' })
-          .catch((error: unknown) => {
+          .catch((refetchError: unknown) => {
             status = 'error'
-            logger.warn(`[MicrosoftCalendarWorker] Re-fetch after poll crash failed for user ${userId}`, error)
+            logger.warn(`[MicrosoftCalendarWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
           })
       })
   }, deltaPollIntervalMs)
