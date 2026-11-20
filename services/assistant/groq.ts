@@ -29,15 +29,15 @@ export async function send(options: SendOptions): Promise<string> {
 }
 
 async function stream(options: SendOptions): Promise<ModelMessage[]> {
-  const config = getConfig(options)
-  const result = streamText(config)
+  const settings = getConfig(options)
+  const result = streamText(settings)
   for await (const chunk of result.textStream) options.onChunk?.(chunk)
   return await result.responseMessages
 }
 
 async function generate(options: SendOptions): Promise<ModelMessage[]> {
-  const config = getConfig(options)
-  const result = await generateText(config)
+  const settings = getConfig(options)
+  const result = await generateText(settings)
   return result.responseMessages
 }
 

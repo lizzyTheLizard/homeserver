@@ -1,5 +1,6 @@
 'use client'
 
+import { z } from 'zod'
 import type { ChatState } from '@/app/shared/_components/chat/AiChatState'
 export type { ChatState } from '@/app/shared/_components/chat/AiChatState'
 
@@ -47,18 +48,19 @@ export class AiChatWebSocket {
 
   private handleMessage(event: MessageEvent) {
     try {
-      const data = JSON.parse(event.data as string) as IncommingMessage
+      const raw = rawMessage(event.data)
+      const data = incommingMessageSchema.parse(JSON.parse(raw))
       if (data.type === 'initialized' && data.uuid) this.onServerInitialized(data.uuid)
       else if (data.type === 'reconnected') this.onReconnected()
-      else if (data.type === 'error') this.onError('Got error message from server', new Error(event.data as string))
+      else if (data.type === 'error') this.onError('Got error message from server', new Error(raw))
       else if (data.type === 'stream_response') this.onStreamResponse(data.chunk ?? '')
       else if (data.type === 'tool_call') this.onToolCall()
       else if (data.type === 'got_actions') this.onGotActions(data.actions ?? [])
       else if (data.type === 'finished_response') this.onFinishedResponse()
-      else this.onError('Got an invalid message from server', new Error(event.data as string))
+      else this.onError('Got an invalid message from server', new Error(raw))
     }
     catch (error: unknown) {
-      this.onError(`Failed to parse server message`, error instanceof Error ? error : new Error(error as string))
+      this.onError(`Failed to parse server message`, error instanceof Error ? error : new Error(String(error)))
     }
   }
 
@@ -214,11 +216,16 @@ function getWebSocketUrl(): string {
   return `${protocol}//${window.location.host}/ws/assistant`
 }
 
-interface IncommingMessage {
-  type: string
-  uuid?: string
-  chunk?: string
-  actions?: string[]
-  error?: string
-  message?: string
+const incommingMessageSchema = z.object({
+  type: z.string(),
+  uuid: z.string().optional(),
+  chunk: z.string().optional(),
+  actions: z.array(z.string()).optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
+})
+
+function rawMessage(data: unknown): string {
+  if (typeof data !== 'string') throw new Error('Got a non-text message from server')
+  return data
 }

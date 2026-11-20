@@ -48,6 +48,7 @@ self.addEventListener('activate', (event) => {
           console.log('PWA: Clearing old cache:', cache)
           return caches.delete(cache)
         }
+        return Promise.empty
       }),
     )
   }))

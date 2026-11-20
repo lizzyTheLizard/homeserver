@@ -55,7 +55,7 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   }
 
   function onSave() {
-    const t = transactions.map(toNeonTransactionInput).filter(t => t !== undefined)
+    const t = transactions.map(toNeonTransactionInput).filter(item => item !== undefined)
     setLoading(true)
     setError(undefined)
     addNeonTransactions(project_id, period, t)
@@ -88,9 +88,8 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
   }, [transactions])
 
   useEffect(() => {
-    const select = document.getElementsByClassName('accountInput')
-    const firstSelect = select[0] as HTMLSelectElement
-    firstSelect.focus()
+    const firstSelect = document.getElementsByClassName('accountInput')[0]
+    if (firstSelect instanceof HTMLSelectElement) firstSelect.focus()
   }, [])
 
   return (

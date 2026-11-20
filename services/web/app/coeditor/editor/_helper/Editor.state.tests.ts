@@ -162,10 +162,10 @@ describe('Command Executed', () => {
   })
 
   test('Initialize command', () => {
-    const state = initialState(undefined, templates)
-    const result = editorStateReducer(state, { type: 'COMMAND_EXECUTED', restart: false, discussion: { id: '1', text: 'Initialized text', template_id: '1', parameters: {} } as unknown as Discussion })
+    const initial = initialState(undefined, templates)
+    const result = editorStateReducer(initial, { type: 'COMMAND_EXECUTED', restart: false, discussion: { id: '1', text: 'Initialized text', template_id: '1', parameters: {} } as unknown as Discussion })
     expect(result).toEqual({
-      ...state,
+      ...initial,
       text: 'Initialized text',
       undoStack: [''],
       redoStack: [],

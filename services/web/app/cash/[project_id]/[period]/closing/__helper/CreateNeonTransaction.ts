@@ -17,7 +17,7 @@ export async function createTransactionsFromNeonInput(client: Queryable, owner: 
   const accounts = [monthly.neon_account_id, ...transactionInput.map(i => i.accountId), monthly.remaining_account_id]
   await recalculateTransactions(client, owner, monthly.project_id, from, accounts)
   return monthly.neon_transactions.map((nt) => {
-    const r = result.find(r => r.order === nt.order)
+    const r = result.find(row => row.order === nt.order)
     if (!r) return nt
     return { ...nt, transaction_id: r.transaction_id }
   })

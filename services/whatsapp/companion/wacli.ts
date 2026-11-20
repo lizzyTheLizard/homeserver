@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { config } from './config'
+import { isRecord } from './isRecord'
 import { logger } from './logger'
 import { Readable } from 'node:stream'
 
@@ -71,7 +72,8 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
         return
       }
       try {
-        const parsed = JSON.parse(trimmed) as { data: unknown }
+        const parsed: unknown = JSON.parse(trimmed)
+        if (!isRecord(parsed)) throw new Error('unexpected wacli output: not a JSON object')
         finish(parsed.data)
       }
       catch (err: unknown) {
@@ -96,7 +98,8 @@ export function attachEventParser(stream: Readable | null, onEvent: (event: Wacl
       buffer = buffer.slice(newlineIndex + 1)
       if (!line) continue
       try {
-        const event = JSON.parse(line) as WacliEvent
+        const event = toWacliEvent(JSON.parse(line))
+        if (!event) throw new Error('not a wacli event')
         onEvent(event)
       }
       catch {
@@ -118,4 +121,39 @@ function wacliEnv(): NodeJS.ProcessEnv {
   if (config.WACLI_SYNC_MAX_MESSAGES) env.WACLI_SYNC_MAX_MESSAGES = config.WACLI_SYNC_MAX_MESSAGES
   if (config.WACLI_SYNC_MAX_DB_SIZE) env.WACLI_SYNC_MAX_DB_SIZE = config.WACLI_SYNC_MAX_DB_SIZE
   return env
+}
+
+// Narrows a parsed JSON value to a WacliEvent, or undefined when it does not
+// match one of the known event shapes.
+function toWacliEvent(value: unknown): WacliEvent | undefined {
+  if (!isRecord(value)) return undefined
+  const { event, data } = value
+  const ts = typeof value.ts === 'number' ? { ts: value.ts } : {}
+  switch (event) {
+    case 'closed':
+    case 'auth_starting':
+    case 'connected':
+    case 'disconnected':
+    case 'logged_out':
+      return { event, ...ts }
+    case 'qr_code':
+      return isRecord(data) && typeof data.code === 'string' ? { event, data: { code: data.code }, ...ts } : undefined
+    case 'error':
+      return isRecord(data) && typeof data.message === 'string' ? { event, data: { message: data.message }, ...ts } : undefined
+    case 'warning': {
+      if (!isRecord(data) || typeof data.message !== 'string') return undefined
+      const { code, name } = data
+      return {
+        event,
+        data: {
+          message: data.message,
+          ...(typeof code === 'string' ? { code } : {}),
+          ...(typeof name === 'string' ? { name } : {}),
+        },
+        ...ts,
+      }
+    }
+    default:
+      return undefined
+  }
 }

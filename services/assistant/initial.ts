@@ -11,6 +11,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
 import { join } from 'path'
 import { logger } from './logger'
+import { z } from 'zod'
 
 const ASSISTANT_DIR = __dirname
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
@@ -55,15 +56,15 @@ async function getWeather(initialContext: InitialContext): Promise<PartResult> {
   ])
   const daily = parseOpenMeteoData(data.daily)
   const hourly = parseOpenMeteoData(data.hourly)
-  const temperatures = Object.entries(hourly).filter(([timeKey]) => timeKey.startsWith(today)).map(([, point]) => point.temperature as number)
+  const temperatures = Object.entries(hourly).filter(([timeKey]) => timeKey.startsWith(today)).map(([, point]) => z.number().parse(point.temperature))
   const minTemp = Math.min(...temperatures)
   const maxTemp = Math.max(...temperatures)
   const timeStr = Temporal.Now.plainDateTimeISO().toString().substring(0, 13) + ':00'
   const current = hourly[timeStr]
   let text = ''
-  text += `Currently the weather is **${current.weather_condition as string}** with **${current.temperature as string}°C,** in **${city}**.  `
+  text += `Currently the weather is **${z.string().parse(current.weather_condition)}** with **${z.number().parse(current.temperature).toString()}°C,** in **${city}**.  `
   text += `During the day, the temperature will rise to **${maxTemp.toString()}°C** and drop to **${minTemp.toString()}°C** in the evening.  `
-  text += `The sun will rise at **${formatTime(daily[today].sunrise as string)}** and set at **${formatTime(daily[today].sunset as string)}**. `
+  text += `The sun will rise at **${formatTime(z.string().parse(daily[today].sunrise))}** and set at **${formatTime(z.string().parse(daily[today].sunset))}**. `
   text += getPrecipitationString(hourly, Temporal.Now.plainDateTimeISO())
   text += '\n\n'
   return { text, actions: ['Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast'] }
@@ -80,15 +81,16 @@ export function getPrecipitationString(hourly: Record<string, Record<string, unk
   let i = 0
   while (i < entries.length) {
     const [, point] = entries[i]
-    if (!PRECIPITATION_CONDITIONS.has(point.weather_condition as string)) {
+    const pointCondition = z.string().parse(point.weather_condition)
+    if (!PRECIPITATION_CONDITIONS.has(pointCondition)) {
       i++
       continue
     }
 
-    const condition = (point.weather_condition as string).toLowerCase()
+    const condition = pointCondition.toLowerCase()
     const start = entries[i][0].substring(11, 16)
     let j = i + 1
-    while (j < entries.length && (entries[j][1].weather_condition as string).toLowerCase() === condition) j++
+    while (j < entries.length && z.string().parse(entries[j][1].weather_condition).toLowerCase() === condition) j++
     const end = j < entries.length ? entries[j][0].substring(11, 16) : entries[j - 1][0].substring(11, 16)
     events.push({ condition, start, end, isNow: entries[i][0].startsWith(currentHour), noClearing: j >= entries.length })
     i = j

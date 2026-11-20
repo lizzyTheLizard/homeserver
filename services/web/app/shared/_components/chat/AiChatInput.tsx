@@ -52,6 +52,7 @@ export function AiChatInput({
       el.setSelectionRange(caret, caret)
       scrollCaretIntoView(el)
     }
+  // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [value, textareaRef])
 
   function submit(text: string) {

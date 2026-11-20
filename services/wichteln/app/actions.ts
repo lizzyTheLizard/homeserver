@@ -21,14 +21,14 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
   const admin = adminCredentials()
   if (username === admin.user && password === admin.password) {
     await setSession({ role: 'admin' })
-    redirect('/admin')
+    return redirect('/admin')
   }
 
   const account = await store.authenticateAccount(await getDb(), username, password)
   if (!account) return { error: 'Name oder Passwort ist falsch.' }
 
   await setSession({ role: 'user', accountId: account.id })
-  redirect('/')
+  return redirect('/')
 }
 
 /** Invite page sign-in; the invite page then joins the group or explains why not. */
@@ -45,7 +45,7 @@ export async function groupLogin(_prev: FormState, formData: FormData): Promise<
   if (!account) return { error: 'Name oder Passwort ist falsch.' }
 
   await setSession({ role: 'user', accountId: account.id })
-  redirect(`/g/${group.inviteToken}`)
+  return redirect(`/g/${group.inviteToken}`)
 }
 
 export async function register(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -64,7 +64,7 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
 
   await setSession({ role: 'user', accountId: result.value.id })
   revalidatePath('/', 'layout')
-  redirect(`/gruppen/${group.id}`)
+  return redirect(`/gruppen/${group.id}`)
 }
 
 export async function changePassword(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -76,13 +76,13 @@ export async function changePassword(_prev: FormState, formData: FormData): Prom
   const result = await store.changePassword(await getDb(), account.id, await hashPassword(password))
   if (!result.ok) return { error: result.error }
 
-  if (account.mustChangePassword) redirect(safeContinuePath(formString(formData, 'weiter')))
+  if (account.mustChangePassword) return redirect(safeContinuePath(formString(formData, 'weiter')))
   return { ok: 'Dein Passwort wurde geändert.' }
 }
 
 export async function logout() {
   await clearSession()
-  redirect('/')
+  return redirect('/')
 }
 
 export async function saveWish(_prev: FormState, formData: FormData): Promise<FormState> {

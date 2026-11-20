@@ -40,7 +40,7 @@ export function MonthlyFinished({ monthly, latestClosing, period, transactionsSh
   ]
 
   const neonTransactions = useMemo(() => monthly.neon_transactions.map((nt) => {
-    const t = transactionsNeonAccount.find(t => t.transaction_id === nt.transaction_id)
+    const t = transactionsNeonAccount.find(row => row.transaction_id === nt.transaction_id)
     const id = nt.order.toString()
     const otherAccount = accounts.find(a => a.id === t?.other_account_id)?.name
     const comment = t?.description
@@ -48,7 +48,7 @@ export function MonthlyFinished({ monthly, latestClosing, period, transactionsSh
   }), [monthly.neon_transactions, transactionsNeonAccount, accounts])
 
   const sharedCategories = useMemo(() => monthly.shared_transactions.map((st) => {
-    const t = transactionsSharedAccount.find(t => t.transaction_id === st.transaction_id)
+    const t = transactionsSharedAccount.find(row => row.transaction_id === st.transaction_id)
     const amount = t?.amount
     return { ...st, amount }
   }).reduce<{ id: string, category: string, amount: number }[]>((acc, curr) => {

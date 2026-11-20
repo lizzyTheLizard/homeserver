@@ -36,6 +36,7 @@ export type EditorStateAction
     | { type: 'UNDO' }
     | { type: 'REDO' }
 
+// oxlint-disable-next-line typescript/consistent-return
 export function editorStateReducer(state: EditorState, action: EditorStateAction): EditorState {
   switch (action.type) {
     case 'COMMAND_EXECUTED':{

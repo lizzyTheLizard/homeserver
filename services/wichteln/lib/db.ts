@@ -1,12 +1,12 @@
 import 'server-only'
 import { Pool } from 'pg'
-import type { PoolClient } from 'pg'
+import type { PoolClient, QueryResultRow } from 'pg'
 import { getConfig } from './config'
 import { applyMigrations, MIGRATION_LOCK_ID } from './migrate'
 
 /** Minimal query interface shared by the pg pool, a transaction client and PGlite. */
 export interface Queryable {
-  query<T>(sql: string, params?: unknown[]): Promise<T[]>
+  query<T extends QueryResultRow>(sql: string, params?: unknown[]): Promise<T[]>
 }
 
 declare global {
@@ -16,9 +16,9 @@ declare global {
 class PgQueryable implements Queryable {
   constructor(private readonly client: Pool | PoolClient) {}
 
-  async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    const result = await this.client.query(sql, params)
-    return result.rows as T[]
+  async query<T extends QueryResultRow>(sql: string, params: unknown[] = []): Promise<T[]> {
+    const result = await this.client.query<T>(sql, params)
+    return result.rows
   }
 }
 
@@ -41,7 +41,7 @@ export async function getDb(): Promise<Queryable> {
 }
 
 /** Runs a read query against the pool. */
-export async function query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+export async function query<T extends QueryResultRow>(sql: string, params: unknown[] = []): Promise<T[]> {
   const pool = await getPool()
   return new PgQueryable(pool).query<T>(sql, params)
 }

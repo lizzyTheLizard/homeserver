@@ -3,6 +3,7 @@ import { send as groqSend } from './groq'
 import type { UserSession } from './session'
 import { generateInitialMessages } from './initial'
 import { logger } from './logger'
+import { z } from 'zod'
 import { getTools } from './tools'
 import { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
 
@@ -45,7 +46,7 @@ export function createAssistantInstance(user: UserSession): Assistant {
     const messagesCopy = [...messages, { role: 'user', content: actionPrompt }] satisfies ModelMessage[]
     const actionString = await groqSend({ messages: messagesCopy })
     try {
-      const actions = JSON.parse(actionString) as string[]
+      const actions = z.array(z.string()).parse(JSON.parse(actionString))
       onGotActions(actions)
     }
     catch (error) {

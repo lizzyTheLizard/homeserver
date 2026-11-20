@@ -13,6 +13,7 @@ export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
   const [todoSidebarId, openTodoSidebar] = useSidebar()
 
   function showTodoDetails(todo: TodoPlus) {
+    // oxlint-disable-next-line eslint/no-underscore-dangle
     setSelectedTodo(todo._original)
     openTodoSidebar()
   }

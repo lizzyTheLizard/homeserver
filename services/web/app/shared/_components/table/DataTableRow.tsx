@@ -1,5 +1,6 @@
 import { MouseEvent } from 'react'
 import { ColumnDefinition } from './DataTable'
+import { fieldOf } from './sortAndFilter'
 import style from './DataTableRow.module.css'
 
 export interface DataTableRowProps<DataType> {
@@ -25,7 +26,7 @@ export function DataTableRow<DataType extends { id: string }>({ row, columns, on
     <tr key={row.id} onClick={onClick} className={rowClass}>
       {columns.map(column => (
         <td key={row.id + column.key} className={column.className} style={column.style} headers={column.header}>
-          {column.cell(row[column.key as keyof DataType], row.id)}
+          {column.cell(fieldOf(row, column.key), row.id)}
         </td>
       ))}
     </tr>

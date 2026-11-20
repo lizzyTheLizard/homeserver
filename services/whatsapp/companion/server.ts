@@ -50,22 +50,20 @@ function main(): void {
   })
 
   app.post('/sessions/:userId/send-message', async (req: SessionRequest, res) => {
-    const body = (req.body ?? {}) as Record<string, unknown>
-    if (typeof body.to !== 'string' || !body.to || typeof body.text !== 'string' || !body.text) {
+    if (typeof req.body.to !== 'string' || !req.body.to || typeof req.body.text !== 'string' || !req.body.text) {
       res.status(400).json({ error: 'send_message: missing \'to\' or \'text\'' })
       return
     }
-    await supervisorFor(req.params.userId).sendMessage(body.to, body.text)
+    await supervisorFor(req.params.userId).sendMessage(req.body.to, req.body.text)
     res.status(204).end()
   })
 
   app.post('/sessions/:userId/archive-chat', async (req: SessionRequest, res) => {
-    const body = (req.body ?? {}) as Record<string, unknown>
-    if (typeof body.id !== 'string' || !body.id) {
+    if (typeof req.body.id !== 'string' || !req.body.id) {
       res.status(400).json({ error: 'archive_chat: missing \'id\'' })
       return
     }
-    await supervisorFor(req.params.userId).archiveChat(body.id, body.archived === true)
+    await supervisorFor(req.params.userId).archiveChat(req.body.id, req.body.archived === true)
     res.status(204).end()
   })
 

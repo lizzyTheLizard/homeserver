@@ -1,6 +1,13 @@
 export type AccountType = 'Cash' | 'Asset' | 'Equity' | 'Liability' | 'Income' | 'Expense' | 'Profit'
 export const ACCOUNT_TYPES: AccountType[] = ['Cash', 'Asset', 'Equity', 'Liability', 'Income', 'Expense', 'Profit']
 
+export function toAccountType(value: string): AccountType {
+  const accountType = ACCOUNT_TYPES.find(t => t === value)
+  if (!accountType) throw new Error(`Invalid account type: ${value}`)
+  return accountType
+}
+
+// oxlint-disable-next-line typescript/consistent-return
 export function isCreditAccount(account: AccountType): boolean {
   switch (account) {
     case 'Cash':
@@ -15,6 +22,7 @@ export function isCreditAccount(account: AccountType): boolean {
   }
 }
 
+// oxlint-disable-next-line typescript/consistent-return
 export function isSummationAccount(type: AccountType): boolean {
   switch (type) {
     case 'Cash':

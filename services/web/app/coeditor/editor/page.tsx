@@ -9,7 +9,8 @@ export const metadata = {
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return serverPageFunction(metadata.title, async () => {
-    const discussionId = (await searchParams).id as string | undefined
+    const id = (await searchParams).id
+    const discussionId = typeof id === 'string' ? id : undefined
     const editorData = await loadEditorData(discussionId)
     return (
       <main>

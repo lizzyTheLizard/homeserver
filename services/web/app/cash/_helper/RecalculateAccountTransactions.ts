@@ -29,9 +29,10 @@ async function recalculateTransactionsForAccount(client: Queryable, owner: strin
 }
 
 async function recalculateSingleTransaction(c: Context): Promise<AccountTransaction> {
-  const details = 'credit_account_id' in c.item
-    ? getTransactionDetails(c as Context<Transaction>)
-    : getClosingDetails(c as Context<Closing>)
+  const item = c.item
+  const details = 'credit_account_id' in item
+    ? getTransactionDetails({ ...c, item })
+    : getClosingDetails({ ...c, item })
 
   const accountTransaction: AccountTransactionInput = {
     id: randomUUID(),

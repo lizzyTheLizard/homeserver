@@ -43,7 +43,7 @@ export const Checked: StoryObj<typeof meta> = {
   play: async ({ args, canvas, userEvent }) => {
     const input = canvas.getByLabelText('Checked checkbox')
     await userEvent.click(input)
-    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ checked: true }) as HTMLInputElement }))
+    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ checked: true }) }))
   },
 }
 

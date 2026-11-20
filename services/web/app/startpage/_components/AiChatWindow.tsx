@@ -30,13 +30,14 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       webSocketRef.current?.terminate()
       webSocketRef.current = undefined
     }
+  // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [])
 
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
     websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }]) }
-    websocket.onNewActions = (actions) => { setActions(actions) }
-    websocket.onStateChange = (state) => { setState(state) }
+    websocket.onNewActions = (newActions) => { setActions(newActions) }
+    websocket.onStateChange = (newState) => { setState(newState) }
     websocket.onIncomingMessageChange = (message) => { setIncomingMessage(message) }
     websocket.connect()
     return websocket

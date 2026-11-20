@@ -49,7 +49,7 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
   }
 
   useEffect(() => {
-    if (liveStatus.type === 'connected') return
+    if (liveStatus.type === 'connected') return undefined
     const interval = setInterval(() => {
       getStatus().then((r) => {
         if (!r.success) {

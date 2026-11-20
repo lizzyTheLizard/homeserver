@@ -234,7 +234,7 @@ export const XSpacingIsProportionalToDays: StoryObj<typeof meta> = {
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
     // Opening balance (01.04) + 3 transactions = 4 dots, read in document order.
-    const dots = Array.from(chart.querySelectorAll('.recharts-line-dot')) as unknown as SVGElement[]
+    const dots = Array.from(chart.querySelectorAll('.recharts-line-dot'))
     await expect(dots).toHaveLength(4)
     const cx = dots.map(dot => Number(dot.getAttribute('cx')))
     // Gaps: 01.04→05.04 = 4 days, 05.04→10.04 = 5 days, 10.04→30.04 = 20 days.

@@ -25,7 +25,7 @@ export async function getSession(cookies: CookieStore): Promise<IronSession<Sess
     cookieName: config.SESSION.COOKIE_NAME,
     password: config.SESSION.SESSION_PASSWORD,
     ttl: 604800, // 1 week in seconds
-    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
+    cookieOptions: { secure: config.NODE_ENV !== 'development' },
   }
   return getIronSession<SessionData>(cookies, settings)
 }

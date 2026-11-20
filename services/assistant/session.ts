@@ -34,7 +34,7 @@ export async function getUserSession(cookies: CookieStore): Promise<UserSession>
     cookieName: config.SESSION.COOKIE_NAME,
     password: config.SESSION.SESSION_PASSWORD,
     ttl: 604800, // 1 week in seconds
-    cookieOptions: { secure: config.NODE_ENV === 'development' ? false : true },
+    cookieOptions: { secure: config.NODE_ENV !== 'development' },
   }
   const session = await getIronSession<{ userInfo?: UserSession }>(cookies, settings)
   if (!session.userInfo) throw new Error('No authenticated user session found')

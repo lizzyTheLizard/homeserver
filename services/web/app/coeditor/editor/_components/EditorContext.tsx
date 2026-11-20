@@ -47,6 +47,7 @@ export function EditorContext({ templates, template, parameters, onParametersCha
           </Select>
         </div>
         <div className={`row ${style.row}`}>
+          {/* oxlint-disable-next-line typescript/consistent-return */}
           {template?.parameters.map((p) => {
             switch (p.type) {
               case 'STRING':

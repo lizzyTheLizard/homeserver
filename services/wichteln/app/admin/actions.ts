@@ -17,7 +17,7 @@ export async function createGroup(_prev: FormState, formData: FormData): Promise
   if (!result.ok) return { error: result.error }
 
   revalidatePath('/admin')
-  redirect(`/admin/${result.value.id}`)
+  return redirect(`/admin/${result.value.id}`)
 }
 
 export async function resetPassword(accountId: string): Promise<FormState> {

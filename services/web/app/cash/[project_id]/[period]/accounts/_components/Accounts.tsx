@@ -1,6 +1,6 @@
 'use client'
 import { Account } from '@/app/cash/_data/Account'
-import { ACCOUNT_TYPES, AccountType } from '@/app/cash/_data/AccountType'
+import { ACCOUNT_TYPES, AccountType, toAccountType } from '@/app/cash/_data/AccountType'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { v4 as randomUUID } from 'uuid'
 import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
@@ -93,7 +93,7 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         noDelete={noDelete}
       >
         <Input type="text" label="Name" required value={name} onChange={(e) => { setName(e.target.value) }} />
-        <Select label="Type" required value={type} onChange={(e) => { setType(e.target.value as AccountType) }}>
+        <Select label="Type" required value={type} onChange={(e) => { setType(toAccountType(e.target.value)) }}>
           {ACCOUNT_TYPES.map(accountType => (<option key={accountType} value={accountType}>{accountType}</option>))}
         </Select>
         <Checkbox label="Archived" checked={archived} onChange={(e) => { setArchived(e.target.checked) }} />

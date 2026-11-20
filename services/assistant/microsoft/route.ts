@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http'
 import { Temporal } from '@js-temporal/polyfill'
 import { getUserSession, parseCookieHeader, UserSession } from '../session'
 import { logger } from '../logger'
+import { z } from 'zod'
 import { getUserInfo, handleMicrosoftLoginCallback } from './graph'
 import { getMicrosoftMailWorker, MicrosoftMessageFull, MicrosoftMessageListItem } from './mail'
 import { getMicrosoftTodoWorker, MicrosoftTodoTask } from './todo'
@@ -66,7 +67,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/mail/send' && method === 'POST') {
-    const body = await readJson(req, { to: [] as string[], subject: '', body: '' })
+    const body = await readJson(req, z.object({ to: z.array(z.string()), subject: z.string(), body: z.string() }), { to: [], subject: '', body: '' })
     const worker = await getMicrosoftMailWorker(user)
     await worker.sendMail(user, body.to, body.subject, body.body)
     sendJson(res, 200, { success: true })
@@ -74,7 +75,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/mail/archive' && method === 'POST') {
-    const body = await readJson(req, { messageId: '' })
+    const body = await readJson(req, z.object({ messageId: z.string() }), { messageId: '' })
     const worker = await getMicrosoftMailWorker(user)
     await worker.archiveMessage(user, body.messageId)
     sendJson(res, 200, { success: true })
@@ -82,7 +83,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/mail/archive-sender' && method === 'POST') {
-    const body = await readJson(req, { senderEmail: '' })
+    const body = await readJson(req, z.object({ senderEmail: z.string() }), { senderEmail: '' })
     const worker = await getMicrosoftMailWorker(user)
     const count = await worker.archiveMessagesFromSender(user, body.senderEmail)
     sendJson(res, 200, { count })
@@ -103,7 +104,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/todo/tasks' && method === 'POST') {
-    const body = await readJson(req, { listId: '', title: '', body: undefined as string | undefined, reminderDateTime: undefined as string | undefined })
+    const body = await readJson(req, z.object({ listId: z.string(), title: z.string(), body: z.string().optional(), reminderDateTime: z.string().optional() }), { listId: '', title: '' })
     const worker = await getMicrosoftTodoWorker(user)
     const reminder = body.reminderDateTime ? Temporal.Instant.from(body.reminderDateTime) : undefined
     const result = await worker.createTask(user, body.listId, body.title, body.body, reminder)
@@ -112,7 +113,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/todo/tasks/complete' && method === 'POST') {
-    const body = await readJson(req, { listId: '', taskId: '' })
+    const body = await readJson(req, z.object({ listId: z.string(), taskId: z.string() }), { listId: '', taskId: '' })
     const worker = await getMicrosoftTodoWorker(user)
     await worker.completeTask(user, body.listId, body.taskId)
     sendJson(res, 200, { success: true })
@@ -120,7 +121,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/todo/tasks/update' && method === 'POST') {
-    const body = await readJson(req, { listId: '', taskId: '', updates: {} })
+    const body = await readJson(req, z.object({ listId: z.string(), taskId: z.string(), updates: z.record(z.string(), z.unknown()) }), { listId: '', taskId: '', updates: {} })
     const worker = await getMicrosoftTodoWorker(user)
     const updates = parseTodoUpdates(body.updates)
     const result = await worker.updateTask(user, body.listId, body.taskId, updates)
@@ -129,7 +130,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/todo/tasks/delete' && method === 'POST') {
-    const body = await readJson(req, { listId: '', taskId: '' })
+    const body = await readJson(req, z.object({ listId: z.string(), taskId: z.string() }), { listId: '', taskId: '' })
     const worker = await getMicrosoftTodoWorker(user)
     await worker.deleteTask(user, body.listId, body.taskId)
     sendJson(res, 200, { success: true })
@@ -155,7 +156,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/calendar/events' && method === 'POST') {
-    const body = await readJson(req, { calendarId: '', subject: '', startDateTime: '', endDateTime: '', body: undefined as string | undefined, location: undefined as string | undefined })
+    const body = await readJson(req, z.object({ calendarId: z.string(), subject: z.string(), startDateTime: z.string(), endDateTime: z.string(), body: z.string().optional(), location: z.string().optional() }), { calendarId: '', subject: '', startDateTime: '', endDateTime: '' })
     const worker = await getMicrosoftCalendarWorker(user)
     const start = Temporal.Instant.from(body.startDateTime)
     const end = Temporal.Instant.from(body.endDateTime)
@@ -165,7 +166,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/callback' && method === 'POST') {
-    const body = await readJson(req, { callbackUrl: '' })
+    const body = await readJson(req, z.object({ callbackUrl: z.string() }), { callbackUrl: '' })
     await handleMicrosoftLoginCallback(user, new URL(body.callbackUrl))
     sendJson(res, 200, { success: true })
     return true
@@ -302,14 +303,14 @@ function sendJson(res: ServerResponse, status: number, data: unknown): void {
   res.writeHead(status, { 'Content-Type': 'application/json' }).end(JSON.stringify(data))
 }
 
-async function readJson<T>(req: IncomingMessage, defaults: T): Promise<T> {
+async function readJson<S extends z.ZodType>(req: IncomingMessage, schema: S, defaults: Record<string, unknown>): Promise<z.output<S>> {
   return new Promise((resolve, reject) => {
     let body = ''
     req.on('data', (chunk: Buffer) => { body += chunk.toString() })
     req.on('end', () => {
       try {
-        const parsed = body ? JSON.parse(body) as T : defaults
-        resolve({ ...defaults, ...parsed })
+        const parsed: unknown = body ? JSON.parse(body) : {}
+        resolve(schema.parse({ ...defaults, ...z.record(z.string(), z.unknown()).parse(parsed) }))
       }
       catch (error) {
         reject(error instanceof Error ? error : new Error(String(error)))

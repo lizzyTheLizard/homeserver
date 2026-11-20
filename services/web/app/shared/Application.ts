@@ -1,6 +1,6 @@
 export interface Application {
   key: string
-  icon: string
+  icon: 'startpage' | 'cash' | 'admin' | 'coeditor'
   name: string
   link: string
   description: string

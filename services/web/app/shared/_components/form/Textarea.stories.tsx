@@ -52,7 +52,7 @@ export const Filled: StoryObj<typeof meta> = {
     const textarea = canvas.getByLabelText('Filled textarea')
     await userEvent.click(textarea)
     await userEvent.keyboard('Hello, World!')
-    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ value: 'Hello, World!' }) as HTMLTextAreaElement }))
+    await expect(args.onChange).lastCalledWith(expect.objectContaining({ target: expect.objectContaining({ value: 'Hello, World!' }) }))
   },
 }
 

@@ -8,6 +8,7 @@ class BackendError extends Error {
 
 type StatusCode = 400 | 401 | 403 | 404 | 500
 
+// oxlint-disable-next-line typescript/consistent-return
 function statusCodeToString(statusCode: StatusCode): string {
   switch (statusCode) {
     case 400: return '400 Bad Request'

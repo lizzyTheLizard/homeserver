@@ -5,19 +5,21 @@ import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { cookies } from 'next/headers'
 import type { Chat, Message, SyncStatus } from '@assistant/whatsapp/types'
+import { z } from 'zod'
+import { chatsSchema, messagesSchema, syncStatusSchema } from './schemas'
 
 export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, error?: string }> {
   await getAuthenticatedUserSession('startpage')
   let status: SyncStatus
   try {
-    status = await assistantGet('/whatsapp/start') as SyncStatus
+    status = await assistantGet('/whatsapp/start', syncStatusSchema)
   }
   catch (error: unknown) {
     return { chats: [], status: { type: 'closed' }, error: errorMessage(error) }
   }
   if (status.type !== 'connected') return { chats: [], status }
   try {
-    return { chats: await assistantGet('/whatsapp/chats') as Chat[], status }
+    return { chats: await assistantGet('/whatsapp/chats', chatsSchema), status }
   }
   catch (error: unknown) {
     return { chats: [], status, error: errorMessage(error) }
@@ -26,11 +28,11 @@ export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, e
 
 export async function loadMessages(chatId: string): Promise<Message[]> {
   await getAuthenticatedUserSession('startpage')
-  return assistantGet(`/whatsapp/messages?chatId=${encodeURIComponent(chatId)}`) as Promise<Message[]>
+  return assistantGet(`/whatsapp/messages?chatId=${encodeURIComponent(chatId)}`, messagesSchema)
 }
 
 export async function getStatus(): ActionResponse<SyncStatus> {
-  return toResponse(assistantGet('/whatsapp/status') as Promise<SyncStatus>)
+  return toResponse(assistantGet('/whatsapp/status', syncStatusSchema))
 }
 
 export async function archiveChat(chatJid: string, archived: boolean): ActionResponse<void> {
@@ -49,8 +51,8 @@ export async function disconnectAccount(): ActionResponse<void> {
   return toResponse(assistantPost('/whatsapp/disconnect', {}).then(() => undefined))
 }
 
-async function assistantGet(path: string): Promise<unknown> {
-  return assistantFetch(path, { headers: { Cookie: await getCookieHeader() } })
+async function assistantGet<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+  return schema.parse(await assistantFetch(path, { headers: { Cookie: await getCookieHeader() } }))
 }
 
 async function assistantPost(path: string, body: Record<string, unknown>): Promise<unknown> {
@@ -99,7 +101,7 @@ function errorMessage(error: unknown): string {
   const match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
   if (!match) return message
   try {
-    const body = JSON.parse(match[1]) as { error?: unknown }
+    const body = errorBodySchema.parse(JSON.parse(match[1]))
     if (typeof body.error === 'string' && body.error.length > 0) return body.error
   }
   catch {
@@ -107,3 +109,5 @@ function errorMessage(error: unknown): string {
   }
   return message
 }
+
+const errorBodySchema = z.object({ error: z.unknown() })
