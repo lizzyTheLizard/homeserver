@@ -164,6 +164,8 @@ jobs:
           printf '[Resolve]\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/no-stub.conf
           sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
           sudo systemctl restart systemd-resolved
+          # The Docker daemon keeps the old 127.0.0.53 resolver until it is restarted
+          sudo systemctl restart docker
           getent hosts registry-1.docker.io
           sudo ss -lntup | grep ':53 ' || true
       - name: Use the placeholder configuration
