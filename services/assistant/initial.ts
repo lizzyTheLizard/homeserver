@@ -38,9 +38,16 @@ export async function generateInitialMessages(user: UserSession, initialContext:
 }
 
 function getGreeting(): Promise<PartResult> {
-  const hour = new Date().getHours(),
-   timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening',
-   result = { actions: [], text: `Good ${timeOfDay}!\n\n` }
+  const hour = new Date().getHours();
+  let timeOfDay = ""
+  if (hour < 12) {
+    timeOfDay = 'morning';
+  } else if (hour < 18) {
+    timeOfDay = 'afternoon';
+  } else {
+    timeOfDay = 'evening';
+  }
+   const result = { actions: [], text: `Good ${timeOfDay}!\n\n` }
   return Promise.resolve(result)
 }
 

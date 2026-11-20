@@ -99,6 +99,7 @@ async function readJson<T>(req: IncomingMessage, defaults: T): Promise<T> {
     req.on('data', (chunk: Buffer) => { body += chunk.toString() })
     req.on('end', () => {
       try {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         const parsed = body ? JSON.parse(body) as T : defaults
         resolve({ ...defaults, ...parsed })
       }

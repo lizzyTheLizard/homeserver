@@ -169,6 +169,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
 
   async function doInitialFetch(): Promise<void> {
     calendars = await graphApiRequest(user, '/me/calendars', async (request) => {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const response = await request.get() as { value: MicrosoftCalendar[] }
       return response.value
     })
@@ -205,6 +206,7 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
             .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')
             .get() as DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }>
         }
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         return await request.get() as DeltaResponse<RawCalendarEvent & { '@removed'?: { reason: string } }>
       })
 
