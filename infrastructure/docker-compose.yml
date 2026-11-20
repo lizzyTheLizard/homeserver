@@ -205,7 +205,7 @@ services:
 
   bind9:
     container_name: Bind9
-    image: ubuntu/bind9:9.20-26.04
+    image: internetsystemsconsortium/bind9:9.20
     restart: unless-stopped
     ports:
       - "53:53/udp"
@@ -221,6 +221,7 @@ services:
     command:
       - |
         sed "s/__HOST_IP__/$${HOST_IP}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
+        chmod 644 /etc/bind/db.gutschi.site
         exec named -g -c /etc/bind/named.conf
 
   certbot:
