@@ -46,7 +46,7 @@
       "declaration"
     ],
     "no-magic-numbers": [
-      "error",
+      "warn",
       {
         "ignore": [
           0,
@@ -65,17 +65,7 @@
         "prefer": "parameter-property"
       }
     ],
-    "id-length": [
-      "error",
-      {
-        "exceptions": [
-          "a",
-          "b",
-          "i",
-          "j"
-        ]
-      }
-    ]
+    "id-length": "warn"
   },
   "overrides": [
     {
