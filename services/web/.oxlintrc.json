@@ -90,6 +90,15 @@
       "rules": {
         "storybook/no-uninstalled-addons": "error"
       }
+    },
+    {
+      "files": [
+        "**/*.tests.ts",
+        "**/*.tests.tsx"
+      ],
+      "rules": {
+        "typescript/no-unsafe-type-assertion": "off"
+      }
     }
   ]
 }
