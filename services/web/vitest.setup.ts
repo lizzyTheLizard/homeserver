@@ -13,20 +13,20 @@ vi.mock('@/app/shared/_external/db/access', async (importOriginal: () => Promise
   const actual = await importOriginal()
   return {
     ...actual,
-    transactional(fn: (client: PGlite) => Promise<unknown>) { return fn(pglite) },
-    nontransactional(fn: (client: PGlite) => Promise<unknown>) { return fn(pglite) },
+    transactional(fn: (client: PGlite) => Promise<unknown>) {
+      return fn(pglite)
+    },
+    nontransactional(fn: (client: PGlite) => Promise<unknown>) {
+      return fn(pglite)
+    },
   }
 })
 
 beforeAll(async () => {
   const migrationsDir = path.join(process.cwd(), 'db')
-  const names = (await fs.readdir(migrationsDir))
-    .filter(n => n.endsWith('.sql'))
-    .sort()
+  const names = (await fs.readdir(migrationsDir)).filter(n => n.endsWith('.sql')).sort()
   for (const name of names) {
     const content = await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')
-    for (const command of splitSql(content)) {
-      await pglite.query(command)
-    }
+    for (const command of splitSql(content)) await pglite.query(command)
   }
 })

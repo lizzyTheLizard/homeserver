@@ -31,12 +31,10 @@ describe('database migrations', () => {
     await applyMigrations(queryable)
 
     const tables = await queryable.query<{ table_name: string }>(
-      'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' ORDER BY table_name',
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name",
     )
     const names = tables.map(row => row.table_name)
-    expect(names).toEqual(
-      expect.arrayContaining(['wichteln_migrations', 'wichteln_groups', 'wichteln_accounts', 'wichteln_participants']),
-    )
+    expect(names).toEqual(expect.arrayContaining(['wichteln_migrations', 'wichteln_groups', 'wichteln_accounts', 'wichteln_participants']))
     expect(names).not.toContain('wichteln_users')
 
     const applied = await queryable.query<{ name: string }>('SELECT name FROM wichteln_migrations ORDER BY name')
@@ -84,10 +82,14 @@ describe('database migrations', () => {
     const groupId = await insertGroup(queryable, 'token')
     const accountId = await insertAccount(queryable, 'Anna')
 
-    await expect(queryable.query(
-      'INSERT INTO wichteln_participants (id, group_id, account_id, wish_title) VALUES ($1, $2, $3, $4)',
-      [randomUUID(), groupId, accountId, 'A title without a description'],
-    )).rejects.toThrow()
+    await expect(
+      queryable.query('INSERT INTO wichteln_participants (id, group_id, account_id, wish_title) VALUES ($1, $2, $3, $4)', [
+        randomUUID(),
+        groupId,
+        accountId,
+        'A title without a description',
+      ]),
+    ).rejects.toThrow()
   })
 
   test('deletes memberships with their group but keeps the accounts', async () => {
@@ -120,18 +122,13 @@ describe('database migrations', () => {
 
     const groupId = randomUUID()
     await queryable.query('INSERT INTO wichteln_groups (id, name) VALUES ($1, $2)', [groupId, 'Old group'])
-    await queryable.query(
-      'INSERT INTO wichteln_users (id, group_id, name, password) VALUES ($1, $2, $3, $4)',
-      [randomUUID(), groupId, 'Anna', 'plain'],
-    )
+    await queryable.query('INSERT INTO wichteln_users (id, group_id, name, password) VALUES ($1, $2, $3, $4)', [randomUUID(), groupId, 'Anna', 'plain'])
 
     await applyOnly(queryable, ['002_invite_registration.sql'])
 
     expect(await queryable.query('SELECT id FROM wichteln_groups')).toEqual([])
     expect(await queryable.query('SELECT id FROM wichteln_users')).toEqual([])
-    const columns = await queryable.query<{ column_name: string }>(
-      'SELECT column_name FROM information_schema.columns WHERE table_name = \'wichteln_users\'',
-    )
+    const columns = await queryable.query<{ column_name: string }>("SELECT column_name FROM information_schema.columns WHERE table_name = 'wichteln_users'")
     expect(columns.map(row => row.column_name)).toContain('password_hash')
     expect(columns.map(row => row.column_name)).not.toContain('password')
   })
@@ -142,19 +139,19 @@ describe('database migrations', () => {
     await applyOnly(queryable, ['001_init.sql', '002_invite_registration.sql'])
 
     const groupId = await insertGroup(queryable, 'token')
-    await queryable.query(
-      'INSERT INTO wichteln_users (id, group_id, name, password_hash) VALUES ($1, $2, $3, $4)',
-      [randomUUID(), groupId, 'Anna', 'scrypt$hash'],
-    )
+    await queryable.query('INSERT INTO wichteln_users (id, group_id, name, password_hash) VALUES ($1, $2, $3, $4)', [
+      randomUUID(),
+      groupId,
+      'Anna',
+      'scrypt$hash',
+    ])
 
     await applyMigrations(queryable)
 
     expect(await queryable.query('SELECT id FROM wichteln_groups')).toEqual([])
     expect(await queryable.query('SELECT id FROM wichteln_accounts')).toEqual([])
     expect(await queryable.query('SELECT id FROM wichteln_participants')).toEqual([])
-    const legacy = await queryable.query(
-      'SELECT table_name FROM information_schema.tables WHERE table_name = \'wichteln_users\'',
-    )
+    const legacy = await queryable.query("SELECT table_name FROM information_schema.tables WHERE table_name = 'wichteln_users'")
     expect(legacy).toEqual([])
   })
 })
@@ -172,10 +169,7 @@ async function insertAccount(db: Queryable, name: string): Promise<string> {
 }
 
 async function insertParticipant(db: Queryable, groupId: string, accountId: string): Promise<void> {
-  await db.query(
-    'INSERT INTO wichteln_participants (id, group_id, account_id) VALUES ($1, $2, $3)',
-    [randomUUID(), groupId, accountId],
-  )
+  await db.query('INSERT INTO wichteln_participants (id, group_id, account_id) VALUES ($1, $2, $3)', [randomUUID(), groupId, accountId])
 }
 
 /** Applies the given migration files the way `applyMigrations` would, to simulate an older database. */
@@ -183,12 +177,8 @@ async function applyOnly(db: Queryable, names: string[]): Promise<void> {
   await db.query('CREATE TABLE IF NOT EXISTS wichteln_migrations (name TEXT PRIMARY KEY, hash TEXT, run_on TIMESTAMPTZ NOT NULL DEFAULT NOW())')
   for (const name of names) {
     const content = (await fs.readFile(path.join(process.cwd(), 'db', name), 'utf8')).replaceAll(/\r\n/g, '\n')
-    for (const statement of splitSql(content)) {
-      await db.query(statement)
-    }
-    await db.query(
-      'INSERT INTO wichteln_migrations (name, hash) VALUES ($1, $2)',
-      [name, createHash('sha256').update(content).digest('hex')],
-    )
+    for (const statement of splitSql(content)) await db.query(statement)
+
+    await db.query('INSERT INTO wichteln_migrations (name, hash) VALUES ($1, $2)', [name, createHash('sha256').update(content).digest('hex')])
   }
 }

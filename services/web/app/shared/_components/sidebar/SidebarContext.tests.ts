@@ -1,7 +1,7 @@
-import { renderHook, act } from '@testing-library/react'
-import { useContext, createElement } from 'react'
+import { act, renderHook } from '@testing-library/react'
+import { createElement, useContext } from 'react'
 import { describe, expect, test } from 'vitest'
-import { useSidebar, SidebarContext } from './SidebarContext'
+import { SidebarContext, useSidebar } from './SidebarContext'
 import { SidebarContainer } from './SidebarContainer'
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -32,53 +32,57 @@ describe('useSidebar', () => {
   })
 
   test('throws when called outside a provider', () => {
-    expect(() => { renderHook(() => useSidebar()) }).toThrow('useSidebar must be used within a SidebarProvider')
+    expect(() => {
+      renderHook(() => useSidebar())
+    }).toThrow('useSidebar must be used within a SidebarProvider')
   })
 
   test('close when nothing is open does not throw', () => {
-    const { result } = renderHook(
-      () => useContext(SidebarContext),
-      { wrapper },
-    )
+    const { result } = renderHook(() => useContext(SidebarContext), { wrapper })
     expect(() => {
-      act(() => { result.current?.close() })
+      act(() => {
+        result.current?.close()
+      })
     }).not.toThrow()
   })
 
   test('openSidebar marks the sidebar as active', () => {
-    const { result } = renderHook(
-      () => ({ sidebar: useSidebar(), ctx: useContext(SidebarContext) }),
-      { wrapper },
-    )
+    const { result } = renderHook(() => ({ sidebar: useSidebar(), ctx: useContext(SidebarContext) }), { wrapper })
     const [id, openSidebar] = result.current.sidebar
     expect(result.current.ctx?.isOpen(id)).toBe(false)
-    act(() => { openSidebar() })
+    act(() => {
+      openSidebar()
+    })
     expect(result.current.ctx?.isOpen(id)).toBe(true)
   })
 
   test('opening a second sidebar deactivates the first', () => {
-    const { result } = renderHook(
-      () => ({ a: useSidebar(), b: useSidebar(), ctx: useContext(SidebarContext) }),
-      { wrapper },
-    )
+    const { result } = renderHook(() => ({ a: useSidebar(), b: useSidebar(), ctx: useContext(SidebarContext) }), {
+      wrapper,
+    })
     const [idA, openA] = result.current.a
     const [idB, openB] = result.current.b
-    act(() => { openA() })
+    act(() => {
+      openA()
+    })
     expect(result.current.ctx?.isOpen(idA)).toBe(true)
-    act(() => { openB() })
+    act(() => {
+      openB()
+    })
     expect(result.current.ctx?.isOpen(idA)).toBe(false)
     expect(result.current.ctx?.isOpen(idB)).toBe(true)
   })
 
   test('close deactivates the active sidebar', () => {
-    const { result } = renderHook(
-      () => ({ sidebar: useSidebar(), ctx: useContext(SidebarContext) }),
-      { wrapper },
-    )
+    const { result } = renderHook(() => ({ sidebar: useSidebar(), ctx: useContext(SidebarContext) }), { wrapper })
     const [id, openSidebar] = result.current.sidebar
-    act(() => { openSidebar() })
+    act(() => {
+      openSidebar()
+    })
     expect(result.current.ctx?.isOpen(id)).toBe(true)
-    act(() => { result.current.ctx?.close() })
+    act(() => {
+      result.current.ctx?.close()
+    })
     expect(result.current.ctx?.isOpen(id)).toBe(false)
   })
 })

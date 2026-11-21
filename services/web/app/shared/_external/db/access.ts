@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { setupPool } from './setup'
 
 declare global {
@@ -43,12 +43,10 @@ export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): 
     const result = await fn(client)
     await client.query('COMMIT')
     return result
-  }
-  catch (error) {
+  } catch (error) {
     await client.query('ROLLBACK')
     throw error
-  }
-  finally {
+  } finally {
     client.release()
   }
 }

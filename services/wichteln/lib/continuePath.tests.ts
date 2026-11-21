@@ -23,9 +23,8 @@ describe('safeContinuePath', () => {
       '/g/team/../admin',
       '/gruppen/not-a-uuid',
       '/gruppen/0b6f4c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e?x=1',
-    ]) {
+    ])
       expect(safeContinuePath(value)).toBe('/')
-    }
   })
 })
 

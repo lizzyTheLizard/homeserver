@@ -11,17 +11,14 @@ function createLogger() {
         winston.format.printf(info => toConsoleString(info)),
         winston.format.colorize({ all: true }),
       )
-    : winston.format.combine(
-        winston.format.errors({ stack: true }),
-        winston.format.json(),
-      )
+    : winston.format.combine(winston.format.errors({ stack: true }), winston.format.json())
   return winston.createLogger({
     level: config.LOG_LEVEL,
     transports: [
       new Console({
         handleExceptions: true,
         handleRejections: true,
-        format: format,
+        format,
       }),
     ],
   })
@@ -29,7 +26,7 @@ function createLogger() {
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
   let message = `${String(info.timestamp)} ${info.level}: ${String(info.message)}`
-  if (typeof info.stack === 'string') message = message + '\n' + info.stack
+  if (typeof info.stack === 'string') message = `${message}\n${info.stack}`
   return message
 }
 

@@ -5,7 +5,7 @@
   flex-wrap: wrap;
 }
 
-.dateFilters>div {
+.dateFilters > div {
   flex-grow: 1;
   width: 10px;
   min-width: 6rem;

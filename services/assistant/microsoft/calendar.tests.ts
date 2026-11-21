@@ -1,30 +1,35 @@
-import { describe, expect, test, beforeAll, vi } from 'vitest'
+import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '../db'
 import { setMicrosoftToken } from './data'
 import { getMicrosoftCalendarWorker } from './calendar'
 import type { UserSession } from '../session'
 
-const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
+const { TEST_MICROSOFT_REFRESH_TOKEN } = process.env
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-calendar', () => {
-  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
+  const token = TEST_MICROSOFT_REFRESH_TOKEN! // oxlint-disable-line
   let user: UserSession
 
   beforeAll(async () => {
     user = { name: 'Test', email: 'calendar-test@test.com', applications: ['startpage'] }
-    await transactional(db => setMicrosoftToken(db, user.email, {
-      access_token: '',
-      refresh_token: token,
-      expires_at: 0,
-    }))
+    await transactional(db =>
+      setMicrosoftToken(db, user.email, {
+        access_token: '',
+        refresh_token: token,
+        expires_at: 0,
+      }),
+    )
   })
 
   test('getCalendars returns calendars', async () => {
     const worker = await getMicrosoftCalendarWorker(user)
-    await vi.waitFor(() => {
-      expect(worker.getCalendars().length).toBeGreaterThan(0)
-    }, { timeout: 10000 })
+    await vi.waitFor(
+      () => {
+        expect(worker.getCalendars().length).toBeGreaterThan(0)
+      },
+      { timeout: 10000 },
+    )
     const calendars = worker.getCalendars()
 
     expect(calendars[0]).toHaveProperty('id')

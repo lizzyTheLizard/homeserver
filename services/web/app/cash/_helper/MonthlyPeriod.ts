@@ -1,5 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { Period } from './Period'
+import type { Period } from './Period'
 
 export interface MonthlyPeriod extends Period {
   year: number
@@ -9,7 +9,7 @@ export interface MonthlyPeriod extends Period {
 }
 
 export function first(period: Period): MonthlyPeriod {
-  if (period.year === undefined) throw new Error('Cannot reopen or close \'all\' period')
+  if (period.year === undefined) throw new Error("Cannot reopen or close 'all' period")
   if (period.openEnded) throw new Error('Cannot reopen or close open-ended period')
   if (period.day !== undefined) throw new Error('Cannot reopen or close daily period')
   if (period.month === undefined) return { year: period.year, month: 1, openEnded: false, day: undefined }
@@ -17,7 +17,7 @@ export function first(period: Period): MonthlyPeriod {
 }
 
 export function last(period: Period): MonthlyPeriod {
-  if (period.year === undefined) throw new Error('Cannot reopen or close \'all\' period')
+  if (period.year === undefined) throw new Error("Cannot reopen or close 'all' period")
   if (period.openEnded) throw new Error('Cannot reopen or close open-ended period')
   if (period.day !== undefined) throw new Error('Cannot reopen or close daily period')
   if (period.month === undefined) return { year: period.year, month: 12, openEnded: false, day: undefined }
@@ -35,9 +35,7 @@ export function next(period: MonthlyPeriod): MonthlyPeriod {
 }
 
 export function compare(period1: MonthlyPeriod, period2: MonthlyPeriod): number {
-  return period1.year === period2.year
-    ? period1.month - period2.month
-    : period1.year - period2.year
+  return period1.year === period2.year ? period1.month - period2.month : period1.year - period2.year
 }
 
 export function isMonthlyPeriod(period: Period): period is MonthlyPeriod {

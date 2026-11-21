@@ -40,8 +40,8 @@ self.addEventListener('install', (event) => {
  */
 self.addEventListener('activate', (event) => {
   // Ensuring old code doesn't break your updated site.
-  event.waitUntil(caches.keys().then((cacheNames) => {
-    return Promise.all(
+  event.waitUntil(caches.keys().then((cacheNames) => 
+    Promise.all(
       cacheNames.map((cache) => {
         // If a cache found in storage doesn't match our current CACHE_NAME, delete it
         if (cache !== CACHE_NAME) {
@@ -51,7 +51,7 @@ self.addEventListener('activate', (event) => {
         return Promise.empty
       }),
     )
-  }))
+  ))
   // Allows the service worker to immediately control all open tabs/pages
   self.clients.claim()
 })
@@ -76,7 +76,7 @@ self.addEventListener('fetch', (event) => {
     if (!isHtmlPage) return fetch(event.request)
     console.log(`PWA: Fetching HTML page ${event.request.url} with timeout of ${HTML_TIMEOUT}ms`)
     return Promise.race([fetch(event.request), timeout(HTML_TIMEOUT)])
-      .then(r => console.log(`PWA: Fetching HTML page ` + event.request.url + ` completed with status: ` + r.status) || r)
+      .then(r => console.log(`PWA: Fetching HTML page ${  event.request.url  } completed with status: ${  r.status}`) || r)
       .catch(error => requestFailed(event, error))
   })())
 })

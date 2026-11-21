@@ -1,11 +1,11 @@
-import { MouseEvent } from 'react'
-import { ColumnDefinition } from './DataTable'
+import type { MouseEvent } from 'react'
+import type { ColumnDefinition } from './DataTable'
 import { fieldOf } from './sortAndFilter'
 import style from './DataTableRow.module.css'
 
 export interface DataTableRowProps<DataType> {
   row: DataType
-  onRowClick?: (item: DataType) => void
+  onRowClick?(item: DataType): void
   columns: ColumnDefinition<unknown>[]
   isActive?: boolean
 }
@@ -17,10 +17,7 @@ export function DataTableRow<DataType extends { id: string }>({ row, columns, on
     e.stopPropagation()
   }
 
-  const rowClass = [
-    onRowClick ? style.rowWithClick : '',
-    isActive ? style.activeRow : '',
-  ].join(' ')
+  const rowClass = [onRowClick ? style.rowWithClick : '', isActive ? style.activeRow : ''].join(' ')
 
   return (
     <tr key={row.id} onClick={onClick} className={rowClass}>

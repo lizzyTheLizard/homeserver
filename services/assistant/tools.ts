@@ -1,7 +1,7 @@
-import { ToolSet } from 'ai'
+import type { ToolSet } from 'ai'
 import type { UserSession } from './session'
 import { readdir } from 'node:fs/promises'
-import { Dirent } from 'node:fs'
+import type { Dirent } from 'node:fs'
 import { join } from 'path'
 import { pathToFileURL } from 'node:url'
 import { logger } from './logger'
@@ -10,7 +10,9 @@ import { z } from 'zod'
 // oxlint-disable-next-line eslint/no-underscore-dangle
 declare const __dirname: string
 const TOOLS_DIR = join(__dirname, 'tools')
-const toolModuleSchema = z.object({ default: z.custom<(user: UserSession) => ToolSet>(value => typeof value === 'function') })
+const toolModuleSchema = z.object({
+  default: z.custom<(user: UserSession) => ToolSet>(value => typeof value === 'function'),
+})
 
 export async function getTools(user: UserSession): Promise<ToolSet> {
   const files = await readdir(TOOLS_DIR, { withFileTypes: true })
@@ -29,6 +31,6 @@ export async function getTools(user: UserSession): Promise<ToolSet> {
 
 function isToolFile(f: Dirent): boolean {
   if (!f.isFile()) return false // Skip directories and symlinks
-  if (!/-tools\.(ts|js)$/.test(f.name)) return false // Only tool implementation files
+  if (!/-tools\.(?:ts|js)$/.test(f.name)) return false // Only tool implementation files
   return true
 }

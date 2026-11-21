@@ -189,7 +189,7 @@ describe('saveProfile', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input1 = { id: randomUUID(), language: 'en', text: 'Original profile text XXX2' }
     const input2 = { id: randomUUID(), language: 'de', text: 'Original profile text XXX2' }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProfile(tx, task.id, input1)
       await createOrModifyProfile(tx, task.id, input2)
     })
@@ -206,10 +206,22 @@ describe('saveProfile', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), language: 'en', text: 'New profile text' }
 
-    await expect(saveProfile({ ...input, id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveProfile({ ...input, id: 'ddd' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveProfile({ ...input, language: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveProfile({ ...input, text: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(saveProfile({ ...input, id: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveProfile({ ...input, id: 'ddd' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveProfile({ ...input, language: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveProfile({ ...input, text: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 })
 
@@ -260,10 +272,22 @@ describe('saveTemplate', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const input = { id: randomUUID(), name: 'Test Template', language: 'en', text: 'Template text' }
 
-    await expect(saveTemplate({ ...input, id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTemplate({ ...input, id: 'ddd' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTemplate({ ...input, name: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTemplate({ ...input, language: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(saveTemplate({ ...input, id: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTemplate({ ...input, id: 'ddd' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTemplate({ ...input, name: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTemplate({ ...input, language: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 })
 

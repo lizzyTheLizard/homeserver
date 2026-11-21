@@ -16,6 +16,7 @@ Trigger: user asks to "Show Todo Overview", "what are my tasks", "show my todos"
 4. Do not propose actions in the overview unless the user explicitly asks for actions.
 
 ## Example Output
+
 ```text
 Here are your todo tasks 📋
 
@@ -31,10 +32,12 @@ Here are your todo tasks 📋
 ```
 
 ## Next Actions
+
 If asked for the next actions after the overview, return these actions:
-   - Add a new todo
-   - View task details for {task title}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Add a new todo
+- View task details for {task title}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Adding a Task
 
@@ -44,13 +47,13 @@ Trigger: user asks to "add a todo", "add a task", "create a task", "new reminder
 2. Gather optional details: body/description, reminder date/time, and which list to add it to.
 3. If the user does not specify a list, use `list_todo_lists` to fetch available lists and suggest one.
 4. Present the draft in an editable input block:
-   ~~~input
+   ```input
    Title: {task title}
    List: {list name}
    Reminder: {reminder date and time, if set}
 
    {task description/body, if any}
-   ~~~
+   ```
 5. Wait for the user to edit and confirm. The user can change any detail.
 6. Treat clear confirmation phrases like "add", "create", "OK", or equivalent as approval, as long as the user did not request any text changes in the same message.
 7. Only when the user explicitly confirms the final unchanged draft, call `create_todo_task` with the confirmed values.

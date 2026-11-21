@@ -19,11 +19,7 @@ export function Input({ list, label, small, ...props }: InputProps) {
   const id = props.id ?? fallbackId
   const listId = list ? `${id}-list` : undefined
   const value = getValue(props.value, internalValue, props.type, focus)
-  const inputClasses = [
-    style.input, props.className ?? '',
-    label ? '' : style.noLabel,
-    small ? style.small : '',
-  ].join(' ')
+  const inputClasses = [style.input, props.className ?? '', label ? '' : style.noLabel, small ? style.small : ''].join(' ')
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInternalValue(e.target.value)
@@ -42,22 +38,16 @@ export function Input({ list, label, small, ...props }: InputProps) {
 
   return (
     <div className={style.container}>
-      <input
-        {...props}
-        id={id}
-        className={inputClasses}
-        value={value}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        placeholder=""
-        onChange={handleChange}
-        list={listId}
-      />
-      { label && <label className={style.label} htmlFor={id}>{label}</label>}
+      <input {...props} id={id} className={inputClasses} value={value} onFocus={onFocus} onBlur={onBlur} placeholder="" onChange={handleChange} list={listId} />
+      {label && (
+        <label className={style.label} htmlFor={id}>
+          {label}
+        </label>
+      )}
       {list && (
         <datalist id={listId}>
-          {list.map((item, index) => (
-            <option key={index} value={item} />
+          {list.map(item => (
+            <option key={item} value={item} />
           ))}
         </datalist>
       )}
@@ -70,7 +60,6 @@ function getValue(propValue: string | number | undefined, internalValue: string,
   // While editing, show unformatted value
   if (focus) return preFormatedValue
   // For currency, show value incl. currency symbol
-  if (type === 'currency')
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'CHF' }).format(Number(preFormatedValue))
+  if (type === 'currency') return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'CHF' }).format(Number(preFormatedValue))
   return preFormatedValue
 }

@@ -8,7 +8,7 @@ description: Use this skill for WhatsApp overview, reading chats, drafting repli
 Trigger: user asks for "Get WhatsApp Overview" or asks for a WhatsApp overview without naming a chat.
 
 1. Call `get_whatsapp_overview` to get all unarchived chats and the recent messages in those chats.
-2. Return the following template filled out. Do not add any extra text or explanations. Follow the template exactly, including the bullet point and bold formatting. 
+2. Return the following template filled out. Do not add any extra text or explanations. Follow the template exactly, including the bullet point and bold formatting.
 
 ```text
 Here is your WhatsApp overview:
@@ -18,6 +18,7 @@ Here is your WhatsApp overview:
 3. Do not mark chats as read automatically.
 
 ## Example Output
+
 ```text
 Here is your WhatsApp overview:
 - **Family**: Yesterday they coordinated dinner time and asked whether you can bring dessert.
@@ -26,13 +27,16 @@ Here is your WhatsApp overview:
 ```
 
 ## Next Actions
+
 If asked for the next actions after the overview, return these actions for each unarchived chat:
-   - Send a response for chat {chatName}
-   - Archive Chat {chatName}
-If duplicate chat names exist, include jid in action labels.
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Send a response for chat {chatName}
+- Archive Chat {chatName}
+  If duplicate chat names exist, include jid in action labels.
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Message Exploration
+
 Trigger: user asks to inspect a specific chat or asks questions about it.
 
 1. Resolve the chat jid:
@@ -46,14 +50,16 @@ Trigger: user asks to inspect a specific chat or asks questions about it.
 Do not mark chats as read automatically.
 
 ## Next Actions
-If asked for the next actions after the exploration, return these actions:
-   - Send a response for chat {chatName}
-   - Archive Chat {chatName}
-If duplicate chat names exist, include jid in action labels.
-Return only short action commands with no explanations. Follow the output format requested by the caller.
 
+If asked for the next actions after the exploration, return these actions:
+
+- Send a response for chat {chatName}
+- Archive Chat {chatName}
+  If duplicate chat names exist, include jid in action labels.
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Drafting And Sending Responses
+
 Trigger: user asks to send or write a response:
 
 1. Load the chat's messages with `get_whatsapp_messages` for that jid if you do not already have them, and read the most recent messages first.
@@ -64,9 +70,9 @@ Trigger: user asks to send or write a response:
 3. Mirror the language and writing style used in the chat. If the language cannot be determined, ask the user which language to use instead of guessing.
 4. Keep the draft natural and concise. Do not invent facts, events, or commitments that are not present in the chat. Do not add a greeting (like "Hi") or a farewell (like "Liebe Grüsse" or "Goodbye") unless the chat's messages consistently use them.
 5. Present the draft in an editable input block:
-   ~~~input
+   ```input
    Draft message text here
-   ~~~
+   ```
 6. Wait for user feedback.
 7. Treat clear confirmation phrases like "send now", "send", "OK", or equivalent as approval, as long as the user did not request any text changes in the same message.
 8. If the user requests any change (for example: "looks good but change X to Y"), do not send yet. Propose a new improved draft and repeat until accepted without further change requests.
@@ -75,13 +81,15 @@ Trigger: user asks to send or write a response:
 Never send a message without explicit confirmation.
 
 ## Next Actions
-If asked for the next actions after drafting a response, return these actions:
-   - Send Now
-   - Archive Chat {chatName}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
 
+If asked for the next actions after drafting a response, return these actions:
+
+- Send Now
+- Archive Chat {chatName}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Archiving
+
 Trigger: user asks to archive a chat.
 
 When user asks to archive a chat, archive directly using `archive_whatsapp_chat` once the target chat is identified.

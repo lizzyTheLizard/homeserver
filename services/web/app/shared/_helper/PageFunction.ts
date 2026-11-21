@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { isBackendError } from './BackendError'
 import { logger } from '../logger'
 import { Temporal } from '@js-temporal/polyfill'
@@ -8,29 +8,32 @@ import { logEvent } from '../_data/Event'
 export async function serverPageFunction(name: string, fn: () => Promise<ReactNode> | ReactNode): Promise<ReactNode> {
   const start = Temporal.Now.instant().epochMilliseconds
   logger.debug(`Rendering page '${name}'`)
-  return Promise.resolve(fn()).then((result) => {
-    const time = Temporal.Now.instant().epochMilliseconds - start
-    logger.debug(`Rendered page '${name}' in ${time.toString()} ms successfully`)
-    return result
-  }).catch(async (error: unknown) => {
-    const time = Temporal.Now.instant().epochMilliseconds - start
-    if (isDynamicServerUsage(error)) throw error
-    if (isBackendError(error)) {
-      if (error.showStack) logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)
-      else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)
+  return Promise.resolve(fn())
+    .then(result => {
+      const time = Temporal.Now.instant().epochMilliseconds - start
+      logger.debug(`Rendered page '${name}' in ${time.toString()} ms successfully`)
+      return result
+    })
+    .catch(async (error: unknown) => {
+      const time = Temporal.Now.instant().epochMilliseconds - start
+      if (isDynamicServerUsage(error)) throw error
+      if (isBackendError(error)) {
+        if (error.showStack) logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms:`, error)
+        else logger.warn(`Error while rendering page '${name}' in ${time.toString()} ms: ${error.userMessage}`)
+        throw error
+      }
+      const code = httpAccessResponseCode(error)
+      if (code === undefined) {
+        logger.error(`Unknown error while rendering page '${name}' in ${time.toString()} ms:`, error)
+        await nontransactional(c => logEvent(c, 'ERROR', `Unknown error while rendering page '${name}': ${String(error)}`))
+      } else {
+        logger.warn(`HTTP ${code.toString()} error while rendering page '${name}' in ${time.toString()} ms:`, error)
+        await nontransactional(c =>
+          logEvent(c, 'WARN', `HTTP ${code.toString()} error while rendering page '${name}' in ${time.toString()} ms: ${String(error)}`),
+        )
+      }
       throw error
-    }
-    const code = httpAccessResponseCode(error)
-    if (code === undefined) {
-      logger.error(`Unknown error while rendering page '${name}' in ${time.toString()} ms:`, error)
-      await nontransactional(c => logEvent(c, 'ERROR', `Unknown error while rendering page '${name}': ${String(error)}`))
-    }
-    else {
-      logger.warn(`HTTP ${code.toString()} error while rendering page '${name}' in ${time.toString()} ms:`, error)
-      await nontransactional(c => logEvent(c, 'WARN', `HTTP ${code.toString()} error while rendering page '${name}' in ${time.toString()} ms: ${String(error)}`))
-    }
-    throw error
-  })
+    })
 }
 
 function isDynamicServerUsage(error: unknown): boolean {

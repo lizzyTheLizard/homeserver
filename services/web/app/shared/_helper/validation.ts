@@ -13,6 +13,6 @@ export function validateString(input: unknown): string {
 
 function formatError(error: z.ZodError): string {
   const issue = error.issues[0]
-  if (issue.path.length === 0) return 'Invalid input (' + issue.message + ')'
-  return 'Invalid input on field \'' + issue.path.join('.') + '\' (' + issue.message + ')'
+  if (issue.path.length === 0) return `Invalid input (${issue.message})`
+  return `Invalid input on field '${issue.path.join('.')}' (${issue.message})`
 }

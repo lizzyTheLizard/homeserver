@@ -1,10 +1,11 @@
-import { Client, GraphRequest } from '@microsoft/microsoft-graph-client'
+import type { GraphRequest } from '@microsoft/microsoft-graph-client'
+import { Client } from '@microsoft/microsoft-graph-client'
 import { Temporal } from '@js-temporal/polyfill'
-import { MicrosoftToken, getMicrosoftToken, setMicrosoftToken } from './data'
+import type { MicrosoftToken } from './data'
+import { getMicrosoftToken, setMicrosoftToken } from './data'
 import * as oidc from 'openid-client'
 import type { UserSession } from '../session'
 import { logger } from '../logger'
-import * as client from 'openid-client'
 import { transactional } from '../db'
 import { Mutex } from 'async-mutex'
 import { config } from '../config'
@@ -24,18 +25,18 @@ export async function getLoginRedirectUrl(callbackUrl: string): Promise<URL> {
     prompt: 'consent',
   }
   const clientConfig = await getClientConfig()
-  return client.buildAuthorizationUrl(clientConfig, parameters)
+  return oidc.buildAuthorizationUrl(clientConfig, parameters)
 }
 
 export async function handleMicrosoftLoginCallback(user: UserSession, currentUrl: URL): Promise<void> {
   const clientConfig = await getClientConfig()
-  const tokenSet = await client.authorizationCodeGrant(clientConfig, currentUrl)
+  const tokenSet = await oidc.authorizationCodeGrant(clientConfig, currentUrl)
   const accessToken = tokenSet.access_token
   const refreshToken = tokenSet.refresh_token
   const expiresAt = Number(tokenSet.expires_at) || Math.floor(Date.now() / 1000) + 3000
   if (!accessToken || !refreshToken) throw new Error('Failed to obtain access or refresh token from Microsoft. Please try again.')
   const token = { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAt }
-  await transactional(async (db) => {
+  await transactional(async db => {
     await setMicrosoftToken(db, user.email, token)
   })
 }
@@ -47,7 +48,11 @@ export async function getUserInfo(user: UserSession): Promise<MicrosoftUserInfo 
 export async function graphApiRequest<T>(user: UserSession, url: string, request: (c: GraphRequest) => Promise<T>): Promise<T> {
   const token = await getCurrentToken(user)
   if (!token) throw new Error('No Microsoft Graph token available')
-  const graphClient = Client.init({ authProvider: (done) => { done(null, token.access_token) } })
+  const graphClient = Client.init({
+    authProvider: done => {
+      done(null, token.access_token)
+    },
+  })
   logger.silly(`Fetch data from GraphAPI ${url}`)
   const start = Date.now()
   const result = await request(graphClient.api(url))
@@ -60,7 +65,7 @@ const tokenMutex = new Mutex()
 export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken | undefined> {
   return tokenMutex.runExclusive(async () => {
     const now = Math.floor(Date.now() / 1000)
-    return transactional(async (db) => {
+    return transactional(async db => {
       const token = await transactional(innerDb => getMicrosoftToken(innerDb, user.email))
       if (!token) return undefined
       if (token.expires_at > now + 60) return token
@@ -77,33 +82,33 @@ export async function getCurrentToken(user: UserSession): Promise<MicrosoftToken
   })
 }
 
-async function getClientConfig(): Promise<client.Configuration> {
-  clientConfigCache ??= client.discovery(new URL(config.MICROSOFT_GRAPH.ISSUER), config.MICROSOFT_GRAPH.APPLICATION_ID, config.MICROSOFT_GRAPH.CLIENT_SECRET)
+async function getClientConfig(): Promise<oidc.Configuration> {
+  clientConfigCache ??= oidc.discovery(new URL(config.MICROSOFT_GRAPH.ISSUER), config.MICROSOFT_GRAPH.APPLICATION_ID, config.MICROSOFT_GRAPH.CLIENT_SECRET)
   return clientConfigCache
 }
-let clientConfigCache: Promise<client.Configuration> | undefined = undefined
+let clientConfigCache: Promise<oidc.Configuration> | undefined = undefined
 
 export function toInstant(dateTime: string, timeZone: string): Temporal.Instant {
   if (timeZone === 'UTC' || !timeZone) {
-    const normalized = dateTime.endsWith('Z') || dateTime.includes('+') || dateTime.includes('[') ? dateTime : dateTime + 'Z'
+    const normalized = dateTime.endsWith('Z') || dateTime.includes('+') || dateTime.includes('[') ? dateTime : `${dateTime}Z`
     return Temporal.Instant.from(normalized)
   }
-  return Temporal.ZonedDateTime.from(dateTime + '[' + timeZone + ']').toInstant()
+  return Temporal.ZonedDateTime.from(`${dateTime}[${timeZone}]`).toInstant()
 }
 
 export function toPlainDate(dateTime: string): Temporal.PlainDate {
   return Temporal.PlainDate.from(dateTime)
 }
 
-export function toGraphDateTime(instant: Temporal.Instant): { dateTime: string, timeZone: string } {
+export function toGraphDateTime(instant: Temporal.Instant): { dateTime: string; timeZone: string } {
   return { dateTime: instant.toString(), timeZone: 'UTC' }
 }
 
-const removedItemSchema = z.object({ 'id': z.string(), '@removed': z.object({ reason: z.string() }) })
+const removedItemSchema = z.object({ id: z.string(), '@removed': z.object({ reason: z.string() }) })
 
 export function deltaResponseSchema<T extends z.ZodType>(itemSchema: T) {
   return z.object({
-    'value': z.array(z.union([removedItemSchema, itemSchema])),
+    value: z.array(z.union([removedItemSchema, itemSchema])),
     '@odata.nextLink': z.string().optional(),
     '@odata.deltaLink': z.string().optional(),
   })

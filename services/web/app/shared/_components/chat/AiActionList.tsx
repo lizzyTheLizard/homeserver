@@ -4,7 +4,7 @@ import styles from './AiActionList.module.css'
 
 export interface AiActionListAction {
   label: string
-  onSelect: () => void
+  onSelect(): void
 }
 
 export interface AiActionListProps {
@@ -21,7 +21,9 @@ export function AiActionList({ actions, disabled = false }: AiActionListProps) {
           type="button"
           className={styles.chip}
           disabled={disabled}
-          onClick={() => { action.onSelect() }}
+          onClick={() => {
+            action.onSelect()
+          }}
         >
           {action.label}
         </button>

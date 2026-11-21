@@ -1,4 +1,4 @@
-import { Chat, Message, SyncStatus } from './types'
+import type { Chat, Message, SyncStatus } from './types'
 import { config } from '../config'
 import { z } from 'zod'
 
@@ -39,9 +39,8 @@ export async function getWhatsappStatus(userId: string): Promise<SyncStatus> {
 export async function getWhatsappChats(userId: string): Promise<Chat[]> {
   const url = `${bridgeUrl(userId)}/chats`
   const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(30_000) })
-  if (!response.ok) {
-    throw new Error(`Failed to fetch chats: ${response.status.toString()} ${await response.text()}`)
-  }
+  if (!response.ok) throw new Error(`Failed to fetch chats: ${response.status.toString()} ${await response.text()}`)
+
   return z.array(chatSchema).parse(await response.json())
 }
 
@@ -49,9 +48,8 @@ export async function getWhatsappMessages(userId: string, chatId: string): Promi
   const url = new URL(`${bridgeUrl(userId)}/messages`)
   url.searchParams.set('chatId', chatId)
   const response = await fetch(url.toString(), { method: 'GET', signal: AbortSignal.timeout(30_000) })
-  if (!response.ok) {
-    throw new Error(`Failed to fetch messages: ${response.status.toString()} ${await response.text()}`)
-  }
+  if (!response.ok) throw new Error(`Failed to fetch messages: ${response.status.toString()} ${await response.text()}`)
+
   return z.array(messageSchema).parse(await response.json())
 }
 
@@ -63,9 +61,7 @@ export async function sendWhatsappMessage(userId: string, chatId: string, messag
     body: JSON.stringify({ to: chatId, text: message }),
     signal: AbortSignal.timeout(30_000),
   })
-  if (!response.ok) {
-    throw new Error(`Failed to send message: ${response.status.toString()} ${await response.text()}`)
-  }
+  if (!response.ok) throw new Error(`Failed to send message: ${response.status.toString()} ${await response.text()}`)
 }
 
 export async function archiveWhatsappChat(userId: string, chatId: string, archived: boolean): Promise<void> {
@@ -76,9 +72,7 @@ export async function archiveWhatsappChat(userId: string, chatId: string, archiv
     body: JSON.stringify({ id: chatId, archived }),
     signal: AbortSignal.timeout(30_000),
   })
-  if (!response.ok) {
-    throw new Error(`Failed to archive chat: ${response.status.toString()} ${await response.text()}`)
-  }
+  if (!response.ok) throw new Error(`Failed to archive chat: ${response.status.toString()} ${await response.text()}`)
 }
 
 export async function triggerWhatsappFullSync(userId: string): Promise<void> {
@@ -87,9 +81,7 @@ export async function triggerWhatsappFullSync(userId: string): Promise<void> {
     method: 'POST',
     signal: AbortSignal.timeout(10_000),
   })
-  if (!response.ok && response.status !== 202) {
-    throw new Error(`Failed to trigger full sync: ${response.status.toString()} ${await response.text()}`)
-  }
+  if (!response.ok && response.status !== 202) throw new Error(`Failed to trigger full sync: ${response.status.toString()} ${await response.text()}`)
 }
 
 export async function disconnectWhatsapp(userId: string): Promise<void> {
@@ -98,9 +90,7 @@ export async function disconnectWhatsapp(userId: string): Promise<void> {
     method: 'POST',
     signal: AbortSignal.timeout(30_000),
   })
-  if (!response.ok && response.status !== 204) {
-    throw new Error(`Failed to disconnect: ${response.status.toString()} ${await response.text()}`)
-  }
+  if (!response.ok && response.status !== 204) throw new Error(`Failed to disconnect: ${response.status.toString()} ${await response.text()}`)
 }
 
 function bridgeUrl(userId: string): string {

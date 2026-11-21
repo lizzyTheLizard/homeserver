@@ -1,6 +1,7 @@
 'use client'
 import { createPortal } from 'react-dom'
-import { ReactNode, useSyncExternalStore } from 'react'
+import type { ReactNode } from 'react'
+import { useSyncExternalStore } from 'react'
 import actionTitleStyle from './ActionTitle.module.css'
 
 const unsubscribe = () => undefined

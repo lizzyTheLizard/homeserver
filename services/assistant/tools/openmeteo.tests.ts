@@ -56,7 +56,12 @@ describe('openmeteoRequest', () => {
     const today = Temporal.Now.plainDateISO()
     const tomorrow = today.add({ days: 1 })
     const endDate = today.add({ days: 4 }).toString()
-    const params = { daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant', start_date: today.toString(), end_date: endDate }
+    const params = {
+      daily:
+        'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant',
+      start_date: today.toString(),
+      end_date: endDate,
+    }
     const data = await openmeteoRequest(52.52, 13.404, params)
     const parsedResult = parseOpenMeteoData(data.daily)
 

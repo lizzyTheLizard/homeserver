@@ -36,8 +36,8 @@ export function selectableWishOwners(group: Group, userId: string): string[] {
 
   return openWishOwners.filter(
     owner =>
-      owner !== userId
-      && canComplete(
+      owner !== userId &&
+      canComplete(
         otherSelectors,
         openWishOwners.filter(o => o !== owner),
       ),

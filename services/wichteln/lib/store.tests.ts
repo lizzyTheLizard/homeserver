@@ -35,9 +35,8 @@ describe('store', () => {
   async function createTestGroup(names = ['Anna', 'Ben', 'Cara']) {
     const created = await store.createGroup(queryable, 'Team')
     if (!created.ok) throw new Error(created.error)
-    for (const name of names) {
-      await register(created.value.id, name)
-    }
+    for (const name of names) await register(created.value.id, name)
+
     const group = await store.getGroup(queryable, created.value.id)
     if (!group) throw new Error('Group disappeared')
     return group
@@ -236,9 +235,7 @@ describe('store', () => {
     await register(group.id, 'Cara', 'same-password')
     await register(group.id, 'Dora', 'same-password')
 
-    const rows = await queryable.query<{ name: string, password_hash: string }>(
-      'SELECT name, password_hash FROM wichteln_accounts',
-    )
+    const rows = await queryable.query<{ name: string; password_hash: string }>('SELECT name, password_hash FROM wichteln_accounts')
     const hashes = rows.map(row => row.password_hash)
     expect(hashes.every(hash => hash.startsWith('scrypt$'))).toBe(true)
     expect(hashes).not.toContain('same-password')

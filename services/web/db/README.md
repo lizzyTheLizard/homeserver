@@ -5,7 +5,7 @@ Migrations are plain SQL files run in lexical filename order at server start (se
 ## Rules
 
 - **Append-only.** Once a migration has been applied to any environment its contents are hashed and stored in the `migrations` table. Editing the file causes startup to abort. Add a new migration to make further changes.
-- **Skip-by-prefix.** Files starting with `XXX_` are run on every startup but *not* recorded. Use this to iterate locally; rename to a numeric prefix before merging.
+- **Skip-by-prefix.** Files starting with `XXX_` are run on every startup but _not_ recorded. Use this to iterate locally; rename to a numeric prefix before merging.
 - **Order matters.** Every migration must run cleanly after every previous migration. The runner aborts if a previously-applied migration has been removed or modified, or if migrations run out of order.
 - **One migration, one logical change.** Easier to roll back mentally and easier to review.
 

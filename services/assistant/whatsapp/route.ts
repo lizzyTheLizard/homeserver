@@ -1,20 +1,28 @@
-import { IncomingMessage, ServerResponse } from 'http'
-import { getUserSession, parseCookieHeader, UserSession } from '../session'
+import type { IncomingMessage, ServerResponse } from 'http'
+import type { UserSession } from '../session'
+import { getUserSession, parseCookieHeader } from '../session'
 import { logger } from '../logger'
 import { z } from 'zod'
-import { archiveWhatsappChat, disconnectWhatsapp, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, startWhatsapp, triggerWhatsappFullSync } from './whatsapp'
+import {
+  archiveWhatsappChat,
+  disconnectWhatsapp,
+  getWhatsappChats,
+  getWhatsappMessages,
+  getWhatsappStatus,
+  sendWhatsappMessage,
+  startWhatsapp,
+  triggerWhatsappFullSync,
+} from './whatsapp'
 
 export async function handleWhatsappApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/whatsapp')) return false
   try {
     const user = await authenticate(req)
     const handled = await route(user, req, res, pathname)
-    if (!handled) {
-      sendJson(res, 404, { error: 'Not found' })
-    }
+    if (!handled) sendJson(res, 404, { error: 'Not found' })
+
     return true
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unauthorized'
     logger.warn(`WhatsApp API auth error: ${message}`)
     sendJson(res, 401, { error: message })
@@ -69,7 +77,10 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/whatsapp/archive-chat' && method === 'POST') {
-    const body = await readJson(req, z.object({ chatId: z.string(), archived: z.boolean() }), { chatId: '', archived: false })
+    const body = await readJson(req, z.object({ chatId: z.string(), archived: z.boolean() }), {
+      chatId: '',
+      archived: false,
+    })
     await archiveWhatsappChat(user.email, body.chatId, body.archived)
     sendJson(res, 200, { success: true })
     return true
@@ -97,13 +108,14 @@ function sendJson(res: ServerResponse, status: number, data: unknown): void {
 async function readJson<S extends z.ZodType>(req: IncomingMessage, schema: S, defaults: Record<string, unknown>): Promise<z.output<S>> {
   return new Promise((resolve, reject) => {
     let body = ''
-    req.on('data', (chunk: Buffer) => { body += chunk.toString() })
+    req.on('data', (chunk: Buffer) => {
+      body += chunk.toString()
+    })
     req.on('end', () => {
       try {
         const parsed: unknown = body ? JSON.parse(body) : {}
         resolve(schema.parse({ ...defaults, ...z.record(z.string(), z.unknown()).parse(parsed) }))
-      }
-      catch (error) {
+      } catch (error) {
         reject(error instanceof Error ? error : new Error(String(error)))
       }
     })

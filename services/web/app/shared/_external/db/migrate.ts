@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { logger } from '../../logger'
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -22,13 +22,11 @@ export async function migrateDatabase(pool: Pool, upToIncluding?: string): Promi
     validateExistingMigrations(existing, planned)
     await executeNewMigrations(client, existing, planned, upToIncluding)
     await client.query('COMMIT')
-  }
-  catch (error) {
+  } catch (error) {
     await client.query('ROLLBACK')
     logger.warn('Database migration failed', error)
     throw error
-  }
-  finally {
+  } finally {
     client.release()
   }
 }
@@ -47,9 +45,7 @@ async function getAllExistingMigrations(client: PoolClient): Promise<DatabaseMig
 
 async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
   const migrationsDir = path.join(process.cwd(), 'db')
-  const names = (await fs.readdir(migrationsDir))
-    .filter(n => n.endsWith('.sql'))
-    .sort()
+  const names = (await fs.readdir(migrationsDir)).filter(n => n.endsWith('.sql')).sort()
   const result: PlannedDatabaseMigration[] = []
   for (const name of names) {
     const content = (await fs.readFile(`${migrationsDir}/${name}`, 'utf-8')).replaceAll(/\r\n/g, '\n')
@@ -60,13 +56,13 @@ async function getAllPlannedMigrations(): Promise<PlannedDatabaseMigration[]> {
 }
 
 async function runMigration(client: PoolClient, migration: PlannedDatabaseMigration) {
-  for (const command of splitSql(migration.content)) {
-    await client.query(command)
-  }
+  for (const command of splitSql(migration.content)) await client.query(command)
+
   if (migration.tmp) {
-    logger.warn(`Tmp migration ${migration.name} executed successfully and NOT saved to the database. Do NOT do this in production, but remove the XXX_ prefix!`)
-  }
-  else {
+    logger.warn(
+      `Tmp migration ${migration.name} executed successfully and NOT saved to the database. Do NOT do this in production, but remove the XXX_ prefix!`,
+    )
+  } else {
     await client.query(`INSERT INTO migrations (name, hash) VALUES ($1, $2)`, [migration.name, migration.hash])
     logger.debug(`Migration ${migration.name} executed successfully`)
   }
@@ -86,7 +82,8 @@ async function executeNewMigrations(client: PoolClient, existing: DatabaseMigrat
   let lastMigrationToRun: string | undefined = undefined
   for (const p of planned) {
     const e = existing.find(m => m.name === p.name)
-    if (e && lastMigrationToRun) throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
+    if (e && lastMigrationToRun)
+      throw databaseError(`Migration ${p.name} has already run, but migration ${lastMigrationToRun} not. The order is not correct, aborting!`)
     if (e) {
       if (p.name === upToIncluding) break
       continue

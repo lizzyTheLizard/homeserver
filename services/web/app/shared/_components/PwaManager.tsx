@@ -8,8 +8,12 @@ export function PwaManager() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
-        .then((reg) => { console.log('[PWA Master] Service worker registered running scope:', reg.scope) })
-        .catch((err: unknown) => { console.error('[PWA Master] Registration failed:', err) })
+        .then(reg => {
+          console.debug('[PWA Master] Service worker registered running scope:', reg.scope)
+        })
+        .catch((err: unknown) => {
+          console.error('[PWA Master] Registration failed:', err)
+        })
     }
   }, [])
 
@@ -34,7 +38,9 @@ export function PwaManager() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ timestamp: Date.now() }),
-      }).catch((err: unknown) => { console.error('Ping failed:', err) })
+      }).catch((err: unknown) => {
+        console.error('Ping failed:', err)
+      })
     }
 
     // Monitor if the user minimizes the PWA or switches apps on Android

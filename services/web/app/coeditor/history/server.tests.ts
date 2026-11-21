@@ -17,11 +17,9 @@ vi.mock('@/app/shared/auth/auth', async () => {
 })
 
 // Mock AI
-vi.mock('../_external/AiPort', () => {
-  return {
-    aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title' }),
-  }
-})
+vi.mock('../_external/AiPort', () => ({
+  aiPort: vi.fn().mockReturnValue({ text: 'Text', title: 'Title' }),
+}))
 
 describe('loadHistory', () => {
   test('Empty list', async ({ task }) => {
@@ -37,8 +35,15 @@ describe('loadHistory', () => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
-    await transactional(async (tx) => {
+    const input = {
+      id: randomUUID(),
+      text: 'New text',
+      title: 'New Title',
+      context: 'context',
+      template_id: templateInput.id,
+      parameters: {},
+    }
+    await transactional(async tx => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
     })
@@ -53,8 +58,15 @@ describe('loadHistory', () => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['cash'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
     const templateInput = { id: randomUUID(), name: 'Template 1', text: 'A test template', language: 'en' }
-    const input = { id: randomUUID(), text: 'New text', title: 'New Title', context: 'context', template_id: templateInput.id, parameters: {} }
-    await transactional(async (tx) => {
+    const input = {
+      id: randomUUID(),
+      text: 'New text',
+      title: 'New Title',
+      context: 'context',
+      template_id: templateInput.id,
+      parameters: {},
+    }
+    await transactional(async tx => {
       await createOrModifyTemplate(tx, task.id, templateInput)
       await createDiscussion(tx, task.id, input)
     })

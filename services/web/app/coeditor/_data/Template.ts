@@ -1,7 +1,8 @@
 import { v4 as randomUUID } from 'uuid'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '../../shared/_helper/BackendError'
-import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Entity, Queryable } from '@/app/shared/_external/db/access'
+import { count, removeNull } from '@/app/shared/_external/db/access'
 
 export interface TemplateInput {
   id: string
@@ -20,15 +21,22 @@ export interface TemplateParameter {
 }
 
 export async function findTemplatesByOwner(client: Queryable, owner: string): Promise<Template[]> {
-  const result = await client.query<Template>(
-    'SELECT * FROM template WHERE owner_email = $1',
-    [owner],
-  )
+  const result = await client.query<Template>('SELECT * FROM template WHERE owner_email = $1', [owner])
   if (result.rows.length === 0) {
     logger.debug('No templates found, inserting default template')
     return [
-      await createOrModifyTemplate(client, owner, { id: randomUUID(), name: 'No Context', language: 'English', text: '' }),
-      await createOrModifyTemplate(client, owner, { id: randomUUID(), name: 'With Context', language: 'English', text: '{context:TEXT}' }),
+      await createOrModifyTemplate(client, owner, {
+        id: randomUUID(),
+        name: 'No Context',
+        language: 'English',
+        text: '',
+      }),
+      await createOrModifyTemplate(client, owner, {
+        id: randomUUID(),
+        name: 'With Context',
+        language: 'English',
+        text: '{context:TEXT}',
+      }),
     ]
   }
   logger.debug(`Found ${result.rows.length.toString()} templates for  owner ${owner}`)
@@ -40,16 +48,13 @@ export function findNumberOfUsersWithTemplates(client: Queryable): Promise<numbe
 }
 
 export async function findTemplateById(client: Queryable, owner: string, id: string): Promise<Template | undefined> {
-  const result = await client.query<Template>(
-    'SELECT * FROM template WHERE owner_email = $1 AND id=$2',
-    [owner, id],
-  )
+  const result = await client.query<Template>('SELECT * FROM template WHERE owner_email = $1 AND id=$2', [owner, id])
   return removeNull(result.rows[0])
 }
 
 export async function createOrModifyTemplate(client: Queryable, owner: string, input: TemplateInput): Promise<Template> {
   const parameters = extractParameters(input.text)
-  const query = await findTemplateById(client, owner, input.id)
+  const query = (await findTemplateById(client, owner, input.id))
     ? 'UPDATE template SET name = $2, language = $3, text = $4, parameters = $6, updated_at = NOW() WHERE id = $1  AND owner_email = $5 RETURNING *'
     : 'INSERT INTO template (id, name, language, text, owner_email, parameters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
   const result = await client.query<Template>(query, [input.id, input.name, input.language, input.text, owner, JSON.stringify(parameters)])
@@ -59,8 +64,8 @@ export async function createOrModifyTemplate(client: Queryable, owner: string, i
 }
 
 function extractParameters(text: string): TemplateParameter[] {
-  const PARAMETER_REGEX = /\{([^}]+)\}/g
-  return Array.from(text.matchAll(PARAMETER_REGEX)).map((match) => {
+  const PARAMETER_REGEX = /\{(?<name>[^}]+)\}/g
+  return Array.from(text.matchAll(PARAMETER_REGEX)).map(match => {
     const matchedString = match[1]
     const parameterDetails = getParameterDetails(matchedString)
     const matchedLength = matchedString.length + 2 // +2 for the curly braces
@@ -68,10 +73,9 @@ function extractParameters(text: string): TemplateParameter[] {
   })
 }
 
-function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SELECT' | 'TEXT', values?: string[] } {
+function getParameterDetails(text: string): { name: string; type: 'STRING' | 'SELECT' | 'TEXT'; values?: string[] } {
   const parts: string[] = text.split(':')
-  if (parts.length < 2 || parts.length > 3)
-    throw invalidInput(`'{${text}}' is not a valid parameter. It must be in the format 'name:type[:value1,value2,...]'`)
+  if (parts.length < 2 || parts.length > 3) throw invalidInput(`'{${text}}' is not a valid parameter. It must be in the format 'name:type[:value1,value2,...]'`)
   const name = parts[0]
   const typeString = parts[1]
   const type = typeString.toUpperCase()
@@ -83,19 +87,11 @@ function getParameterDetails(text: string): { name: string, type: 'STRING' | 'SE
 
 export async function removeTemplate(client: Queryable, owner: string, template_id: string): Promise<Template | undefined> {
   // First remove all discussions related to this template
-  const result1 = await client.query(
-    'DELETE FROM discussion WHERE template_id = $1 AND owner_email = $2',
-    [template_id, owner],
-  )
+  const result1 = await client.query('DELETE FROM discussion WHERE template_id = $1 AND owner_email = $2', [template_id, owner])
   logger.debug(`Removed ${(result1.rowCount ?? 0).toString()} discussions for template ${template_id}`)
 
-  const result2 = await client.query<Template>(
-    'DELETE FROM template WHERE id = $1 AND owner_email = $2 RETURNING *',
-    [template_id, owner],
-  )
-  if (result2.rowCount !== 0)
-    logger.debug(`Deleted template ${template_id} for owner ${owner}`)
-  else
-    logger.debug(`Tried to delete non-existing template '${template_id}' for owner ${owner}`)
+  const result2 = await client.query<Template>('DELETE FROM template WHERE id = $1 AND owner_email = $2 RETURNING *', [template_id, owner])
+  if (result2.rowCount !== 0) logger.debug(`Deleted template ${template_id} for owner ${owner}`)
+  else logger.debug(`Tried to delete non-existing template '${template_id}' for owner ${owner}`)
   return removeNull(result2.rows[0])
 }

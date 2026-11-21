@@ -23,9 +23,8 @@ export async function toResponse<T>(promise: Promise<T>): ActionResponse<T> {
       if (isBackendError(error) && error.showStack) {
         logger.warn('Error in server action', error)
         return { success: false, error: error.userMessage }
-      }
-      else if (isBackendError(error)) {
-        logger.warn('Error in server action: ' + error.message)
+      } else if (isBackendError(error)) {
+        logger.warn(`Error in server action: ${error.message}`)
         await nontransactional(c => logEvent(c, 'WARN', `Error in server action: ${error.message}`))
         return { success: false, error: error.userMessage }
       }

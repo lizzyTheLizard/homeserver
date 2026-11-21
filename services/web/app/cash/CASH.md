@@ -7,7 +7,7 @@ A double-entry bookkeeping app for personal finances. Each user owns one or more
 `'Cash' | 'Asset' | 'Equity' | 'Liability' | 'Income' | 'Expense' | 'Profit'`
 
 | Type      | Credit account | Summation account |
-|-----------|----------------|-------------------|
+| --------- | -------------- | ----------------- |
 | Cash      | no             | yes               |
 | Asset     | no             | yes               |
 | Equity    | yes            | yes               |
@@ -16,7 +16,7 @@ A double-entry bookkeeping app for personal finances. Each user owns one or more
 | Expense   | no             | no                |
 | Profit    | no             | no                |
 
-A *credit account* increases on the credit side of a transaction; a *summation account* carries its balance forward across periods (the others are reset by closings).
+A _credit account_ increases on the credit side of a transaction; a _summation account_ carries its balance forward across periods (the others are reset by closings).
 
 ## Period grammar
 

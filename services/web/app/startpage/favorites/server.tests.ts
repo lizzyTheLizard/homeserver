@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { transactional } from '@/app/shared/_external/db/access'
-import { loadFavorites, saveFavorite, deleteFavorite } from './server'
+import { deleteFavorite, loadFavorites, saveFavorite } from './server'
 import { createOrModifyFavorite } from '@/app/startpage/_data/Favorite'
 import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
@@ -13,7 +13,13 @@ vi.mock('@/app/shared/auth/auth', async () => {
   }
 })
 
-const makeInput = (id = crypto.randomUUID()) => ({ id, position: 1, name: 'GitHub', url: 'https://github.com', description: 'Source code' })
+const makeInput = (id = crypto.randomUUID()) => ({
+  id,
+  position: 1,
+  name: 'GitHub',
+  url: 'https://github.com',
+  description: 'Source code',
+})
 
 describe('loadFavorites', () => {
   test('returns empty list when no favorites', async ({ task }) => {
@@ -41,7 +47,7 @@ describe('loadFavorites', () => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    await transactional(tx => createOrModifyFavorite(tx, task.id + '_other', { ...makeInput(), name: 'Other' }))
+    await transactional(tx => createOrModifyFavorite(tx, `${task.id}_other`, { ...makeInput(), name: 'Other' }))
 
     const result = await loadFavorites()
 
@@ -94,11 +100,11 @@ describe('deleteFavorite', () => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
-    const otherId = task.id + '_other'
+    const otherId = `${task.id}_other`
     const created = await transactional(tx => createOrModifyFavorite(tx, otherId, makeInput()))
     await deleteFavorite(created.id)
 
-    const result = await transactional(async (tx) => {
+    const result = await transactional(async tx => {
       const { findFavoritesByOwner } = await import('@/app/startpage/_data/Favorite')
       return findFavoritesByOwner(tx, otherId)
     })

@@ -1,6 +1,7 @@
 import { invalidInput } from '../../shared/_helper/BackendError'
 import { logger } from '@/app/shared/logger'
-import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Entity, Queryable } from '@/app/shared/_external/db/access'
+import { removeNull } from '@/app/shared/_external/db/access'
 
 export interface ProfileInput {
   id: string
@@ -10,28 +11,19 @@ export interface ProfileInput {
 export type Profile = Entity<ProfileInput>
 
 export async function findProfilesByOwner(client: Queryable, owner: string): Promise<Profile[]> {
-  const result = await client.query<Profile>(
-    'SELECT * FROM profile WHERE owner_email = $1',
-    [owner],
-  )
+  const result = await client.query<Profile>('SELECT * FROM profile WHERE owner_email = $1', [owner])
   logger.debug(`Found ${result.rows.length.toString()} profiles for owner ${owner}`)
   return result.rows.map(removeNull)
 }
 
 export async function findProfileByOwnerAndLanguage(client: Queryable, owner: string, language: string): Promise<Profile | undefined> {
-  const result = await client.query<Profile>(
-    'SELECT * FROM profile WHERE owner_email = $1 AND language = $2 LIMIT 1',
-    [owner, language],
-  )
+  const result = await client.query<Profile>('SELECT * FROM profile WHERE owner_email = $1 AND language = $2 LIMIT 1', [owner, language])
   logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile '${language}' for owner ${owner}`)
   return removeNull(result.rows[0])
 }
 
 async function findProfileById(client: Queryable, owner: string, id: string): Promise<Profile | undefined> {
-  const result = await client.query<Profile>(
-    'SELECT * FROM profile WHERE owner_email = $1 AND id = $2 LIMIT 1',
-    [owner, id],
-  )
+  const result = await client.query<Profile>('SELECT * FROM profile WHERE owner_email = $1 AND id = $2 LIMIT 1', [owner, id])
   logger.debug(`Found ${result.rows[0] ? '' : 'no '}profile '${id}' for owner ${owner}`)
   return removeNull(result.rows[0])
 }
@@ -50,10 +42,7 @@ export async function createOrModifyProfile(client: Queryable, owner: string, in
 }
 
 export async function removeProfile(client: Queryable, owner: string, id: string): Promise<Profile | undefined> {
-  const result = await client.query<Profile>(
-    'DELETE FROM profile WHERE owner_email = $1 AND id = $2 RETURNING *',
-    [owner, id],
-  )
+  const result = await client.query<Profile>('DELETE FROM profile WHERE owner_email = $1 AND id = $2 RETURNING *', [owner, id])
   if (result.rowCount !== 0) logger.debug(`Deleted profile '${id}' for owner ${owner}`)
   else logger.debug(`Tried to delete non-existing profile '${id}' for owner ${owner}`)
   return removeNull(result.rows[0])

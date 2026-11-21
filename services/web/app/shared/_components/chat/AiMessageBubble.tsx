@@ -10,7 +10,7 @@ export interface AiMessageBubbleProps {
   generating?: boolean
   stalled?: boolean
   editable?: boolean
-  onEdit?: (editedText: string) => void
+  onEdit?(editedText: string): void
 }
 
 export function AiMessageBubble({ role, content, generating, stalled, editable, onEdit }: AiMessageBubbleProps) {
@@ -21,16 +21,16 @@ export function AiMessageBubble({ role, content, generating, stalled, editable, 
   function codeComponent({ className, children }: React.ComponentPropsWithoutRef<'code'>) {
     if (!className?.includes('language-input')) return <code className={className}>{children}</code>
     // oxlint-disable-next-line typescript/no-base-to-string
-    const text = String(Array.isArray(children) ? children.join('') : children ?? '')
+    const text = String(Array.isArray(children) ? children.join('') : (children ?? ''))
     const response = role === 'user'
-    return <EditableBlock key={'input_' + text} content={text} onEdit={onEdit} editable={editable} response={response} />
+    return <EditableBlock key={`input_${text}`} content={text} onEdit={onEdit} editable={editable} response={response} />
   }
 
   const label = stalled ? <StalledLabel /> : showGenerating ? <GeneratingLabel /> : null
 
   let bubbleClass = role === 'assistant' ? styles.aiBubble : styles.userBubble
-  if (stalled) bubbleClass += ' ' + styles.stalledBubble
-  if (!hasMessage) bubbleClass += ' ' + styles.typingBubble
+  if (stalled) bubbleClass += ` ${styles.stalledBubble}`
+  if (!hasMessage) bubbleClass += ` ${styles.typingBubble}`
 
   let mainContent = <Markdown components={{ code: codeComponent }}>{content}</Markdown>
   if (!hasMessage) mainContent = <TypingIndicator stalled={stalled} />
@@ -39,9 +39,7 @@ export function AiMessageBubble({ role, content, generating, stalled, editable, 
   return (
     <div className={messageClass}>
       <div className={styles.labelWrapper}>
-        <div className={bubbleClass}>
-          {mainContent}
-        </div>
+        <div className={bubbleClass}>{mainContent}</div>
         {label}
       </div>
     </div>

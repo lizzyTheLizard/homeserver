@@ -1,23 +1,25 @@
-import { describe, expect, test, beforeAll } from 'vitest'
+import { beforeAll, describe, expect, test } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '../db'
 import { setMicrosoftToken } from './data'
 import { getMicrosoftMailWorker } from './mail'
 import type { UserSession } from '../session'
 
-const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
+const { TEST_MICROSOFT_REFRESH_TOKEN } = process.env
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-mail', () => {
-  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
+  const token = TEST_MICROSOFT_REFRESH_TOKEN! // oxlint-disable-line
   let user: UserSession
 
   beforeAll(async () => {
     user = { name: 'Test', email: 'mail-test@test.com', applications: ['startpage'] }
-    await transactional(db => setMicrosoftToken(db, user.email, {
-      access_token: '',
-      refresh_token: token,
-      expires_at: 0,
-    }))
+    await transactional(db =>
+      setMicrosoftToken(db, user.email, {
+        access_token: '',
+        refresh_token: token,
+        expires_at: 0,
+      }),
+    )
   })
 
   test('getInboxMessages returns messages', async () => {

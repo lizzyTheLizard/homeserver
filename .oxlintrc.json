@@ -1,0 +1,100 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "react"],
+  "jsPlugins": ["eslint-plugin-react-refresh", "eslint-plugin-storybook"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error",
+    "style": "error"
+  },
+  "env": { "node": true, "browser": true },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.next/**",
+    "**/out/**",
+    "**/build/**",
+    "**/storybook-static/**",
+    "**/next-env.d.ts",
+    "services/web/public/**"
+  ],
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error", "info", "debug"] }],
+    "no-alert": "error",
+    "no-eval": "error",
+    "no-new-func": "error",
+    "no-var": "error",
+    "sort-imports": ["error", { "ignoreDeclarationSort": true, "ignoreCase": true }],
+    "func-style": ["error", "declaration", { "allowArrowFunctions": true }],
+    "curly": ["error", "multi-or-nest"],
+    "capitalized-comments": ["error", "always", { "ignorePattern": "oxlint|oxfmt|prettier|istanbul|c8|v8" }],
+    "prefer-named-capture-group": "error",
+    "no-duplicate-imports": ["error", { "allowSeparateTypeImports": true }],
+    "typescript/no-explicit-any": "error",
+    "typescript/parameter-properties": ["error", { "prefer": "parameter-property" }],
+    "typescript/method-signature-style": ["error", "method"],
+    "typescript/consistent-type-imports": ["error", { "disallowTypeAnnotations": false }],
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css", "server-only"] }],
+    "import/no-cycle": "error",
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "react/purity": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error",
+    "react-refresh/only-export-components": ["error", { "allowExportNames": ["metadata", "viewport", "dynamic"] }],
+    "storybook/no-uninstalled-addons": "error",
+
+    "no-magic-numbers": ["warn", { "ignore": [-1, 0, 1, 2], "ignoreArrayIndexes": true, "ignoreDefaultValues": true }],
+    "max-statements": ["warn", 20],
+    "max-params": ["warn", 4],
+    "no-await-in-loop": "warn",
+
+    "one-var": "off", // one declaration per statement is the norm
+    "sort-keys": "off", // key order carries meaning
+    "id-length": "off", // short names (`e`, `i`, `db`) are fine
+    "no-ternary": "off", // idiomatic in JSX and expressions
+    "no-nested-ternary": "off", // oxfmt formats chains readably
+    "init-declarations": "off", // assigning later in branches/try is deliberate
+    "no-continue": "off", // fine in loops
+    "prefer-destructuring": "off", // changes typing under noUncheckedIndexedAccess
+    "import/no-named-export": "off", // named exports are the convention
+    "import/prefer-default-export": "off", // named exports are the convention
+    "import/group-exports": "off", // exports are declared inline
+    "import/exports-last": "off", // exported functions come first (CLAUDE.md)
+    "import/no-namespace": "off", // `import * as` is used for some libraries
+    "import/no-nodejs-modules": "off", // server-side code
+    "import/consistent-type-specifier-style": "off", // conflicts with consistent-type-imports autofix
+    "typescript/unbound-method": "off", // conflicts with method-signature-style "method" (callback props are method signatures)
+    "react/jsx-max-depth": "off", // deep JSX trees are normal
+    "react/jsx-props-no-spreading": "off", // prop spreading is deliberate
+    "react/react-in-jsx-scope": "off" // not needed with the automatic JSX runtime
+  },
+  "overrides": [
+    {
+      "files": ["**/*.stories.ts", "**/*.stories.tsx", "**/*.story.ts", "**/*.story.tsx"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off",
+        "storybook/await-interactions": "error",
+        "storybook/context-in-play-function": "error",
+        "storybook/default-exports": "error",
+        "storybook/hierarchy-separator": "warn",
+        "storybook/no-redundant-story-name": "warn",
+        "storybook/no-renderer-packages": "error",
+        "storybook/prefer-pascal-case": "warn",
+        "storybook/story-exports": "error",
+        "storybook/use-storybook-expect": "error",
+        "storybook/use-storybook-testing-library": "error"
+      }
+    },
+    {
+      "files": ["**/*.tests.ts", "**/*.tests.tsx"],
+      "rules": {
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/consistent-return": "off",
+        "import/first": "off", // vi.mock must precede the imports it affects
+        "no-console": "off"
+      }
+    }
+  ]
+}

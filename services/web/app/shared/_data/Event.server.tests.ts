@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { transactional, nontransactional } from '@/app/shared/_external/db/access'
+import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { findRecentEvents, logEvent } from './Event'
 
 describe('logEvent', () => {

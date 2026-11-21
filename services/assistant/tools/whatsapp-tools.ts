@@ -1,7 +1,8 @@
-import { tool, ToolSet } from 'ai'
+import type { ToolSet } from 'ai'
+import { tool } from 'ai'
 import { z } from 'zod/v4'
 import type { UserSession } from '../session'
-import { getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage, archiveWhatsappChat } from '../whatsapp/whatsapp'
+import { archiveWhatsappChat, getWhatsappChats, getWhatsappMessages, getWhatsappStatus, sendWhatsappMessage } from '../whatsapp/whatsapp'
 import { logger } from '../logger'
 
 export default function getTools(user: UserSession): ToolSet {
@@ -11,9 +12,10 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: z.array(chatOverviewSchema),
     execute: async () => {
       const chats = (await getWhatsappChats(user.email)).filter(c => !c.isArchived)
-      return Promise.all(chats
-        .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) }))
-        .map(c => c.then(({ chat, messages }) => ({ chat, messages: filterRecentMessages(messages) }))),
+      return Promise.all(
+        chats
+          .map(async chat => ({ chat, messages: await getWhatsappMessages(user.email, chat.id) }))
+          .map(c => c.then(({ chat, messages }) => ({ chat, messages: filterRecentMessages(messages) }))),
       )
     },
   })
@@ -64,8 +66,7 @@ export default function getTools(user: UserSession): ToolSet {
       try {
         await sendWhatsappMessage(user.email, chatId, message)
         return 'Message sent successfully'
-      }
-      catch (error) {
+      } catch (error) {
         logger.warn(`Failed to send WhatsApp message to chat ${chatId}`, error)
         throw error
       }
@@ -81,8 +82,7 @@ export default function getTools(user: UserSession): ToolSet {
       try {
         await archiveWhatsappChat(user.email, chatId, true)
         return 'Chat archived successfully'
-      }
-      catch (error) {
+      } catch (error) {
         logger.warn(`Failed to archive WhatsApp chat ${chatId}`, error)
         throw error
       }
@@ -137,5 +137,7 @@ const messageSchema = z.object({
 
 const chatOverviewSchema = z.object({
   chat: chatSchema.describe('The chat details'),
-  messages: z.array(messageSchema).describe('Most recent messages in this chat. Only use them for an overview, load messages using get_whatsapp_messages otherwise'),
+  messages: z
+    .array(messageSchema)
+    .describe('Most recent messages in this chat. Only use them for an overview, load messages using get_whatsapp_messages otherwise'),
 })

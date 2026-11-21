@@ -1,4 +1,5 @@
-import { tool, ToolSet } from 'ai'
+import type { ToolSet } from 'ai'
+import { tool } from 'ai'
 import { z } from 'zod/v4'
 import { getLocationByName } from './openstreetmap'
 
@@ -17,7 +18,5 @@ const locationByNameTool = tool({
     lat: z.number().describe('Latitude of the place'),
     lon: z.number().describe('Longitude of the place'),
   }),
-  execute: async ({ name }) => {
-    return await getLocationByName(name)
-  },
+  execute: async ({ name }) => await getLocationByName(name),
 })

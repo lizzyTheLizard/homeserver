@@ -1,4 +1,5 @@
-import { Pool, PoolClient } from 'pg'
+import type { PoolClient } from 'pg'
+import { Pool } from 'pg'
 import { config } from './config'
 import { runMigrations } from './migrate'
 
@@ -24,12 +25,10 @@ export async function transactional<T>(fn: (client: PoolClient) => Promise<T>): 
     const result = await fn(client)
     await client.query('COMMIT')
     return result
-  }
-  catch (error) {
+  } catch (error) {
     await client.query('ROLLBACK')
     throw error
-  }
-  finally {
+  } finally {
     client.release()
   }
 }

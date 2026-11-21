@@ -11,7 +11,7 @@ pnpm dev                 # web (:3000) + assistant (:8500) + whatsapp bridge + w
 pnpm dev:wichteln        # wichteln alone
 pnpm build               # build all packages
 pnpm test                # all tests, all packages
-pnpm lint                # oxlint --type-aware --fix in all packages (pnpm lint:ci = no fix, used in CI)
+pnpm lint                # oxlint --fix, then oxfmt, in all packages (pnpm lint:ci = checks only, used in CI)
 pnpm --filter @homeserver/web vitest run path/to/file.tests.ts   # single test file
 pnpm --filter @homeserver/web vitest run --project unit          # single vitest project
 pnpm --filter @homeserver/web storybook                          # Storybook on :6006
@@ -57,6 +57,6 @@ Vitest runs three projects (`services/web/vitest.config.mts`):
 - CSS only in `*.module.css` files beside the component; no inline styles.
 - Client-only rendering is guarded with `useIsClient()` from `app/shared/_helper/useIsClient.ts`.
 - One React component per file.
-- Keep each `import` statement on a single line.
-- Linting is Oxlint with type-aware rules (`.oxlintrc.json` per package, needs `oxlint-tsgolint`). There are no stylistic/formatting rules; disable comments use `oxlint-disable-next-line <plugin>/<rule>`.
+- Keep each `import` statement on a single line (oxfmt only wraps one when it exceeds 160 columns).
+- Linting is Oxlint with type-aware rules (one root `.oxlintrc.json` for all packages, needs `oxlint-tsgolint`); formatting is oxfmt (one root `.oxfmtrc.json`: 2 spaces, single quotes, no semicolons, 160 columns; `pnpm lint` formats, `lint:ci` fails on unformatted files). Disable comments use `oxlint-disable-next-line <plugin>/<rule>`.
 - Exported and test functions first in a file; internal helpers at the end.

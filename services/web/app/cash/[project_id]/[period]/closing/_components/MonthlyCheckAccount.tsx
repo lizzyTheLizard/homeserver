@@ -1,8 +1,8 @@
 'use client'
-import { Account } from '@/app/cash/_data/Account'
-import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { Monthly } from '@/app/cash/_data/Monthly'
-import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import type { Account } from '@/app/cash/_data/Account'
+import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import type { Monthly } from '@/app/cash/_data/Monthly'
+import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { AccountJournal } from '../../journal/_components/AccountJournal'
 import { markAsChecked } from '../server'
@@ -29,9 +29,9 @@ export function MonthlyCheckAccount({ monthly, accounts, account, transactions, 
     setLoading(true)
     setError(undefined)
     markAsChecked(monthly.project_id, monthly.period)
-      .then((r) => {
+      .then(r => {
         if (r.success) router.refresh()
-        else setError('Failed to check account: ' + r.error)
+        else setError(`Failed to check account: ${r.error}`)
         setLoading(false)
       })
       .catch((e: unknown) => {
@@ -44,9 +44,22 @@ export function MonthlyCheckAccount({ monthly, accounts, account, transactions, 
   return (
     <>
       {error && <div className="error">{error}</div>}
-      {loading && (<LoadingSpinner />)}
-      <AccountJournal account={account} accounts={accounts} transactions={transactions} lastTransaction={lastTransaction} project_id={project_id} period={period}></AccountJournal>
-      <ActionButton onClick={() => { check() }}>Continue</ActionButton>
+      {loading && <LoadingSpinner />}
+      <AccountJournal
+        account={account}
+        accounts={accounts}
+        transactions={transactions}
+        lastTransaction={lastTransaction}
+        project_id={project_id}
+        period={period}
+      />
+      <ActionButton
+        onClick={() => {
+          check()
+        }}
+      >
+        Continue
+      </ActionButton>
     </>
   )
 }

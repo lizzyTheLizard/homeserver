@@ -1,4 +1,5 @@
-import { count, Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Entity, Queryable } from '@/app/shared/_external/db/access'
+import { count, removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface ProjectInput {
@@ -10,36 +11,25 @@ export interface ProjectInput {
 export type Project = Entity<ProjectInput>
 
 export async function findAllProjects(client: Queryable): Promise<Project[]> {
-  const result = await client.query<Project>(
-    `SELECT * FROM project`,
-  )
+  const result = await client.query<Project>(`SELECT * FROM project`)
   logger.debug(`Found ${result.rows.length.toString()} projects in total`)
   return result.rows.map(removeNull)
 }
 
 export async function findProjectsByOwner(client: Queryable, ownerId: string): Promise<Project[]> {
-  const result = await client.query<Project>(
-    `SELECT * FROM project WHERE owner_email = $1`,
-    [ownerId],
-  )
+  const result = await client.query<Project>(`SELECT * FROM project WHERE owner_email = $1`, [ownerId])
   logger.debug(`Found ${result.rows.length.toString()} projects for owner ${ownerId}`)
   return result.rows.map(removeNull)
 }
 
 export async function findProjectById(client: Queryable, ownerId: string, id: string): Promise<Project | undefined> {
-  const result = await client.query<Project>(
-    `SELECT * FROM project WHERE owner_email = $1 AND id = $2`,
-    [ownerId, id],
-  )
+  const result = await client.query<Project>(`SELECT * FROM project WHERE owner_email = $1 AND id = $2`, [ownerId, id])
   logger.debug(`${result.rows[0] ? 'Found' : 'Did not find'} project ${id} for owner ${ownerId}`)
   return removeNull(result.rows[0])
 }
 
 export async function createOrModifyProject(client: Queryable, project: ProjectInput): Promise<Project> {
-  const result1 = await client.query<Project>(
-    `SELECT * FROM project WHERE id = $1`,
-    [project.id],
-  )
+  const result1 = await client.query<Project>(`SELECT * FROM project WHERE id = $1`, [project.id])
   const query = result1.rows[0]
     ? 'UPDATE project SET name = $2, owner_email = $3, archived = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *'
     : 'INSERT INTO project (id, name, owner_email, archived) VALUES ($1, $2, $3, $4) RETURNING *'
@@ -54,10 +44,7 @@ export async function createOrModifyProject(client: Queryable, project: ProjectI
  * use — callers must enforce that the request is authorised.
  */
 export async function removeProjectAsAdmin(client: Queryable, id: string): Promise<Project | undefined> {
-  const result = await client.query<Project>(
-    `DELETE FROM project WHERE id = $1 RETURNING *`,
-    [id],
-  )
+  const result = await client.query<Project>(`DELETE FROM project WHERE id = $1 RETURNING *`, [id])
   logger.debug(`Project ${id} deleted (admin)`)
   return removeNull(result.rows[0])
 }

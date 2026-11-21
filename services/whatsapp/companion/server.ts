@@ -26,7 +26,7 @@ function main(): void {
 
   app.use(requestTracing)
   // The wacli webhook needs the raw body to verify the HMAC signature, so it is
-  // mounted before the JSON parser that the rest of the API relies on.
+  // Mounted before the JSON parser that the rest of the API relies on.
   app.post('/sessions/:userId/webhook', express.raw({ type: '*/*', limit: '1mb' }), async (req: SessionRequest, res) => {
     const supervisor = supervisors.get(req.params.userId)
     if (!supervisor) {
@@ -37,7 +37,9 @@ function main(): void {
     res.status(204).end()
   })
   app.use(express.json({ limit: '1mb' }))
-  app.get('/health', (_req, res) => { res.status(200).end() })
+  app.get('/health', (_req, res) => {
+    res.status(200).end()
+  })
 
   app.get('/sessions/:userId/status', (req: SessionRequest, res) => {
     const existing = supervisors.get(req.params.userId)
@@ -51,7 +53,7 @@ function main(): void {
 
   app.post('/sessions/:userId/send-message', async (req: SessionRequest, res) => {
     if (typeof req.body.to !== 'string' || !req.body.to || typeof req.body.text !== 'string' || !req.body.text) {
-      res.status(400).json({ error: 'send_message: missing \'to\' or \'text\'' })
+      res.status(400).json({ error: "send_message: missing 'to' or 'text'" })
       return
     }
     await supervisorFor(req.params.userId).sendMessage(req.body.to, req.body.text)
@@ -60,7 +62,7 @@ function main(): void {
 
   app.post('/sessions/:userId/archive-chat', async (req: SessionRequest, res) => {
     if (typeof req.body.id !== 'string' || !req.body.id) {
-      res.status(400).json({ error: 'archive_chat: missing \'id\'' })
+      res.status(400).json({ error: "archive_chat: missing 'id'" })
       return
     }
     await supervisorFor(req.params.userId).archiveChat(req.body.id, req.body.archived === true)
@@ -84,7 +86,7 @@ function main(): void {
   })
 
   app.get('/sessions/:userId/messages', async (req: SessionRequest, res) => {
-    const chatId = req.query.chatId
+    const { chatId } = req.query
     if (typeof chatId !== 'string' || !chatId) {
       res.status(400).json({ error: 'missing chatId query parameter' })
       return
@@ -109,8 +111,12 @@ function main(): void {
     process.exit(0)
   }
 
-  process.on('SIGTERM', () => { void shutdown('SIGTERM') })
-  process.on('SIGINT', () => { void shutdown('SIGINT') })
+  process.on('SIGTERM', () => {
+    void shutdown('SIGTERM')
+  })
+  process.on('SIGINT', () => {
+    void shutdown('SIGINT')
+  })
 }
 
 // Logs every inbound request and its response status.

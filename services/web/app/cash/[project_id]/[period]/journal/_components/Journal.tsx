@@ -1,14 +1,16 @@
 'use client'
-import { Account } from '@/app/cash/_data/Account'
+import type { Account } from '@/app/cash/_data/Account'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { v4 as randomUUID } from 'uuid'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
-import { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
-import { lastDay, Period, startDate, todayOrInPeriod, toUrlString } from '@/app/cash/_helper/Period'
+import type { Transaction, TransactionInput } from '@/app/cash/_data/Transaction'
+import type { Period } from '@/app/cash/_helper/Period'
+import { lastDay, startDate, todayOrInPeriod, toUrlString } from '@/app/cash/_helper/Period'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
-import { ReactNode, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { Currency } from '@/app/shared/_components/Currency'
 import { AccountBadge } from '@/app/cash/_components/AccountBadge'
 import { deleteTransaction, saveTransaction } from '../server'
@@ -35,15 +37,23 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
   const [current, setCurrent] = useState(getInitialInput(period, project_id))
   const [noDelete, setNoDelete] = useState(false)
 
-  const creditAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.credit_account_id)))
-    .map(accountId => accounts.find(a => a.id === accountId))
-    .filter((a): a is Account => a !== undefined)
-    .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts])
+  const creditAccounts = useMemo(
+    () =>
+      Array.from(new Set(transactions.map(t => t.credit_account_id)))
+        .map(accountId => accounts.find(a => a.id === accountId))
+        .filter((a): a is Account => a !== undefined)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [transactions, accounts],
+  )
 
-  const debitAccounts = useMemo(() => Array.from(new Set((transactions).map(t => t.debit_account_id)))
-    .map(accountId => accounts.find(a => a.id === accountId))
-    .filter((a): a is Account => a !== undefined)
-    .sort((a, b) => a.name.localeCompare(b.name)), [transactions, accounts])
+  const debitAccounts = useMemo(
+    () =>
+      Array.from(new Set(transactions.map(t => t.debit_account_id)))
+        .map(accountId => accounts.find(a => a.id === accountId))
+        .filter((a): a is Account => a !== undefined)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [transactions, accounts],
+  )
 
   const columns = [
     accountColumn('credit_account_id', creditAccounts, period, { className: style.account, header: 'Credit Account' }),
@@ -64,18 +74,38 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
     const creditAccount = accounts.find(a => a.id === item.credit_account_id)
     const debitAccount = accounts.find(a => a.id === item.debit_account_id)
     return (
-      <div key={item.id} className={style.mobileItem} onClick={() => { showTransaction(item) }}>
+      <div
+        key={item.id}
+        className={style.mobileItem}
+        onClick={() => {
+          showTransaction(item)
+        }}
+      >
         <div className={style.mobileRow}>
           <span className={style.mobileDesc}>{item.description}</span>
           <Currency amount={item.amount} />
         </div>
         <div className={style.mobileMeta}>
           <span className={style.mobileAccounts}>
-            {creditAccount && <AccountBadge type={creditAccount.type} name={creditAccount.name} link={`/cash/${creditAccount.project_id}/${toUrlString(period)}/journal?accountId=${creditAccount.id}`} />}
+            {creditAccount && (
+              <AccountBadge
+                type={creditAccount.type}
+                name={creditAccount.name}
+                link={`/cash/${creditAccount.project_id}/${toUrlString(period)}/journal?accountId=${creditAccount.id}`}
+              />
+            )}
             <span className={style.mobileArrow}>→</span>
-            {debitAccount && <AccountBadge type={debitAccount.type} name={debitAccount.name} link={`/cash/${debitAccount.project_id}/${toUrlString(period)}/journal?accountId=${debitAccount.id}`} />}
+            {debitAccount && (
+              <AccountBadge
+                type={debitAccount.type}
+                name={debitAccount.name}
+                link={`/cash/${debitAccount.project_id}/${toUrlString(period)}/journal?accountId=${debitAccount.id}`}
+              />
+            )}
           </span>
-          <span><DateTime date={item.date} /></span>
+          <span>
+            <DateTime date={item.date} />
+          </span>
         </div>
       </div>
     )
@@ -88,11 +118,20 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
         data={transactions}
         initialSortingOrder={[{ key: 'date', direction: 'DESC' }]}
         searchLabel="Search transactions…"
-        onRowClick={(transaction) => { showTransaction(transaction) }}
+        onRowClick={transaction => {
+          showTransaction(transaction)
+        }}
         renderMobile={renderMobile}
       />
       <PeriodPicker period={period} project_id={project_id} />
-      <ActionButton onClick={(e) => { showTransaction(); e.stopPropagation() }}>Add Transaction</ActionButton>
+      <ActionButton
+        onClick={e => {
+          showTransaction()
+          e.stopPropagation()
+        }}
+      >
+        Add Transaction
+      </ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
@@ -101,17 +140,66 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
         onAfterSave={addTransaction}
         onDelete={() => deleteTransaction(current.id)}
         noDelete={noDelete}
-        onAfterDelete={() => { removeTransaction(current.id) }}
+        onAfterDelete={() => {
+          removeTransaction(current.id)
+        }}
       >
-        <Input type="date" label="Date" min={startDate(period)} max={lastDay(period)} value={current.date} onChange={(e) => { setCurrent({ ...current, date: e.target.value }) }} />
-        <Select label="Credit Account" value={current.credit_account_id} onChange={(e) => { setCurrent({ ...current, credit_account_id: e.target.value }) }}>
-          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        <Input
+          type="date"
+          label="Date"
+          min={startDate(period)}
+          max={lastDay(period)}
+          value={current.date}
+          onChange={e => {
+            setCurrent({ ...current, date: e.target.value })
+          }}
+        />
+        <Select
+          label="Credit Account"
+          value={current.credit_account_id}
+          onChange={e => {
+            setCurrent({ ...current, credit_account_id: e.target.value })
+          }}
+        >
+          {accounts
+            .filter(a => !a.archived)
+            .map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
         </Select>
-        <Select label="Debit Account" value={current.debit_account_id} onChange={(e) => { setCurrent({ ...current, debit_account_id: e.target.value }) }}>
-          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        <Select
+          label="Debit Account"
+          value={current.debit_account_id}
+          onChange={e => {
+            setCurrent({ ...current, debit_account_id: e.target.value })
+          }}
+        >
+          {accounts
+            .filter(a => !a.archived)
+            .map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
         </Select>
-        <Input type="currency" label="Amount" value={current.amount} onChange={(e) => { setCurrent({ ...current, amount: e.target.value }) }} />
-        <Textarea style={{ flexGrow: 1 }} label="Description" value={current.description} onChange={(e) => { setCurrent({ ...current, description: e.target.value }) }} />
+        <Input
+          type="currency"
+          label="Amount"
+          value={current.amount}
+          onChange={e => {
+            setCurrent({ ...current, amount: e.target.value })
+          }}
+        />
+        <Textarea
+          style={{ flexGrow: 1 }}
+          label="Description"
+          value={current.description}
+          onChange={e => {
+            setCurrent({ ...current, description: e.target.value })
+          }}
+        />
       </Sidebar>
     </>
   )
@@ -120,7 +208,7 @@ export function Journal({ accounts, transactions: transactionsIn, project_id, pe
 function getInitialInput(period: Period, project_id: string): Omit<TransactionInput, 'amount'> & { amount: string } {
   return {
     id: randomUUID(),
-    project_id: project_id,
+    project_id,
     credit_account_id: '',
     debit_account_id: '',
     amount: '0',

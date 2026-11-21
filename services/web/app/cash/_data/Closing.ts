@@ -1,5 +1,7 @@
-import { endDate, Period, startDate, toString } from '../_helper/Period'
-import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Period } from '../_helper/Period'
+import { endDate, startDate, toString } from '../_helper/Period'
+import type { Entity, Queryable } from '@/app/shared/_external/db/access'
+import { removeNull } from '@/app/shared/_external/db/access'
 import { logger } from '@/app/shared/logger'
 
 export interface ClosingInput {
@@ -22,10 +24,7 @@ export async function findAllClosingsByAccount(client: Queryable, owner: string,
 }
 
 export async function findLastClosing(client: Queryable, owner: string, projectId: string): Promise<Closing | undefined> {
-  const result = await client.query<Closing>(
-    `SELECT * FROM closing WHERE project_id = $1 AND owner_email = $2 ORDER BY date DESC LIMIT 1`,
-    [projectId, owner],
-  )
+  const result = await client.query<Closing>(`SELECT * FROM closing WHERE project_id = $1 AND owner_email = $2 ORDER BY date DESC LIMIT 1`, [projectId, owner])
   if (result.rows.length === 0) logger.debug(`No closing found for project ${projectId} and owner ${owner}`)
   else logger.debug(`Found closing for project ${projectId} and owner ${owner}`)
   return removeNull(result.rows[0])
@@ -42,10 +41,11 @@ export async function createClosing(client: Queryable, owner: string, closing: C
 }
 
 export async function removeClosingAfter(client: Queryable, owner_email: string, projectId: string, fromDate: string): Promise<Closing[]> {
-  const result = await client.query<Closing>(
-    `DELETE FROM closing WHERE project_id = $1 AND date >= $2 AND owner_email = $3 RETURNING *`,
-    [projectId, fromDate, owner_email],
-  )
+  const result = await client.query<Closing>(`DELETE FROM closing WHERE project_id = $1 AND date >= $2 AND owner_email = $3 RETURNING *`, [
+    projectId,
+    fromDate,
+    owner_email,
+  ])
   logger.debug(`Removed ${result.rows.length.toString()} closings for project ${projectId} after ${fromDate}`)
   return result.rows.map(removeNull)
 }

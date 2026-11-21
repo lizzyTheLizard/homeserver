@@ -2,15 +2,16 @@ import { Mutex } from 'async-mutex'
 import { promises as fs } from 'node:fs'
 import type { ChildProcess } from 'node:child_process'
 import { logger } from './logger'
-import { mapAuthenticated, mapChatArchived, mapChats, mapMessages, type Chat, type Message } from './mapping'
-import { runWacli, spawnWacli, WacliEvent } from './wacli'
+import { mapAuthenticated, mapChatArchived, mapChats, mapMessages } from './mapping'
+import type { Chat, Message } from './mapping'
+import type { WacliEvent } from './wacli'
+import { runWacli, spawnWacli } from './wacli'
 import { config } from './config'
 import { createHash, randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 
 // A Supervisor owns the lifecycle of one user's wacli store and processes.
-export type Status = { type: 'needAuth', qr: string } | { type: 'connected' }
-  | { type: 'fullsync' } | { type: 'closed' }
+export type Status = { type: 'needAuth'; qr: string } | { type: 'connected' } | { type: 'fullsync' } | { type: 'closed' }
 
 export class Supervisor {
   private readonly storeDir: string
@@ -43,16 +44,22 @@ export class Supervisor {
   private startSync(): Promise<Status> {
     logger.debug(`[${this.userId}] Is already authenticated, start sync`)
     const args = [
-      'sync', '--follow', '--events',
-      '--webhook', `http://127.0.0.1:${String(config.PORT)}/sessions/${this.userId}/webhook`,
-      '--webhook-allow-private', '--webhook-secret', this.webhookSecret,
+      'sync',
+      '--follow',
+      '--events',
+      '--webhook',
+      `http://127.0.0.1:${String(config.PORT)}/sessions/${this.userId}/webhook`,
+      '--webhook-allow-private',
+      '--webhook-secret',
+      this.webhookSecret,
     ]
     logger.debug(`[${this.userId}] starting wacli sync`)
     return new Promise((res, rej) => {
       try {
-        this.child = spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
-      }
-      catch (err: unknown) {
+        this.child = spawnWacli(this.storeDir, args, event => {
+          this.handleEvent(event, res, rej)
+        })
+      } catch (err: unknown) {
         void this.stop().catch(() => undefined)
         rej(err instanceof Error ? err : Error(String(err)))
       }
@@ -65,9 +72,10 @@ export class Supervisor {
     logger.debug(`[${this.userId}] starting wacli sync`)
     return new Promise((res, rej) => {
       try {
-        this.child = spawnWacli(this.storeDir, args, (event) => { this.handleEvent(event, res, rej) })
-      }
-      catch (err: unknown) {
+        this.child = spawnWacli(this.storeDir, args, event => {
+          this.handleEvent(event, res, rej)
+        })
+      } catch (err: unknown) {
         void this.stop().catch(() => undefined)
         rej(err instanceof Error ? err : Error(String(err)))
       }
@@ -84,12 +92,12 @@ export class Supervisor {
         break
       case 'error':
         if (this.isStopping) break
-        logger.warn(`[${this.userId}] wacli session had an error: ` + event.data.message)
+        logger.warn(`[${this.userId}] wacli session had an error: ${event.data.message}`)
         rej(new Error('Could not start wacli'))
         break
       case 'warning':
         if (this.isStopping) break
-        logger.warn(`[${this.userId}] wacli warning: ` + event.data.message)
+        logger.warn(`[${this.userId}] wacli warning: ${event.data.message}`)
         if (event.data.message.includes('hit an LTHash mismatch')) rej(new Error('Could not start wacli'))
         break
       case 'qr_code':
@@ -129,13 +137,13 @@ export class Supervisor {
       }
       logger.warn(`[${this.userId}] wacli session is closed but a process is still running, stopping it`)
     }
-    const child = this.child
+    const { child } = this
     if (!child) throw new Error('Cannot stop a process that has not been started')
     if (child.exitCode !== null || child.signalCode !== null) throw new Error('The wacli process has already exited')
     this.child = null
     this.isStopping = true
     logger.debug(`[${this.userId}] stop wacli sync`)
-    return new Promise<void>((res) => {
+    return new Promise<void>(res => {
       // Send a kill after 5s if child does not close, independant of the event loop
       const killTimer = setTimeout(() => {
         logger.warn(`[${this.userId}] wacli sync dit not terminate normally, kill it`)
@@ -164,12 +172,11 @@ export class Supervisor {
     return this.mutex.runExclusive(async () => {
       await this.stopProcess()
       logger.info(`[${this.userId}] disconnect wacli session`)
-      // ignore errors if already logged out
-      await runWacli(this.storeDir, ['auth', 'logout'], false)
-        .catch ((err: unknown) => {
-          const error = err instanceof Error ? err : Error(String(err))
-          logger.warn(`[${this.userId}] Could not log out`, error)
-        })
+      // Ignore errors if already logged out
+      await runWacli(this.storeDir, ['auth', 'logout'], false).catch((err: unknown) => {
+        const error = err instanceof Error ? err : Error(String(err))
+        logger.warn(`[${this.userId}] Could not log out`, error)
+      })
       await fs.rm(this.storeDir, { recursive: true, force: true })
       this.status = { type: 'closed' }
     })
@@ -232,11 +239,13 @@ export class Supervisor {
       this.status = { type: 'fullsync' }
       runWacli(this.storeDir, ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'], false, 5 * 60 * 1000)
         .then(() => logger.info('Fullsync finished'))
-        .catch ((err: unknown) => {
+        .catch((err: unknown) => {
           const error = err instanceof Error ? err : Error(String(err))
           logger.warn(`[${this.userId}] Full sync failed`, error)
         })
-        .finally(() => { this.status = { type: 'closed' } })
+        .finally(() => {
+          this.status = { type: 'closed' }
+        })
     })
   }
 

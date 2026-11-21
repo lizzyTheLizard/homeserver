@@ -14,7 +14,7 @@ export interface TextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
   value?: string
   keepSelection?: boolean
   ref?: React.RefObject<HTMLTextAreaElement | null>
-  onSelectionChange?: (selection?: Selection) => void
+  onSelectionChange?(selection?: Selection): void
 }
 
 /** A textarea component with the following additional features
@@ -63,19 +63,25 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
 
   function handleMouseUp(e: React.MouseEvent<HTMLTextAreaElement>) {
     const target = e.currentTarget
-    setTimeout(() => { updateSelection(target) }, 10)
+    setTimeout(() => {
+      updateSelection(target)
+    }, 10)
     props.onMouseUp?.(e)
   }
 
   function handleMouseLeave(e: React.MouseEvent<HTMLTextAreaElement>) {
     const target = e.currentTarget
-    setTimeout(() => { updateSelection(target) }, 10)
+    setTimeout(() => {
+      updateSelection(target)
+    }, 10)
     props.onMouseLeave?.(e)
   }
 
   function handleKeyUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     const target = e.currentTarget
-    setTimeout(() => { updateSelection(target) }, 10)
+    setTimeout(() => {
+      updateSelection(target)
+    }, 10)
     props.onKeyUp?.(e)
   }
 
@@ -84,9 +90,8 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
     const end = target.selectionEnd
     const text = target.value.substring(start, end)
     const newSelection = start === end ? undefined : { start, end, text }
-    if (newSelection?.start === selection?.start && newSelection?.end === selection?.end) {
-      return
-    }
+    if (newSelection?.start === selection?.start && newSelection?.end === selection?.end) return
+
     setSelection(newSelection)
     onSelectionChange?.(newSelection)
   }
@@ -105,16 +110,25 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
 
   useEffect(() => {
     if (!input.current) return undefined
-    const observer = new ResizeObserver(() => { updateSize(input.current) })
+    const observer = new ResizeObserver(() => {
+      updateSize(input.current)
+    })
     observer.observe(input.current)
-    setTimeout(() => { updateSize(input.current) }, 100)
-    return () => { observer.disconnect() }
+    setTimeout(() => {
+      updateSize(input.current)
+    }, 100)
+    return () => {
+      observer.disconnect()
+    }
   }, [input, updateSize])
 
   useEffect(() => {
     if (!selection) return
-    if (value.substring(selection.start, selection.end) !== selection.text)
-      setTimeout(() => { setSelection(undefined) }, 100)
+    if (value.substring(selection.start, selection.end) !== selection.text) {
+      setTimeout(() => {
+        setSelection(undefined)
+      }, 100)
+    }
   }, [value, selection])
 
   return (
@@ -133,11 +147,22 @@ export function Textarea({ label, keepSelection, onSelectionChange, className, s
         onMouseLeave={handleMouseLeave}
         onKeyUp={handleKeyUp}
         onScroll={handleScroll}
-      >
-      </textarea>
-      { label && <label className={style.label} htmlFor={id}>{label}</label>}
-      { selection && !focused && keepSelection && (
-        <div className={holderClasses} ref={div} style={{ top: (-scrollTop).toString() + 'px', width: width.toString() + 'px', height: height.toString() + 'px' }}>
+      />
+      {label && (
+        <label className={style.label} htmlFor={id}>
+          {label}
+        </label>
+      )}
+      {selection && !focused && keepSelection && (
+        <div
+          className={holderClasses}
+          ref={div}
+          style={{
+            top: `${(-scrollTop).toString()}px`,
+            width: `${width.toString()}px`,
+            height: `${height.toString()}px`,
+          }}
+        >
           {value.substring(0, selection.start)}
           <span>{selection.text}</span>
           {value.substring(selection.end)}

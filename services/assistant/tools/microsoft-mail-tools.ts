@@ -1,4 +1,5 @@
-import { tool, ToolSet } from 'ai'
+import type { ToolSet } from 'ai'
+import { tool } from 'ai'
 import { z } from 'zod/v4'
 import type { UserSession } from '../session'
 import { getMicrosoftMailWorker } from '../microsoft/mail'
@@ -13,8 +14,13 @@ export default function getTools(user: UserSession): ToolSet {
       if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       const messages = worker.getInboxMessages()
       return messages.map(m => ({
-        id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
-        receivedDateTime: m.receivedDateTime.toString(), isRead: m.isRead, bodyPreview: m.bodyPreview,
+        id: m.id,
+        subject: m.subject,
+        from: m.from,
+        toRecipients: m.toRecipients,
+        receivedDateTime: m.receivedDateTime.toString(),
+        isRead: m.isRead,
+        bodyPreview: m.bodyPreview,
       }))
     },
   })
@@ -31,8 +37,14 @@ export default function getTools(user: UserSession): ToolSet {
       const message = await worker.getMessage(mailId)
       if (!message) throw new Error(`Email with ID ${mailId} not found`)
       return {
-        id: message.id, subject: message.subject, from: message.from, toRecipients: message.toRecipients,
-        receivedDateTime: message.receivedDateTime.toString(), isRead: message.isRead, bodyPreview: message.bodyPreview, body: message.body,
+        id: message.id,
+        subject: message.subject,
+        from: message.from,
+        toRecipients: message.toRecipients,
+        receivedDateTime: message.receivedDateTime.toString(),
+        isRead: message.isRead,
+        bodyPreview: message.bodyPreview,
+        body: message.body,
       }
     },
   })
@@ -77,8 +89,13 @@ export default function getTools(user: UserSession): ToolSet {
       const messages = worker.getInboxMessages()
       const filtered = messages.filter(m => m.from.emailAddress.address === senderEmail)
       return filtered.map(m => ({
-        id: m.id, subject: m.subject, from: m.from, toRecipients: m.toRecipients,
-        receivedDateTime: m.receivedDateTime.toString(), isRead: m.isRead, bodyPreview: m.bodyPreview,
+        id: m.id,
+        subject: m.subject,
+        from: m.from,
+        toRecipients: m.toRecipients,
+        receivedDateTime: m.receivedDateTime.toString(),
+        isRead: m.isRead,
+        bodyPreview: m.bodyPreview,
       }))
     },
   })
@@ -92,9 +109,7 @@ export default function getTools(user: UserSession): ToolSet {
       const worker = await getMicrosoftMailWorker(user)
       if (worker.getStatus() !== 'connected') throw new Error('Outlook is not connected yet. Please try again in a moment.')
       const count = await worker.archiveMessagesFromSender(user, senderEmail)
-      return count === 0
-        ? `No emails from ${senderEmail} found in inbox`
-        : `Successfully archived ${count.toString()} email(s) from ${senderEmail}`
+      return count === 0 ? `No emails from ${senderEmail} found in inbox` : `Successfully archived ${count.toString()} email(s) from ${senderEmail}`
     },
   })
 

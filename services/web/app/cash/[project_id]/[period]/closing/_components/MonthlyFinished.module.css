@@ -1,7 +1,7 @@
 .inputRow {
-    display: flex;;
+  display: flex;
 }
 
 .inputRow > div {
-    flex-grow: 1;
+  flex-grow: 1;
 }

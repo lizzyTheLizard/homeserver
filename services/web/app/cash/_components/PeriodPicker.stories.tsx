@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { PeriodPicker } from './PeriodPicker'
-import { all, Period } from '../_helper/Period'
+import type { Period } from '../_helper/Period'
+import { all } from '../_helper/Period'
 import { useState } from 'react'
 import { expect, fn } from 'storybook/test'
 
@@ -13,7 +14,7 @@ const meta = {
     period: { current: false, year: 2023, month: 5 },
     onPeriodChange: fn(),
   },
-  render: (args) => {
+  render: args => {
     const [period, setPeriod] = useState(args.period)
 
     function onPeriodChange(newPeriod: Period) {
@@ -25,8 +26,7 @@ const meta = {
 } satisfies Meta<typeof PeriodPicker>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const All: StoryObj<typeof meta> = {
   args: {

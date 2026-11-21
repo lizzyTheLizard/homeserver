@@ -10,7 +10,7 @@ const meta = {
 } satisfies Meta<typeof AccountBadge>
 export default meta
 
-export const Default: StoryObj<typeof meta> = { }
+export const Default: StoryObj<typeof meta> = {}
 
 export const Link: StoryObj<typeof meta> = { args: { link: '/cash/1/2024-01/journal?accountId=1' } }
 

@@ -25,7 +25,9 @@ describe('parseCookieHeader', () => {
 
   test('set throws because response object is not available', () => {
     const cookies = parseCookieHeader('a=1')
-    expect(() => { cookies.set('a', '2') }).toThrow('Cannot set cookie a without response object')
+    expect(() => {
+      cookies.set('a', '2')
+    }).toThrow('Cannot set cookie a without response object')
   })
 })
 

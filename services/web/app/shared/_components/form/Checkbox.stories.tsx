@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { useState } from 'react'
-import { fn, expect } from 'storybook/test'
+import { expect, fn } from 'storybook/test'
 import { Checkbox } from './Checkbox'
 
 const meta = {
   title: 'Shared/Form/Checkbox',
   component: Checkbox,
   tags: ['autodocs'],
-  args: {
-  },
+  args: {},
 } satisfies Meta<typeof Checkbox>
 export default meta
 
@@ -30,13 +29,16 @@ export const Checked: StoryObj<typeof meta> = {
     label: 'Checked checkbox',
     onChange: fn(),
   },
-  render: (args) => {
+  render: args => {
     const [checked, setChecked] = useState(args.checked)
     return (
       <Checkbox
         {...args}
         checked={checked}
-        onChange={(e) => { setChecked(e.target.checked); args.onChange?.(e) }}
+        onChange={e => {
+          setChecked(e.target.checked)
+          args.onChange?.(e)
+        }}
       />
     )
   },

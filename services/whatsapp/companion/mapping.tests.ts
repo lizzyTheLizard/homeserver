@@ -15,8 +15,20 @@ describe('mapChats', () => {
       { jid: '456@g.us', name: '', last_message_ts: '2024-01-02T10:00:00.250Z' },
     ])
     expect(chats).toEqual([
-      { id: '456@g.us', name: '456@g.us', isArchived: false, isGroup: true, lastMessageTimestamp: '2024-01-02T10:00:00Z' },
-      { id: '123@s.whatsapp.net', name: 'Alice', isArchived: true, isGroup: false, lastMessageTimestamp: '2024-01-01T10:00:00Z' },
+      {
+        id: '456@g.us',
+        name: '456@g.us',
+        isArchived: false,
+        isGroup: true,
+        lastMessageTimestamp: '2024-01-02T10:00:00Z',
+      },
+      {
+        id: '123@s.whatsapp.net',
+        name: 'Alice',
+        isArchived: true,
+        isGroup: false,
+        lastMessageTimestamp: '2024-01-01T10:00:00Z',
+      },
     ])
   })
 
@@ -140,11 +152,7 @@ describe('mapMessages', () => {
 
   test('drops messages without text content', () => {
     const messages = mapMessages({
-      messages: [
-        { MsgID: 'a', Text: 'hello' },
-        { MsgID: 'b' },
-        { MsgID: 'c', Text: '' },
-      ],
+      messages: [{ MsgID: 'a', Text: 'hello' }, { MsgID: 'b' }, { MsgID: 'c', Text: '' }],
     })
     expect(messages.map(message => message.id)).toEqual(['a'])
   })
@@ -159,12 +167,6 @@ describe('mapMessages', () => {
         { MsgID: 'e', Timestamp: 123456, Text: 'x' },
       ],
     })
-    expect(messages.map(message => message.messageTimestamp)).toEqual([
-      '2024-01-01T10:00:00Z',
-      '2024-01-01T10:00:00Z',
-      'garbage',
-      '',
-      '',
-    ])
+    expect(messages.map(message => message.messageTimestamp)).toEqual(['2024-01-01T10:00:00Z', '2024-01-01T10:00:00Z', 'garbage', '', ''])
   })
 })

@@ -2,7 +2,8 @@
 
 import { useActionState, useState, useSyncExternalStore } from 'react'
 import { useFormStatus } from 'react-dom'
-import { changePassword, groupLogin, login, register, saveWish, selectWish, type FormState } from './actions'
+import { changePassword, groupLogin, login, register, saveWish, selectWish } from './actions'
+import type { FormState } from './actions'
 import { createGroup } from './admin/actions'
 
 function Message({ state }: { state: FormState }) {
@@ -28,7 +29,8 @@ export function SubmitButton({
       type="submit"
       className={className}
       disabled={pending || disabled}
-      onClick={(e) => {
+      onClick={e => {
+        // oxlint-disable-next-line no-alert -- native confirmation dialog is intended
         if (confirm && !window.confirm(confirm)) e.preventDefault()
       }}
     >
@@ -119,15 +121,7 @@ export function ChangePasswordForm({ continueTo }: { continueTo: string }) {
       </div>
       <div>
         <label htmlFor="new-password-confirmation">Neues Passwort wiederholen</label>
-        <input
-          id="new-password-confirmation"
-          name="passwordConfirmation"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          maxLength={200}
-          required
-        />
+        <input id="new-password-confirmation" name="passwordConfirmation" type="password" autoComplete="new-password" minLength={8} maxLength={200} required />
       </div>
       <Message state={state} />
       <SubmitButton className="full">Passwort speichern</SubmitButton>
@@ -135,7 +129,7 @@ export function ChangePasswordForm({ continueTo }: { continueTo: string }) {
   )
 }
 
-export function WishForm({ groupId, title, description }: { groupId: string, title?: string, description?: string }) {
+export function WishForm({ groupId, title, description }: { groupId: string; title?: string; description?: string }) {
   const [state, action] = useActionState(saveWish, undefined)
   return (
     <form action={action} className="stack">
@@ -154,13 +148,7 @@ export function WishForm({ groupId, title, description }: { groupId: string, tit
   )
 }
 
-export function WishPicker({
-  groupId,
-  wishes,
-}: {
-  groupId: string
-  wishes: { ownerId: string, title: string, description: string }[]
-}) {
+export function WishPicker({ groupId, wishes }: { groupId: string; wishes: { ownerId: string; title: string; description: string }[] }) {
   const [state, action] = useActionState(selectWish, undefined)
   return (
     <div className="stack">
@@ -171,10 +159,7 @@ export function WishPicker({
           <input type="hidden" name="ownerId" value={w.ownerId} />
           <h3>{w.title}</h3>
           <p>{w.description}</p>
-          <SubmitButton
-            className="full"
-            confirm={`Möchtest du den Wunsch „${w.title}“ erfüllen? Die Auswahl kann nicht rückgängig gemacht werden.`}
-          >
+          <SubmitButton className="full" confirm={`Möchtest du den Wunsch „${w.title}“ erfüllen? Die Auswahl kann nicht rückgängig gemacht werden.`}>
             Diesen Wunsch erfüllen
           </SubmitButton>
         </form>
@@ -198,13 +183,7 @@ export function CreateGroupForm() {
   )
 }
 
-export function ResetPasswordForm({
-  name,
-  action: boundAction,
-}: {
-  name: string
-  action: (prev: FormState) => Promise<FormState>
-}) {
+export function ResetPasswordForm({ name, action: boundAction }: { name: string; action(prev: FormState): Promise<FormState> }) {
   const [state, action] = useActionState(boundAction, undefined)
   return (
     <form action={action} className="reset-password">
@@ -213,9 +192,7 @@ export function ResetPasswordForm({
       </SubmitButton>
       {state?.ok && (
         <span className="small">
-          Neues Passwort:
-          {' '}
-          <code>{state.ok}</code>
+          Neues Passwort: <code>{state.ok}</code>
         </span>
       )}
       {state?.error && <span className="small error-text">{state.error}</span>}
@@ -225,16 +202,22 @@ export function ResetPasswordForm({
 
 export function CopyInviteLink({ path }: { path: string }) {
   const [copied, setCopied] = useState(false)
-  const origin = useSyncExternalStore(subscribeNever, () => window.location.origin, () => '')
+  const origin = useSyncExternalStore(
+    subscribeNever,
+    () => window.location.origin,
+    () => '',
+  )
   const link = `${origin}${path}`
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(link)
       setCopied(true)
-      setTimeout(() => { setCopied(false) }, 2000)
-    }
-    catch {
+      setTimeout(() => {
+        setCopied(false)
+      }, 2000)
+    } catch {
+      // oxlint-disable-next-line no-alert -- native prompt is the simplest way to copy a link
       window.prompt('Einladungslink kopieren:', link)
     }
   }
@@ -242,7 +225,13 @@ export function CopyInviteLink({ path }: { path: string }) {
   return (
     <div className="invite-link">
       <code>{link}</code>
-      <button type="button" className="secondary" onClick={() => { void copy() }}>
+      <button
+        type="button"
+        className="secondary"
+        onClick={() => {
+          void copy()
+        }}
+      >
         {copied ? 'Kopiert ✓' : 'Einladungslink kopieren'}
       </button>
     </div>
@@ -251,5 +240,7 @@ export function CopyInviteLink({ path }: { path: string }) {
 
 /** The page origin never changes, so there is nothing to subscribe to. */
 function subscribeNever() {
-  return () => { /* nothing to unsubscribe */ }
+  return () => {
+    /* Nothing to unsubscribe */
+  }
 }

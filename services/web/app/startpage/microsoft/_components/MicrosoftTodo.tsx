@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { textColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { DateTime } from '@/app/shared/_components/DateTime'
@@ -54,9 +54,7 @@ export function MicrosoftTodo({ todos }: { todos: SerializedTodoTask[] }) {
                 <DateTime date={selectedTodo.reminderDateTime} oneLine />
               </div>
             )}
-            {selectedTodo.body && (
-              <div className={styles.taskBodyPreview}>{selectedTodo.body.content}</div>
-            )}
+            {selectedTodo.body && <div className={styles.taskBodyPreview}>{selectedTodo.body.content}</div>}
           </div>
         )}
       </Sidebar>

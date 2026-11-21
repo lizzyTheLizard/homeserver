@@ -11,7 +11,10 @@ export default meta
 
 export const Normal: StoryObj<typeof meta> = {
   args: {
-    actions: [{ label: 'Improve', onSelect: fn() }, { label: 'Summarize', onSelect: fn() }],
+    actions: [
+      { label: 'Improve', onSelect: fn() },
+      { label: 'Summarize', onSelect: fn() },
+    ],
   },
   play: async ({ canvasElement, args }) => {
     const first = await within(canvasElement).findByRole('button', { name: 'Improve' })

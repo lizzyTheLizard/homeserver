@@ -11,8 +11,8 @@ vi.mock('./tools', () => ({ getTools: mockGetTools }))
 vi.mock('./initial', () => ({ generateInitialMessages: mockGenerateInitialMessages }))
 
 import { createAssistantInstance } from './assistant'
-import { AssistantEvent } from './types'
-import { SendOptions } from './groq'
+import type { AssistantEvent } from './types'
+import type { SendOptions } from './groq'
 
 const user = { name: 'Test User', email: 'test@test.com', applications: ['startpage'] }
 
@@ -52,7 +52,10 @@ describe('createAssistantInstance', () => {
         emit({ type: 'stream_response', chunk: 'Good morning!' })
         emit({ type: 'finished_response' })
         emit({ type: 'got_actions', actions: ['Action 1', 'Action 2'] })
-        return [{ role: 'system', content: 'instructions' }, { role: 'assistant', content: 'Good morning!' }]
+        return [
+          { role: 'system', content: 'instructions' },
+          { role: 'assistant', content: 'Good morning!' },
+        ]
       })
 
       const events: AssistantEvent[] = []
@@ -71,7 +74,7 @@ describe('createAssistantInstance', () => {
       mockGetTools.mockResolvedValue({})
       mockGenerateInitialMessages.mockResolvedValue([{ role: 'system', content: 'sys' }])
       let callCount = 0
-      mockDeepseekSend.mockImplementation((options: { messages: { role: string, content: string }[] }) => {
+      mockDeepseekSend.mockImplementation((options: { messages: { role: string; content: string }[] }) => {
         callCount++
         if (callCount === 2) {
           options.messages.push({ role: 'assistant', content: '[]' })
@@ -104,7 +107,8 @@ describe('createAssistantInstance', () => {
         options.onChunk?.('Hello')
         options.onChunk?.(' World')
         options.onToolCall?.()
-        if (callCount === 2) options.messages.push({ role: 'assistant', content: '[]' }); return '[]'
+        if (callCount === 2) options.messages.push({ role: 'assistant', content: '[]' })
+        return '[]'
       })
 
       await assistant.send('test')
@@ -133,7 +137,7 @@ describe('createAssistantInstance', () => {
       assistant.on(e => events.push(e))
 
       let callCount = 0
-      mockDeepseekSend.mockImplementation(({ messages }: { messages: { role: string, content: string }[] }) => {
+      mockDeepseekSend.mockImplementation(({ messages }: { messages: { role: string; content: string }[] }) => {
         callCount++
         if (callCount === 2) {
           messages.push({ role: 'assistant', content: '["Action A", "Action B"]' })
@@ -154,7 +158,7 @@ describe('createAssistantInstance', () => {
       assistant.on(e => events.push(e))
 
       let callCount = 0
-      mockDeepseekSend.mockImplementation(({ messages }: { messages: { role: string, content: string }[] }) => {
+      mockDeepseekSend.mockImplementation(({ messages }: { messages: { role: string; content: string }[] }) => {
         callCount++
         if (callCount === 2) {
           messages.push({ role: 'assistant', content: '[]' })

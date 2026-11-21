@@ -10,7 +10,7 @@ import { hashPassword } from '@/lib/password'
 import { passwordError, registrationError } from '@/lib/registration'
 import { safeContinuePath } from '@/lib/continuePath'
 
-export type FormState = { error?: string, ok?: string } | undefined
+export type FormState = { error?: string; ok?: string } | undefined
 
 /** Start page sign-in for the administrator and for participant accounts. */
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {

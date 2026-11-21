@@ -55,17 +55,14 @@ export async function withTransaction<T>(fn: (db: Queryable) => Promise<T>): Pro
     const result = await fn(new PgQueryable(client))
     await client.query('COMMIT')
     return result
-  }
-  catch (error) {
+  } catch (error) {
     try {
       await client.query('ROLLBACK')
-    }
-    catch {
+    } catch {
       // Keep the original error; a failed rollback is not actionable here.
     }
     throw error
-  }
-  finally {
+  } finally {
     client.release()
   }
 }
@@ -75,8 +72,7 @@ async function createPool(): Promise<Pool> {
   try {
     await runMigrations(pool)
     return pool
-  }
-  catch (error) {
+  } catch (error) {
     await pool.end()
     throw error
   }
@@ -89,17 +85,14 @@ async function runMigrations(pool: Pool): Promise<void> {
     await client.query('SELECT pg_advisory_xact_lock($1)', [MIGRATION_LOCK_ID])
     await applyMigrations(new PgQueryable(client))
     await client.query('COMMIT')
-  }
-  catch (error) {
+  } catch (error) {
     try {
       await client.query('ROLLBACK')
-    }
-    catch {
+    } catch {
       // Keep the original error; a failed rollback is not actionable here.
     }
     throw error
-  }
-  finally {
+  } finally {
     client.release()
   }
 }

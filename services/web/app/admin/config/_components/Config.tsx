@@ -9,7 +9,7 @@ export interface ConfigProps {
   data?: ConfigSection[]
 }
 
-export function Config({ data = [] }: ConfigProps) {
+export function Config({ data = NO_DATA }: ConfigProps) {
   const [query, setQuery] = useState('')
   const [showSecrets, setShowSecrets] = useState(false)
 
@@ -19,12 +19,16 @@ export function Config({ data = [] }: ConfigProps) {
         <h1>Config</h1>
         <input
           value={query}
-          onChange={(e) => { setQuery(e.target.value) }}
+          onChange={e => {
+            setQuery(e.target.value)
+          }}
           placeholder="Filter keys…"
           className={styles.search}
         />
         <button
-          onClick={() => { setShowSecrets(v => !v) }}
+          onClick={() => {
+            setShowSecrets(v => !v)
+          }}
           className={showSecrets ? styles.showSecretsActive : styles.showSecrets}
         >
           {showSecrets ? 'Hide secrets' : 'Show secrets'}
@@ -39,36 +43,30 @@ export function Config({ data = [] }: ConfigProps) {
   )
 }
 
-function SectionCard({ section, showSecrets, query }: { section: ConfigSection, showSecrets: boolean, query: string }) {
-  const filtered = section.entries.filter(e =>
-    !query
-    || e.key.toLowerCase().includes(query.toLowerCase())
-    || (e.value ?? '').toLowerCase().includes(query.toLowerCase()),
+function SectionCard({ section, showSecrets, query }: { section: ConfigSection; showSecrets: boolean; query: string }) {
+  const filtered = section.entries.filter(
+    e => !query || e.key.toLowerCase().includes(query.toLowerCase()) || (e.value ?? '').toLowerCase().includes(query.toLowerCase()),
   )
   if (filtered.length === 0) return null
   return (
     <div className={styles.card}>
       <div className={styles.sectionLabel}>{section.label}</div>
-      {filtered.map(e => <ConfigRow key={e.key} entry={e} showSecrets={showSecrets} />)}
+      {filtered.map(e => (
+        <ConfigRow key={e.key} entry={e} showSecrets={showSecrets} />
+      ))}
     </div>
   )
 }
 
-function ConfigRow({ entry, showSecrets }: { entry: ConfigSection['entries'][number], showSecrets: boolean }) {
+function ConfigRow({ entry, showSecrets }: { entry: ConfigSection['entries'][number]; showSecrets: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const val = entry.value ?? ''
   const masked = '••••••••••••••••'
 
   let display: string
-  if (entry.secret && !showSecrets) {
-    display = masked
-  }
-  else if (entry.truncate && !expanded) {
-    display = val.slice(0, 60) + '…'
-  }
-  else {
-    display = val
-  }
+  if (entry.secret && !showSecrets) display = masked
+  else if (entry.truncate && !expanded) display = `${val.slice(0, 60)}…`
+  else display = val
 
   const canToggle = entry.truncate && (!entry.secret || showSecrets)
 
@@ -76,11 +74,14 @@ function ConfigRow({ entry, showSecrets }: { entry: ConfigSection['entries'][num
     <div className={styles.configRow}>
       <span className={styles.configKey}>{entry.key}</span>
       <span className={styles.configValueWrap}>
-        <span className={entry.secret && !showSecrets ? styles.configValueSecret : styles.configValue}>
-          {display}
-        </span>
+        <span className={entry.secret && !showSecrets ? styles.configValueSecret : styles.configValue}>{display}</span>
         {canToggle && (
-          <button onClick={() => { setExpanded(v => !v) }} className={styles.toggleBtn}>
+          <button
+            onClick={() => {
+              setExpanded(v => !v)
+            }}
+            className={styles.toggleBtn}
+          >
             {expanded ? 'less' : 'more'}
           </button>
         )}
@@ -88,3 +89,5 @@ function ConfigRow({ entry, showSecrets }: { entry: ConfigSection['entries'][num
     </div>
   )
 }
+
+const NO_DATA: NonNullable<ConfigProps['data']> = []

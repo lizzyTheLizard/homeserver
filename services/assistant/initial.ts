@@ -1,12 +1,12 @@
 import type { UserSession } from './session'
-import { AssistantEvent, InitialContext } from './types'
+import type { AssistantEvent, InitialContext } from './types'
 import { openmeteoRequest, parseOpenMeteoData } from './tools/openmeteo'
 import { getLocationDescription } from './tools/openstreetmap'
 import { ensureWhatsappStarted, getWhatsappChats, getWhatsappStatus } from './whatsapp/whatsapp'
 import { getMicrosoftMailWorker } from './microsoft/mail'
 import { getMicrosoftTodoWorker } from './microsoft/todo'
 import { getMicrosoftCalendarWorker } from './microsoft/calendar'
-import { ModelMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 import { Temporal } from '@js-temporal/polyfill'
 import fs from 'fs'
 import { join } from 'path'
@@ -16,7 +16,11 @@ import { z } from 'zod'
 const ASSISTANT_DIR = __dirname
 const systemMessageTemplate = fs.readFileSync(join(ASSISTANT_DIR, 'system.md'), 'utf-8')
 
-export async function generateInitialMessages(user: UserSession, initialContext: InitialContext, emit: (event: AssistantEvent) => void): Promise<ModelMessage[]> {
+export async function generateInitialMessages(
+  user: UserSession,
+  initialContext: InitialContext,
+  emit: (event: AssistantEvent) => void,
+): Promise<ModelMessage[]> {
   // Initialize all the needed data. Do this in a particular order to avoid unnecessary waiting time.
   logger.info(`Generating initial messages for user ${user.email} with context: ${JSON.stringify(initialContext)}`)
   const greeting = getGreeting()
@@ -33,9 +37,12 @@ export async function generateInitialMessages(user: UserSession, initialContext:
   // Now we emit the message to the client, start with a tool_call to clean existing messages
   emit({ type: 'stream_response', chunk: initialMessage })
   emit({ type: 'finished_response' })
-  emit({ type: 'got_actions', actions: actions })
+  emit({ type: 'got_actions', actions })
   logger.debug(`Finished initial message generation.`)
-  return [{ role: 'system', content: systemMessage }, { role: 'assistant', content: initialMessage }]
+  return [
+    { role: 'system', content: systemMessage },
+    { role: 'assistant', content: initialMessage },
+  ]
 }
 
 function getGreeting(): Promise<PartResult> {
@@ -46,20 +53,24 @@ function getGreeting(): Promise<PartResult> {
 }
 
 async function getWeather(initialContext: InitialContext): Promise<PartResult> {
-  const location = initialContext.location
+  const { location } = initialContext
   const today = Temporal.Now.plainDateISO().toString()
   const tomorrow = Temporal.Now.plainDateISO().add({ days: 1 }).toString()
-  const params = { hourly: 'temperature_2m,precipitation,weather_code', daily: 'sunrise,sunset', start_date: today, end_date: tomorrow }
-  const [city, data] = await Promise.all([
-    getLocationDescription(location),
-    openmeteoRequest(location.lat, location.lon, params),
-  ])
+  const params = {
+    hourly: 'temperature_2m,precipitation,weather_code',
+    daily: 'sunrise,sunset',
+    start_date: today,
+    end_date: tomorrow,
+  }
+  const [city, data] = await Promise.all([getLocationDescription(location), openmeteoRequest(location.lat, location.lon, params)])
   const daily = parseOpenMeteoData(data.daily)
   const hourly = parseOpenMeteoData(data.hourly)
-  const temperatures = Object.entries(hourly).filter(([timeKey]) => timeKey.startsWith(today)).map(([, point]) => z.number().parse(point.temperature))
+  const temperatures = Object.entries(hourly)
+    .filter(([timeKey]) => timeKey.startsWith(today))
+    .map(([, point]) => z.number().parse(point.temperature))
   const minTemp = Math.min(...temperatures)
   const maxTemp = Math.max(...temperatures)
-  const timeStr = Temporal.Now.plainDateTimeISO().toString().substring(0, 13) + ':00'
+  const timeStr = `${Temporal.Now.plainDateTimeISO().toString().substring(0, 13)}:00`
   const current = hourly[timeStr]
   let text = ''
   text += `Currently the weather is **${z.string().parse(current.weather_condition)}** with **${z.number().parse(current.temperature).toString()}°C,** in **${city}**.  `
@@ -67,17 +78,20 @@ async function getWeather(initialContext: InitialContext): Promise<PartResult> {
   text += `The sun will rise at **${formatTime(z.string().parse(daily[today].sunrise))}** and set at **${formatTime(z.string().parse(daily[today].sunset))}**. `
   text += getPrecipitationString(hourly, Temporal.Now.plainDateTimeISO())
   text += '\n\n'
-  return { text, actions: ['Get Todays Weather Details', 'Get Tomorrow\'s Weather Details', 'Get a Weekly Weather Forecast'] }
+  return {
+    text,
+    actions: ['Get Todays Weather Details', "Get Tomorrow's Weather Details", 'Get a Weekly Weather Forecast'],
+  }
 }
 
 export function getPrecipitationString(hourly: Record<string, Record<string, unknown>>, now: Temporal.PlainDateTime): string {
   const today = now.toString().substring(0, 10)
-  const currentHour = now.toString().substring(0, 13) + ':00'
+  const currentHour = `${now.toString().substring(0, 13)}:00`
   const entries = Object.entries(hourly)
     .filter(([timeKey]) => timeKey.startsWith(today) && timeKey >= currentHour)
     .sort(([a], [b]) => a.localeCompare(b))
 
-  const events: { condition: string, start: string, end: string, isNow: boolean, noClearing: boolean }[] = []
+  const events: { condition: string; start: string; end: string; isNow: boolean; noClearing: boolean }[] = []
   let i = 0
   while (i < entries.length) {
     const [, point] = entries[i]
@@ -92,7 +106,13 @@ export function getPrecipitationString(hourly: Record<string, Record<string, unk
     let j = i + 1
     while (j < entries.length && z.string().parse(entries[j][1].weather_condition).toLowerCase() === condition) j++
     const end = j < entries.length ? entries[j][0].substring(11, 16) : entries[j - 1][0].substring(11, 16)
-    events.push({ condition, start, end, isNow: entries[i][0].startsWith(currentHour), noClearing: j >= entries.length })
+    events.push({
+      condition,
+      start,
+      end,
+      isNow: entries[i][0].startsWith(currentHour),
+      noClearing: j >= entries.length,
+    })
     i = j
   }
 
@@ -124,12 +144,28 @@ function capitalize(s: string): string {
 }
 
 const PRECIPITATION_CONDITIONS = new Set([
-  'Light drizzle', 'Moderate drizzle', 'Dense drizzle', 'Light freezing drizzle', 'Dense freezing drizzle',
-  'Light rain', 'Moderate rain', 'Heavy rain', 'Light freezing rain', 'Heavy freezing rain',
-  'Light snow', 'Moderate snow', 'Heavy snow', 'Snow grains',
-  'Light rain showers', 'Moderate rain showers', 'Heavy rain showers',
-  'Light snow showers', 'Heavy snow showers',
-  'Slight or moderate thunderstorm', 'Thunderstorm with slight hail', 'Thunderstorm with heavy hail',
+  'Light drizzle',
+  'Moderate drizzle',
+  'Dense drizzle',
+  'Light freezing drizzle',
+  'Dense freezing drizzle',
+  'Light rain',
+  'Moderate rain',
+  'Heavy rain',
+  'Light freezing rain',
+  'Heavy freezing rain',
+  'Light snow',
+  'Moderate snow',
+  'Heavy snow',
+  'Snow grains',
+  'Light rain showers',
+  'Moderate rain showers',
+  'Heavy rain showers',
+  'Light snow showers',
+  'Heavy snow showers',
+  'Slight or moderate thunderstorm',
+  'Thunderstorm with slight hail',
+  'Thunderstorm with heavy hail',
 ])
 
 function formatTime(input: string): string {
@@ -148,7 +184,9 @@ async function getMicrosoft(user: UserSession): Promise<PartResult> {
     const connected = [mailWorker, todoWorker, calendarWorker].reduce((p, s) => p && s.getStatus() === 'connected', true)
     if (connected) break
     if (i === 299) {
-      logger.error(`Microsoft services not connected for user ${user.email}. Mail: ${mailWorker.getStatus()}, Todo: ${todoWorker.getStatus()}, Calendar: ${calendarWorker.getStatus()}`)
+      logger.error(
+        `Microsoft services not connected for user ${user.email}. Mail: ${mailWorker.getStatus()}, Todo: ${todoWorker.getStatus()}, Calendar: ${calendarWorker.getStatus()}`,
+      )
       return { text: 'Microsoft services not connected in time. ', actions: [] }
     }
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -181,16 +219,14 @@ async function getWhatsapp(user: UserSession): Promise<PartResult> {
   const chats = await getWhatsappChats(user.email)
   const unarchived = chats.filter(c => !c.isArchived).length
   const text = `There are **${unarchived.toString()}** unarchived WhatsApp chats. `
-  const actions = (unarchived > 0 ? ['Get WhatsApp Overview'] : [])
+  const actions = unarchived > 0 ? ['Get WhatsApp Overview'] : []
   return { text, actions }
 }
 
 function getSystemMessage(initialContext: InitialContext): string {
-  const location = initialContext.location
+  const { location } = initialContext
   const locationDescription = `Latitude: ${location.lat.toString()}, Longitude: ${location.lon.toString()}`
-  return systemMessageTemplate
-    .replace('{{LOCATION}}', locationDescription)
-    .replace('{{DATE}}', Temporal.Now.plainDateTimeISO().toString())
+  return systemMessageTemplate.replace('{{LOCATION}}', locationDescription).replace('{{DATE}}', Temporal.Now.plainDateTimeISO().toString())
 }
 
 interface PartResult {

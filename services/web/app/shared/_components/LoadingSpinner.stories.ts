@@ -8,8 +8,7 @@ const meta = {
 } satisfies Meta<typeof LoadingSpinner>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const WithText: StoryObj<typeof meta> = {
   args: {

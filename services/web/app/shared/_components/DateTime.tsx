@@ -19,14 +19,22 @@ export function DateTime({ date, oneLine }: DateProps) {
   const t = typeof date !== 'string' ? date : date.length <= 10 ? Temporal.PlainDate.from(date) : Temporal.Instant.from(date)
   if ('era' in t) {
     const plainDate = Temporal.PlainDate.from(t)
-    return (<span>{plainDate.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>)
+    return <span>{plainDate.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
   }
   if ('epochMilliseconds' in t) {
-    const zoned = Temporal.Instant.fromEpochMilliseconds(t.epochMilliseconds)
-      .toZonedDateTimeISO(new Intl.DateTimeFormat().resolvedOptions().timeZone)
+    const zoned = Temporal.Instant.fromEpochMilliseconds(t.epochMilliseconds).toZonedDateTimeISO(new Intl.DateTimeFormat().resolvedOptions().timeZone)
     if (oneLine) {
       return (
-        <span>{zoned.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+        <span>
+          {zoned.toLocaleString(undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+        </span>
       )
     }
     return (
@@ -36,5 +44,5 @@ export function DateTime({ date, oneLine }: DateProps) {
       </div>
     )
   }
-  throw new Error('Unsupported date type ' + typeof date + ': ' + JSON.stringify(date))
+  throw new Error(`Unsupported date type ${typeof date}: ${JSON.stringify(date)}`)
 }

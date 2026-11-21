@@ -14,7 +14,7 @@ export const TYPE_MAPPINGS: Record<number, (value: string) => unknown> = {
   1700: value => parseFloat(value), // NUMERIC
 }
 
-let phaseTimings: { connectionMs: number, migrationMs: number } | undefined = undefined
+let phaseTimings: { connectionMs: number; migrationMs: number } | undefined = undefined
 
 export function getDbPhaseTimings(): typeof phaseTimings {
   return phaseTimings
@@ -29,8 +29,10 @@ export async function setupPool(): Promise<Pool> {
   try {
     logger.debug('Setting up database connection')
     const pool = new Pool({ connectionString: config.DB_CONNECTION_STRING, max: 100 })
-    // oxlint-disable-next-line typescript/no-unsafe-enum-assignment -- all TYPE_MAPPINGS OIDs are members of pg's TypeId enum, so the runtime value is safe
-    Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => { PG.types.setTypeParser(parseInt(typeId, 10), parser) })
+    Object.entries(TYPE_MAPPINGS).forEach(([typeId, parser]) => {
+      // oxlint-disable-next-line import/no-named-as-default-member, typescript/no-unsafe-enum-assignment -- pg is a CommonJS module (default import required); all TYPE_MAPPINGS OIDs are members of pg's TypeId enum
+      PG.types.setTypeParser(parseInt(typeId, 10), parser)
+    })
 
     const connStart = Date.now()
     await testConnection(pool)
@@ -43,8 +45,7 @@ export async function setupPool(): Promise<Pool> {
 
     logger.info(`Database successfully connected in ${connectionMs.toString()}ms and migrated in ${migrationMs.toString()}ms`)
     return pool
-  }
-  catch (error) {
+  } catch (error) {
     logger.error('Failed to set up database connection:', isBackendError(error) && !error.showStack ? error.message : error)
     throw error
   }
@@ -54,11 +55,8 @@ async function testConnection(pool: Pool): Promise<void> {
   const client = await pool.connect()
   try {
     const res = await client.query<{ result: number }>('SELECT 1 + 1 as result;')
-    if (res.rows[0]?.result !== 2) {
-      throw databaseError('Database connection test failed')
-    }
-  }
-  finally {
+    if (res.rows[0]?.result !== 2) throw databaseError('Database connection test failed')
+  } finally {
     client.release()
   }
 }

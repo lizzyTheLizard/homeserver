@@ -30,8 +30,8 @@ describe('MonthlyPeriod', () => {
 
   test('first/last reject ALL period', () => {
     const period = basePeriod({})
-    expect(() => first(period)).toThrow('Cannot reopen or close \'all\' period')
-    expect(() => last(period)).toThrow('Cannot reopen or close \'all\' period')
+    expect(() => first(period)).toThrow("Cannot reopen or close 'all' period")
+    expect(() => last(period)).toThrow("Cannot reopen or close 'all' period")
   })
 
   test('first/last reject open-ended period', () => {
@@ -51,13 +51,21 @@ describe('MonthlyPeriod', () => {
   })
 
   test('next advances to next month', () => {
-    expect(next({ year: 2023, month: 5, openEnded: false, day: undefined }))
-      .toEqual({ year: 2023, month: 6, openEnded: false, day: undefined })
+    expect(next({ year: 2023, month: 5, openEnded: false, day: undefined })).toEqual({
+      year: 2023,
+      month: 6,
+      openEnded: false,
+      day: undefined,
+    })
   })
 
   test('next wraps December to January', () => {
-    expect(next({ year: 2023, month: 12, openEnded: false, day: undefined }))
-      .toEqual({ year: 2024, month: 1, openEnded: false, day: undefined })
+    expect(next({ year: 2023, month: 12, openEnded: false, day: undefined })).toEqual({
+      year: 2024,
+      month: 1,
+      openEnded: false,
+      day: undefined,
+    })
   })
 
   test('compare orders by year then month', () => {

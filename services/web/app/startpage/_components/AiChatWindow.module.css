@@ -32,7 +32,9 @@
   font-size: 0.8rem;
   cursor: pointer;
   font-family: inherit;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .restartButton:hover {

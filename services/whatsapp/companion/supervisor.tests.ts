@@ -66,8 +66,8 @@ function makeFakeChild(): FakeChild {
 }
 
 // Returns a session whose handleEvent is assigned by the mocked spawnWacli as
-// soon as the supervisor calls it. Keep the object (not a destructured copy)
-// so closures observe the assignment.
+// Soon as the supervisor calls it. Keep the object (not a destructured copy)
+// So closures observe the assignment.
 function setupSupervisor(): Session {
   const child = makeFakeChild()
   const session: Session = { child, handleEvent: undefined }
@@ -80,7 +80,9 @@ function setupSupervisor(): Session {
 
 async function startConnected(supervisor: Supervisor, session: Session): Promise<void> {
   const startPromise = supervisor.start()
-  await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+  await vi.waitFor(() => {
+    expect(session.handleEvent).toBeDefined()
+  })
   session.handleEvent?.({ event: 'connected' })
   await startPromise
 }
@@ -118,15 +120,22 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'connected' })
     await expect(startPromise).resolves.toEqual({ type: 'connected' })
     expect(mockSpawnWacli).toHaveBeenCalledWith(
       storeDir,
       [
-        'sync', '--follow', '--events',
-        '--webhook', `http://127.0.0.1:8400/sessions/${userId}/webhook`,
-        '--webhook-allow-private', '--webhook-secret', supervisor.getWebhookSecret(),
+        'sync',
+        '--follow',
+        '--events',
+        '--webhook',
+        `http://127.0.0.1:8400/sessions/${userId}/webhook`,
+        '--webhook-allow-private',
+        '--webhook-secret',
+        supervisor.getWebhookSecret(),
       ],
       expect.any(Function),
     )
@@ -145,7 +154,9 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'qr_code', data: { code: 'QRCODE123' } })
     await expect(startPromise).resolves.toEqual({ type: 'needAuth', qr: 'QRCODE123' })
     expect(mockSpawnWacli).toHaveBeenCalledWith(storeDir, ['auth', '--events'], expect.any(Function))
@@ -155,11 +166,15 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'connected' })
     await expect(startPromise).resolves.toEqual({ type: 'connected' })
     const stopPromise = supervisor.stop()
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await stopPromise
   })
@@ -177,7 +192,9 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'error', data: { message: 'boom' } })
     await expect(startPromise).rejects.toThrow()
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
@@ -187,9 +204,14 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     const message = 'warning: app state regular_low hit an LTHash mismatch; requesting recovery snapshot'
-    session.handleEvent?.({ event: 'warning', data: { code: 'app_state_lthash_mismatch', message, name: 'regular_low' } })
+    session.handleEvent?.({
+      event: 'warning',
+      data: { code: 'app_state_lthash_mismatch', message, name: 'regular_low' },
+    })
     await expect(startPromise).rejects.toThrow()
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
   })
@@ -198,7 +220,9 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'warning', data: { code: 'something_else', message: 'just a warning' } })
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
     session.handleEvent?.({ event: 'connected' })
@@ -209,7 +233,9 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'closed' })
     await expect(startPromise).rejects.toThrow('Could not start wacli')
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
@@ -229,7 +255,9 @@ describe('Supervisor', () => {
     const supervisor = new Supervisor(userId)
     await startConnected(supervisor, session)
     const stopPromise = supervisor.stop()
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await stopPromise
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })
@@ -270,7 +298,13 @@ describe('Supervisor', () => {
       if (args[0] === 'messages') {
         return {
           messages: [
-            { MsgID: 'm1', ChatJID: '123@s.whatsapp.net', FromMe: false, Text: 'Hello', Timestamp: '2024-01-01T10:00:00Z' },
+            {
+              MsgID: 'm1',
+              ChatJID: '123@s.whatsapp.net',
+              FromMe: false,
+              Text: 'Hello',
+              Timestamp: '2024-01-01T10:00:00Z',
+            },
           ],
         }
       }
@@ -291,7 +325,13 @@ describe('Supervisor', () => {
       if (args.includes('--chat')) {
         return {
           messages: [
-            { MsgID: 'm1', ChatJID: '123@s.whatsapp.net', FromMe: true, Text: 'Hi there', Timestamp: '2024-01-01T10:00:00.123Z' },
+            {
+              MsgID: 'm1',
+              ChatJID: '123@s.whatsapp.net',
+              FromMe: true,
+              Text: 'Hi there',
+              Timestamp: '2024-01-01T10:00:00.123Z',
+            },
           ],
         }
       }
@@ -302,7 +342,14 @@ describe('Supervisor', () => {
     await startConnected(supervisor, session)
     const messages = await supervisor.getMessages('123@s.whatsapp.net')
     expect(messages).toEqual([
-      { id: 'm1', chatId: '123@s.whatsapp.net', fromMe: true, fromName: 'Me', content: 'Hi there', messageTimestamp: '2024-01-01T10:00:00Z' },
+      {
+        id: 'm1',
+        chatId: '123@s.whatsapp.net',
+        fromMe: true,
+        fromName: 'Me',
+        content: 'Hi there',
+        messageTimestamp: '2024-01-01T10:00:00Z',
+      },
     ])
     expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['messages', 'list', '--chat', '123@s.whatsapp.net', '--asc', '--limit', '5000'], true)
   })
@@ -312,7 +359,9 @@ describe('Supervisor', () => {
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     const startPromise = supervisor.start()
-    await vi.waitFor(() => { expect(session.handleEvent).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(session.handleEvent).toBeDefined()
+    })
     session.handleEvent?.({ event: 'qr_code', data: { code: 'QR' } })
     await startPromise
     await expect(supervisor.getChats()).rejects.toThrow('Not connected')
@@ -331,13 +380,17 @@ describe('Supervisor', () => {
     const supervisor = new Supervisor(userId)
     await startConnected(supervisor, session)
     const archivePromise = supervisor.archiveChat('123@s.whatsapp.net', true)
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await archivePromise
     expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['chats', 'archive', '--chat', '123@s.whatsapp.net'], false)
 
     const unarchivePromise = supervisor.archiveChat('456@s.whatsapp.net', false)
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await unarchivePromise
     expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['chats', 'unarchive', '--chat', '456@s.whatsapp.net'], false)
@@ -368,25 +421,42 @@ describe('Supervisor', () => {
   test('fullSync runs a one-off sync and returns to closed', async () => {
     let resolveSync: ((value: unknown) => void) | undefined
     mockRunWacli.mockImplementation((_store: string, args: string[]) => {
-      if (args[0] === 'sync') return new Promise((resolve) => { resolveSync = resolve })
+      if (args[0] === 'sync') {
+        return new Promise(resolve => {
+          resolveSync = resolve
+        })
+      }
       return { authenticated: true }
     })
     const session = setupSupervisor()
     const supervisor = new Supervisor(userId)
     await startConnected(supervisor, session)
     const fullSyncPromise = supervisor.fullSync()
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await fullSyncPromise
     expect(supervisor.getStatus()).toEqual({ type: 'fullsync' })
-    expect(mockRunWacli).toHaveBeenCalledWith(storeDir, ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'], false, 5 * 60 * 1000)
+    expect(mockRunWacli).toHaveBeenCalledWith(
+      storeDir,
+      ['sync', '--once', '--refresh-contacts', '--refresh-groups', '--refresh-channels', '--idle-exit', '10s'],
+      false,
+      5 * 60 * 1000,
+    )
     resolveSync?.(null)
-    await vi.waitFor(() => { expect(supervisor.getStatus()).toEqual({ type: 'closed' }) })
+    await vi.waitFor(() => {
+      expect(supervisor.getStatus()).toEqual({ type: 'closed' })
+    })
   })
 
   test('fullSync ignores concurrent calls while syncing', async () => {
     mockRunWacli.mockImplementation(async (_store: string, args: string[]) => {
-      if (args[0] === 'sync') return new Promise(() => { /* never resolves */ })
+      if (args[0] === 'sync') {
+        return new Promise(() => {
+          /* Never resolves */
+        })
+      }
       if (args[0] === 'auth') return { authenticated: true }
       return null
     })
@@ -394,7 +464,9 @@ describe('Supervisor', () => {
     const supervisor = new Supervisor(userId)
     await startConnected(supervisor, session)
     const first = supervisor.fullSync()
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await first
     expect(supervisor.getStatus()).toEqual({ type: 'fullsync' })
@@ -412,7 +484,9 @@ describe('Supervisor', () => {
     const supervisor = new Supervisor(userId)
     await startConnected(supervisor, session)
     const disconnectPromise = supervisor.disconnect()
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await disconnectPromise
     expect(mockRunWacli).toHaveBeenCalledWith(storeDirForUser, ['auth', 'logout'], false)
@@ -434,7 +508,9 @@ describe('Supervisor', () => {
     const supervisor = new Supervisor(userId)
     await startConnected(supervisor, session)
     const disconnectPromise = supervisor.disconnect()
-    await vi.waitFor(() => { expect(session.child.kill).toHaveBeenCalledWith('SIGTERM') })
+    await vi.waitFor(() => {
+      expect(session.child.kill).toHaveBeenCalledWith('SIGTERM')
+    })
     session.child.emitEvent('close')
     await expect(disconnectPromise).resolves.toBeUndefined()
     expect(supervisor.getStatus()).toEqual({ type: 'closed' })

@@ -1,20 +1,22 @@
 .editableView {
   margin-top: 0.6rem;
   padding: 0.6rem 0.8rem;
-  background: rgba(0,0,210,0.06);
-  border: 1px solid rgba(0,0,210,0.13);
-  border-left: 3px solid rgba(0,0,210,0.35);
+  background: rgba(0, 0, 210, 0.06);
+  border: 1px solid rgba(0, 0, 210, 0.13);
+  border-left: 3px solid rgba(0, 0, 210, 0.35);
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
   line-height: 1.55;
   color: #1a1a2e;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 
 .editableView:hover {
-  background: rgba(0,0,210,0.1);
-  border-left-color: rgba(0,0,210,0.6);
+  background: rgba(0, 0, 210, 0.1);
+  border-left-color: rgba(0, 0, 210, 0.6);
 }
 
 .editableViewDisabled {
@@ -22,19 +24,18 @@
 }
 
 .editableViewDisabled:hover {
-  background: rgba(0,0,210,0.06);
-  border-left-color: rgba(0,0,210,0.13);
+  background: rgba(0, 0, 210, 0.06);
+  border-left-color: rgba(0, 0, 210, 0.13);
 }
 
-
 .editableViewResponse {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
   border: none;
   cursor: inherit;
 }
 
 .editableViewResponse:hover {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .editableViewLabel {
@@ -42,7 +43,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(0,0,210,0.55);
+  color: rgba(0, 0, 210, 0.55);
   margin-bottom: 0.15rem;
 }
 
@@ -57,7 +58,7 @@
 
 .editableEditingBorder {
   position: relative;
-  border: 2px solid rgba(0,0,210,0.25);
+  border: 2px solid rgba(0, 0, 210, 0.25);
   border-radius: 8px;
   overflow: hidden;
   transition: border-color 0.15s;
@@ -92,14 +93,14 @@
   justify-content: flex-end;
   gap: 0.4rem;
   padding: 0.4rem 0.5rem;
-  background: rgba(0,0,210,0.03);
-  border-top: 1px solid rgba(0,0,210,0.08);
+  background: rgba(0, 0, 210, 0.03);
+  border-top: 1px solid rgba(0, 0, 210, 0.08);
 }
 
 .editableCancelBtn {
   padding: 0.3rem 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   background: white;
   cursor: pointer;
   font-size: 0.8rem;
@@ -112,7 +113,7 @@
   padding: 0.3rem 0.9rem;
   border-radius: 6px;
   border: none;
-  background: rgba(0,0,210,1);
+  background: rgba(0, 0, 210, 1);
   color: white;
   cursor: pointer;
   font-size: 0.8rem;
@@ -121,7 +122,7 @@
 }
 
 .editableOkBtn:disabled {
-  background: rgba(0,0,210,0.5);
+  background: rgba(0, 0, 210, 0.5);
   cursor: not-allowed;
 }
 

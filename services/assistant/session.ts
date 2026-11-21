@@ -25,8 +25,8 @@ interface ResponseCookie {
 }
 
 export interface CookieStore {
-  get: (name: string) => { name: string, value: string } | undefined
-  set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void, (options: ResponseCookie): void }
+  get(name: string): { name: string; value: string } | undefined
+  set: { (name: string, value: string, cookie?: Partial<ResponseCookie>): void; (options: ResponseCookie): void }
 }
 
 export async function getUserSession(cookies: CookieStore): Promise<UserSession> {
@@ -44,7 +44,7 @@ export async function getUserSession(cookies: CookieStore): Promise<UserSession>
 export function parseCookieHeader(cookieHeader: string | undefined): CookieStore {
   const cookies: Record<string, string> = {}
   if (cookieHeader) {
-    cookieHeader.split(';').forEach((cookie) => {
+    cookieHeader.split(';').forEach(cookie => {
       const [name, ...rest] = cookie.split('=')
       cookies[name.trim()] = rest.join('=').trim()
     })

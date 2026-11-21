@@ -1,6 +1,8 @@
-import { endDate, Period, startDate, toString } from '../_helper/Period'
+import type { Period } from '../_helper/Period'
+import { endDate, startDate, toString } from '../_helper/Period'
 import { logger } from '@/app/shared/logger'
-import { Entity, Queryable, removeNull } from '@/app/shared/_external/db/access'
+import type { Entity, Queryable } from '@/app/shared/_external/db/access'
+import { removeNull } from '@/app/shared/_external/db/access'
 
 export interface AccountTransactionInput {
   id: string
@@ -17,10 +19,12 @@ export interface AccountTransactionInput {
 export type AccountTransaction = Entity<AccountTransactionInput>
 
 export async function deleteAccountTransactions(client: Queryable, owner: string, accountId: string, period: Period): Promise<void> {
-  await client.query(
-    'DELETE FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date >= $3 AND date < $4',
-    [accountId, owner, startDate(period), endDate(period)],
-  )
+  await client.query('DELETE FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date >= $3 AND date < $4', [
+    accountId,
+    owner,
+    startDate(period),
+    endDate(period),
+  ])
   logger.debug(`Deleting account transactions for account ${accountId} in period ${toString(period)}`)
 }
 
@@ -33,7 +37,12 @@ export async function findAllAccountTransactionsInPeriod(client: Queryable, owne
   return result.rows.map(removeNull)
 }
 
-export async function findLatestAccountTransactionBefore(client: Queryable, owner: string, accountId: string, period: Period): Promise<AccountTransaction | undefined> {
+export async function findLatestAccountTransactionBefore(
+  client: Queryable,
+  owner: string,
+  accountId: string,
+  period: Period,
+): Promise<AccountTransaction | undefined> {
   const result = await client.query<AccountTransaction>(
     'SELECT * FROM account_transaction WHERE account_id = $1 AND owner_email = $2 AND date < $3 ORDER BY date DESC, ordering DESC LIMIT 1',
     [accountId, owner, startDate(period)],
@@ -70,7 +79,19 @@ export async function findLatestAccountTransactionsIn(client: Queryable, project
 export async function createAccountTransaction(client: Queryable, owner: string, input: AccountTransactionInput): Promise<AccountTransaction> {
   const result = await client.query<AccountTransaction>(
     'INSERT INTO account_transaction (id, ordering, account_id, project_id, other_account_id, amount, total_balance, date, transaction_id, description, owner_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-    [input.id, input.ordering, input.account_id, input.project_id, input.other_account_id, input.amount, input.total_balance, input.date, input.transaction_id, input.description, owner],
+    [
+      input.id,
+      input.ordering,
+      input.account_id,
+      input.project_id,
+      input.other_account_id,
+      input.amount,
+      input.total_balance,
+      input.date,
+      input.transaction_id,
+      input.description,
+      owner,
+    ],
   )
   if (!result.rows[0]) throw new Error('Failed to create account transaction')
   logger.debug(`Creating account transaction for account ${input.account_id} on date ${input.date}`)

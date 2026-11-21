@@ -1,6 +1,6 @@
 'use client'
 
-export type ErrorPageProps = { error: Error } | { message: string, name: string }
+export type ErrorPageProps = { error: Error } | { message: string; name: string }
 
 export function ErrorPage(props: ErrorPageProps) {
   const name = 'name' in props ? props.name : props.error.name
@@ -10,15 +10,18 @@ export function ErrorPage(props: ErrorPageProps) {
       <h1>{name}</h1>
       <p>{message}</p>
       <p>
-        You can either
-        {' '}
-        <a href="/">go back to the main page</a>
-        {' '}
-        or
-        {' '}
-        <a href="#" onClick={(e) => { history.back(); e.preventDefault() }}>go back to the last page</a>
+        You can either <a href="/">go back to the main page</a> or{' '}
+        <a
+          href="#"
+          onClick={e => {
+            history.back()
+            e.preventDefault()
+          }}
+        >
+          go back to the last page
+        </a>
       </p>
-      {'error' in props && (<div style={{ whiteSpace: 'pre-wrap', color: 'red', fontSize: 'small' }}>{props.error.stack}</div>)}
+      {'error' in props && <div style={{ whiteSpace: 'pre-wrap', color: 'red', fontSize: 'small' }}>{props.error.stack}</div>}
     </main>
   )
 }

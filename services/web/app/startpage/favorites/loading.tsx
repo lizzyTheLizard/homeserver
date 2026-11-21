@@ -9,7 +9,7 @@ export default function Loading() {
         <h1>Favorites</h1>
       </ActionTitle>
       <FavoritesContent favorites={[]} />
-      <LoadingSpinner></LoadingSpinner>
+      <LoadingSpinner />
     </main>
   )
 }

@@ -57,7 +57,7 @@ export const GeneratingEmptyStalled: StoryObj<typeof meta> = {
 export const GeneratingPartial: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
-    content: 'Here\'s your email summary:\n\n- Stefan Meier — Project meeting next Thursday at 14:00\n- Oliver Braun — Question about Q2 numbers, needs reply',
+    content: "Here's your email summary:\n\n- Stefan Meier — Project meeting next Thursday at 14:00\n- Oliver Braun — Question about Q2 numbers, needs reply",
     generating: true,
     stalled: false,
   },
@@ -66,13 +66,14 @@ export const GeneratingPartial: StoryObj<typeof meta> = {
 export const GeneratingPartialStalled: StoryObj<typeof meta> = {
   args: {
     role: 'assistant',
-    content: 'Sure! Here\'s a draft for Thomas:\n\n"Hey Thomas! Yes, I\'ll be there Saturday —',
+    content: "Sure! Here's a draft for Thomas:\n\n\"Hey Thomas! Yes, I'll be there Saturday —",
     generating: true,
     stalled: true,
   },
 }
 
-const EDITABLE_CONTENT = 'Hi Thomas! I\'ve drafted a reply for you.\n\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where? Should I bring anything?\n~~~\n\nFeel free to edit the draft above before I send it.'
+const EDITABLE_CONTENT =
+  "Hi Thomas! I've drafted a reply for you.\n\n~~~input\nHey Thomas! Yes, I'll be there Saturday — what time and where? Should I bring anything?\n~~~\n\nFeel free to edit the draft above before I send it."
 
 export const EditableBeforeEdit: StoryObj<typeof meta> = {
   args: {
@@ -91,9 +92,7 @@ export const EditableDuringEdit: StoryObj<typeof meta> = {
   play: async ({ canvasElement }) => {
     await new Promise(resolve => setTimeout(resolve, 100))
     const editableBlock = canvasElement.querySelector<HTMLElement>('[class*="editableView"]')
-    if (editableBlock) {
-      editableBlock.click()
-    }
+    if (editableBlock) editableBlock.click()
   },
 }
 
@@ -106,29 +105,26 @@ export const EditableAfterEdit: StoryObj<typeof meta> = {
   play: async ({ canvasElement }) => {
     await new Promise(resolve => setTimeout(resolve, 100))
     const editableBlock = canvasElement.querySelector<HTMLElement>('[class*="editableView"]')
-    if (editableBlock) {
-      editableBlock.click()
-    }
+    if (editableBlock) editableBlock.click()
+
     await new Promise(resolve => setTimeout(resolve, 150))
     const textarea = canvasElement.querySelector<HTMLTextAreaElement>('textarea')
     if (textarea) {
       // oxlint-disable-next-line typescript/unbound-method
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
-      nativeInputValueSetter?.call(textarea, 'Hey Thomas! Yes, I\'ll be there Saturday at 19:00. Let me know if you need me to bring anything!')
+      nativeInputValueSetter?.call(textarea, "Hey Thomas! Yes, I'll be there Saturday at 19:00. Let me know if you need me to bring anything!")
       textarea.dispatchEvent(new Event('input', { bubbles: true }))
     }
     await new Promise(resolve => setTimeout(resolve, 100))
     const okButton = Array.from(canvasElement.querySelectorAll('button')).find(btn => btn.textContent === 'OK')
-    if (okButton) {
-      okButton.click()
-    }
+    if (okButton) okButton.click()
   },
 }
 
 export const EditableResponse: StoryObj<typeof meta> = {
   args: {
     role: 'user',
-    content: 'I updated the text\n~~~input\nHey Thomas! Yes, I\'ll be there Saturday — what time and where? Should I bring anything?\n~~~',
+    content: "I updated the text\n~~~input\nHey Thomas! Yes, I'll be there Saturday — what time and where? Should I bring anything?\n~~~",
   },
 }
 

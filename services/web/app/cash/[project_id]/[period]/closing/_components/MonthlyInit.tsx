@@ -1,12 +1,12 @@
 'use client'
-import { Account } from '@/app/cash/_data/Account'
-import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import type { Account } from '@/app/cash/_data/Account'
+import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { Select } from '@/app/shared/_components/form/Select'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useEffect, useRef, useState } from 'react'
 import { initialize } from '../server'
 import { useRouter } from 'next/navigation'
-import { Monthly, MonthlyInput, NeonTransaction } from '@/app/cash/_data/Monthly'
+import type { Monthly, MonthlyInput, NeonTransaction } from '@/app/cash/_data/Monthly'
 import { v4 as randomUUID } from 'uuid'
 import { Input } from '@/app/shared/_components/form/Input'
 import { parseNeonFile } from '../__helper/NeonParser'
@@ -31,18 +31,20 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
   const firstField = useRef<HTMLSelectElement>(null)
   const valid = neonAccountId && sharedAccountId && creditCardAccountId && remainingAccountId && neonFile
 
-  useEffect(() => { firstField.current?.focus() }, [])
+  useEffect(() => {
+    firstField.current?.focus()
+  }, [])
 
   function onSave() {
     if (!neonAccountId || !sharedAccountId || !creditCardAccountId || !remainingAccountId || !neonFile) return
     setLoading(true)
     setError(undefined)
     parseNeonFile(neonFile)
-      .then(async (transactions) => {
+      .then(async transactions => {
         const input = toInput(transactions)
         const r = await initialize(input)
         if (r.success) router.refresh()
-        else setError('Failed to initialize monthly closing: ' + r.error)
+        else setError(`Failed to initialize monthly closing: ${r.error}`)
         setLoading(false)
       })
       .catch((e: unknown) => {
@@ -69,23 +71,85 @@ export function MonthlyInit({ project_id, period, accounts, lastMonthClosing }: 
 
   return (
     <>
-      <ActionButton onClick={onSave} disabled={loading || !valid} variant="primary">Continue</ActionButton>
+      <ActionButton onClick={onSave} disabled={loading || !valid} variant="primary">
+        Continue
+      </ActionButton>
       {error && <div className="error">{error}</div>}
-      {loading && (<LoadingSpinner />)}
+      {loading && <LoadingSpinner />}
       <form className="form-gaps">
-        <Select ref={firstField} label="Neon Account" value={neonAccountId} onChange={(e) => { setNeonAccountId(e.target.value) }} required>
-          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        <Select
+          ref={firstField}
+          label="Neon Account"
+          value={neonAccountId}
+          onChange={e => {
+            setNeonAccountId(e.target.value)
+          }}
+          required
+        >
+          {accounts
+            .filter(a => !a.archived)
+            .map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
         </Select>
-        <Select label="Shared Account" value={sharedAccountId} onChange={(e) => { setSharedAccountId(e.target.value) }} required>
-          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        <Select
+          label="Shared Account"
+          value={sharedAccountId}
+          onChange={e => {
+            setSharedAccountId(e.target.value)
+          }}
+          required
+        >
+          {accounts
+            .filter(a => !a.archived)
+            .map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
         </Select>
-        <Select label="Credit Card Account" value={creditCardAccountId} onChange={(e) => { setCreditCardAccountId(e.target.value) }} required>
-          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        <Select
+          label="Credit Card Account"
+          value={creditCardAccountId}
+          onChange={e => {
+            setCreditCardAccountId(e.target.value)
+          }}
+          required
+        >
+          {accounts
+            .filter(a => !a.archived)
+            .map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
         </Select>
-        <Select label="Remaining Account" value={remainingAccountId} onChange={(e) => { setRemainingAccountId(e.target.value) }} required>
-          {accounts.filter(a => !a.archived).map(account => (<option key={account.id} value={account.id}>{account.name}</option>))}
+        <Select
+          label="Remaining Account"
+          value={remainingAccountId}
+          onChange={e => {
+            setRemainingAccountId(e.target.value)
+          }}
+          required
+        >
+          {accounts
+            .filter(a => !a.archived)
+            .map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
         </Select>
-        <Input type="file" label="Neon File" onChange={(e) => { setNeonFile(e.target.files?.[0]) }} required />
+        <Input
+          type="file"
+          label="Neon File"
+          onChange={e => {
+            setNeonFile(e.target.files?.[0])
+          }}
+          required
+        />
       </form>
     </>
   )

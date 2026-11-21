@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { promises as fs, readFileSync } from 'fs'
 import { join } from 'path'
 import { getSkillTools } from './skills-tools'
@@ -56,7 +56,7 @@ describe('skill loading from filesystem', () => {
   The other files in the skill directory are additional resources that may be needed to execute the skill. 
   The contents of the files are as follows:`)
     // oxlint-disable-next-line typescript/no-non-null-assertion
-    const fileContent = JSON.parse(/(\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
+    const fileContent = JSON.parse(/(?:\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
     expect(fileContent['SKILL.md']).toBe(SKILL_CONTENT)
     expect(Object.keys(fileContent)).toHaveLength(1)
   })
@@ -75,7 +75,7 @@ describe('skill loading from filesystem', () => {
     // oxlint-disable-next-line typescript/no-non-null-assertion
     const result = (await tools[`load_skill_${SKILL_NAME}`].execute!({}, { toolCallId: '123', messages: [], context: {} })) as string
     // oxlint-disable-next-line typescript/no-non-null-assertion
-    const fileContent = JSON.parse(/(\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
+    const fileContent = JSON.parse(/(?:\{[\s\S]*?\})$/.exec(result)![0]) as Record<string, string>
     expect(fileContent['SKILL.md']).toBe(SKILL_CONTENT)
     expect(fileContent['template.md']).toBe('# Template\nThis is a template file.')
     expect(fileContent['data.json']).toBe(JSON.stringify({ key: 'value' }))

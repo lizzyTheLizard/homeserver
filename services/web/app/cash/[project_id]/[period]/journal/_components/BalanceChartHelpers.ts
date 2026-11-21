@@ -1,5 +1,7 @@
-import { Period, startDate } from '@/app/cash/_helper/Period'
-import { AccountType, isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
+import type { Period } from '@/app/cash/_helper/Period'
+import { startDate } from '@/app/cash/_helper/Period'
+import type { AccountType } from '@/app/cash/_data/AccountType'
+import { isCreditAccount, isSummationAccount } from '@/app/cash/_data/AccountType'
 import { config } from '@/app/shared/config'
 
 export interface BalancePoint {
@@ -62,10 +64,17 @@ export function buildBalancePoints(transactions: TransactionWithOrdering[], open
  * opening balance carried into the period (when one exists). Credit accounts
  * invert the sign, like the table.
  */
-export function prepareBalancePoints(transactions: TransactionWithOrdering[], lastBalance: number | undefined, accountType: AccountType, period: Period): BalancePoint[] {
+export function prepareBalancePoints(
+  transactions: TransactionWithOrdering[],
+  lastBalance: number | undefined,
+  accountType: AccountType,
+  period: Period,
+): BalancePoint[] {
   const sign = isCreditAccount(accountType) ? -1 : 1
-  return buildBalancePoints(transactions, lastBalance, period)
-    .map(point => ({ ...point, balance: normalizeZero(point.balance * sign) }))
+  return buildBalancePoints(transactions, lastBalance, period).map(point => ({
+    ...point,
+    balance: normalizeZero(point.balance * sign),
+  }))
 }
 
 /**
@@ -75,12 +84,17 @@ export function prepareBalancePoints(transactions: TransactionWithOrdering[], la
  * group-ending balances, or from the carried-in balance for the first group),
  * never the accumulated sum. Credit accounts invert the sign, like the table.
  */
-export function prepareBalanceDeltas(transactions: TransactionWithOrdering[], lastBalance: number | undefined, accountType: AccountType, period: Period): BalancePoint[] {
+export function prepareBalanceDeltas(
+  transactions: TransactionWithOrdering[],
+  lastBalance: number | undefined,
+  accountType: AccountType,
+  period: Period,
+): BalancePoint[] {
   const sign = isCreditAccount(accountType) ? -1 : 1
   const granularity = granularityForPeriod(period)
   const groups = lastPerGroup(transactions, granularity)
   let previous = lastBalance ?? 0
-  return groups.map((group) => {
+  return groups.map(group => {
     const delta = normalizeZero((group.total_balance - previous) * sign)
     previous = group.total_balance
     return toPoint(group.date, delta, false, granularity)
@@ -89,8 +103,9 @@ export function prepareBalanceDeltas(transactions: TransactionWithOrdering[], la
 
 function lastPerGroup(transactions: TransactionWithOrdering[], granularity: BalanceGranularity): TransactionWithOrdering[] {
   const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date) || (a.ordering ?? 0) - (b.ordering ?? 0))
-  return sorted.filter((transaction, index) =>
-    index === sorted.length - 1 || groupOf(sorted[index + 1].date, granularity) !== groupOf(transaction.date, granularity))
+  return sorted.filter(
+    (transaction, index) => index === sorted.length - 1 || groupOf(sorted[index + 1].date, granularity) !== groupOf(transaction.date, granularity),
+  )
 }
 
 /** Coerces `-0` to `0` so values never render as "-0". */
@@ -151,7 +166,7 @@ export function niceTicks(min: number, max: number, desiredCount = 5): number[] 
   if (min > max) [min, max] = [max, min]
   const span = max - min
   const rawStep = span / desiredCount
-  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
   const normalized = rawStep / magnitude
   const factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
   const step = factor * magnitude
@@ -172,5 +187,11 @@ function groupOf(date: string, granularity: BalanceGranularity): string {
 }
 
 function toPoint(date: string, total_balance: number, opening: boolean, granularity: BalanceGranularity): BalancePoint {
-  return { date, x: toTimestamp(date), label: formatGranularityLabel(date, granularity), balance: total_balance, opening }
+  return {
+    date,
+    x: toTimestamp(date),
+    label: formatGranularityLabel(date, granularity),
+    balance: total_balance,
+    opening,
+  }
 }

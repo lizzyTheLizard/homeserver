@@ -2,7 +2,7 @@
 
 import { Icon } from '../Icon'
 import styles from './AiConnectionStatusIndicator.module.css'
-import { ChatState } from './AiChatState'
+import type { ChatState } from './AiChatState'
 
 export interface AiConnectionStatusIndicatorProps {
   state: ChatState
@@ -43,7 +43,7 @@ export function AiConnectionStatusIndicator({ state }: AiConnectionStatusIndicat
   return (
     <div className={styles.container}>
       <div className={styles.message}>
-        <div className={styles.bubble + ' ' + bubbleColorClass}>
+        <div className={`${styles.bubble} ${bubbleColorClass}`}>
           <div className={styles.iconWrapper}>
             <Icon name={iconName} className={iconClass} />
           </div>

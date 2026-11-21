@@ -20,7 +20,7 @@ export function mapChats(data: unknown): Chat[] {
   const chats = (typeof data === 'object' && data !== null && Array.isArray(data) ? data : []) as unknown[]
   return chats
     .filter(chat => typeof chat === 'object' && chat !== null)
-    .map(chat => chat as {jid?: string})
+    .map(chat => chat as { jid?: string })
     .filter(chat => chat.jid !== 'status@broadcast')
     .map(mapChat)
     .sort((a, b) => {
@@ -51,7 +51,7 @@ interface WacliChat {
 }
 
 export function mapAuthenticated(data: unknown): boolean {
-  const obj = (typeof data === 'object' && data !== null ? data : {}) as {authenticated?: boolean}
+  const obj = (typeof data === 'object' && data !== null ? data : {}) as { authenticated?: boolean }
   return obj.authenticated === true
 }
 
@@ -91,16 +91,15 @@ function formatSenderName(senderJid: string, fromMe: boolean, senderName: string
 }
 
 function normalizeTimestamp(value: unknown): string {
-  const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/
+  const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/
   if (typeof value !== 'string' || value === '') return ''
   if (UTC_TIMESTAMP.test(value)) {
     // Strip any fractional seconds.
     return value.replace(/\.\d+Z$/, 'Z')
   }
   const parsed = new Date(value)
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toISOString().replace(/\.\d{3}Z$/, 'Z')
-  }
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().replace(/\.\d{3}Z$/, 'Z')
+
   return value
 }
 

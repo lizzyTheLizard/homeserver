@@ -18,8 +18,7 @@ const meta = {
 } satisfies Meta<typeof Header>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const NoApplication: StoryObj<typeof meta> = {
   args: {

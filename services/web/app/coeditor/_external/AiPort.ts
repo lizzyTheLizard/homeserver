@@ -1,16 +1,22 @@
-import { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
+import type { Command, CommandResult, PredefinedCommandType } from '../_data/Command'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
 import { validateObject } from '@/app/shared/_helper/validation'
-import { generateText, ModelMessage, Output } from 'ai'
-import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import type { ModelMessage } from 'ai'
+import { generateText, Output } from 'ai'
+import type { GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import { createGroq } from '@ai-sdk/groq'
 import { z } from 'zod'
 
 const GROQ_MODEL = 'openai/gpt-oss-120b'
 const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
 const model = provider(GROQ_MODEL)
-const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: false, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
+const groqOptions = {
+  reasoningFormat: 'hidden',
+  parallelToolCalls: false,
+  reasoningEffort: 'low',
+} satisfies GroqLanguageModelChatOptions
 const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
 
 export interface AiPortInput {
@@ -42,9 +48,7 @@ export async function aiPort(input: AiPortInput, commandsSoFar: Command[]): Prom
 }
 
 function toModelMessage(message: ChatMessage): ModelMessage {
-  return message.role === 'assistant'
-    ? { role: 'assistant', content: [{ type: 'text', text: message.content }] }
-    : message
+  return message.role === 'assistant' ? { role: 'assistant', content: [{ type: 'text', text: message.content }] } : message
 }
 
 function createSystemMessage(input: AiPortInput): string {
@@ -71,17 +75,13 @@ function createSystemMessage(input: AiPortInput): string {
 }
 
 export function mapToChatMessages(input: AiPortInput | Command): ChatMessage[] {
-  const selection = input.selection_start !== undefined && input.selection_end !== undefined
-    ? input.text?.substring(input.selection_start, input.selection_end)
-    : undefined
+  const selection =
+    input.selection_start !== undefined && input.selection_end !== undefined ? input.text?.substring(input.selection_start, input.selection_end) : undefined
 
-  if (!input.predefined_command && !input.custom_command) {
-    throw invalidInput('Either custom_command or predefined_command must be provided')
-  }
+  if (!input.predefined_command && !input.custom_command) throw invalidInput('Either custom_command or predefined_command must be provided')
+
   const command = input.custom_command ?? (input.predefined_command ? commands[input.predefined_command] : undefined)
-  if (input.predefined_command && !command) {
-    throw invalidInput(`Unknown predefined command '${input.predefined_command}'`)
-  }
+  if (input.predefined_command && !command) throw invalidInput(`Unknown predefined command '${input.predefined_command}'`)
 
   const message = {
     title: input.title,
@@ -90,9 +90,7 @@ export function mapToChatMessages(input: AiPortInput | Command): ChatMessage[] {
     command,
   }
 
-  if (!('result' in input)) {
-    return [{ role: 'user', content: JSON.stringify(message) }]
-  }
+  if (!('result' in input)) return [{ role: 'user', content: JSON.stringify(message) }]
 
   const response = { text: input.result.text, title: input.result.title }
   return [
@@ -102,10 +100,7 @@ export function mapToChatMessages(input: AiPortInput | Command): ChatMessage[] {
 }
 
 async function chatCompletion(systemMessage: string, chatMessages: ChatMessage[]): Promise<string> {
-  const messages: ModelMessage[] = [
-    { role: 'system', content: systemMessage },
-    ...chatMessages.map(toModelMessage),
-  ]
+  const messages: ModelMessage[] = [{ role: 'system', content: systemMessage }, ...chatMessages.map(toModelMessage)]
   const result = await generateText({
     ...agentSettings,
     messages,
@@ -118,20 +113,16 @@ export function parseOutput(content: string): z.infer<typeof AiResponseSchema> {
   let parsed: unknown
   try {
     parsed = JSON.parse(content)
-  }
-  catch {
+  } catch {
     throw new Error(`AI returned non-JSON response: ${content.slice(0, 200)}`)
   }
   return validateObject(parsed, AiResponseSchema)
 }
 
 export function getFullNewText(input: AiPortInput, newText: string): string {
-  if (input.selection_end === undefined)
-    return newText
-  if (input.selection_start === undefined)
-    return newText
-  if (input.text === undefined)
-    return newText
+  if (input.selection_end === undefined) return newText
+  if (input.selection_start === undefined) return newText
+  if (input.text === undefined) return newText
 
   return input.text.substring(0, input.selection_start) + newText + input.text.substring(input.selection_end)
 }
@@ -146,10 +137,10 @@ async function loggingFetch(resource: string | URL | Request, init: RequestInit 
 
 function logRequest(init: RequestInit | undefined) {
   if (!config.AI.LOG_REQUEST_RESPONSE) return
-  const bodyString = init?.body ? String(init.body) : ''// oxlint-disable-line typescript/no-base-to-string
+  const bodyString = init?.body ? String(init.body) : '' // oxlint-disable-line typescript/no-base-to-string
   const requestSize = bodyString.length
   logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
-  console.log(bodyString)
+  logger.debug(bodyString)
 }
 
 async function logResponse(res: Response, requestStartTime: number) {
@@ -162,7 +153,7 @@ async function logResponse(res: Response, requestStartTime: number) {
   if (config.AI.LOG_REQUEST_RESPONSE) {
     const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
     logger.debug(`LLM  response of size ${text.length.toString()} bytes received in ${timeToFirstTokenInS}s`)
-    console.log(text)
+    logger.debug(text)
   }
   const timeInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
   logger.debug(`LLM response of size ${text.length.toString()} bytes completed in ${timeInS}s`)
@@ -170,8 +161,10 @@ async function logResponse(res: Response, requestStartTime: number) {
 
 const commands: Record<PredefinedCommandType, string> = {
   INITIALIZE: 'I want to create a new text. Create an initial draft based on the profile and the context of the whole text.',
-  IMPROVE: 'I want to improve the text based on the profile and the context. Remove any spelling or grammar mistakes, improve the style and the readability of the text. Do not change the meaning of the text.',
-  REFORMULATE: 'I want to reformulate the text based on the profile and the context. Do not change the meaning of the text, but make it more concise or more elaborate as needed.',
+  IMPROVE:
+    'I want to improve the text based on the profile and the context. Remove any spelling or grammar mistakes, improve the style and the readability of the text. Do not change the meaning of the text.',
+  REFORMULATE:
+    'I want to reformulate the text based on the profile and the context. Do not change the meaning of the text, but make it more concise or more elaborate as needed.',
   SUMMARIZE: 'I want to summarize the text. Make it shorter while keeping the meaning.',
   EXTEND: 'I want to extend the text. Add more information and details to the text.',
 }

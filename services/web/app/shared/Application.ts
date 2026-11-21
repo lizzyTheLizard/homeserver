@@ -4,12 +4,15 @@ export interface Application {
   name: string
   link: string
   description: string
-  getLinks: (path: string) => { text: string, href: string, hideMobile?: boolean }[]
+  getLinks(path: string): { text: string; href: string; hideMobile?: boolean }[]
 }
 
 export const applications: Application[] = [
   {
-    key: 'startpage', link: '/startpage/favorites', icon: 'startpage', name: 'StartPage',
+    key: 'startpage',
+    link: '/startpage/favorites',
+    icon: 'startpage',
+    name: 'StartPage',
     description: 'Browser start page with personal favorites',
     getLinks: () => [
       { text: 'Favorites', href: '/startpage/favorites' },
@@ -18,7 +21,10 @@ export const applications: Application[] = [
     ],
   },
   {
-    key: 'cash', link: '/cash/', icon: 'cash', name: 'Cash',
+    key: 'cash',
+    link: '/cash/',
+    icon: 'cash',
+    name: 'Cash',
     description: 'Double bookkeeping application for privates',
     getLinks: (path: string) => {
       if (path.startsWith('/cash/projects/')) return []
@@ -36,7 +42,10 @@ export const applications: Application[] = [
     },
   },
   {
-    key: 'admin', link: '/admin/dashboard', icon: 'admin', name: 'Admin',
+    key: 'admin',
+    link: '/admin/dashboard',
+    icon: 'admin',
+    name: 'Admin',
     description: 'General server admin',
     getLinks: () => [
       { text: 'Dashboard', href: '/admin/dashboard' },
@@ -46,7 +55,10 @@ export const applications: Application[] = [
     ],
   },
   {
-    key: 'coeditor', link: '/coeditor/editor', icon: 'coeditor', name: 'CoEditor',
+    key: 'coeditor',
+    link: '/coeditor/editor',
+    icon: 'coeditor',
+    name: 'CoEditor',
     description: 'Customizable AI-driven Editor',
     getLinks: () => [
       { text: 'Editor', href: '/coeditor/editor' },

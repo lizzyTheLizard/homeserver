@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { sortAndFilter } from './sortAndFilter'
 import { numberColumn, textColumn } from './DataTableColumnBuilders'
-import { ColumnDefinition } from './DataTable'
+import type { ColumnDefinition } from './DataTable'
 
 interface TestRow {
   id: string
@@ -15,10 +15,7 @@ const sampleData: TestRow[] = [
   { id: '3', name: 'Charlie', age: 35 },
 ]
 
-const columns = [
-  textColumn('name'),
-  numberColumn('age'),
-] as ColumnDefinition<unknown>[]
+const columns = [textColumn('name'), numberColumn('age')] as ColumnDefinition<unknown>[]
 
 describe('sortAndFilter', () => {
   it('returns full dataset when searchTerm is empty string', () => {

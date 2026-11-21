@@ -2,10 +2,11 @@
 
 import { useCallback, useReducer, useState } from 'react'
 import { editorStateReducer, initialState } from '../_helper/Editor.state'
-import { PredefinedCommandType } from '../../_data/Command'
-import { Discussion } from '../../_data/Discussion'
-import { Textarea, Selection } from '@/app/shared/_components/form/Textarea'
-import { Template } from '../../_data/Template'
+import type { PredefinedCommandType } from '../../_data/Command'
+import type { Discussion } from '../../_data/Discussion'
+import type { Selection } from '@/app/shared/_components/form/Textarea'
+import { Textarea } from '@/app/shared/_components/form/Textarea'
+import type { Template } from '../../_data/Template'
 import { v4 as randomUUID } from 'uuid'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
@@ -34,7 +35,7 @@ export function Editor({ discussion, templates }: EditorProps) {
     setExecutePending(true)
     const input = {
       id: randomUUID(),
-      discussion_id: restart ? randomUUID() : discussion?.id ?? randomUUID(),
+      discussion_id: restart ? randomUUID() : (discussion?.id ?? randomUUID()),
       template_id: state.template.id,
       text: state.text,
       parameters: state.parameters,
@@ -43,23 +44,24 @@ export function Editor({ discussion, templates }: EditorProps) {
       custom_command: command ? undefined : customCommand,
       predefined_command: command,
     }
-    executeCommand(input).then((result) => {
-      if (!result.success) {
-        setError(result.error)
+    executeCommand(input)
+      .then(result => {
+        if (!result.success) {
+          setError(result.error)
+          setExecutePending(false)
+          return
+        }
+        dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
+        setCustomCommand('')
+        setError(undefined)
         setExecutePending(false)
-        return
-      }
-      dispatch({ type: 'COMMAND_EXECUTED', discussion: result.data, restart: restart ?? false })
-      setCustomCommand('')
-      setError(undefined)
-      setExecutePending(false)
-      if (result.data.id !== discussion?.id)
-        router.replace(`/coeditor/editor?id=${result.data.id}`)
-    }).catch((caught: unknown) => {
-      console.error('Error executing command:', caught)
-      setExecutePending(false)
-      setError(caught instanceof Error ? caught.message : String(caught))
-    })
+        if (result.data.id !== discussion?.id) router.replace(`/coeditor/editor?id=${result.data.id}`)
+      })
+      .catch((caught: unknown) => {
+        console.error('Error executing command:', caught)
+        setExecutePending(false)
+        setError(caught instanceof Error ? caught.message : String(caught))
+      })
   }
 
   function initialize() {
@@ -82,47 +84,96 @@ export function Editor({ discussion, templates }: EditorProps) {
         templates={templates}
         template={state.template}
         parameters={state.parameters}
-        onBlur={() => { initialize() }}
-        onTemplateChange={useCallback((template: Template) => { dispatch({ type: 'TEMPLATE_CHANGE', template }) }, [])}
-        onParametersChange={useCallback((name: string, value: string | undefined) => { dispatch({ type: 'PARAMETERS_CHANGE', name, value }) }, [])}
+        onBlur={() => {
+          initialize()
+        }}
+        onTemplateChange={useCallback((template: Template) => {
+          dispatch({ type: 'TEMPLATE_CHANGE', template })
+        }, [])}
+        onParametersChange={useCallback((name: string, value: string | undefined) => {
+          dispatch({ type: 'PARAMETERS_CHANGE', name, value })
+        }, [])}
       />
       <div className={style.toolbar}>
-        <button className={style.iconButton} onClick={() => { dispatch({ type: 'UNDO' }) }} disabled={!state.undoStack.length} title="Undo"><Icon name="undo" style={{ width: 14, height: 14 }} /></button>
-        <button className={style.iconButton} onClick={() => { dispatch({ type: 'REDO' }) }} disabled={!state.redoStack.length} title="Redo"><Icon name="redo" style={{ width: 14, height: 14 }} /></button>
-        <button className={style.iconButton} onClick={() => { execute('INITIALIZE', true) }} disabled={!state.contextValid || !discussion?.id} title="New"><Icon name="new" style={{ width: 14, height: 14 }} /></button>
+        <button
+          className={style.iconButton}
+          onClick={() => {
+            dispatch({ type: 'UNDO' })
+          }}
+          disabled={!state.undoStack.length}
+          title="Undo"
+        >
+          <Icon name="undo" style={{ width: 14, height: 14 }} />
+        </button>
+        <button
+          className={style.iconButton}
+          onClick={() => {
+            dispatch({ type: 'REDO' })
+          }}
+          disabled={!state.redoStack.length}
+          title="Redo"
+        >
+          <Icon name="redo" style={{ width: 14, height: 14 }} />
+        </button>
+        <button
+          className={style.iconButton}
+          onClick={() => {
+            execute('INITIALIZE', true)
+          }}
+          disabled={!state.contextValid || !discussion?.id}
+          title="New"
+        >
+          <Icon name="new" style={{ width: 14, height: 14 }} />
+        </button>
       </div>
       <Textarea
         className={style.textarea}
         label="Text"
         value={state.text}
-        onChange={(e) => { dispatch({ type: 'TEXT_CHANGE', text: e.currentTarget.value }) }}
-        onBlur={() => { dispatch({ type: 'TEXT_BLUR' }) }}
+        onChange={e => {
+          dispatch({ type: 'TEXT_CHANGE', text: e.currentTarget.value })
+        }}
+        onBlur={() => {
+          dispatch({ type: 'TEXT_BLUR' })
+        }}
         disabled={!state.contextValid}
-        keepSelection={true}
+        keepSelection
         onSelectionChange={setSelection}
-      >
-      </Textarea>
+      />
       <AiChatInput
         value={customCommand}
         onChange={setCustomCommand}
-        onSubmit={() => { execute() }}
+        onSubmit={() => {
+          execute()
+        }}
         disabled={!state.contextValid}
         actionsDisabled={state.text.length === 0}
         placeholder="Custom command…"
-        actions={PROPOSED_ACTIONS.map(action => ({ label: predefinedCommandLabel(action) ?? '', onSelect: () => { execute(action) } }))}
+        actions={PROPOSED_ACTIONS.map(action => ({
+          label: predefinedCommandLabel(action) ?? '',
+          onSelect: () => {
+            execute(action)
+          },
+        }))}
       />
-      {error && <div className={style.error}>{'Could not execute command: ' + error}</div>}
+      {error && <div className={style.error}>{`Could not execute command: ${error}`}</div>}
     </div>
   )
 }
 
 function predefinedCommandLabel(command: PredefinedCommandType | undefined): string | undefined {
   switch (command) {
-    case 'INITIALIZE': return 'Initialize'
-    case 'IMPROVE': return 'Improve'
-    case 'REFORMULATE': return 'Reformulate'
-    case 'SUMMARIZE': return 'Summarize'
-    case 'EXTEND': return 'Extend'
-    default: return undefined
+    case 'INITIALIZE':
+      return 'Initialize'
+    case 'IMPROVE':
+      return 'Improve'
+    case 'REFORMULATE':
+      return 'Reformulate'
+    case 'SUMMARIZE':
+      return 'Summarize'
+    case 'EXTEND':
+      return 'Extend'
+    default:
+      return undefined
   }
 }

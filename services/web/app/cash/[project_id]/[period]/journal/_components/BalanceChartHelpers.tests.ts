@@ -1,10 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { buildBalancePoints, chartKindForAccount, labelFor, prepareBalancePoints, prepareBalanceDeltas, formatDateLabel, formatGranularityLabel, granularityForPeriod, niceTicks, toTimestamp } from './BalanceChartHelpers'
-import { Period } from '@/app/cash/_helper/Period'
+import {
+  buildBalancePoints,
+  chartKindForAccount,
+  formatDateLabel,
+  formatGranularityLabel,
+  granularityForPeriod,
+  labelFor,
+  niceTicks,
+  prepareBalanceDeltas,
+  prepareBalancePoints,
+  toTimestamp,
+} from './BalanceChartHelpers'
+import type { Period } from '@/app/cash/_helper/Period'
 
 const monthPeriod: Period = { current: false, year: 2026, month: 4 }
 const yearPeriod: Period = { current: false, year: 2026 }
-const allPeriod: Period = { }
+const allPeriod: Period = {}
 
 describe('granularityForPeriod', () => {
   it('uses day granularity for a single month', () => {
@@ -17,7 +28,7 @@ describe('granularityForPeriod', () => {
   })
 
   it('uses year granularity for the whole history', () => {
-    expect(granularityForPeriod({ })).toBe('year')
+    expect(granularityForPeriod({})).toBe('year')
   })
 })
 
@@ -30,48 +41,64 @@ describe('buildBalancePoints', () => {
   })
 
   it('keeps transactions (one point per day) in ascending date order for a month period', () => {
-    const points = buildBalancePoints([
-      { date: '2026-04-20', total_balance: 1500 },
-      { date: '2026-04-05', total_balance: 1200 },
-      { date: '2026-04-12', total_balance: 1350 },
-    ], undefined, monthPeriod)
+    const points = buildBalancePoints(
+      [
+        { date: '2026-04-20', total_balance: 1500 },
+        { date: '2026-04-05', total_balance: 1200 },
+        { date: '2026-04-12', total_balance: 1350 },
+      ],
+      undefined,
+      monthPeriod,
+    )
 
     expect(points.map(p => p.date)).toEqual(['2026-04-05', '2026-04-12', '2026-04-20'])
     expect(points.map(p => p.balance)).toEqual([1200, 1350, 1500])
   })
 
   it('collapses same-day transactions to the last one for a month period', () => {
-    const points = buildBalancePoints([
-      { date: '2026-04-05', total_balance: 1000, ordering: 1 },
-      { date: '2026-04-05', total_balance: 1100, ordering: 2 },
-      { date: '2026-04-06', total_balance: 1200, ordering: 1 },
-      { date: '2026-04-06', total_balance: 900, ordering: 2 },
-    ], undefined, monthPeriod)
+    const points = buildBalancePoints(
+      [
+        { date: '2026-04-05', total_balance: 1000, ordering: 1 },
+        { date: '2026-04-05', total_balance: 1100, ordering: 2 },
+        { date: '2026-04-06', total_balance: 1200, ordering: 1 },
+        { date: '2026-04-06', total_balance: 900, ordering: 2 },
+      ],
+      undefined,
+      monthPeriod,
+    )
 
     expect(points.map(p => p.date)).toEqual(['2026-04-05', '2026-04-06'])
     expect(points.map(p => p.balance)).toEqual([1100, 900])
   })
 
   it('collapses to one point per month for a year period, using the last transaction', () => {
-    const points = buildBalancePoints([
-      { date: '2026-01-10', total_balance: 1000, ordering: 1 },
-      { date: '2026-01-25', total_balance: 1100, ordering: 2 },
-      { date: '2026-04-05', total_balance: 1200, ordering: 1 },
-      { date: '2026-04-20', total_balance: 1300, ordering: 2 },
-      { date: '2026-12-31', total_balance: 1400, ordering: 1 },
-    ], undefined, yearPeriod)
+    const points = buildBalancePoints(
+      [
+        { date: '2026-01-10', total_balance: 1000, ordering: 1 },
+        { date: '2026-01-25', total_balance: 1100, ordering: 2 },
+        { date: '2026-04-05', total_balance: 1200, ordering: 1 },
+        { date: '2026-04-20', total_balance: 1300, ordering: 2 },
+        { date: '2026-12-31', total_balance: 1400, ordering: 1 },
+      ],
+      undefined,
+      yearPeriod,
+    )
 
     expect(points.map(p => p.date)).toEqual(['2026-01-25', '2026-04-20', '2026-12-31'])
     expect(points.map(p => p.balance)).toEqual([1100, 1300, 1400])
   })
 
   it('collapses to one point per year for the whole history', () => {
-    const points = buildBalancePoints([
-      { date: '2024-03-10', total_balance: 1000, ordering: 1 },
-      { date: '2024-11-25', total_balance: 1100, ordering: 2 },
-      { date: '2026-05-05', total_balance: 1200, ordering: 1 },
-      { date: '2026-09-20', total_balance: 1300, ordering: 2 },
-    ], undefined, allPeriod)
+    const points = buildBalancePoints(
+      [
+        { date: '2024-03-10', total_balance: 1000, ordering: 1 },
+        { date: '2024-11-25', total_balance: 1100, ordering: 2 },
+        { date: '2026-05-05', total_balance: 1200, ordering: 1 },
+        { date: '2026-09-20', total_balance: 1300, ordering: 2 },
+      ],
+      undefined,
+      allPeriod,
+    )
 
     expect(points.map(p => p.date)).toEqual(['2024-11-25', '2026-09-20'])
     expect(points.map(p => p.balance)).toEqual([1100, 1300])
@@ -85,11 +112,15 @@ describe('buildBalancePoints', () => {
   })
 
   it('uses proportional timestamps on the x-axis', () => {
-    const points = buildBalancePoints([
-      { date: '2026-04-05', total_balance: 1200 },
-      { date: '2026-04-15', total_balance: 1350 },
-      { date: '2026-04-20', total_balance: 1500 },
-    ], undefined, monthPeriod)
+    const points = buildBalancePoints(
+      [
+        { date: '2026-04-05', total_balance: 1200 },
+        { date: '2026-04-15', total_balance: 1350 },
+        { date: '2026-04-20', total_balance: 1500 },
+      ],
+      undefined,
+      monthPeriod,
+    )
 
     const dayMs = 24 * 60 * 60 * 1000
     // 10 days between the 5th and the 15th...
@@ -124,10 +155,15 @@ describe('chartKindForAccount', () => {
 
 describe('prepareBalancePoints', () => {
   it('starts a summation account at the opening balance with absolute values', () => {
-    const points = prepareBalancePoints([
-      { date: '2026-04-05', total_balance: 1200, ordering: 1 },
-      { date: '2026-04-12', total_balance: 1350, ordering: 1 },
-    ], 1000, 'Cash', monthPeriod)
+    const points = prepareBalancePoints(
+      [
+        { date: '2026-04-05', total_balance: 1200, ordering: 1 },
+        { date: '2026-04-12', total_balance: 1350, ordering: 1 },
+      ],
+      1000,
+      'Cash',
+      monthPeriod,
+    )
 
     expect(points).toHaveLength(3)
     expect(points[0]).toMatchObject({ date: '2026-04-01', balance: 1000, opening: true })
@@ -136,9 +172,7 @@ describe('prepareBalancePoints', () => {
   })
 
   it('inverts values for a credit summation account (Liability)', () => {
-    const points = prepareBalancePoints([
-      { date: '2026-04-05', total_balance: 1200, ordering: 1 },
-    ], 1000, 'Liability', monthPeriod)
+    const points = prepareBalancePoints([{ date: '2026-04-05', total_balance: 1200, ordering: 1 }], 1000, 'Liability', monthPeriod)
 
     expect(points[0]).toMatchObject({ balance: -1000, opening: true })
     expect(points[1]).toMatchObject({ balance: -1200, opening: false })
@@ -146,23 +180,33 @@ describe('prepareBalancePoints', () => {
 })
 
 describe('prepareBalanceDeltas', () => {
-  it('shows one bar per day with only the day\'s difference for an expense account', () => {
-    const points = prepareBalanceDeltas([
-      { date: '2026-04-05', total_balance: 5120, ordering: 1 },
-      { date: '2026-04-12', total_balance: 5300, ordering: 1 },
-    ], 5000, 'Expense', monthPeriod)
+  it("shows one bar per day with only the day's difference for an expense account", () => {
+    const points = prepareBalanceDeltas(
+      [
+        { date: '2026-04-05', total_balance: 5120, ordering: 1 },
+        { date: '2026-04-12', total_balance: 5300, ordering: 1 },
+      ],
+      5000,
+      'Expense',
+      monthPeriod,
+    )
 
     expect(points).toHaveLength(2)
     expect(points[0]).toMatchObject({ date: '2026-04-05', balance: 120, opening: false })
     expect(points[1]).toMatchObject({ date: '2026-04-12', balance: 180, opening: false })
   })
 
-  it('uses the last transaction of a day for that day\'s bar', () => {
-    const points = prepareBalanceDeltas([
-      { date: '2026-04-05', total_balance: 5100, ordering: 1 },
-      { date: '2026-04-05', total_balance: 5120, ordering: 2 },
-      { date: '2026-04-06', total_balance: 5250, ordering: 1 },
-    ], 5000, 'Expense', monthPeriod)
+  it("uses the last transaction of a day for that day's bar", () => {
+    const points = prepareBalanceDeltas(
+      [
+        { date: '2026-04-05', total_balance: 5100, ordering: 1 },
+        { date: '2026-04-05', total_balance: 5120, ordering: 2 },
+        { date: '2026-04-06', total_balance: 5250, ordering: 1 },
+      ],
+      5000,
+      'Expense',
+      monthPeriod,
+    )
 
     expect(points).toHaveLength(2)
     expect(points[0]).toMatchObject({ date: '2026-04-05', balance: 120, opening: false })
@@ -170,18 +214,21 @@ describe('prepareBalanceDeltas', () => {
   })
 
   it('inverts deltas for a credit non-summation account (Income)', () => {
-    const points = prepareBalanceDeltas([
-      { date: '2026-04-05', total_balance: 5120, ordering: 1 },
-    ], 5000, 'Income', monthPeriod)
+    const points = prepareBalanceDeltas([{ date: '2026-04-05', total_balance: 5120, ordering: 1 }], 5000, 'Income', monthPeriod)
 
     expect(points[0]).toMatchObject({ date: '2026-04-05', balance: -120, opening: false })
   })
 
   it('shows one bar per month for a year period', () => {
-    const points = prepareBalanceDeltas([
-      { date: '2026-01-25', total_balance: 10100, ordering: 1 },
-      { date: '2026-04-20', total_balance: 10400, ordering: 1 },
-    ], 10000, 'Expense', yearPeriod)
+    const points = prepareBalanceDeltas(
+      [
+        { date: '2026-01-25', total_balance: 10100, ordering: 1 },
+        { date: '2026-04-20', total_balance: 10400, ordering: 1 },
+      ],
+      10000,
+      'Expense',
+      yearPeriod,
+    )
 
     expect(points).toHaveLength(2)
     expect(points[0]).toMatchObject({ date: '2026-01-25', balance: 100, opening: false })
@@ -189,10 +236,15 @@ describe('prepareBalanceDeltas', () => {
   })
 
   it('shows one bar per year for the whole history, starting from 0', () => {
-    const points = prepareBalanceDeltas([
-      { date: '2024-11-25', total_balance: 1100, ordering: 2 },
-      { date: '2026-09-20', total_balance: 1300, ordering: 2 },
-    ], undefined, 'Expense', allPeriod)
+    const points = prepareBalanceDeltas(
+      [
+        { date: '2024-11-25', total_balance: 1100, ordering: 2 },
+        { date: '2026-09-20', total_balance: 1300, ordering: 2 },
+      ],
+      undefined,
+      'Expense',
+      allPeriod,
+    )
 
     expect(points).toHaveLength(2)
     expect(points[0]).toMatchObject({ date: '2024-11-25', balance: 1100, opening: false })

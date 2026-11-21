@@ -35,36 +35,29 @@ export async function applyMigrations(db: Queryable): Promise<void> {
   `)
 
   const planned = await readPlannedMigrations()
-  const applied = new Map(
-    (await db.query<AppliedMigration>('SELECT name, hash FROM wichteln_migrations')).map(m => [m.name, m.hash]),
-  )
+  const applied = new Map((await db.query<AppliedMigration>('SELECT name, hash FROM wichteln_migrations')).map(m => [m.name, m.hash]))
   let seenUnapplied = false
 
   for (const migration of planned) {
     const appliedHash = applied.get(migration.name)
 
     if (appliedHash !== undefined) {
-      if (seenUnapplied) {
-        throw new Error(`Migration ${migration.name} has run, but an earlier migration has not`)
-      }
-      if (appliedHash !== migration.hash) {
-        throw new Error(`Migration ${migration.name} has changed since it was applied`)
-      }
+      if (seenUnapplied) throw new Error(`Migration ${migration.name} has run, but an earlier migration has not`)
+
+      if (appliedHash !== migration.hash) throw new Error(`Migration ${migration.name} has changed since it was applied`)
+
       continue
     }
 
     seenUnapplied = true
-    for (const statement of splitSql(migration.content)) {
-      await db.query(statement)
-    }
+    for (const statement of splitSql(migration.content)) await db.query(statement)
+
     await db.query('INSERT INTO wichteln_migrations (name, hash) VALUES ($1, $2)', [migration.name, migration.hash])
   }
 }
 
 async function readPlannedMigrations(): Promise<PlannedMigration[]> {
-  const names = (await fs.readdir(MIGRATIONS_DIR))
-    .filter(name => name.endsWith('.sql'))
-    .sort()
+  const names = (await fs.readdir(MIGRATIONS_DIR)).filter(name => name.endsWith('.sql')).sort()
 
   const migrations: PlannedMigration[] = []
   for (const name of names) {

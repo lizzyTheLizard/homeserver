@@ -19,29 +19,24 @@ export default async function AccountsPage() {
       <h1>Konten</h1>
 
       <section className="card">
-        {accounts.length === 0
-          ? (
-              <p className="muted">Noch keine Konten vorhanden.</p>
-            )
-          : (
-              <ul className="list">
-                {accounts.map(account => (
-                  <li key={account.id}>
-                    <div className="participant">
-                      <strong>{account.name}</strong>
-                      <span className="muted small">
-                        {account.groups.length > 0 ? account.groups.join(', ') : 'Keiner Gruppe zugeordnet'}
-                      </span>
-                      <ResetPasswordForm name={account.name} action={resetPassword.bind(null, account.id)} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {accounts.length === 0 ? (
+          <p className="muted">Noch keine Konten vorhanden.</p>
+        ) : (
+          <ul className="list">
+            {accounts.map(account => (
+              <li key={account.id}>
+                <div className="participant">
+                  <strong>{account.name}</strong>
+                  <span className="muted small">{account.groups.length > 0 ? account.groups.join(', ') : 'Keiner Gruppe zugeordnet'}</span>
+                  <ResetPasswordForm name={account.name} action={resetPassword.bind(null, account.id)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
         {accounts.length > 0 && (
           <p className="muted small">
-            „Passwort zurücksetzen“ gilt für alle Gruppen der Person. Bei der nächsten Anmeldung muss sie ein eigenes
-            Passwort wählen.
+            „Passwort zurücksetzen“ gilt für alle Gruppen der Person. Bei der nächsten Anmeldung muss sie ein eigenes Passwort wählen.
           </p>
         )}
       </section>

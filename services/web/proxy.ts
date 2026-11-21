@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
-import { getSession, CookieStore } from '@/app/shared/auth/session'
+import type { CookieStore } from '@/app/shared/auth/session'
+import { getSession } from '@/app/shared/auth/session'
 import { startLogin } from '@/app/shared/auth/auth'
 import { logger } from '@/app/shared/logger'
 
@@ -28,36 +29,27 @@ const PUBLIC_PATHS = ['/shared/auth/']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const method = request.method
+  const { method } = request
   const start = Date.now()
 
-  if (isPublicDoNotLogPath(pathname)) {
-    return NextResponse.next()
-  }
+  if (isPublicDoNotLogPath(pathname)) return NextResponse.next()
 
   logger.debug(`${method} ${request.url}`)
 
   const { response, forwarded } = await handleAuth(request, pathname)
   const duration = (Date.now() - start).toString()
-  if (forwarded) {
-    logger.info(`${method} ${pathname} forwarded in (${duration}ms)`)
-  }
-  else {
-    logger.info(`${method} ${pathname} answered with ${response.status.toString()} in (${duration}ms)`)
-  }
+  if (forwarded) logger.info(`${method} ${pathname} forwarded in (${duration}ms)`)
+  else logger.info(`${method} ${pathname} answered with ${response.status.toString()} in (${duration}ms)`)
+
   return response
 }
 
-async function handleAuth(request: NextRequest, pathname: string): Promise<{ response: NextResponse, forwarded: boolean }> {
+async function handleAuth(request: NextRequest, pathname: string): Promise<{ response: NextResponse; forwarded: boolean }> {
   const session = await getSession(createCookieStore(request))
 
-  if (session.userInfo || isPublicPath(pathname)) {
-    return { response: NextResponse.next(), forwarded: true }
-  }
+  if (session.userInfo || isPublicPath(pathname)) return { response: NextResponse.next(), forwarded: true }
 
-  if (isAjaxRequest(request)) {
-    return { response: new NextResponse('Unauthorized', { status: 401 }), forwarded: false }
-  }
+  if (isAjaxRequest(request)) return { response: new NextResponse('Unauthorized', { status: 401 }), forwarded: false }
 
   const response = NextResponse.redirect(new URL('/', request.url), 302)
   const cookieStore = createCookieStore(request, response)
@@ -71,12 +63,8 @@ function createCookieStore(request: NextRequest, response?: NextResponse): Cooki
     get: (name: string) => request.cookies.get(name),
     set: (nameOrOptions: string | ResponseCookie, value?: string, options?: Partial<ResponseCookie>) => {
       if (!response) throw new Error('Cannot set cookie in proxy without response object')
-      if (typeof nameOrOptions === 'string') {
-        response.cookies.set(nameOrOptions, value ?? '', options)
-      }
-      else {
-        response.cookies.set(nameOrOptions)
-      }
+      if (typeof nameOrOptions === 'string') response.cookies.set(nameOrOptions, value ?? '', options)
+      else response.cookies.set(nameOrOptions)
     },
   }
 }

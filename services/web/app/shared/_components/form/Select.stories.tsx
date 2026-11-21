@@ -20,8 +20,7 @@ const meta = {
 } satisfies Meta<typeof Select>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const Disabled: StoryObj<typeof meta> = {
   args: {
@@ -40,10 +39,17 @@ export const Preselected: StoryObj<typeof meta> = {
     required: true,
     value: 'Option 2',
   },
-  render: (args) => {
+  render: args => {
     const [value, setValue] = useState(args.value)
     return (
-      <Select {...args} value={value} onChange={(e) => { setValue(e.target.value); args.onChange?.(e) }}>
+      <Select
+        {...args}
+        value={value}
+        onChange={e => {
+          setValue(e.target.value)
+          args.onChange?.(e)
+        }}
+      >
         {args.children}
       </Select>
     )
@@ -55,10 +61,17 @@ export const PreselectedOptional: StoryObj<typeof meta> = {
     required: false,
     value: 'Option 2',
   },
-  render: (args) => {
+  render: args => {
     const [value, setValue] = useState(args.value)
     return (
-      <Select {...args} value={value} onChange={(e) => { setValue(e.target.value); args.onChange?.(e) }}>
+      <Select
+        {...args}
+        value={value}
+        onChange={e => {
+          setValue(e.target.value)
+          args.onChange?.(e)
+        }}
+      >
         {args.children}
       </Select>
     )

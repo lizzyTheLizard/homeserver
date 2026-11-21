@@ -27,16 +27,20 @@ export default async function Page({ params }: ClosingPageProps) {
     const projectId = (await params).project_id
     const period = fromUrlString((await params).period)
 
-    if (!isMonthlyPeriod(period)) return (
-      <main>
-        <ActionTitle>
-          <h1>Monthly Closing</h1>
-        </ActionTitle>
-        <PeriodPicker period={period} project_id={projectId} />
-        <ActionButton disabled variant="primary">Continue</ActionButton>
-        <div>This period is not a valid monthly period.</div>
-      </main>
-    )
+    if (!isMonthlyPeriod(period)) {
+      return (
+        <main>
+          <ActionTitle>
+            <h1>Monthly Closing</h1>
+          </ActionTitle>
+          <PeriodPicker period={period} project_id={projectId} />
+          <ActionButton disabled variant="primary">
+            Continue
+          </ActionButton>
+          <div>This period is not a valid monthly period.</div>
+        </main>
+      )
+    }
 
     const pageData = await loadData(projectId, period)
     switch (pageData.type) {
@@ -47,7 +51,9 @@ export default async function Page({ params }: ClosingPageProps) {
               <h1>Monthly Closing</h1>
             </ActionTitle>
             <PeriodPicker period={period} project_id={projectId} />
-            <ActionButton disabled variant="primary">Continue</ActionButton>
+            <ActionButton disabled variant="primary">
+              Continue
+            </ActionButton>
             <div>This period is already closed.</div>
           </main>
         )

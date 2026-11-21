@@ -1,8 +1,9 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
-import { Favorite } from '@/app/startpage/_data/Favorite'
-import { saveFavorite, deleteFavorite } from '../server'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
+import type { Favorite } from '@/app/startpage/_data/Favorite'
+import { deleteFavorite, saveFavorite } from '../server'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
@@ -10,7 +11,7 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import styles from './FavoritesContent.module.css'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { textColumn, numberColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { numberColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { v4 as randomUUID } from 'uuid'
 
@@ -46,12 +47,15 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
 
   function renderMobile(f: Favorite): ReactNode {
     return (
-      <div key={f.id} className={styles.mobileItem} onClick={() => { showFavorite(f) }}>
+      <div
+        key={f.id}
+        className={styles.mobileItem}
+        onClick={() => {
+          showFavorite(f)
+        }}
+      >
         <div className={styles.mobileItemName}>
-          <span className={styles.mobilePosition}>
-            {f.position}
-            .
-          </span>
+          <span className={styles.mobilePosition}>{f.position}.</span>
           {f.name}
         </div>
         <div className={styles.mobileUrl}>{f.url}</div>
@@ -62,7 +66,7 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
 
   return (
     <>
-      <DataTable
+      <DataTable<Favorite>
         data={favorites}
         columns={columns}
         onRowClick={showFavorite}
@@ -70,9 +74,14 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
         renderMobile={renderMobile}
         initialSortingOrder={[{ key: 'position', direction: 'ASC' }]}
         searchLabel="Search favorites…"
+      />
+      <ActionButton
+        onClick={() => {
+          showFavorite()
+        }}
       >
-      </DataTable>
-      <ActionButton onClick={() => { showFavorite() }}>Add Favorite</ActionButton>
+        Add Favorite
+      </ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
@@ -80,13 +89,41 @@ export function FavoritesContent({ favorites: favoritesIn }: { favorites: Favori
         onSave={() => saveFavorite({ id, position: parseInt(position), name, url, description })}
         onAfterSave={addFavorite}
         onDelete={() => deleteFavorite(id)}
-        onAfterDelete={() => { removeFavorite(id) }}
+        onAfterDelete={() => {
+          removeFavorite(id)
+        }}
         noDelete={noDelete}
       >
-        <Input label="Position" type="number" value={position} onChange={(e) => { setPosition(e.target.value) }} />
-        <Input label="Name" value={name} onChange={(e) => { setName(e.target.value) }} />
-        <Input label="URL" value={url} onChange={(e) => { setUrl(e.target.value) }} />
-        <Textarea style={{ flexGrow: 1 }} label="Description" value={description} onChange={(e) => { setDescription(e.target.value) }} />
+        <Input
+          label="Position"
+          type="number"
+          value={position}
+          onChange={e => {
+            setPosition(e.target.value)
+          }}
+        />
+        <Input
+          label="Name"
+          value={name}
+          onChange={e => {
+            setName(e.target.value)
+          }}
+        />
+        <Input
+          label="URL"
+          value={url}
+          onChange={e => {
+            setUrl(e.target.value)
+          }}
+        />
+        <Textarea
+          style={{ flexGrow: 1 }}
+          label="Description"
+          value={description}
+          onChange={e => {
+            setDescription(e.target.value)
+          }}
+        />
       </Sidebar>
     </>
   )

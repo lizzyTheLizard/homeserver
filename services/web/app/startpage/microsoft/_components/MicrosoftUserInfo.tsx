@@ -42,24 +42,36 @@ export function MicrosoftUserInfo({ connected, userInfo }: MicrosoftUserInfoPara
     window.location.reload()
   }
 
-  if (loading) return (<LoadingSpinner></LoadingSpinner>)
+  if (loading) return <LoadingSpinner />
 
   if (!connected) {
     return (
       <div className={styles.container}>
         <div className={styles.status}>Not connected</div>
-        <p className={styles.description}>Connect your Microsoft account to access Outlook emails, search your archive, and send messages from the AI assistant.</p>
+        <p className={styles.description}>
+          Connect your Microsoft account to access Outlook emails, search your archive, and send messages from the AI assistant.
+        </p>
         {error && <div className={styles.error}>{error}</div>}
-        <Button onClick={() => { void handleConnect() }} type="button" className={styles.button}>Connect Microsoft Account</Button>
+        <Button
+          onClick={() => {
+            void handleConnect()
+          }}
+          type="button"
+          className={styles.button}
+        >
+          Connect Microsoft Account
+        </Button>
       </div>
     )
   }
 
   return (
-    <ActionButton onClick={() => { void handleDisconnect() }}>
-      Disconnect (
-      {userInfo?.mail ?? 'Unknown'}
-      )
+    <ActionButton
+      onClick={() => {
+        void handleDisconnect()
+      }}
+    >
+      Disconnect ({userInfo?.mail ?? 'Unknown'})
     </ActionButton>
   )
 }

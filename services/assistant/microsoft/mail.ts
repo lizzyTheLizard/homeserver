@@ -10,8 +10,8 @@ export type InferenceClassification = 'focused' | 'other'
 export interface MicrosoftMessageListItem {
   id: string
   subject: string
-  from: { emailAddress: { address: string, name?: string } }
-  toRecipients: { emailAddress: { address: string, name?: string } }[]
+  from: { emailAddress: { address: string; name?: string } }
+  toRecipients: { emailAddress: { address: string; name?: string } }[]
   receivedDateTime: Temporal.Instant
   isRead: boolean
   bodyPreview: string
@@ -19,7 +19,7 @@ export interface MicrosoftMessageListItem {
 }
 
 export interface MicrosoftMessageFull extends MicrosoftMessageListItem {
-  body: { contentType: string, content: string }
+  body: { contentType: string; content: string }
 }
 
 export interface InboxCount {
@@ -89,29 +89,30 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   }
 
   function getInboxMessages(): MicrosoftMessageListItem[] {
-    return Array.from(messages.values())
-      .sort((a, b) => Temporal.Instant.compare(b.receivedDateTime, a.receivedDateTime))
+    return Array.from(messages.values()).sort((a, b) => Temporal.Instant.compare(b.receivedDateTime, a.receivedDateTime))
   }
 
-  function getStatus(): string { return status }
+  function getStatus(): string {
+    return status
+  }
 
   async function getMessage(messageId: string): Promise<MicrosoftMessageFull | undefined> {
-    return await graphApiRequest(user, `/me/messages/${messageId}`, async (request) => {
-      const response = rawMessageFullSchema.parse(await request
-        .select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,body')
-        .get())
+    return await graphApiRequest(user, `/me/messages/${messageId}`, async request => {
+      const response = rawMessageFullSchema.parse(await request.select('id,subject,from,toRecipients,receivedDateTime,isRead,bodyPreview,body').get())
       return convertMessageFull(response)
     })
   }
 
   function getInboxCount(): InboxCount {
-    let focused = 0, focusedUnread = 0, other = 0, otherUnread = 0
+    let focused = 0,
+      focusedUnread = 0,
+      other = 0,
+      otherUnread = 0
     for (const m of messages.values()) {
       if (m.inferenceClassification === 'focused') {
         focused++
         if (!m.isRead) focusedUnread++
-      }
-      else {
+      } else {
         other++
         if (!m.isRead) otherUnread++
       }
@@ -123,14 +124,13 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
     try {
       const toRecipients = to.map(address => ({ emailAddress: { address } }))
       logger.debug(`Send mail to ${to.join(', ')}`)
-      await graphApiRequest(requestUser, `/me/sendMail`, async (request) => {
+      await graphApiRequest(requestUser, `/me/sendMail`, async request => {
         await request.post({
           message: { subject, body: { contentType: 'Text', content: body }, toRecipients },
           saveToSentItems: 'true',
         })
       })
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       logger.warn(`Failed to send Outlook email to ${to.join(', ')}`, error)
       throw error
     }
@@ -144,36 +144,39 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
       const archiveFolder = await getArchiveFolder(requestUser)
       if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
       logger.debug(`Archive mail ${messageId}`)
-      await graphApiRequest(requestUser, `/me/messages/${messageId}/move`, async (request) => {
+      await graphApiRequest(requestUser, `/me/messages/${messageId}/move`, async request => {
         await request.post({ destinationId: archiveFolder })
       })
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       const message = messages.get(messageId)
-      logger.warn(`Failed to archive Outlook email from ${message?.from.emailAddress.address ?? 'unknown'} with subject "${message?.subject ?? 'unknown'}"`, error)
+      logger.warn(
+        `Failed to archive Outlook email from ${message?.from.emailAddress.address ?? 'unknown'} with subject "${message?.subject ?? 'unknown'}"`,
+        error,
+      )
       throw error
     }
   }
 
   async function archiveMessagesFromSender(requestUser: UserSession, senderEmail: string): Promise<number> {
-    return mutex.runExclusive(async () => {
-      const matching = Array.from(messages.values())
-        .filter(m => m.from.emailAddress.address === senderEmail)
-      if (matching.length === 0) return 0
-      const archiveFolder = await getArchiveFolder(requestUser)
-      if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
-      for (const msg of matching) {
-        messages.delete(msg.id)
-        logger.debug(`Archive mail ${msg.id}`)
-        await graphApiRequest(requestUser, `/me/messages/${msg.id}/move`, async (request) => {
-          await request.post({ destinationId: archiveFolder })
-        })
-      }
-      return matching.length
-    }).catch((error: unknown) => {
-      logger.warn(`Failed to archive Outlook emails from ${senderEmail}`, error)
-      throw error
-    })
+    return mutex
+      .runExclusive(async () => {
+        const matching = Array.from(messages.values()).filter(m => m.from.emailAddress.address === senderEmail)
+        if (matching.length === 0) return 0
+        const archiveFolder = await getArchiveFolder(requestUser)
+        if (!archiveFolder) throw new Error('Archive folder not found. Please check your Outlook setup.')
+        for (const msg of matching) {
+          messages.delete(msg.id)
+          logger.debug(`Archive mail ${msg.id}`)
+          await graphApiRequest(requestUser, `/me/messages/${msg.id}/move`, async request => {
+            await request.post({ destinationId: archiveFolder })
+          })
+        }
+        return matching.length
+      })
+      .catch((error: unknown) => {
+        logger.warn(`Failed to archive Outlook emails from ${senderEmail}`, error)
+        throw error
+      })
   }
 
   async function doInitialFetch(): Promise<void> {
@@ -191,16 +194,14 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
   async function syncMessages(url: string): Promise<void> {
     let currentUrl: string | undefined = url
     while (currentUrl) {
-      const deltaResult: z.infer<typeof messageDeltaSchema> = await graphApiRequest(user, currentUrl, async (request) => {
-        return messageDeltaSchema.parse(await request.get())
-      })
+      const deltaResult: z.infer<typeof messageDeltaSchema> = await graphApiRequest(user, currentUrl, async request =>
+        messageDeltaSchema.parse(await request.get()),
+      )
       for (const item of deltaResult.value) {
         if ('@removed' in item) messages.delete(item.id)
         else messages.set(item.id, convertMessageListItem(item))
       }
-      if (deltaResult['@odata.nextLink']) {
-        currentUrl = deltaResult['@odata.nextLink']
-      }
+      if (deltaResult['@odata.nextLink']) currentUrl = deltaResult['@odata.nextLink']
       else {
         if (deltaResult['@odata.deltaLink']) deltaLink = deltaResult['@odata.deltaLink']
         currentUrl = undefined
@@ -210,35 +211,44 @@ function createMicrosoftMailWorker(user: UserSession): MicrosoftMailWorker {
 
   status = 'connecting'
   doInitialFetch()
-    .then(() => { status = 'connected' })
+    .then(() => {
+      status = 'connected'
+    })
     .catch((error: unknown) => {
       status = 'error'
       logger.warn(`[MicrosoftMailWorker] Initial fetch failed for user ${userId}`, error)
     })
   interval = setInterval(() => {
-    doDeltaPoll()
-      .catch((error: unknown) => {
-        logger.warn(`[MicrosoftMailWorker] Poll crash for user ${userId}`, error)
-        status = 'connecting'
-        doInitialFetch()
-          .then(() => { status = 'connected' })
-          .catch((refetchError: unknown) => {
-            status = 'error'
-            logger.warn(`[MicrosoftMailWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
-          })
-      })
+    doDeltaPoll().catch((error: unknown) => {
+      logger.warn(`[MicrosoftMailWorker] Poll crash for user ${userId}`, error)
+      status = 'connecting'
+      doInitialFetch()
+        .then(() => {
+          status = 'connected'
+        })
+        .catch((refetchError: unknown) => {
+          status = 'error'
+          logger.warn(`[MicrosoftMailWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
+        })
+    })
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { getInboxMessages, getMessage, getInboxCount, getStatus, sendMail, archiveMessage, archiveMessagesFromSender, touch }
+  return {
+    getInboxMessages,
+    getMessage,
+    getInboxCount,
+    getStatus,
+    sendMail,
+    archiveMessage,
+    archiveMessagesFromSender,
+    touch,
+  }
 }
 
 async function getArchiveFolder(user: UserSession): Promise<string | undefined> {
-  return await graphApiRequest(user, '/me/mailFolders', async (request) => {
-    const response = archiveFolderSchema.parse(await request
-      .filter('displayName eq \'Archive\'')
-      .select('id')
-      .get())
+  return await graphApiRequest(user, '/me/mailFolders', async request => {
+    const response = archiveFolderSchema.parse(await request.filter("displayName eq 'Archive'").select('id').get())
     return response.value[0]?.id
   })
 }

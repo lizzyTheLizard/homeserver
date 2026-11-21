@@ -19,9 +19,7 @@ export default async function StartPage() {
   return (
     <div className="card login">
       <h1>Willkommen beim Wichteln</h1>
-      <p className="muted">
-        Melde dich mit deinem Namen und Passwort an. Neu hier? Registriere dich über den Einladungslink deiner Gruppe.
-      </p>
+      <p className="muted">Melde dich mit deinem Namen und Passwort an. Neu hier? Registriere dich über den Einladungslink deiner Gruppe.</p>
       <LoginForm />
     </div>
   )
@@ -36,12 +34,7 @@ async function GroupOverview({ account }: { account: Account }) {
   return (
     <>
       <div className="row">
-        <h1>
-          Hallo
-          {' '}
-          {account.name}
-          !
-        </h1>
+        <h1>Hallo {account.name}!</h1>
         <div className="actions">
           <Link href="/passwort" className="button secondary">
             Passwort ändern
@@ -54,23 +47,19 @@ async function GroupOverview({ account }: { account: Account }) {
 
       <section className="card">
         <h2>Deine Gruppen</h2>
-        {groups.length === 0
-          ? (
-              <p className="muted">
-                Du bist noch in keiner Gruppe. Öffne den Einladungslink, den du erhalten hast, um einer Gruppe beizutreten.
-              </p>
-            )
-          : (
-              <ul className="list">
-                {groups.map(g => (
-                  <li key={g.id}>
-                    <Link href={`/gruppen/${g.id}`}>
-                      <strong>{g.name}</strong>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {groups.length === 0 ? (
+          <p className="muted">Du bist noch in keiner Gruppe. Öffne den Einladungslink, den du erhalten hast, um einer Gruppe beizutreten.</p>
+        ) : (
+          <ul className="list">
+            {groups.map(g => (
+              <li key={g.id}>
+                <Link href={`/gruppen/${g.id}`}>
+                  <strong>{g.name}</strong>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </>
   )
