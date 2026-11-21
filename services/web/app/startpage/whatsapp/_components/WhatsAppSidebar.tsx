@@ -7,7 +7,7 @@ import { Button } from '@/app/shared/_components/form/Button'
 import { archiveChat, loadMessages, sendChatMessage } from '../server'
 import { MessageBubble } from './MessageBubble'
 import styles from './WhatsAppSidebar.module.css'
-import type { Chat, Message } from '@assistant/whatsapp/types'
+import type { Chat, Message } from '@/app/startpage/whatsapp/_external/types'
 
 interface WhatsAppSidebarProps {
   selectedChat: Chat | null

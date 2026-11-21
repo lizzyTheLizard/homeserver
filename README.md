@@ -15,11 +15,7 @@ Each service lives in its own folder under `services/` and is published as its o
 | **Cash**     | Double-entry bookkeeping for private finances — projects, journals, accounts, reports, monthly closing |
 | **CoEditor** | AI-powered document editor backed by an OpenAI-compatible model |
 | **Admin**    | Administration dashboard — metrics, configuration, project management |
-| **Startpage**| Browser start page with personal favourites |
-
-### Assistant
-
-[`services/assistant`](services/assistant) — the AI assistant service on port `8500`. It serves the assistant WebSocket (proxied through nginx, authenticated with the same session cookie as the web app) and internal REST APIs under `/microsoft/*` and `/whatsapp/*` that the web app calls via `ASSISTANT_INTERNAL_URL`. It manages Microsoft tokens, the mail/todo/calendar workers, weather and geolocation helpers, and background sync.
+| **Startpage**| Browser start page with personal favourites, the AI assistant chat, Microsoft mail/tasks/calendar and WhatsApp |
 
 ### WhatsApp bridge
 
@@ -64,7 +60,7 @@ The full stack (prod database, application, reverse proxies, DNS, backups, and t
 `dev-machine` container with VS Code + Claude Code) is described in
 [infrastructure/README.md](infrastructure/README.md).
 
-The web app is at `http://localhost:3000`, where all routes are protected by OpenID Connect (Microsoft Azure AD by default); Wichteln is at `http://localhost:3001`. Web, assistant and Wichteln each run their own migrations (`services/<service>/db/`) automatically on first DB connection.
+The web app is at `http://localhost:3000`, where all routes are protected by OpenID Connect (Microsoft Azure AD by default); Wichteln is at `http://localhost:3001`. Web and Wichteln each run their own migrations (`services/<service>/db/`) automatically on first DB connection.
 
 ## Environment
 
@@ -88,7 +84,7 @@ In production every required var must be set; the services fail fast on startup 
 
 | Command            | Description |
 |--------------------|-------------|
-| `pnpm dev`         | Run web (:3000) + assistant + whatsapp + wichteln (:3001) together |
+| `pnpm dev`         | Run web (:3000) + whatsapp + wichteln (:3001) together |
 | `pnpm build`       | Build all packages |
 | `pnpm test`        | Run all tests in all packages |
 | `pnpm test:watch`  | Tests in watch mode (all packages) |
@@ -118,7 +114,7 @@ The `openspec-*` skills are auto-generated and must not be edited by hand.
 
 ## Architecture
 
-Each service is built into its own image (`ghcr.io/lizzythelizard/homeserver-<service>`) by the single pipeline in `.github/workflows/pipeline.yml` (only when that service changed) and deployed with `infrastructure/docker-compose.yml`. The web app calls the assistant over an internal URL, and the assistant talks to the WhatsApp bridge; web, assistant and Wichteln share the PostgreSQL database, each with its own migrations.
+Each service is built into its own image (`ghcr.io/lizzythelizard/homeserver-<service>`) by the single pipeline in `.github/workflows/pipeline.yml` (only when that service changed) and deployed with `infrastructure/docker-compose.yml`. The web app hosts the assistant and talks to the WhatsApp bridge directly; web and Wichteln share the PostgreSQL database, each with its own migrations.
 
 The **web** service uses the Next.js App Router with React Server Components by default. Mutations are exposed as Server Actions (`'use server'` files); there is no separate API layer.
 
@@ -137,7 +133,6 @@ Per-row ownership is keyed on the user's email (`owner_email`). There is no `use
 /
 ├── services/           Deployable services, one folder per container image
 │   ├── web/            Next.js application
-│   ├── assistant/      Standalone assistant service (port 8500, WebSocket)
 │   ├── whatsapp/       WhatsApp bridge container (wacli + companion)
 │   ├── wichteln/       Wichteln Secret Santa app (own db/ migrations)
 │   └── dev-machine/    Development container (code-server, Claude Code, SSH)

@@ -10,7 +10,7 @@ There is no Go code in this repository: `wacli` is downloaded as a release binar
 ## Architecture
 
 ```text
-Next.js / assistant
+Next.js
       │  HTTP (WHATSAPP_BRIDGE_URL, port 8400)
       ▼
 companion/server.ts     ─── REST API
@@ -25,7 +25,7 @@ wacli (one process per user)
 /data/<store-id>/wacli.db     (chats, contacts, groups, messages)
 ```
 
-Each user (the assistant passes the user's email) maps to an isolated wacli store
+Each user (the web app passes the user's email) maps to an isolated wacli store
 directory under `WHATSAPP_DATA_DIR`. The directory name is a short SHA-256 of the
 user id, so it is deterministic and filesystem-safe.
 
@@ -124,7 +124,7 @@ and the message mirror can be re-synced, so this state is treated as disposable.
 ## Build and run
 
 ```bash
-# Build the container (context is the repo root, like the assistant image)
+# Build the container (context is the repo root, like the web image)
 docker build -t whatsapp-bridge:latest -f whatsapp-bridge/Dockerfile .
 
 # Run locally (no Docker): needs the wacli binary on PATH

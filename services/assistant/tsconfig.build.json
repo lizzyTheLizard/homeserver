@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "noEmit": false,
-    "module": "commonjs"
-  },
-  "include": ["server.ts", "tools/*.ts"]
-}

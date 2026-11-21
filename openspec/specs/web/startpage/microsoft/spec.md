@@ -2,21 +2,25 @@
 
 ## Purpose
 
-Defines the Microsoft area of the start page: connecting the user's Microsoft account and showing their mail, tasks and calendar events, read through the assistant service.
+Defines the Microsoft area of the start page: connecting the user's Microsoft account and showing their mail, tasks and calendar events, read by the web application itself.
 
 ## Requirements
 
-### Requirement: Microsoft data is read and changed through the assistant
+### Requirement: Microsoft data is read and changed in the web application
 
-The start page's Microsoft server actions SHALL call the assistant service's internal Microsoft API, forwarding the user's session cookie, and SHALL report a failure by logging it together with the address it called and by answering the caller with an error.
+The start page's Microsoft server actions SHALL read and change the user's Microsoft data inside the web application, using the signed-in session of the request, and SHALL report a failure by logging it and by answering the caller with an error. The web application SHALL keep the user's Microsoft token in its own database table and SHALL refresh it when it expires.
 
 #### Scenario: Status is read from the assistant
 - **WHEN** the Microsoft page loads
-- **THEN** the connection status, mail, tasks and events come from the assistant service
+- **THEN** the connection status, mail, tasks and events are read by the web application itself
 
 #### Scenario: Assistant failure is logged and reported
-- **WHEN** the assistant service cannot be reached or answers with an error
-- **THEN** the failure is logged with the target address and the caller receives an error
+- **WHEN** reading or changing Microsoft data fails
+- **THEN** the failure is logged and the caller receives an error
+
+#### Scenario: The token is stored by the web application
+- **WHEN** a user connects their account
+- **THEN** the token is stored in the web application's database and survives a restart
 
 ### Requirement: Mail, tasks and events are shown once all three are connected
 
@@ -52,15 +56,15 @@ Selecting a message SHALL load that message's full content and show it in a side
 
 ### Requirement: The user connects and disconnects the Microsoft account
 
-The page SHALL offer to connect the account by obtaining a sign-in address from the assistant and sending the browser to the Microsoft sign-in, completing the connection on return, and to disconnect a connected account.
+The page SHALL offer to connect the account by sending the browser to the Microsoft sign-in address for this application, completing the connection on return by exchanging the callback in the web application, and to disconnect a connected account.
 
 #### Scenario: Connecting redirects to sign-in
 - **WHEN** the user activates connect
-- **THEN** the browser is sent to the Microsoft sign-in address the assistant returned for this application
+- **THEN** the browser is sent to the Microsoft sign-in address for this application
 
 #### Scenario: Returning from sign-in completes the connection
 - **WHEN** the browser returns to the page's Microsoft callback address
-- **THEN** the callback is handed to the assistant and the browser is sent back to the Microsoft page
+- **THEN** the web application completes the connection for the signed-in user and the browser is sent back to the Microsoft page
 
 #### Scenario: Failed callback is reported
 - **WHEN** the callback cannot complete the connection and the account is not connected

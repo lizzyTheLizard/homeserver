@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the WhatsApp area of the start page: pairing the account, listing chats, reading and replying to messages and archiving chats, driven through the assistant.
+Defines the WhatsApp area of the start page: pairing the account, listing chats, reading and replying to messages and archiving chats, driven by the web application through the WhatsApp bridge.
 
 ## Requirements
 
@@ -74,10 +74,14 @@ While the account is not connected, the page SHALL poll the connection status ev
 - **WHEN** a send, archive, sync or disconnect action fails
 - **THEN** the page shows the error
 
-### Requirement: The page reaches WhatsApp through the assistant
+### Requirement: The page reaches WhatsApp from the web application
 
-The start page SHALL reach WhatsApp through the assistant's internal API, which SHALL forward the request for the signed-in user, so the bridge is never called directly by the browser.
+The start page's WhatsApp server actions SHALL reach the WhatsApp bridge from inside the web application for the signed-in user, so the bridge is never called directly by the browser and no other service sits in between.
 
 #### Scenario: WhatsApp calls are proxied
 - **WHEN** the start page loads chats, messages or performs a WhatsApp action
-- **THEN** the call goes through the assistant for the signed-in user
+- **THEN** the web application calls the bridge for the signed-in user
+
+#### Scenario: A request without a session is refused
+- **WHEN** a WhatsApp action is invoked without a valid session carrying the start page application
+- **THEN** it is rejected and the bridge is not called

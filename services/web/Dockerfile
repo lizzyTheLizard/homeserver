@@ -25,8 +25,6 @@ COPY --from=deps /app/services/web/node_modules ./services/web/node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/pnpm* ./
 COPY ./services/web ./services/web
-COPY ./services/assistant/microsoft/types.ts ./services/assistant/microsoft/types.ts
-COPY ./services/assistant/whatsapp/types.ts ./services/assistant/whatsapp/types.ts
 
 RUN pnpm --filter @homeserver/web build
 

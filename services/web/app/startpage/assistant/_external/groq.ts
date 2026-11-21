@@ -1,0 +1,123 @@
+import type { ModelMessage, ToolSet } from 'ai'
+import { generateText, isStepCount, streamText } from 'ai'
+import { logger } from '@/app/shared/logger'
+import type { GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import { createGroq } from '@ai-sdk/groq'
+import { config } from '@/app/shared/config'
+
+const MAX_TOOL_ITERATIONS = 10
+const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
+const model = provider('openai/gpt-oss-120b')
+const groqOptions = {
+  reasoningFormat: 'hidden',
+  parallelToolCalls: true,
+  reasoningEffort: 'low',
+} satisfies GroqLanguageModelChatOptions
+const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
+
+export interface SendOptions {
+  messages: ModelMessage[]
+  tools?: ToolSet
+  onChunk?(chunk: string): void
+  onToolCall?(): void
+  signal?: AbortSignal
+}
+
+export async function send(options: SendOptions): Promise<string> {
+  const responseMessages = options.onChunk ? await stream(options) : await generate(options)
+  responseMessages.forEach(m => options.messages.push(m))
+  if (responseMessages.length === 0) throw new Error('No response messages received from assistant')
+  const lastMessage = responseMessages[responseMessages.length - 1].content
+  if (!Array.isArray(lastMessage)) throw new Error('Last message content is not an array')
+  if (lastMessage.length === 0) return ''
+  const content = lastMessage.find(c => c.type === 'text')
+  if (content && 'text' in content) return content.text
+  throw new Error('Last message content is not text')
+}
+
+async function stream(options: SendOptions): Promise<ModelMessage[]> {
+  const settings = getConfig(options)
+  const result = streamText(settings)
+  for await (const chunk of result.textStream) options.onChunk?.(chunk)
+  return await result.responseMessages
+}
+
+async function generate(options: SendOptions): Promise<ModelMessage[]> {
+  const settings = getConfig(options)
+  const result = await generateText(settings)
+  return result.responseMessages
+}
+
+function getConfig({ messages, tools, onToolCall, signal }: SendOptions): Parameters<typeof generateText>[0] {
+  return {
+    ...agentSettings,
+    messages,
+    tools,
+    toolChoice: tools ? 'auto' : 'none',
+    maxOutputTokens: 2048,
+    abortSignal: signal,
+    stopWhen: isStepCount(MAX_TOOL_ITERATIONS),
+    onStepEnd: ({ toolCalls }) => {
+      if (toolCalls.length > 0) onToolCall?.()
+    },
+    onToolExecutionStart: ({ toolCall }) => {
+      logger.debug(`Tool execution started: ${toolCall.toolName}`)
+    },
+    onToolExecutionEnd: ({ toolCall }) => {
+      logger.debug(`Tool execution ended: ${toolCall.toolName}`)
+    },
+  } satisfies Parameters<typeof generateText>[0]
+}
+
+async function loggingFetch(resource: string | URL | Request, init: RequestInit | undefined): Promise<Response> {
+  const requestStartTime = Date.now()
+  logRequest(init)
+  const response = await fetch(resource, init)
+  void logResponse(response, requestStartTime)
+  return response
+}
+
+function logRequest(init: RequestInit | undefined) {
+  if (!config.AI.LOG_REQUEST_RESPONSE) return
+  const bodyString = init?.body ? String(init.body) : '' // oxlint-disable-line typescript/no-base-to-string
+  const requestSize = bodyString.length
+  logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
+  logger.debug(bodyString)
+}
+
+async function logResponse(res: Response, requestStartTime: number) {
+  if (!res.ok) {
+    logger.warn(`LLM API request failed with status ${res.status.toString()} ${res.statusText}`)
+    return
+  }
+  const reader = res.clone().body?.getReader()
+  if (!reader) {
+    logger.warn('LLM API response has no readable stream body')
+    return
+  }
+  const decoder = new TextDecoder()
+  let responseSize = 0
+  let first = true
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    const chunkText = decoder.decode(chunk.value, { stream: true })
+    if (!chunkText.startsWith('data:')) first = false
+    logResponseChunk(chunkText, first, requestStartTime)
+    first = false
+    responseSize += chunkText.length
+  }
+  logResponseEnd(responseSize, requestStartTime)
+}
+
+function logResponseChunk(chunkText: string, first: boolean, requestStartTime: number) {
+  if (!config.AI.LOG_REQUEST_RESPONSE) return
+  if (first) {
+    const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
+    logger.debug(`LLM first response of size ${chunkText.length.toString()} bytes received in ${timeToFirstTokenInS}s`)
+  }
+  logger.debug(chunkText)
+}
+
+function logResponseEnd(responseSize: number, requestStartTime: number) {
+  const timeInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
+  logger.debug(`LLM response of size ${responseSize.toString()} bytes completed in ${timeInS}s`)
+}

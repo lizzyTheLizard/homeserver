@@ -8,25 +8,7 @@ const meta = {
 } satisfies Meta<typeof AiConnectionStatusIndicator>
 export default meta
 
-export const WaitForReconnecting: StoryObj<typeof meta> = {
-  args: {
-    state: { type: 'wait-for-reconnecting', nextAttempt: 3, maxAttempts: 10, inSeconds: 10 },
-  },
-}
-
-export const Reconnecting: StoryObj<typeof meta> = {
-  args: {
-    state: { type: 'reconnecting' },
-  },
-}
-
-export const RetriesExhausted: StoryObj<typeof meta> = {
-  args: {
-    state: { type: 'automatic-reconnecting-exhausted', maxAttempts: 10 },
-  },
-}
-
-export const RetryImpossible: StoryObj<typeof meta> = {
+export const ConversationEnded: StoryObj<typeof meta> = {
   args: {
     state: { type: 'reconnect-impossible' },
   },

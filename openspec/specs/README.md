@@ -7,13 +7,12 @@ under `web`.
 The OpenSpec CLI lists capabilities alphabetically, so this file records the order they should be
 read in.
 
-1. **[assistant](assistant/spec.md)** — the assistant service: its chat, the greeting and context it
-   opens with, its skills (Microsoft mail/tasks/calendar, weather, WhatsApp), the WhatsApp reply
-   skill, and its internal Microsoft and WhatsApp APIs.
-2. **[web](web/spec.md)** — the web application as a whole: the authenticated shell, access by
+1. **[web](web/spec.md)** — the web application as a whole: the authenticated shell, access by
    application, the shared design language and components, server actions and migrations.
    - **[web/startpage](web/startpage/spec.md)** — the start page, its assistant chat and input, and
      its areas.
+     - [web/startpage/assistant](web/startpage/assistant/spec.md) — the assistant chat endpoint, its
+       conversations, skills and tools.
      - [web/startpage/favorites](web/startpage/favorites/spec.md) — favorite management.
      - [web/startpage/microsoft](web/startpage/microsoft/spec.md) — mail, tasks, events and the
        Microsoft connection.
@@ -31,16 +30,16 @@ read in.
      - [web/cash/reports](web/cash/reports/spec.md) — the cash reports.
      - [web/cash/closing](web/cash/closing/spec.md) — closing and the monthly closing workflow.
    - **[web/admin](web/admin/spec.md)** — metrics, current configuration and cash administration.
-3. **[dev-machine](dev-machine/spec.md)** — the development container: SSH, the browser-based
+2. **[dev-machine](dev-machine/spec.md)** — the development container: SSH, the browser-based
    development interfaces, the repository bootstrap and the toolchain.
-4. **[infrastructure](infrastructure/spec.md)** — the deployed stack: the docker-compose services,
+3. **[infrastructure](infrastructure/spec.md)** — the deployed stack: the docker-compose services,
    the reverse proxies and TLS, DNS, and backup and restore.
-5. **[pipeline](pipeline/spec.md)** — the single GitHub pipeline: change detection, per-service
+4. **[pipeline](pipeline/spec.md)** — the single GitHub pipeline: change detection, per-service
    linting, test suites and Docker image builds, publish and deploy from `main`, and the one
    always-running "Quality Gate" that pull requests require.
-6. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
+5. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
    which is not archived, not named after its branch, or whose spec deltas were not synced.
-7. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
+6. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
    isolated stores, REST API and health endpoint.
 
 The `wichteln` application's capability is added by its in-flight change in

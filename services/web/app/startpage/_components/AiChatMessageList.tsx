@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { AiMessageBubble } from '@/app/shared/_components/chat/AiMessageBubble'
 import styles from './AiChatMessageList.module.css'
-import type { ChatState } from './AiChatWebSocket'
+import type { ChatState } from './AiChatConnection'
 
 export interface Message {
   id: number
