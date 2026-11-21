@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-pnpm workspace with four packages under `services/`; target one with `pnpm --filter @homeserver/<web|assistant|whatsapp|wichteln> <script>`.
+pnpm workspace with three packages under `services/`; target one with `pnpm --filter @homeserver/<web|whatsapp|wichteln> <script>`.
 
 ```bash
-pnpm dev                 # web (:3000) + assistant (:8500) + whatsapp bridge + wichteln (:3001) as local processes
+pnpm dev                 # web (:3000) + whatsapp bridge + wichteln (:3001) as local processes
 pnpm dev:wichteln        # wichteln alone
 pnpm build               # build all packages
 pnpm test                # all tests, all packages
@@ -31,15 +31,14 @@ The binding rules (branch invariants, commit trailers `OpenSpec-Change:` / `Agen
 
 Services (each its own container image in GHCR, built and deployed by the single `.github/workflows/pipeline.yml`, which detects the changed services, runs their lint/test/build via `service.yml`, deploys from `main` and ends in the one required check "Quality Gate", run on a self-hosted home server via `infrastructure/docker-compose.yml`):
 
-- **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer.
-- **`services/assistant`** — standalone service on port 8500. Serves the assistant WebSocket (proxied by nginx) and internal REST APIs `/microsoft/*` and `/whatsapp/*` that the web app calls via `ASSISTANT_INTERNAL_URL` (not exposed publicly). Owns Microsoft tokens, mail/todo/calendar workers, WhatsApp proxying, weather/geolocation and background sync, talking directly to the shared Postgres.
+- **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer. The startpage also hosts the assistant: Microsoft logic (Graph, token, mail/todo/calendar workers) in `startpage/microsoft/_external/`, the WhatsApp bridge client in `startpage/whatsapp/_external/`, and the chat (model, skills, tools, weather) in `startpage/assistant/`, served by the streaming `POST /startpage/assistant/chat` route handler (newline-delimited JSON; conversations live in web-process memory).
 - **`services/whatsapp`** — bridge container: the prebuilt [wacli](https://github.com/openclaw/wacli) binary plus an Express companion (`companion/`) that drives it and exposes REST. One wacli process per user (`auth --events` while unpaired, `sync --follow --events` while paired); reads are one-shot `wacli --json` calls; `archive-chat`/`mark-chat-read`/`full-sync` briefly pause sync to take the store lock. Per-user SQLite stores live in `WHATSAPP_DATA_DIR` (Docker volume, deliberately not backed up). No Go code in the repo.
 - **`services/wichteln`** — separate Next.js app (port 3001 in dev) sharing the Postgres DB with `wichteln_*`-prefixed tables.
 - **`services/dev-machine`** — development container (code-server, Claude Code Remote Control, Storybook, SSH on 2222). Remote Control runs with `--spawn worktree`: each new session gets its own git worktree under `.claude/worktrees/` with `services/.env` and `infrastructure/.env` copied in (`.worktreeinclude`); run `pnpm install` there first.
 
-**Auth** — `services/web/proxy.ts` runs before every route and validates the iron-session cookie; unauthenticated users are redirected to Azure AD OIDC via `startLogin()` in `app/shared/auth/auth.ts`, AJAX requests get 401. `/shared/auth/*`, `/shared/ping`, static assets and Next.js internals bypass auth. The assistant validates the same cookie on its WebSocket. Row ownership is keyed on the user's email (`owner_email`, from the OIDC claim); there is no users table.
+**Auth** — `services/web/proxy.ts` runs before every route and validates the iron-session cookie; unauthenticated users are redirected to Azure AD OIDC via `startLogin()` in `app/shared/auth/auth.ts`, AJAX requests get 401. `/shared/auth/*`, `/shared/ping`, static assets and Next.js internals bypass auth. Row ownership is keyed on the user's email (`owner_email`, from the OIDC claim); there is no users table.
 
-**Database** — PostgreSQL via `pg`. The pool is created lazily on first use by `app/shared/_external/db/setup.ts`, which also runs the migrations from `services/web/db/` at that point (assistant and wichteln have their own `db/` migration folders). All access goes through `app/shared/_external/db/access.ts`: `transactional(fn)` (BEGIN/COMMIT/ROLLBACK) or `nontransactional(fn)`. Custom type parsers (`TYPE_MAPPINGS`) keep dates as strings and turn numerics into JS numbers.
+**Database** — PostgreSQL via `pg`. The pool is created lazily on first use by `app/shared/_external/db/setup.ts`, which also runs the migrations from `services/web/db/` at that point (wichteln has its own `db/` migration folder). All access goes through `app/shared/_external/db/access.ts`: `transactional(fn)` (BEGIN/COMMIT/ROLLBACK) or `nontransactional(fn)`. Custom type parsers (`TYPE_MAPPINGS`) keep dates as strings and turn numerics into JS numbers.
 
 **Ops** — the `backup` service dumps the prod DB nightly and uploads to OneDrive; restore with `docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev|prod> [--yes]` (use `--yes` for prod, since exec has no TTY). Details in `infrastructure/README.md`.
 

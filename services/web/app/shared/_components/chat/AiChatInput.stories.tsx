@@ -282,22 +282,12 @@ export const ActionsWithCustomOnSelect: Story = {
   },
 }
 
-export const ShowsReconnectingStatus: Story = {
-  args: {
-    status: { type: 'wait-for-reconnecting', nextAttempt: 2, maxAttempts: 10, inSeconds: 8 },
-  },
-  play: async ({ canvasElement }) => {
-    await within(canvasElement).findByText(/Connection lost\. Reconnecting in 8s/)
-    await expect(within(canvasElement).queryByRole('button', { name: 'Retry now' })).toBeNull()
-  },
-}
-
 export const ShowsFatalStatus: Story = {
   args: {
     status: { type: 'reconnect-impossible' },
   },
   play: async ({ canvasElement }) => {
-    await within(canvasElement).findByText(/Connection failed, reconnection is not possible/)
+    await within(canvasElement).findByText(/The conversation has ended/)
     await expect(within(canvasElement).queryByRole('button', { name: 'Restart the session' })).toBeNull()
   },
 }

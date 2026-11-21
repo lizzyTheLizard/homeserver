@@ -9,7 +9,7 @@ type SessionRequest = Request<{ userId: string }>
 
 main()
 
-// Sets up and starts the REST API the Next.js app and the assistant call.
+// Sets up and starts the REST API the Next.js app calls.
 function main(): void {
   // One supervisor per user, created lazily on first use.
   const supervisors = new Map<string, Supervisor>()

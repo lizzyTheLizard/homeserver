@@ -13,8 +13,8 @@
 ## 1. System setup — what is contained and how it is available
 
 The entire stack is **self-hosted on a single home server** (no cloud provider,
-no Terraform). A single `docker-compose.yml` brings up every component. The five
-service images (`homeserver-web`, `homeserver-assistant`, `homeserver-whatsapp`,
+no Terraform). A single `docker-compose.yml` brings up every component. The four
+service images (`homeserver-web`, `homeserver-whatsapp`,
 `homeserver-wichteln` and `homeserver-dev-machine`) are published to GitHub
 Container Registry as `ghcr.io/lizzythelizard/<name>:latest` by the per-service CI
 workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--upgrading-the-application)).
@@ -24,7 +24,6 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 | Concern            | Container (`container_name`)     | Image                       |
 |--------------------|---------------------------------|-----------------------------|
 | App (prod)         | `applicationprod` (`Prod-Application`) | `ghcr.io/lizzythelizard/homeserver-web:latest` |
-| Assistant          | `assistant` (`Prod-Assistant`)   | `ghcr.io/lizzythelizard/homeserver-assistant:latest` |
 | WhatsApp bridge    | `whatsapp` (`WhatsApp`)          | `ghcr.io/lizzythelizard/homeserver-whatsapp:latest` |
 | Wichteln app       | `wichteln` (`Wichteln`)          | `ghcr.io/lizzythelizard/homeserver-wichteln:latest` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
@@ -400,7 +399,7 @@ only do this if you have a reason to.
   every pull request (opened, updated, reopened), every push to `main` and on
   manual dispatch; pushes to other branches do not run it. Its stages:
   1. **Detect changes** (`.github/scripts/detect-changes.mjs`) — which of web,
-     assistant, WhatsApp, Wichteln, dev machine and infrastructure changed,
+     WhatsApp, Wichteln, dev machine and infrastructure changed,
      against the pull request's base or, on `main`, the previous `main` commit.
      Root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` and `.nvmrc`
      count for every service; the pipeline's own files (`pipeline.yml`,

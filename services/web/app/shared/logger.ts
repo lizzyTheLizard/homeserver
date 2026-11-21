@@ -14,6 +14,7 @@ function createLogger() {
     : winston.format.combine(winston.format.errors({ stack: true }), winston.format.json())
   return winston.createLogger({
     level: config.LOG_LEVEL,
+    exitOnError: shouldExitOnError,
     transports: [
       new Console({
         handleExceptions: true,
@@ -22,6 +23,12 @@ function createLogger() {
       }),
     ],
   })
+}
+// A client that closes its connection mid-request makes Node emit an `aborted` (ECONNRESET) error.
+// A client that closes its connection mid-request makes Node emit an `aborted` (ECONNRESET) error
+// Nobody can handle it. That is routine, not a reason to take the whole server down.
+function shouldExitOnError(error: Error): boolean {
+  return !('code' in error && error.code === 'ECONNRESET')
 }
 
 function toConsoleString(info: winston.Logform.TransformableInfo) {
