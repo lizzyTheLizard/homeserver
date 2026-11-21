@@ -48,7 +48,7 @@ The production database, the development database, the development home and the 
 
 ### Requirement: nginx terminates TLS and routes the public hostnames
 
-nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a health endpoint answering `ok` over plain HTTP and redirect everything else to HTTPS, and SHALL route each public hostname and port to its service, including the unbuffered chat stream of the web application and the Wichteln app.
+nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a health endpoint answering `ok` over plain HTTP and redirect everything else to HTTPS, and SHALL route each public hostname and port to its service, including the streamed chat answers of the web application and the Wichteln app.
 
 #### Scenario: Plain HTTP is redirected
 - **WHEN** a request arrives over plain HTTP that is not an ACME challenge or the health endpoint
@@ -68,7 +68,7 @@ nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a healt
 
 #### Scenario: Assistant WebSocket is proxied
 - **WHEN** a client calls the web application's chat endpoint
-- **THEN** nginx forwards it without buffering the response and with a read timeout long enough for a streamed answer
+- **THEN** nginx forwards it, streams the response without buffering when the application asks for it, and waits long enough for a slow streamed answer
 
 #### Scenario: The internal APIs stay internal
 - **WHEN** a client requests the WhatsApp bridge through the public entrypoint

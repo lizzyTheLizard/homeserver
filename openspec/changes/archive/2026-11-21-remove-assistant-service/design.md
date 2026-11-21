@@ -27,7 +27,7 @@ Chat answers take seconds to tens of seconds (tool loops, up to 10 steps) and ar
 **4. Code layout in web** (conventions: `_`-prefixed non-route folders, exported functions first):
 - `app/startpage/microsoft/_external/` — `graph.ts`, `mail.ts`, `todo.ts`, `calendar.ts`, `data.ts` (token access via `transactional`/`nontransactional` of the shared `db/access.ts`). `server.ts` calls these directly; the former REST route's validation/serialization moves into the actions. `callback/route.ts` calls `handleMicrosoftLoginCallback` with the session user.
 - `app/startpage/whatsapp/_external/whatsapp.ts` — bridge client; `server.ts` calls it directly.
-- `app/startpage/assistant/` — `chat/route.ts`, `_helper/` (conversation store, groq model, initial/greeting, system prompt), `_tools/` (per-service tool files; Microsoft/WhatsApp tools import from the folders above), `_skills/*/SKILL.md`, `_external/` (open-meteo, OpenStreetMap). `system.md` and skills sit beside the code.
+- `app/startpage/assistant/` — `chat/` (the route handler plus everything only it uses: conversation store, stream helper, assistant instance, greeting/context, tool registry, event types, system prompt), `_tools/` (per-service tool files; Microsoft/WhatsApp tools import from the folders above), `_skills/*/SKILL.md`, `_external/` (Groq model client, open-meteo, OpenStreetMap). `system.md` and skills sit beside the code.
 - Types previously shared through `@assistant/...` are imported locally; the alias is removed.
 
 **5. Static tool/skill registries instead of runtime directory scanning.** The assistant discovers `*-tools.ts` and skill directories with `readdir`/dynamic `import`, which does not survive Next bundling. Tools are registered via an explicit import list; skills are loaded with `fs` from a path included in the standalone trace (`outputFileTracingIncludes` for `_skills/**` and `system.md`). The spec behavior ("a skill per directory with a valid definition; malformed ones skipped") is preserved.
@@ -36,14 +36,14 @@ Chat answers take seconds to tens of seconds (tool loops, up to 10 steps) and ar
 
 **7. Database.** New web migration `180_assistant_microsoft_token.sql`: `CREATE TABLE IF NOT EXISTS assistant_microsoft_token (...)` with the same definition, so tokens written by the old service remain valid with no data copy, and fresh/PGlite databases get the table. The table keeps its name to avoid a risky rename; the leftover `assistant_migrations` table is harmless and may be dropped later. The web migrations never touch it otherwise.
 
-**8. Config/infra.** `ASSISTANT_INTERNAL_URL` and the `@assistant/*` alias go. Web needs `AI_API_KEY`, `MICROSOFT_GRAPH_APPLICATION_ID/CLIENT_SECRET/ISSUER` (added to `config.ts`) and `WHATSAPP_BRIDGE_URL`; the web service in compose depends on the healthy bridge instead of the assistant. nginx: remove `/ws/assistant` blocks; add a location for the chat endpoint with `proxy_buffering off` and a long `proxy_read_timeout` so NDJSON streams flush. Dev: `pnpm dev` no longer starts an assistant process.
+**8. Config/infra.** `ASSISTANT_INTERNAL_URL` and the `@assistant/*` alias go. Web needs `AI_API_KEY`, `MICROSOFT_GRAPH_APPLICATION_ID/CLIENT_SECRET/ISSUER` (added to `config.ts`) and `WHATSAPP_BRIDGE_URL`; the web service in compose depends on the healthy bridge instead of the assistant. nginx: remove the `/ws/assistant` blocks and give the web `location /` a long `proxy_read_timeout`/`proxy_send_timeout`; no dedicated chat location is needed because the route sends `X-Accel-Buffering: no`, which makes nginx stream that one response unbuffered. Dev: `pnpm dev` no longer starts an assistant process.
 
 **9. Dependencies.** Add `@microsoft/microsoft-graph-client` and `async-mutex` to web; `ai`, `@ai-sdk/groq`, `@js-temporal/polyfill`, `openid-client`, `iron-session`, `zod` are already there. `ws` and the assistant package disappear from the lockfile.
 
 ## Risks / Trade-offs
 
 - [Lost conversation on web restart/redeploy] → Accepted (already true for the assistant); UI offers a new chat. Documented in the spec.
-- [Long-lived streaming requests behind nginx/Next] → Disable proxy buffering, raise read timeout, set `maxDuration`/no response compression for the route; verify in a dev-container run.
+- [Long-lived streaming requests behind nginx/Next] → The route disables nginx buffering per response via `X-Accel-Buffering`, nginx's read timeout is raised, set `maxDuration`/no response compression for the route; verify in a dev-container run.
 - [Background polling workers inside the web server compete with page rendering] → They are I/O-bound and already bounded by the inactivity timeout; keep that behavior.
 - [Next bundling breaks file-based discovery / `__dirname`] → Decision 5; covered by a test that the registries contain all tools/skills and by a production build in the verification task.
 - [Dropped mid-answer request is not resumable] → Accepted per the simplest-option goal; the error message tells the user to resend.

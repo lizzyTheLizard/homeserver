@@ -1,10 +1,10 @@
-# Spec Delta
+# web/startpage/assistant Specification
 
 ## Purpose
 
 Defines the assistant chat as part of the web application: the HTTP endpoint that runs a conversation for the signed-in user, how answers stream back, the greeting and context it opens with, its skills and tools, and the limits on the model.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: The chat runs over authenticated HTTP requests
 
@@ -73,6 +73,10 @@ The assistant's first message of a conversation SHALL greet the user according t
 #### Scenario: Actions are offered
 - **WHEN** the opening message is complete
 - **THEN** the actions that follow from it are offered as selectable controls
+
+#### Scenario: Microsoft is not connected
+- **WHEN** the user has not connected a Microsoft account
+- **THEN** the opening message says at once that Microsoft is not connected, without waiting for the Microsoft startup wait, and offers no Microsoft actions
 
 #### Scenario: Microsoft is not ready in time
 - **WHEN** the Microsoft data is not ready within the startup wait

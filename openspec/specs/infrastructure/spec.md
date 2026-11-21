@@ -24,7 +24,7 @@ The deployment SHALL be a single docker-compose stack whose services share one n
 
 ### Requirement: Services wait for the dependencies that must be healthy
 
-The stack SHALL gate the reverse proxy on the application, the assistant and the auth proxy being healthy and on the Wichteln service having started, and the application on the production database, the assistant and the WhatsApp bridge being healthy; other dependencies SHALL only order the start. The auth proxy SHALL only be started after the log and database viewers, without waiting for them to report healthy.
+The stack SHALL gate the reverse proxy on the application and the auth proxy being healthy and on the Wichteln service having started, and the application on the production database and the WhatsApp bridge being healthy; other dependencies SHALL only order the start. The auth proxy SHALL only be started after the log and database viewers, without waiting for them to report healthy.
 
 #### Scenario: Proxy waits for the application
 - **WHEN** the stack starts and the application is not yet healthy
@@ -36,7 +36,7 @@ The stack SHALL gate the reverse proxy on the application, the assistant and the
 
 #### Scenario: Application waits for its dependencies
 - **WHEN** the application starts
-- **THEN** it starts only after the production database, the assistant and the WhatsApp bridge are healthy
+- **THEN** it starts only after the production database and the WhatsApp bridge are healthy
 
 #### Scenario: Viewers are ordered but not awaited
 - **WHEN** the log or database viewer fails to become healthy
@@ -44,7 +44,7 @@ The stack SHALL gate the reverse proxy on the application, the assistant and the
 
 ### Requirement: Every long-running service reports its health
 
-Each long-running service SHALL carry a healthcheck that probes it: the application its ping endpoint, the assistant and the WhatsApp bridge their health endpoints, both databases their readiness, the reverse proxies their local health route and the backup service its scheduler process.
+Each long-running service SHALL carry a healthcheck that probes it: the application its ping endpoint, the WhatsApp bridge its health endpoint, both databases their readiness, the reverse proxies their local health route and the backup service its scheduler process.
 
 #### Scenario: An unhealthy service is reported
 - **WHEN** a service's probe fails
@@ -56,19 +56,19 @@ Each long-running service SHALL carry a healthcheck that probes it: the applicat
 
 ### Requirement: The stack keeps its data in named volumes
 
-The production database, the development database, the development home and the WhatsApp bridge data SHALL live in named volumes that survive a restart or re-creation of the stack, while certificates, backups and configuration are mounted from the host. The assistant's and Wichteln's data SHALL live in the shared production database rather than in dedicated volumes.
+The production database, the development database, the development home and the WhatsApp bridge data SHALL live in named volumes that survive a restart or re-creation of the stack, while certificates, backups and configuration are mounted from the host. Wichteln's data and the web application's data SHALL live in the shared production database rather than in dedicated volumes.
 
 #### Scenario: Data survives a stack restart
 - **WHEN** the stack is stopped and started again
 - **THEN** the databases, the development home and the WhatsApp data are retained
 
 #### Scenario: Assistant and Wichteln share the production database
-- **WHEN** the assistant or Wichteln stores data
+- **WHEN** the web application or Wichteln stores data
 - **THEN** the data is written to the shared production database and no dedicated database or volume exists for them
 
 ### Requirement: nginx terminates TLS and routes the public hostnames
 
-nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a health endpoint answering `ok` over plain HTTP and redirect everything else to HTTPS, and SHALL route each public hostname and port to its service, including the assistant WebSocket endpoint and the Wichteln app.
+nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a health endpoint answering `ok` over plain HTTP and redirect everything else to HTTPS, and SHALL route each public hostname and port to its service, including the streamed chat answers of the web application and the Wichteln app.
 
 #### Scenario: Plain HTTP is redirected
 - **WHEN** a request arrives over plain HTTP that is not an ACME challenge or the health endpoint
@@ -87,11 +87,11 @@ nginx SHALL be the public entrypoint, SHALL serve the ACME challenge and a healt
 - **THEN** nginx terminates TLS with the Wichteln certificate and forwards the request to the Wichteln service
 
 #### Scenario: Assistant WebSocket is proxied
-- **WHEN** a client connects to the assistant WebSocket endpoint
-- **THEN** nginx upgrades and forwards the connection to the assistant service
+- **WHEN** a client calls the web application's chat endpoint
+- **THEN** nginx forwards it, streams the response without buffering when the application asks for it, and waits long enough for a slow streamed answer
 
 #### Scenario: The internal APIs stay internal
-- **WHEN** a client requests the assistant's Microsoft or WhatsApp API through the public entrypoint
+- **WHEN** a client requests the WhatsApp bridge through the public entrypoint
 - **THEN** no route exists for it
 
 ### Requirement: The internal user interfaces are gated by basic auth
@@ -209,7 +209,7 @@ The stack SHALL run the Wichteln app as its own service on the shared network an
 
 ### Requirement: Application images are pulled from GHCR
 
-The web application, assistant, WhatsApp bridge, Wichteln and development-machine images SHALL be published to GitHub Container Registry as `ghcr.io/<owner>/homeserver-<name>:latest` and the stack SHALL pull them from the registry. The backup service's image SHALL be built on the host instead, and the remaining services SHALL use published images.
+The web application, WhatsApp bridge, Wichteln and development-machine images SHALL be published to GitHub Container Registry as `ghcr.io/<owner>/homeserver-<name>:latest` and the stack SHALL pull them from the registry. The backup service's image SHALL be built on the host instead, and the remaining services SHALL use published images.
 
 #### Scenario: Stack pulls the application images from GHCR
 - **WHEN** the stack starts the application services
@@ -270,3 +270,15 @@ Every image of the docker-compose stack that is not built from this repository S
 #### Scenario: Own image follows the latest build
 - **WHEN** the compose file references an image published as `ghcr.io/lizzythelizard/homeserver-*`
 - **THEN** its tag is `latest`
+
+### Requirement: The web application is configured for the assistant's external services
+
+The web application's container SHALL receive the language-model key, the Microsoft Graph application credentials and the WhatsApp bridge address, and SHALL NOT need any other service to run the assistant, Microsoft or WhatsApp features.
+
+#### Scenario: No assistant container exists
+- **WHEN** the stack is running
+- **THEN** no assistant service is defined, and the Microsoft, WhatsApp and chat features work with the web application alone plus the bridge and database
+
+#### Scenario: Missing configuration fails fast
+- **WHEN** the web application starts in production without a required key or credential
+- **THEN** it reports the missing variable instead of starting with a default
