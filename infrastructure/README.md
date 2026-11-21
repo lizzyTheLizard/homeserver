@@ -13,8 +13,8 @@
 ## 1. System setup — what is contained and how it is available
 
 The entire stack is **self-hosted on a single home server** (no cloud provider,
-no Terraform). A single `docker-compose.yml` brings up every component. The four
-service images (`homeserver-web`, `homeserver-whatsapp`,
+no Terraform). A single `docker-compose.yml` brings up every component. The three
+service images (`homeserver-web`,
 `homeserver-wichteln` and `homeserver-dev-machine`) are published to GitHub
 Container Registry as `ghcr.io/lizzythelizard/<name>:latest` by the per-service CI
 workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--upgrading-the-application)).
@@ -24,7 +24,7 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 | Concern            | Container (`container_name`)     | Image                       |
 |--------------------|---------------------------------|-----------------------------|
 | App (prod)         | `applicationprod` (`Prod-Application`) | `ghcr.io/lizzythelizard/homeserver-web:latest` |
-| WhatsApp bridge    | `whatsapp` (`WhatsApp`)          | `ghcr.io/lizzythelizard/homeserver-whatsapp:latest` |
+| WhatsApp (WAHA)    | `waha` (`WAHA`), dev: `wahadev` (`DEV-WAHA`) | `devlikeapro/waha:latest-2026.10.1` (upstream image; not built by us) |
 | Wichteln app       | `wichteln` (`Wichteln`)          | `ghcr.io/lizzythelizard/homeserver-wichteln:latest` |
 | Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
 | Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
@@ -63,7 +63,7 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 * **`pgwebprod`** is a web UI for the prod DB at `https://www.gutschi.site:8443`
   (admin auth).
 * **`dev-machine`** is a full Linux dev environment (node:26-bookworm-slim) with Node 26,
-  pnpm, Go, the GitHub CLI, PostgreSQL client tools, `wacli` (WhatsApp CLI),
+  pnpm, Go, the GitHub CLI, PostgreSQL client tools,
   **code-server** and **Claude Code**, managed by `supervisord`. Access:
   * VS Code Remote SSH → `ssh dev@<host> -p 2222`
   * Browser VS Code → `https://dev.gutschi.site:8443`
@@ -71,12 +71,20 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
     Claude app to the dev machine's `claude remote-control` session (requires a
     one-time `claude /login` and an eligible Claude subscription)
 
-In development neither the WhatsApp bridge nor Wichteln is a separate container.
-`pnpm dev` inside `dev-machine` starts Wichteln (`next dev` on port `3001`) and the TypeScript companion (`pnpm --filter
-@homeserver/whatsapp dev`, i.e. `tsx watch`) which drives the `wacli`
-binary, as a local process alongside the Next.js server, tied to the same
-lifecycle. The bridge's
-state is a local SQLite directory under `services/whatsapp/data/`, not `postgresdev`.
+In development Wichteln is not a separate container: `pnpm dev` inside `dev-machine` starts
+Wichteln (`next dev` on port `3001`) as a local process next to the Next.js server. WhatsApp
+runs in the separate `wahadev` container (its own `waha_dev_sessions` volume), reached from
+`dev-machine` via `WAHA_URL=http://wahadev:3000` and the shared `WAHA_API_KEY` in `services/.env`.
+
+### WhatsApp (WAHA)
+
+`waha` runs the browser engine (`WHATSAPP_DEFAULT_ENGINE=WEBJS`) with one session per user; the web
+application calls it directly over the internal compose network with the `X-Api-Key` header
+(`WAHA_API_KEY` from `infrastructure/.env`, read by both WAHA and the web application). Its
+dashboard and Swagger UI are disabled and nginx has no route to it. Session data lives in the
+`waha_sessions` volume (`/app/.sessions`), deliberately not backed up: a lost session is re-paired
+by scanning the QR code again. After the switch from the old wacli bridge every user scans once; the
+old `whatsapp_data` volume can be deleted.
 
 ---
 
@@ -399,7 +407,7 @@ only do this if you have a reason to.
   every pull request (opened, updated, reopened), every push to `main` and on
   manual dispatch; pushes to other branches do not run it. Its stages:
   1. **Detect changes** (`.github/scripts/detect-changes.mjs`) — which of web,
-     WhatsApp, Wichteln, dev machine and infrastructure changed,
+     Wichteln, dev machine and infrastructure changed,
      against the pull request's base or, on `main`, the previous `main` commit.
      Root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` and `.nvmrc`
      count for every service; the pipeline's own files (`pipeline.yml`,

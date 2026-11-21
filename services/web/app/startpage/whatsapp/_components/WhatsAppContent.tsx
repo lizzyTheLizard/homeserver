@@ -1,16 +1,19 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { boolColumn, dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
-import { disconnectAccount, fullSync, getStatus } from '../server'
+import { disconnectAccount, getStatus } from '../server'
 import { WhatsAppSidebar } from './WhatsAppSidebar'
 import styles from './WhatsAppContent.module.css'
 import type { Chat, SyncStatus } from '@/app/startpage/whatsapp/_external/types'
 import { QRCode } from 'react-qr-code'
+
+const RELOAD_DELAY_MS = 2000
+const OVERRIDE_MS = 8000
 
 const columns = [
   textColumn('name', { header: 'Name', style: {} }),
@@ -20,25 +23,42 @@ const columns = [
 ]
 
 export function WhatsAppContent({ chats, status, error: loadError }: { chats: Chat[]; status: SyncStatus; error?: string }) {
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
+  const [selectedChatId, setSelectedChatId] = useState<string | undefined>(undefined)
+  // Archive changes the user just made, shown for a few seconds until the reloaded chat list has caught up
+  const [archivedOverrides, setArchivedOverrides] = useState<Record<string, boolean>>({})
   const [sidebarId, openSidebar] = useSidebar()
   const [actionError, setActionError] = useState<string | undefined>(undefined)
   const [liveStatus, setLiveStatus] = useState<SyncStatus>(status)
   const router = useRouter()
 
+  const shownChats = useMemo(
+    () => chats.map(chat => (chat.id in archivedOverrides ? { ...chat, isArchived: archivedOverrides[chat.id] } : chat)),
+    [chats, archivedOverrides],
+  )
+  const selectedChat = shownChats.find(chat => chat.id === selectedChatId) ?? null
+
   const statusError = liveStatus.type === 'closed' ? 'The WhatsApp connection is closed' : undefined
   const error = actionError ?? loadError ?? statusError
 
   function showMessages(chat: Chat) {
-    setSelectedChat(chat)
+    setSelectedChatId(chat.id)
     openSidebar()
   }
 
-  async function handleFullSync() {
-    setActionError(undefined)
-    const result = await fullSync()
-    if (!result.success) setActionError(result.error)
-    else router.refresh()
+  // WAHA's lists can lag a moment behind an action, so reload now and once more shortly after
+  function reloadChats() {
+    router.refresh()
+    setTimeout(() => {
+      router.refresh()
+    }, RELOAD_DELAY_MS)
+  }
+
+  function handleArchivedChange(chatId: string, archived: boolean) {
+    setArchivedOverrides(current => ({ ...current, [chatId]: archived }))
+    setTimeout(() => {
+      setArchivedOverrides(current => Object.fromEntries(Object.entries(current).filter(([id]) => id !== chatId)))
+    }, OVERRIDE_MS)
+    reloadChats()
   }
 
   async function handleDisconnect() {
@@ -71,7 +91,7 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
     }
   }, [liveStatus.type, router])
 
-  if (liveStatus.type === 'fullsync') return <LoadingSpinner text="Running full sync, this may take a while..." />
+  if (liveStatus.type === 'starting') return <LoadingSpinner text="Starting WhatsApp, this may take a moment..." />
   if (liveStatus.type === 'needAuth') {
     return (
       <div className={styles.qrContainer}>
@@ -87,13 +107,6 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
     <>
       <ActionButton
         onClick={() => {
-          void handleFullSync()
-        }}
-      >
-        Full Sync
-      </ActionButton>
-      <ActionButton
-        onClick={() => {
           void handleDisconnect()
         }}
       >
@@ -103,7 +116,7 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
         <div className={styles.errorBox}>{error}</div>
       ) : (
         <DataTable
-          data={chats}
+          data={shownChats}
           columns={columns}
           onRowClick={showMessages}
           initialSortingOrder={[
@@ -113,7 +126,13 @@ export function WhatsAppContent({ chats, status, error: loadError }: { chats: Ch
           searchLabel="Search chats…"
         />
       )}
-      <WhatsAppSidebar key={selectedChat?.id} selectedChat={selectedChat} sidebarId={sidebarId} />
+      <WhatsAppSidebar
+        key={selectedChat?.id}
+        selectedChat={selectedChat}
+        sidebarId={sidebarId}
+        onArchivedChange={handleArchivedChange}
+        onMessageSent={reloadChats}
+      />
     </>
   )
 }

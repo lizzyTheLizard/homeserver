@@ -12,7 +12,6 @@ import {
   getWhatsappStatus,
   sendWhatsappMessage,
   startWhatsapp,
-  triggerWhatsappFullSync,
 } from './_external/whatsapp'
 
 export async function loadData(): Promise<{ chats: Chat[]; status: SyncStatus; error?: string }> {
@@ -46,10 +45,6 @@ export async function archiveChat(chatJid: string, archived: boolean): ActionRes
 
 export async function sendChatMessage(chatJid: string, text: string): ActionResponse<void> {
   return toResponse(withUser(user => sendWhatsappMessage(user, chatJid, text)))
-}
-
-export async function fullSync(): ActionResponse<void> {
-  return toResponse(withUser(user => triggerWhatsappFullSync(user)))
 }
 
 export async function disconnectAccount(): ActionResponse<void> {

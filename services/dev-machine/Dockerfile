@@ -47,26 +47,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
 
 
-# 5. Install wacli (WhatsApp CLI) — the WhatsApp bridge companion drives this
-# binary, so it must be on PATH for `pnpm dev:bridge`.
-ARG WACLI_VERSION="0.17.1"
-RUN curl -fsSL "https://github.com/openclaw/wacli/releases/download/v${WACLI_VERSION}/wacli_${WACLI_VERSION}_linux_amd64.tar.gz" \
-      -o /tmp/wacli.tar.gz \
- && mkdir /tmp/wacli \
- && tar -xzf /tmp/wacli.tar.gz -C /tmp/wacli \
- && mv /tmp/wacli/wacli /usr/local/bin/wacli \
- && chmod +x /usr/local/bin/wacli \
- && rm -rf /tmp/wacli.tar.gz /tmp/wacli
-
-# 6. Install code-server, Claude Code and openspec
+# 5. Install code-server, Claude Code and openspec
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN npm install -g @anthropic-ai/claude-code
 RUN npm install -g @fission-ai/openspec@latest
 
-# 7. Create dedicated non-root user "dev"
+# 6. Create dedicated non-root user "dev"
 RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# 8. Copy configuration files & entrypoint script
+# 7. Copy configuration files & entrypoint script
 COPY services/dev-machine/supervisord.conf /etc/supervisor/supervisord.conf
 COPY services/dev-machine/sshd_config /etc/ssh/sshd_config
 COPY services/dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh

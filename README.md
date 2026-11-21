@@ -17,9 +17,9 @@ Each service lives in its own folder under `services/` and is published as its o
 | **Admin**    | Administration dashboard — metrics, configuration, project management |
 | **Startpage**| Browser start page with personal favourites, the AI assistant chat, Microsoft mail/tasks/calendar and WhatsApp |
 
-### WhatsApp bridge
+### WhatsApp (WAHA)
 
-[`services/whatsapp`](services/whatsapp) — runs the prebuilt [wacli](https://github.com/openclaw/wacli) WhatsApp client plus a small Express companion that drives it and exposes a REST API. Each user gets an isolated SQLite store in a Docker volume, which is deliberately not part of the database backup.
+The web app talks directly to a [WAHA](https://waha.devlike.pro) container (browser engine `WEBJS`, image `devlikeapro/waha`) over its REST API, with one WAHA session per user. WAHA keeps its sessions in a Docker volume, which is deliberately not part of the database backup.
 
 ### Wichteln
 
@@ -84,7 +84,7 @@ In production every required var must be set; the services fail fast on startup 
 
 | Command            | Description |
 |--------------------|-------------|
-| `pnpm dev`         | Run web (:3000) + whatsapp + wichteln (:3001) together |
+| `pnpm dev`         | Run web (:3000) + wichteln (:3001) together |
 | `pnpm build`       | Build all packages |
 | `pnpm test`        | Run all tests in all packages |
 | `pnpm test:watch`  | Tests in watch mode (all packages) |
@@ -114,7 +114,7 @@ The `openspec-*` skills are auto-generated and must not be edited by hand.
 
 ## Architecture
 
-Each service is built into its own image (`ghcr.io/lizzythelizard/homeserver-<service>`) by the single pipeline in `.github/workflows/pipeline.yml` (only when that service changed) and deployed with `infrastructure/docker-compose.yml`. The web app hosts the assistant and talks to the WhatsApp bridge directly; web and Wichteln share the PostgreSQL database, each with its own migrations.
+Each service is built into its own image (`ghcr.io/lizzythelizard/homeserver-<service>`) by the single pipeline in `.github/workflows/pipeline.yml` (only when that service changed) and deployed with `infrastructure/docker-compose.yml`. The web app hosts the assistant and talks to WAHA (WhatsApp) directly; web and Wichteln share the PostgreSQL database, each with its own migrations.
 
 The **web** service uses the Next.js App Router with React Server Components by default. Mutations are exposed as Server Actions (`'use server'` files); there is no separate API layer.
 
@@ -133,7 +133,6 @@ Per-row ownership is keyed on the user's email (`owner_email`). There is no `use
 /
 ├── services/           Deployable services, one folder per container image
 │   ├── web/            Next.js application
-│   ├── whatsapp/       WhatsApp bridge container (wacli + companion)
 │   ├── wichteln/       Wichteln Secret Santa app (own db/ migrations)
 │   └── dev-machine/    Development container (code-server, Claude Code, SSH)
 ├── infrastructure/     Self-hosted deployment: docker-compose stack on the home server (see [infrastructure/README.md](infrastructure/README.md))

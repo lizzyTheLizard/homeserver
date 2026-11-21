@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
-export const SERVICES = ['web', 'whatsapp', 'wichteln', 'dev-machine']
+export const SERVICES = ['web', 'wichteln', 'dev-machine']
 export const TARGETS = [...SERVICES, 'infrastructure']
 
 const SHARED_WORKSPACE_FILES = new Set(['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.nvmrc', '.oxlintrc.json', '.oxfmtrc.json'])

@@ -32,7 +32,7 @@ The repository SHALL have exactly one build-and-deploy pipeline. It SHALL run wh
 
 ### Requirement: The pipeline first detects what changed
 
-The pipeline SHALL start by determining which of the web application, WhatsApp bridge, Wichteln and development machine services and whether the infrastructure changed, comparing a pull request against its base branch and a push to main against the previous main commit. All later stages SHALL act only on what this stage reports as changed.
+The pipeline SHALL start by determining which of the web application, Wichteln and development machine services and whether the infrastructure changed, comparing a pull request against its base branch and a push to main against the previous main commit. All later stages SHALL act only on what this stage reports as changed.
 
 #### Scenario: A change inside a service folder
 - **WHEN** the compared commits change files under `services/<name>/` only
@@ -67,8 +67,8 @@ For each service reported as changed, the pipeline SHALL lint it, run its tests 
 - **THEN** its lint, its three test projects and its image build run
 
 #### Scenario: An unchanged service is skipped
-- **WHEN** the WhatsApp bridge is not reported as changed
-- **THEN** the bridge's lint, test and build jobs are skipped
+- **WHEN** Wichteln is not reported as changed
+- **THEN** Wichteln's lint, test and build jobs are skipped
 
 #### Scenario: A pull request builds without publishing
 - **WHEN** the pipeline runs for a pull request
@@ -76,11 +76,11 @@ For each service reported as changed, the pipeline SHALL lint it, run its tests 
 
 ### Requirement: Each changed service's image is published from main
 
-The pipeline SHALL build the web application, WhatsApp bridge, Wichteln and development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, SHALL tag the web application image with the commit, branch, pipeline run and build time, and SHALL publish an image to GitHub Container Registry only on the main branch, only when its service changed and only after its lint and tests passed.
+The pipeline SHALL build the web application, Wichteln and development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, SHALL tag the web application image with the commit, branch, pipeline run and build time, and SHALL publish an image to GitHub Container Registry only on the main branch, only when its service changed and only after its lint and tests passed.
 
 #### Scenario: A changed service's image is published on main
-- **WHEN** the pipeline runs on main and the WhatsApp bridge is reported as changed and its lint and tests pass
-- **THEN** `ghcr.io/<owner>/homeserver-whatsapp:latest` is built from `services/whatsapp/` and published
+- **WHEN** the pipeline runs on main and Wichteln is reported as changed and its lint and tests pass
+- **THEN** `ghcr.io/<owner>/homeserver-wichteln:latest` is built from `services/wichteln/` and published
 
 #### Scenario: A failing check blocks publishing
 - **WHEN** a changed service's lint or tests fail
@@ -119,8 +119,8 @@ The pipeline SHALL end with one job named "Quality Gate" that depends on every o
 The deploy SHALL run only for a run on the main branch, regardless of who started it, and only after the deployed service's lint, tests and image publish succeeded. A service that has no lint or test task, such as the development machine, SHALL be deployed once its image publish succeeded; its missing lint or test SHALL NOT block the deploy. For each changed service it SHALL synchronise the stack definition to the server, pull that service's published image and recreate only that service. Concurrent deploys on the server SHALL be serialised.
 
 #### Scenario: Deploy publishes the stack
-- **WHEN** the pipeline runs on main, the WhatsApp bridge is reported as changed and its image was published
-- **THEN** the stack definition is synchronised to the server and the bridge's container is recreated from the new image
+- **WHEN** the pipeline runs on main, Wichteln is reported as changed and its image was published
+- **THEN** the stack definition is synchronised to the server and Wichteln's container is recreated from the new image
 
 #### Scenario: A service without lint or tests is deployed
 - **WHEN** the pipeline runs on main, only the development machine is reported as changed and its image was published
@@ -144,11 +144,11 @@ The deploy SHALL run only for a run on the main branch, regardless of who starte
 
 ### Requirement: Every package is linted and tested
 
-The pipeline SHALL be able to lint every package and SHALL run the web application's three test projects, the WhatsApp bridge's tests and Wichteln's tests, each only when its service is reported as changed. A failing job SHALL stop the jobs that depend on it.
+The pipeline SHALL be able to lint every package and SHALL run the web application's three test projects, Wichteln's tests, each only when its service is reported as changed. A failing job SHALL stop the jobs that depend on it.
 
 #### Scenario: All checks run
 - **WHEN** every service is reported as changed
-- **THEN** the lint and test jobs of every service and the four image builds run
+- **THEN** the lint and test jobs of every service and the three image builds run
 
 #### Scenario: A failing check stops its dependants
 - **WHEN** any lint, test or build job fails
@@ -168,7 +168,7 @@ The linting task SHALL apply fixes when run locally and SHALL only report proble
 
 ### Requirement: All packages are linted with one shared configuration
 
-The web application, WhatsApp bridge and Wichteln SHALL be linted against a single lint configuration at the repository root, and no package SHALL carry its own lint configuration file.
+The web application and Wichteln SHALL be linted against a single lint configuration at the repository root, and no package SHALL carry its own lint configuration file.
 
 #### Scenario: Every package uses the same rules
 - **WHEN** any package is linted
@@ -259,7 +259,7 @@ When the infrastructure is reported as changed, the pipeline SHALL start the who
 Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily (before 6 a.m. Zurich time) and open one pull request per dependency update, only for versions at least one day old. Major-version updates of `postgres` SHALL be ignored because they need a data migration and must match the PostgreSQL client of the backup image. Dependabot SHALL NOT open version-update pull requests.
 
 #### Scenario: Every Dockerfile is covered
-- **WHEN** a Dockerfile exists in `services/web`, `services/whatsapp`, `services/wichteln`, `services/dev-machine` or `infrastructure/db-backup`
+- **WHEN** a Dockerfile exists in `services/web`, `services/wichteln`, `services/dev-machine` or `infrastructure/db-backup`
 - **THEN** Renovate checks its images
 
 #### Scenario: Compose images are covered
