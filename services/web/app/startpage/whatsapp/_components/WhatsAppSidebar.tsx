@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { Button } from '@/app/shared/_components/form/Button'
@@ -12,9 +11,13 @@ import type { Chat, Message } from '@/app/startpage/whatsapp/_external/types'
 interface WhatsAppSidebarProps {
   selectedChat: Chat | null
   sidebarId: string
+  onArchivedChange(chatId: string, archived: boolean): void
+  onMessageSent(): void
 }
 
-export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProps) {
+const RELOAD_DELAY_MS = 1500
+
+export function WhatsAppSidebar({ selectedChat, sidebarId, onArchivedChange, onMessageSent }: WhatsAppSidebarProps) {
   const [messages, setMessages] = useState<Message[] | null>(null)
   const [messagesLoading, setMessagesLoading] = useState(Boolean(selectedChat))
   const [archiveLoading, setArchiveLoading] = useState(false)
@@ -22,7 +25,6 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
   const [actionError, setActionError] = useState<string | undefined>(undefined)
   const [messageText, setMessageText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   useEffect(() => {
     if (!selectedChat) return
@@ -48,8 +50,8 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
       setActionError(result.error)
       return
     }
-    void loadMessages(selectedChat.id).then(setMessages)
-    router.refresh()
+    reloadMessages(selectedChat.id)
+    onArchivedChange(selectedChat.id, !selectedChat.isArchived)
   }
 
   async function handleSendMessage() {
@@ -63,7 +65,16 @@ export function WhatsAppSidebar({ selectedChat, sidebarId }: WhatsAppSidebarProp
       return
     }
     setMessageText('')
-    void loadMessages(selectedChat.id).then(setMessages)
+    reloadMessages(selectedChat.id)
+    onMessageSent()
+  }
+
+  // WAHA can take a moment to list a new message, so read again shortly after
+  function reloadMessages(chatId: string) {
+    void loadMessages(chatId).then(setMessages)
+    setTimeout(() => {
+      void loadMessages(chatId).then(setMessages)
+    }, RELOAD_DELAY_MS)
   }
 
   return (

@@ -10,7 +10,7 @@ The WhatsApp bridge mirrors messages into a local SQLite store through wacli. Th
 - Add a `waha` container (upstream image `devlikeapro/waha`, engine `WEBJS`) to the compose stack with a named volume for its session data, API-key protection, and no public route.
 - `services/web` calls WAHA directly: `startpage/whatsapp/_external/whatsapp.ts` keeps its exported functions and the `Chat`/`Message`/`SyncStatus` types (so pages, server actions and the assistant tools stay unchanged) but maps them onto WAHA's REST API with one WAHA session per user and an `X-Api-Key` header.
 - Configuration: `WHATSAPP_BRIDGE_URL` is replaced by `WAHA_URL` and `WAHA_API_KEY`.
-- "Full sync" becomes a restart of the user's WAHA session (WAHA has no equivalent); "disconnect" is a session logout.
+- The "Full sync" button, its server action and the `fullsync` status are removed (live reads leave nothing to synchronise; the status for a starting session is renamed `starting`); "disconnect" is a session logout.
 - Auto-unarchive on incoming message is no longer done by us: WhatsApp unarchives itself and the live view shows it.
 - **BREAKING**: existing paired wacli sessions cannot be reused; every user scans the QR code once again.
 

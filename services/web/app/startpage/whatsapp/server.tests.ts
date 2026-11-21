@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { archiveChat, disconnectAccount, fullSync, getStatus, loadData, loadMessages, sendChatMessage } from './server'
+import { archiveChat, disconnectAccount, getStatus, loadData, loadMessages, sendChatMessage } from './server'
 import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import {
@@ -10,7 +10,6 @@ import {
   getWhatsappStatus,
   sendWhatsappMessage,
   startWhatsapp,
-  triggerWhatsappFullSync,
 } from './_external/whatsapp'
 
 vi.mock('@/app/shared/auth/auth', async () => {
@@ -25,7 +24,6 @@ vi.mock('./_external/whatsapp', () => ({
   getWhatsappStatus: vi.fn(),
   sendWhatsappMessage: vi.fn(),
   startWhatsapp: vi.fn(),
-  triggerWhatsappFullSync: vi.fn(),
 }))
 
 const { mockWarn } = vi.hoisted(() => ({ mockWarn: vi.fn<(message: string) => void>() }))
@@ -95,12 +93,10 @@ describe('actions', () => {
     expect(await getStatus()).toEqual({ success: true, data: { type: 'closed' } })
     expect((await archiveChat('c1', true)).success).toBe(true)
     expect((await sendChatMessage('c1', 'hi')).success).toBe(true)
-    expect((await fullSync()).success).toBe(true)
     expect((await disconnectAccount()).success).toBe(true)
 
     expect(archiveWhatsappChat).toHaveBeenCalledWith(task.id, 'c1', true)
     expect(sendWhatsappMessage).toHaveBeenCalledWith(task.id, 'c1', 'hi')
-    expect(triggerWhatsappFullSync).toHaveBeenCalledWith(task.id)
     expect(disconnectWhatsapp).toHaveBeenCalledWith(task.id)
   })
 

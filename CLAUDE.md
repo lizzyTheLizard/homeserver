@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-pnpm workspace with three packages under `services/`; target one with `pnpm --filter @homeserver/<web|whatsapp|wichteln> <script>`.
+pnpm workspace with two packages under `services/` (plus the dev-machine image); target one with `pnpm --filter @homeserver/<web|wichteln> <script>`.
 
 ```bash
-pnpm dev                 # web (:3000) + whatsapp bridge + wichteln (:3001) as local processes
+pnpm dev                 # web (:3000) + wichteln (:3001) as local processes
 pnpm dev:wichteln        # wichteln alone
 pnpm build               # build all packages
 pnpm test                # all tests, all packages
@@ -31,8 +31,7 @@ The binding rules (branch invariants, commit trailers `OpenSpec-Change:` / `Agen
 
 Services (each its own container image in GHCR, built and deployed by the single `.github/workflows/pipeline.yml`, which detects the changed services, runs their lint/test/build via `service.yml`, deploys from `main` and ends in the one required check "Quality Gate", run on a self-hosted home server via `infrastructure/docker-compose.yml`):
 
-- **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer. The startpage also hosts the assistant: Microsoft logic (Graph, token, mail/todo/calendar workers) in `startpage/microsoft/_external/`, the WhatsApp bridge client in `startpage/whatsapp/_external/`, and the chat (model, skills, tools, weather) in `startpage/assistant/`, served by the streaming `POST /startpage/assistant/chat` route handler (newline-delimited JSON; conversations live in web-process memory).
-- **`services/whatsapp`** — bridge container: the prebuilt [wacli](https://github.com/openclaw/wacli) binary plus an Express companion (`companion/`) that drives it and exposes REST. One wacli process per user (`auth --events` while unpaired, `sync --follow --events` while paired); reads are one-shot `wacli --json` calls; `archive-chat`/`mark-chat-read`/`full-sync` briefly pause sync to take the store lock. Per-user SQLite stores live in `WHATSAPP_DATA_DIR` (Docker volume, deliberately not backed up). No Go code in the repo.
+- **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer. The startpage also hosts the assistant: Microsoft logic (Graph, token, mail/todo/calendar workers) in `startpage/microsoft/_external/`, the WAHA client in `startpage/whatsapp/_external/`, and the chat (model, skills, tools, weather) in `startpage/assistant/`, served by the streaming `POST /startpage/assistant/chat` route handler (newline-delimited JSON; conversations live in web-process memory).
 - **`services/wichteln`** — separate Next.js app (port 3001 in dev) sharing the Postgres DB with `wichteln_*`-prefixed tables.
 - **`services/dev-machine`** — development container (code-server, Claude Code Remote Control, Storybook, SSH on 2222). Remote Control runs with `--spawn worktree`: each new session gets its own git worktree under `.claude/worktrees/` with `services/.env` and `infrastructure/.env` copied in (`.worktreeinclude`); run `pnpm install` there first.
 

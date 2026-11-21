@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the WhatsApp area of the start page: pairing the account, listing chats, reading and replying to messages and archiving chats, driven by the web application through the WhatsApp bridge.
+Defines the WhatsApp area of the start page: pairing the account, listing chats, reading and replying to messages and archiving chats, driven by the web application through the WAHA service.
 
 ## Requirements
 

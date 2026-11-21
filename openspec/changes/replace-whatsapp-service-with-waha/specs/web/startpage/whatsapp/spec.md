@@ -16,7 +16,7 @@ The web application SHALL use one WAHA session per signed-in user, named determi
 
 ### Requirement: WAHA's session state maps to the connection status
 
-The web application SHALL report WAHA's session state as needing authentication with the current QR code while it waits for a scan, as connected while it works, as running a full sync while the session is starting, for example after a restart triggered by the user, and as closed when the session is stopped, missing or failed.
+The web application SHALL report WAHA's session state as needing authentication with the current QR code while it waits for a scan, as connected while it works, as starting while the session is starting, and as closed when the session is stopped, missing or failed.
 
 #### Scenario: Waiting for a scan
 - **WHEN** the user's WAHA session is waiting for a QR scan
@@ -46,17 +46,13 @@ The web application SHALL list the user's chats, including archived and old chat
 - **WHEN** a chat's messages are requested
 - **THEN** its text messages are returned oldest first with sender name, own-message flag and time
 
-### Requirement: Send, archive, read and full sync act through WAHA
+### Requirement: Send, archive and disconnect act through WAHA
 
-The web application SHALL send a text message, archive or unarchive a chat, mark a chat read, run a full sync by restarting the user's WAHA session, and disconnect by logging the session out, each through WAHA's API for the user's own session, and SHALL surface a failed WAHA call as an error.
+The web application SHALL send a text message, archive or unarchive a chat, and disconnect by logging the session out, each through WAHA's API for the user's own session, and SHALL surface a failed WAHA call as an error.
 
 #### Scenario: Message is sent through WAHA
 - **WHEN** the user sends a reply
 - **THEN** WAHA sends the text to that chat from the user's session
-
-#### Scenario: Full sync restarts the session
-- **WHEN** the user starts a full sync
-- **THEN** the user's WAHA session is restarted and the page reports that it may take a while
 
 #### Scenario: Disconnect logs out
 - **WHEN** the user disconnects
@@ -78,6 +74,18 @@ The WAHA service SHALL require its API key on every request, SHALL NOT be publis
 - **WHEN** the start page is served to a browser
 - **THEN** neither the key nor the WAHA address is part of the response
 
+### Requirement: The page offers a disconnect
+
+The page SHALL offer to disconnect the account and SHALL NOT offer a full sync.
+
+#### Scenario: Account is disconnected
+- **WHEN** the user activates disconnect
+- **THEN** the account is disconnected and the page returns to the pairing state
+
+#### Scenario: No full sync is offered
+- **WHEN** the account is connected
+- **THEN** the page offers disconnect and no full sync
+
 ## MODIFIED Requirements
 
 ### Requirement: The page reaches WhatsApp from the web application
@@ -91,3 +99,9 @@ The start page's WhatsApp server actions SHALL call the WAHA service directly fr
 #### Scenario: A request without a session is refused
 - **WHEN** a WhatsApp action is invoked without a valid session carrying the start page application
 - **THEN** it is rejected and WAHA is not called
+
+## REMOVED Requirements
+
+### Requirement: The page offers a full sync and a disconnect
+**Reason**: WAHA reads chats live, so there is nothing to synchronise; the button and action are removed.
+**Migration**: See "The page offers a disconnect".

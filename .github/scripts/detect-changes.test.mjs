@@ -9,7 +9,7 @@ test('a change inside a service folder reports only that service', () => {
 })
 
 test('every service folder maps to its own service', () => {
-  for (const service of ['web', 'whatsapp', 'wichteln', 'dev-machine'])
+  for (const service of ['web', 'wichteln', 'dev-machine'])
     assert.deepEqual(detectChanges([`services/${service}/Dockerfile`]), { ...everything(false), [service]: true })
 })
 
@@ -42,7 +42,7 @@ test('changes outside services, infrastructure, workspace files and the pipeline
 })
 
 test('several changes combine', () => {
-  const changed = detectChanges(['./services/whatsapp/src/index.ts', 'infrastructure/nginx/nginx.conf'])
+  const changed = detectChanges(['./services/wichteln/src/index.ts', 'infrastructure/nginx/nginx.conf'])
 
-  assert.deepEqual(changed, { ...everything(false), whatsapp: true, infrastructure: true })
+  assert.deepEqual(changed, { ...everything(false), wichteln: true, infrastructure: true })
 })

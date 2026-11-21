@@ -1,6 +1,5 @@
 packages:
   - 'services/web'
-  - 'services/whatsapp'
   - 'services/wichteln'
 allowBuilds:
   '@whiskeysockets/baileys': true

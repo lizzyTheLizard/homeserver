@@ -39,8 +39,6 @@ read in.
    always-running "Quality Gate" that pull requests require.
 5. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
    which is not archived, not named after its branch, or whose spec deltas were not synced.
-6. **[whatsapp-bridge](whatsapp-bridge/spec.md)** — the WhatsApp bridge's per-user wacli processes,
-   isolated stores, REST API and health endpoint.
 
 The `wichteln` application's capability is added by its in-flight change in
 [`openspec/changes/wichteln`](../changes/wichteln/proposal.md).
