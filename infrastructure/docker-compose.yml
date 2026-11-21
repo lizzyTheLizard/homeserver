@@ -64,9 +64,6 @@ services:
       APP_URL: https://www.gutschi.site
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
       WAHA_URL: http://waha:3000
-      # Temporary: the web image published before the WAHA switch still requires this at startup (pull request checks run it).
-      # Not read by the new image; remove in the follow-up change.
-      WHATSAPP_BRIDGE_URL: http://unused:8400
     depends_on:
       postgresprod:
         condition: service_healthy
