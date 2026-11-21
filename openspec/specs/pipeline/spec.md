@@ -39,7 +39,7 @@ The pipeline SHALL start by determining which of the web application, assistant,
 - **THEN** only that service is reported as changed
 
 #### Scenario: A change to shared workspace files
-- **WHEN** the root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc` or the shared setup action changes
+- **WHEN** the root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc`, the shared lint and format configuration (`.oxlintrc.json`, `.oxfmtrc.json`) or the shared setup action changes
 - **THEN** every service is reported as changed
 
 #### Scenario: A change to the pipeline definition
@@ -165,6 +165,30 @@ The linting task SHALL apply fixes when run locally and SHALL only report proble
 #### Scenario: CI lint does not change files
 - **WHEN** the linting task runs for CI
 - **THEN** it reports problems without modifying files
+
+### Requirement: All packages are linted with one shared configuration
+
+The web application, assistant, WhatsApp bridge and Wichteln SHALL be linted against a single lint configuration at the repository root, and no package SHALL carry its own lint configuration file.
+
+#### Scenario: Every package uses the same rules
+- **WHEN** any package is linted
+- **THEN** the shared root configuration applies, including its performance, style and curated restriction rules
+
+#### Scenario: The shared configuration is a shared workspace file
+- **WHEN** the shared lint or format configuration changes
+- **THEN** every service is linted and tested
+
+### Requirement: Linting checks code formatting
+
+The linting task SHALL check that code, style, JSON, YAML, Markdown and HTML files of the services follow the project's formatting conventions (2-space indentation, single quotes, no semicolons, a maximum line width, consistent whitespace and wrapping). Locally the linting task SHALL reformat non-conforming files; for CI it SHALL fail on them without changing files.
+
+#### Scenario: A formatting violation fails CI lint
+- **WHEN** a changed file uses double quotes or a wrong indentation and the linting task runs for CI
+- **THEN** the lint job fails and reports the file
+
+#### Scenario: A formatting violation is fixed locally
+- **WHEN** the linting task runs locally on a file with such a violation
+- **THEN** the file is rewritten to conform
 
 ### Requirement: The web application's tests run as three parallel projects
 
