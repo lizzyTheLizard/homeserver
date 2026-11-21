@@ -1,9 +1,11 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { ActionResponse } from '@/app/shared/_helper/ActionResponse'
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { validateObject, validateString } from '@/app/shared/_helper/validation'
-import { createOrModifyFavorite, Favorite, FavoriteInput, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite'
+import type { Favorite, FavoriteInput } from '@/app/startpage/_data/Favorite'
+import { createOrModifyFavorite, findFavoritesByOwner, removeFavorite } from '@/app/startpage/_data/Favorite'
 import { logEvent } from '@/app/shared/_data/Event'
 import { z } from 'zod'
 
@@ -13,23 +15,27 @@ export async function loadFavorites(): Promise<Favorite[]> {
 }
 
 export async function saveFavorite(input: FavoriteInput): ActionResponse<Favorite> {
-  return toResponse(transactional(async (tx) => {
-    const user = await getAuthenticatedUserSession('startpage')
-    validateObject(input, FavoriteInputSchema)
-    const result = await createOrModifyFavorite(tx, user.email, input)
-    await logEvent(tx, 'INFO', `Saved favorite ${input.name}`)
-    return result
-  }))
+  return toResponse(
+    transactional(async tx => {
+      const user = await getAuthenticatedUserSession('startpage')
+      validateObject(input, FavoriteInputSchema)
+      const result = await createOrModifyFavorite(tx, user.email, input)
+      await logEvent(tx, 'INFO', `Saved favorite ${input.name}`)
+      return result
+    }),
+  )
 }
 
 export async function deleteFavorite(id: string): ActionResponse<Favorite | undefined> {
-  return toResponse(transactional(async (tx) => {
-    const user = await getAuthenticatedUserSession('startpage')
-    validateString(id)
-    const result = await removeFavorite(tx, user.email, id)
-    if (result) await logEvent(tx, 'INFO', `Deleted favorite ${result.name}`)
-    return result
-  }))
+  return toResponse(
+    transactional(async tx => {
+      const user = await getAuthenticatedUserSession('startpage')
+      validateString(id)
+      const result = await removeFavorite(tx, user.email, id)
+      if (result) await logEvent(tx, 'INFO', `Deleted favorite ${result.name}`)
+      return result
+    }),
+  )
 }
 
 const FavoriteInputSchema = z.object({

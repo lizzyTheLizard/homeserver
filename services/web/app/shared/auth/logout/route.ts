@@ -6,10 +6,9 @@ import { config } from '@/app/shared/config'
 export async function GET() {
   try {
     await logout()
-  }
-  catch (error) {
+  } catch (error) {
     logger.warn('Error during logout', error)
-    return redirect(config.APP_URL + '/shared/auth/error')
+    return redirect(`${config.APP_URL}/shared/auth/error`)
   }
-  return redirect(config.APP_URL + '/shared/auth/out')
+  return redirect(`${config.APP_URL}/shared/auth/out`)
 }

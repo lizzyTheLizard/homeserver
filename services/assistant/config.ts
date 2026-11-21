@@ -1,7 +1,7 @@
 const NODE_ENVS = ['development', 'production', 'test'] as const
 
 export interface Config {
-  NODE_ENV: typeof NODE_ENVS[number]
+  NODE_ENV: (typeof NODE_ENVS)[number]
   LOG_LEVEL: string
   AI: {
     API_KEY: string

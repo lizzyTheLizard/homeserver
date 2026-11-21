@@ -36,7 +36,7 @@ const allowDefaults = isDev || isTest || isBuild || isStorybook
 
 const NODE_ENVS = ['development', 'production', 'test'] as const
 
-function toNodeEnv(value: string): typeof NODE_ENVS[number] {
+function toNodeEnv(value: string): (typeof NODE_ENVS)[number] {
   const nodeEnv = NODE_ENVS.find(env => env === value)
   if (!nodeEnv) throw new Error(`Invalid NODE_ENV: ${value}`)
   return nodeEnv
@@ -78,10 +78,10 @@ export const config: Config = {
   NODE_PUBLIC_CURRENCY: optional('NODE_PUBLIC_CURRENCY', 'CHF'),
   WHATSAPP_BRIDGE_URL: required('WHATSAPP_BRIDGE_URL', 'http://localhost:8400'),
   // In the dev-machine container the assistant runs as a local process and binds
-  // the container's own address, so "localhost" (127.0.0.1) is not reachable.
+  // The container's own address, so "localhost" (127.0.0.1) is not reachable.
   ASSISTANT_INTERNAL_URL: required('ASSISTANT_INTERNAL_URL', 'http://dev-machine:8500'),
   GIT_BRANCH: required('GIT_BRANCH', 'DEVELOPMENT'),
   GIT_COMMIT_HASH: required('GIT_COMMIT_HASH', 'DEVELOPMENT'),
-  GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // not required, no default
+  GITHUB_RUN_ID: process.env.GITHUB_RUN_ID, // Not required, no default
   BUILD_TIME: required('BUILD_TIME', new Date().toISOString()),
 }

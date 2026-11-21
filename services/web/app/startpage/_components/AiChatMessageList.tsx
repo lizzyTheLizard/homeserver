@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { AiMessageBubble } from '@/app/shared/_components/chat/AiMessageBubble'
 import styles from './AiChatMessageList.module.css'
-import { ChatState } from './AiChatWebSocket'
+import type { ChatState } from './AiChatWebSocket'
 
 export interface Message {
   id: number
@@ -15,7 +15,7 @@ export interface AiChatMessageListProps {
   messages: Message[]
   state: ChatState
   incomingMessage: string
-  onEdit: (editedText: string) => void
+  onEdit(editedText: string): void
   hasActions: boolean
 }
 
@@ -26,28 +26,18 @@ export function AiChatMessageList({ messages, state, incomingMessage, hasActions
   const stalled = state.type === 'waiting-for-response' && state.stalled
 
   useEffect(() => {
-    if (listRef.current && listRef.current.clientWidth > 600)
-      listRef.current.scrollTop = listRef.current.scrollHeight
-    else
-      window.scrollTo(0, document.body.scrollHeight)
-  // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    if (listRef.current && listRef.current.clientWidth > 600) listRef.current.scrollTop = listRef.current.scrollHeight
+    else window.scrollTo(0, document.body.scrollHeight)
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [messages, incomingMessage, incomming, stalled, hasActions])
 
   return (
     <div ref={listRef} className={styles.messageList}>
       {messages.map((msg, index) => {
         const editable = ready && msg.role === 'assistant' && index === messages.length - 1
-        return (
-          <AiMessageBubble
-            key={'message_' + msg.id.toString()}
-            role={msg.role}
-            content={msg.content}
-            editable={editable}
-            onEdit={onEdit}
-          />
-        )
+        return <AiMessageBubble key={`message_${msg.id.toString()}`} role={msg.role} content={msg.content} editable={editable} onEdit={onEdit} />
       })}
-      {incomming && (<AiMessageBubble role="assistant" content={incomingMessage} generating={true} stalled={stalled} />)}
+      {incomming && <AiMessageBubble role="assistant" content={incomingMessage} generating stalled={stalled} />}
     </div>
   )
 }

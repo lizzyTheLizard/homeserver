@@ -1,7 +1,8 @@
 'use client'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Template } from '../../_data/Template'
+import type { Template } from '../../_data/Template'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
@@ -9,7 +10,6 @@ import { deleteTemplate, saveTemplate } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Templates.module.css'
@@ -24,7 +24,7 @@ const templateColumns = [
   textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } }),
 ]
 
-export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
+export function Templates({ templates: templatesIn = NO_TEMPLATES }: TemplatesProps) {
   const [templates, addTemplate, removeTemplate] = useListState(templatesIn)
   const [title, setTitle] = useState<string>('New Template')
   const [sidebarId, openSidebar] = useSidebar()
@@ -46,7 +46,13 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
 
   function renderMobile(template: Template): ReactNode {
     return (
-      <div key={template.id} className={style.mobileItem} onClick={() => { showTemplate(template) }}>
+      <div
+        key={template.id}
+        className={style.mobileItem}
+        onClick={() => {
+          showTemplate(template)
+        }}
+      >
         <div className={style.mobileTitle}>{template.name}</div>
         <div className={style.mobileMeta}>{template.language}</div>
         <div className={style.mobileText}>{template.text}</div>
@@ -57,9 +63,17 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
   return (
     <>
       <h2>Templates</h2>
-      <ActionButton onClick={() => { showTemplate() }}>Add Template</ActionButton>
+      <ActionButton
+        onClick={() => {
+          showTemplate()
+        }}
+      >
+        Add Template
+      </ActionButton>
       <DataTable
-        onRowClick={(template) => { showTemplate(template) }}
+        onRowClick={template => {
+          showTemplate(template)
+        }}
         columns={templateColumns}
         data={templates}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
@@ -72,13 +86,38 @@ export function Templates({ templates: templatesIn = [] }: TemplatesProps) {
         onSave={() => saveTemplate({ id, language, text, name })}
         onAfterSave={addTemplate}
         onDelete={() => deleteTemplate(id)}
-        onAfterDelete={() => { removeTemplate(id) }}
+        onAfterDelete={() => {
+          removeTemplate(id)
+        }}
         noDelete={noDelete}
       >
-        <Input type="text" label="Name" value={name} onChange={(e) => { setName(e.target.value) }} />
-        <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
-        <Textarea style={{ flexGrow: 1 }} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
+        <Input
+          type="text"
+          label="Name"
+          value={name}
+          onChange={e => {
+            setName(e.target.value)
+          }}
+        />
+        <Input
+          type="text"
+          label="Language"
+          value={language}
+          onChange={e => {
+            setLanguage(e.target.value)
+          }}
+        />
+        <Textarea
+          style={{ flexGrow: 1 }}
+          label="Text"
+          value={text}
+          onChange={e => {
+            setText(e.target.value)
+          }}
+        />
       </Sidebar>
     </>
   )
 }
+
+const NO_TEMPLATES: NonNullable<TemplatesProps['templates']> = []

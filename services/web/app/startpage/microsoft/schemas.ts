@@ -1,5 +1,13 @@
 import { z } from 'zod'
-import type { MicrosoftConnectionStatus, MicrosoftStatus, SerializedMessageFull, SerializedMessageListItem, SerializedCalendarEvent, SerializedTodoTask, MicrosoftUserInfo } from '@assistant/microsoft/types'
+import type {
+  MicrosoftConnectionStatus,
+  MicrosoftStatus,
+  MicrosoftUserInfo,
+  SerializedCalendarEvent,
+  SerializedMessageFull,
+  SerializedMessageListItem,
+  SerializedTodoTask,
+} from '@assistant/microsoft/types'
 
 const recipient = z.object({ emailAddress: z.object({ address: z.string(), name: z.string().optional() }) })
 const contentType = z.enum(['text', 'html'])

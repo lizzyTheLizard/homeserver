@@ -69,20 +69,20 @@ unarchive, and an already-unarchived chat is left unchanged.
 
 ## REST API
 
-| Method | Path | Body | Response |
-|---|---|---|---|
-| `GET` | `/health` | — | `200` |
-| `POST` | `/sessions/{userId}/start` | — | `200` `{type, qr?, error?}` |
-| `GET` | `/sessions/{userId}/status` | — | `200` `{type, qr?, error?}` |
-| `POST` | `/sessions/{userId}/stop` | — | `204` |
-| `POST` | `/sessions/{userId}/send-message` | `{to, text}` | `204` |
-| `POST` | `/sessions/{userId}/archive-chat` | `{id, archived}` | `204` |
-| `POST` | `/sessions/{userId}/mark-chat-read` | `{id}` | `204` |
-| `POST` | `/sessions/{userId}/full-sync` | — | `202` |
-| `POST` | `/sessions/{userId}/webhook` | (internal, wacli-signed) | `204` |
-| `POST` | `/sessions/{userId}/disconnect` | — | `204` |
-| `GET` | `/sessions/{userId}/chats` | — | `200` `Chat[]` |
-| `GET` | `/sessions/{userId}/messages?chatId=...` | — | `200` `Message[]` |
+| Method | Path                                     | Body                     | Response                    |
+| ------ | ---------------------------------------- | ------------------------ | --------------------------- |
+| `GET`  | `/health`                                | —                        | `200`                       |
+| `POST` | `/sessions/{userId}/start`               | —                        | `200` `{type, qr?, error?}` |
+| `GET`  | `/sessions/{userId}/status`              | —                        | `200` `{type, qr?, error?}` |
+| `POST` | `/sessions/{userId}/stop`                | —                        | `204`                       |
+| `POST` | `/sessions/{userId}/send-message`        | `{to, text}`             | `204`                       |
+| `POST` | `/sessions/{userId}/archive-chat`        | `{id, archived}`         | `204`                       |
+| `POST` | `/sessions/{userId}/mark-chat-read`      | `{id}`                   | `204`                       |
+| `POST` | `/sessions/{userId}/full-sync`           | —                        | `202`                       |
+| `POST` | `/sessions/{userId}/webhook`             | (internal, wacli-signed) | `204`                       |
+| `POST` | `/sessions/{userId}/disconnect`          | —                        | `204`                       |
+| `GET`  | `/sessions/{userId}/chats`               | —                        | `200` `Chat[]`              |
+| `GET`  | `/sessions/{userId}/messages?chatId=...` | —                        | `200` `Message[]`           |
 
 Status `type` values are `needAuth` (with `qr`), `connected`, `fullsync` and
 `closed`.
@@ -99,20 +99,20 @@ Status `type` values are `needAuth` (with `qr`), `connected`, `fullsync` and
 
 ## Environment variables
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `NODE_ENV` | `development` (dev) | Selects the logger format: colourised/timestamped in development, JSON in production. |
-| `LOG_LEVEL` | `debug` (dev) / `info` (prod) | `debug` \| `info` \| `warn` \| `error`. |
-| `PORT` | `8400` | Port the REST API listens on. |
-| `WHATSAPP_DATA_DIR` | `./data` (container: `/data`) | Base directory for per-user wacli stores (the SQLite files). |
-| `WACLI_BIN` | `wacli` | Path to the wacli binary. |
-| `WACLI_DEVICE_PLATFORM` | `desktop` | Device platform WhatsApp shows for the linked device. |
-| `WACLI_DEVICE_LABEL` | `Gutschi.site` (dev: `Gutschi.site (DEV)`) | Device label WhatsApp shows for the linked device. |
-| `WHATSAPP_CMD_TIMEOUT_MS` | `20000` | Timeout for short-lived wacli commands. |
-| `WHATSAPP_CHATS_LIMIT` | `1000` | Max chats returned by `GET /chats`. |
-| `WHATSAPP_MESSAGES_LIMIT` | `5000` | Max messages returned by `GET /messages`. |
-| `WACLI_SYNC_MAX_MESSAGES` | unset | Cap on total messages stored locally (forwarded to wacli). |
-| `WACLI_SYNC_MAX_DB_SIZE` | unset | Cap on the SQLite mirror size (forwarded to wacli). |
+| Variable                  | Default                                    | Purpose                                                                               |
+| ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `NODE_ENV`                | `development` (dev)                        | Selects the logger format: colourised/timestamped in development, JSON in production. |
+| `LOG_LEVEL`               | `debug` (dev) / `info` (prod)              | `debug` \| `info` \| `warn` \| `error`.                                               |
+| `PORT`                    | `8400`                                     | Port the REST API listens on.                                                         |
+| `WHATSAPP_DATA_DIR`       | `./data` (container: `/data`)              | Base directory for per-user wacli stores (the SQLite files).                          |
+| `WACLI_BIN`               | `wacli`                                    | Path to the wacli binary.                                                             |
+| `WACLI_DEVICE_PLATFORM`   | `desktop`                                  | Device platform WhatsApp shows for the linked device.                                 |
+| `WACLI_DEVICE_LABEL`      | `Gutschi.site` (dev: `Gutschi.site (DEV)`) | Device label WhatsApp shows for the linked device.                                    |
+| `WHATSAPP_CMD_TIMEOUT_MS` | `20000`                                    | Timeout for short-lived wacli commands.                                               |
+| `WHATSAPP_CHATS_LIMIT`    | `1000`                                     | Max chats returned by `GET /chats`.                                                   |
+| `WHATSAPP_MESSAGES_LIMIT` | `5000`                                     | Max messages returned by `GET /messages`.                                             |
+| `WACLI_SYNC_MAX_MESSAGES` | unset                                      | Cap on total messages stored locally (forwarded to wacli).                            |
+| `WACLI_SYNC_MAX_DB_SIZE`  | unset                                      | Cap on the SQLite mirror size (forwarded to wacli).                                   |
 
 ## Persistence
 

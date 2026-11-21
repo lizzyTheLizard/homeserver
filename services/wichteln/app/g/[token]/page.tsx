@@ -34,27 +34,21 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
       <section className="card">
         <h2>Registrieren</h2>
-        {group.phase === 'wishes'
-          ? (
-              <>
-                <p className="muted small">
-                  Neu hier? Wähle einen Namen und ein Passwort. Damit meldest du dich auch in allen weiteren Gruppen an.
-                </p>
-                <RegisterForm token={group.inviteToken} />
-              </>
-            )
-          : (
-              <div className="alert error">
-                Die Auswahlphase hat bereits begonnen. Eine Registrierung ist nicht mehr möglich.
-              </div>
-            )}
+        {group.phase === 'wishes' ? (
+          <>
+            <p className="muted small">Neu hier? Wähle einen Namen und ein Passwort. Damit meldest du dich auch in allen weiteren Gruppen an.</p>
+            <RegisterForm token={group.inviteToken} />
+          </>
+        ) : (
+          <div className="alert error">Die Auswahlphase hat bereits begonnen. Eine Registrierung ist nicht mehr möglich.</div>
+        )}
       </section>
     </div>
   )
 }
 
 /** Joins the signed-in account during the wish phase (idempotent) and opens the group. */
-async function SignedInInvite({ group, account }: { group: Group, account: Account }) {
+async function SignedInInvite({ group, account }: { group: Group; account: Account }) {
   if (account.mustChangePassword) redirect(changePasswordPath(`/g/${group.inviteToken}`))
 
   const joined = await withTransaction(db => joinGroup(db, group.id, account.id))

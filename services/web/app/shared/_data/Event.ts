@@ -1,8 +1,9 @@
-import { Queryable, removeNull, transactional } from '@/app/shared/_external/db/access'
+import type { Queryable } from '@/app/shared/_external/db/access'
+import { removeNull, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
 
 export const EventLevels = ['INFO', 'WARN', 'ERROR']
-export type EventLevel = typeof EventLevels[number]
+export type EventLevel = (typeof EventLevels)[number]
 
 export interface Event {
   id: string
@@ -21,8 +22,6 @@ export async function logEvent(client: Queryable | undefined, level: EventLevel,
 }
 
 export async function findRecentEvents(client: Queryable): Promise<Event[]> {
-  const result = await client.query<Event>(
-    `SELECT id, time, level, message FROM events WHERE time >= NOW() - INTERVAL '24 hours' ORDER BY time DESC, id DESC`,
-  )
+  const result = await client.query<Event>(`SELECT id, time, level, message FROM events WHERE time >= NOW() - INTERVAL '24 hours' ORDER BY time DESC, id DESC`)
   return result.rows.map(removeNull)
 }

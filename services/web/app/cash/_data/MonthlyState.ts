@@ -1,5 +1,5 @@
 export const MONTHLY_STATES = ['NEON', 'NEONCHECK', 'CREDITCARDCHECK', 'SHAREDCHECK', 'SHARED', 'FINISHED'] as const
-export type MonthlyState = typeof MONTHLY_STATES[number]
+export type MonthlyState = (typeof MONTHLY_STATES)[number]
 
 export function nextState(state: MonthlyState): MonthlyState {
   switch (state) {

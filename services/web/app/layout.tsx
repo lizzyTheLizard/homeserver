@@ -20,10 +20,8 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
       <body>
         <link rel="stylesheet" href="/global.css" />
         <PwaManager />
-        <Header accessibleApplications={user?.applications ?? []} hasSession={!!user}></Header>
-        <SidebarContainer>
-          {children}
-        </SidebarContainer>
+        <Header accessibleApplications={user?.applications ?? []} hasSession={Boolean(user)} />
+        <SidebarContainer>{children}</SidebarContainer>
       </body>
     </html>
   )

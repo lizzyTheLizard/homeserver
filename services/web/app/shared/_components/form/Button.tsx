@@ -7,7 +7,7 @@ export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'danger' | 'link'
   className?: string
   style?: React.CSSProperties
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onClick?(e: React.MouseEvent<HTMLButtonElement>): void
   children?: React.ReactNode
 }
 

@@ -10,8 +10,7 @@ export function proxy() {
   try {
     getConfig()
     return NextResponse.next()
-  }
-  catch {
+  } catch {
     return new NextResponse('Service unavailable', { status: 503 })
   }
 }

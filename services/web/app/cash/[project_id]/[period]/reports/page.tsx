@@ -23,7 +23,7 @@ export default async function Page({ params }: ReportsPageProps) {
     return (
       <main>
         <ActionTitle>
-          <h1>{'Report ' + toString(period)}</h1>
+          <h1>{`Report ${toString(period)}`}</h1>
         </ActionTitle>
         <Reports {...data} project_id={projectId} period={period} />
       </main>

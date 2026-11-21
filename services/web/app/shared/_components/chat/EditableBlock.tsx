@@ -1,15 +1,25 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
 import styles from './EditableBlock.module.css'
 
 type EditState = 'viewing' | 'editing'
 
-export function EditableBlock({ content, onEdit, editable, response }: { content: string, onEdit?: (editedText: string) => void, editable?: boolean, response: boolean }) {
+export function EditableBlock({
+  content,
+  onEdit,
+  editable,
+  response,
+}: {
+  content: string
+  onEdit?(editedText: string): void
+  editable?: boolean
+  response: boolean
+}) {
   const [state, setState] = useState<EditState>('viewing')
   const [editValue, setEditValue] = useState(content)
-  const [dimensions, setDimensions] = useState<{ width: number, height: number } | null>(null)
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
   const viewRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -21,9 +31,7 @@ export function EditableBlock({ content, onEdit, editable, response }: { content
     setEditValue(content)
     setState('editing')
     setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus()
-      }
+      if (textareaRef.current) textareaRef.current.focus()
     }, 50)
   }
 
@@ -32,9 +40,8 @@ export function EditableBlock({ content, onEdit, editable, response }: { content
   }
 
   function handleOk() {
-    if (editValue !== content) {
-      if (onEdit) onEdit(editValue)
-    }
+    if (editValue !== content) if (onEdit) onEdit(editValue)
+
     setState('viewing')
   }
 
@@ -56,7 +63,9 @@ export function EditableBlock({ content, onEdit, editable, response }: { content
           <Textarea
             ref={textareaRef}
             value={editValue}
-            onChange={(e) => { setEditValue(e.target.value) }}
+            onChange={e => {
+              setEditValue(e.target.value)
+            }}
             onKeyDown={handleKeyDown}
             style={dimensions ? { width: dimensions.width, height: dimensions.height } : undefined}
             className={styles.editableTextarea}

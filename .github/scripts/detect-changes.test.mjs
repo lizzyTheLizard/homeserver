@@ -15,7 +15,7 @@ test("every service folder maps to its own service", () => {
 });
 
 test("shared workspace files report every service but not the infrastructure", () => {
-  for (const path of ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".nvmrc"]) {
+  for (const path of ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".nvmrc", ".oxlintrc.json", ".oxfmtrc.json"]) {
     assert.deepEqual(detectChanges([path]), { ...everything(true), infrastructure: false }, path);
   }
 });

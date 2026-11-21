@@ -1,13 +1,15 @@
 /* oxlint-disable typescript/no-explicit-any */
 /* oxlint-disable typescript/no-unsafe-assignment */
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import { v4 as randomUUID } from 'uuid'
-import { loadJournal, saveTransaction, deleteTransaction, loadAccountJournal } from './server'
-import { createOrModifyProject, ProjectInput } from '@/app/cash/_data/Project'
-import { AccountInput, createOrModifyAccount } from '@/app/cash/_data/Account'
+import { deleteTransaction, loadAccountJournal, loadJournal, saveTransaction } from './server'
+import type { ProjectInput } from '@/app/cash/_data/Project'
+import { createOrModifyProject } from '@/app/cash/_data/Project'
+import type { AccountInput } from '@/app/cash/_data/Account'
+import { createOrModifyAccount } from '@/app/cash/_data/Account'
 import { createTransaction } from '@/app/cash/_data/Transaction'
-import { UserSession } from '@/app/shared/auth/session'
+import type { UserSession } from '@/app/shared/auth/session'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { createClosing } from '@/app/cash/_data/Closing'
 import { findLatestAccountTransactionBefore } from '@/app/cash/_data/AccountTransaction'
@@ -29,8 +31,14 @@ describe('loadAccountJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account)
     })
@@ -48,13 +56,55 @@ describe('loadAccountJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
-    const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: '2023-06-20', description: 'Second transaction' }
-    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: '2022-05-01', description: 'Before date transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'A1',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'A2',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const account3 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'A3',
+      type: 'Expense',
+      archived: false,
+    } as AccountInput
+    const transaction1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account1.id,
+      debit_account_id: account2.id,
+      amount: 100.5,
+      date: '2023-05-15',
+      description: 'Test transaction',
+    }
+    const transaction2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account1.id,
+      debit_account_id: account2.id,
+      amount: 50.25,
+      date: '2023-06-20',
+      description: 'Second transaction',
+    }
+    const beforeDateTransaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account1.id,
+      debit_account_id: account2.id,
+      amount: 300.0,
+      date: '2022-05-01',
+      description: 'Before date transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -69,10 +119,27 @@ describe('loadAccountJournal', () => {
 
     expect(result.accounts).toHaveLength(3)
     expect(result.transactions).toEqual([
-      expect.objectContaining({ amount: -50.25, total_balance: -450.75, date: transaction2.date, transaction_id: transaction2.id }),
-      expect.objectContaining({ amount: -100.50, total_balance: -400.50, date: transaction1.date, transaction_id: transaction1.id }),
+      expect.objectContaining({
+        amount: -50.25,
+        total_balance: -450.75,
+        date: transaction2.date,
+        transaction_id: transaction2.id,
+      }),
+      expect.objectContaining({
+        amount: -100.5,
+        total_balance: -400.5,
+        date: transaction1.date,
+        transaction_id: transaction1.id,
+      }),
     ])
-    expect(result.lastTransaction).toEqual(expect.objectContaining({ amount: -300.00, total_balance: -300.00, date: beforeDateTransaction.date, transaction_id: beforeDateTransaction.id }))
+    expect(result.lastTransaction).toEqual(
+      expect.objectContaining({
+        amount: -300.0,
+        total_balance: -300.0,
+        date: beforeDateTransaction.date,
+        transaction_id: beforeDateTransaction.id,
+      }),
+    )
     expect(result.account).toEqual(expect.objectContaining(account1))
   })
 
@@ -81,13 +148,55 @@ describe('loadAccountJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'A1', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'A2', type: 'Income', archived: false } as AccountInput
-    const account3 = { id: randomUUID(), project_id: project.id, name: 'A3', type: 'Expense', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 50.25, date: '2023-06-20', description: 'Second transaction' }
-    const beforeDateTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: account1.id, debit_account_id: account2.id, amount: 300.00, date: '2022-05-01', description: 'Before date transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'A1',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'A2',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const account3 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'A3',
+      type: 'Expense',
+      archived: false,
+    } as AccountInput
+    const transaction1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account1.id,
+      debit_account_id: account2.id,
+      amount: 100.5,
+      date: '2023-05-15',
+      description: 'Test transaction',
+    }
+    const transaction2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account1.id,
+      debit_account_id: account2.id,
+      amount: 50.25,
+      date: '2023-06-20',
+      description: 'Second transaction',
+    }
+    const beforeDateTransaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account1.id,
+      debit_account_id: account2.id,
+      amount: 300.0,
+      date: '2022-05-01',
+      description: 'Before date transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -102,9 +211,21 @@ describe('loadAccountJournal', () => {
 
     expect(result.accounts).toHaveLength(3)
     expect(result.transactions).toEqual([
-      expect.objectContaining({ amount: -50.25, total_balance: -150.75, date: transaction2.date, transaction_id: transaction2.id }),
+      expect.objectContaining({
+        amount: -50.25,
+        total_balance: -150.75,
+        date: transaction2.date,
+        transaction_id: transaction2.id,
+      }),
     ])
-    expect(result.lastTransaction).toEqual(expect.objectContaining({ amount: -100.50, total_balance: -100.50, date: transaction1.date, transaction_id: transaction1.id }))
+    expect(result.lastTransaction).toEqual(
+      expect.objectContaining({
+        amount: -100.5,
+        total_balance: -100.5,
+        date: transaction1.date,
+        transaction_id: transaction1.id,
+      }),
+    )
     expect(result.account).toEqual(expect.objectContaining(account1))
   })
 
@@ -113,8 +234,14 @@ describe('loadAccountJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account)
     })
@@ -127,8 +254,14 @@ describe('loadAccountJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account)
     })
@@ -155,10 +288,30 @@ describe('loadJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'Test transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 100.5,
+      date: '2023-05-15',
+      description: 'Test transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -178,11 +331,39 @@ describe('loadJournal', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction1 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 100.50, date: '2023-05-15', description: 'May transaction' }
-    const transaction2 = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 200.75, date: '2023-06-20', description: 'June transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 100.5,
+      date: '2023-05-15',
+      description: 'May transaction',
+    }
+    const transaction2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 200.75,
+      date: '2023-06-20',
+      description: 'June transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -218,18 +399,38 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
+    const transactionInput = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
     const result = await saveTransaction(transactionInput)
 
-    if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
+    if (!result.success) throw new Error(`Expected success response but got error: ${result.error}`)
     expect(result.data).toEqual(expect.objectContaining(transactionInput))
     expect(result.data.owner_email).toEqual(task.id)
   })
@@ -239,20 +440,40 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
       await createTransaction(tx, task.id, transaction)
     })
 
-    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
+    const updatedTransaction = { ...transaction, amount: 200.0, description: 'Updated' }
     const result = await saveTransaction(updatedTransaction)
 
-    if (!result.success) throw new Error('Expected success response but got error: ' + result.error)
+    if (!result.success) throw new Error(`Expected success response but got error: ${result.error}`)
     expect(result.data).toEqual(expect.objectContaining(updatedTransaction))
     expect(result.data.owner_email).toEqual(task.id)
   })
@@ -262,10 +483,30 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false } as ProjectInput
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -274,8 +515,11 @@ describe('saveTransaction', () => {
 
     const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
-    await expect(saveTransaction(updatedTransaction)).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    const updatedTransaction = { ...transaction, amount: 200.0, description: 'Updated' }
+    await expect(saveTransaction(updatedTransaction)).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Create transaction in project of other users', async ({ task }) => {
@@ -283,9 +527,21 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -293,8 +549,19 @@ describe('saveTransaction', () => {
 
     const otherUser: UserSession = { ...user, email: 'other-user-id' }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(otherUser)
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    await expect(saveTransaction(transactionInput)).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    const transactionInput = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    await expect(saveTransaction(transactionInput)).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Invalid input', async ({ task }) => {
@@ -302,25 +569,75 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    await expect(saveTransaction({ ...transactionInput, id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, project_id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, project_id: randomUUID() })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, credit_account_id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, credit_account_id: randomUUID() })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, debit_account_id: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, debit_account_id: randomUUID() })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, amount: undefined as any })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, date: undefined as any })).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(saveTransaction({ ...transactionInput, description: '' })).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    const transactionInput = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    await expect(saveTransaction({ ...transactionInput, id: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, project_id: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, project_id: randomUUID() })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, credit_account_id: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, credit_account_id: randomUUID() })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, debit_account_id: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, debit_account_id: randomUUID() })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, amount: undefined as any })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, date: undefined as any })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
+    await expect(saveTransaction({ ...transactionInput, description: '' })).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Modify transaction in closed period', async ({ task }) => {
@@ -328,11 +645,38 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    const closing = {
+      id: randomUUID(),
+      project_id: project.id,
+      date: '2023-07-31',
+      capital_account_id: account1.id,
+      profit_account_id: account2.id,
+      profit: 0,
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -340,8 +684,11 @@ describe('saveTransaction', () => {
       await createClosing(tx, task.id, closing)
     })
 
-    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
-    await expect(saveTransaction(updatedTransaction)).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    const updatedTransaction = { ...transaction, amount: 200.0, description: 'Updated' }
+    await expect(saveTransaction(updatedTransaction)).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Create transaction in closed period', async ({ task }) => {
@@ -349,18 +696,48 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const closing = {
+      id: randomUUID(),
+      project_id: project.id,
+      date: '2023-07-31',
+      capital_account_id: account1.id,
+      profit_account_id: account2.id,
+      profit: 0,
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
       await createClosing(tx, task.id, closing)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    await expect(saveTransaction(transactionInput)).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    const transactionInput = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    await expect(saveTransaction(transactionInput)).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Create account transaction', async ({ task }) => {
@@ -368,15 +745,35 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
+    const transactionInput = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
     await saveTransaction(transactionInput)
 
     const result = await nontransactional(c => findLatestAccountTransactionBefore(c, task.id, account1.id, { year: 2023, month: 8, openEnded: true }))
@@ -403,17 +800,37 @@ describe('saveTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
       await createTransaction(tx, task.id, transaction)
     })
 
-    const updatedTransaction = { ...transaction, amount: 200.00, description: 'Updated' }
+    const updatedTransaction = { ...transaction, amount: 200.0, description: 'Updated' }
     await saveTransaction(updatedTransaction)
 
     const result = await nontransactional(c => findLatestAccountTransactionBefore(c, task.id, account2.id, { year: 2023, month: 8, openEnded: true }))
@@ -446,10 +863,30 @@ describe('deleteTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'Transaction to delete',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -458,7 +895,7 @@ describe('deleteTransaction', () => {
 
     const result = await deleteTransaction(transaction.id)
 
-    if (!result.success) throw new Error('Expected success response: ' + result.error)
+    if (!result.success) throw new Error(`Expected success response: ${result.error}`)
 
     // Verify transaction is deleted
     const journal = await loadJournal({ current: true, year: 2023, month: 7 }, project.id)
@@ -470,10 +907,30 @@ describe('deleteTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'Transaction to delete' }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'Transaction to delete',
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -499,7 +956,15 @@ describe('deleteTransaction', () => {
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
     await transactional(tx => createOrModifyProject(tx, project))
 
-    const nonExistentTransaction = { id: randomUUID(), project_id: project.id, credit_account_id: randomUUID(), debit_account_id: randomUUID(), amount: 150.25, date: '2023-07-10', description: 'Does not exist' }
+    const nonExistentTransaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: randomUUID(),
+      debit_account_id: randomUUID(),
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'Does not exist',
+    }
     await expect(deleteTransaction(nonExistentTransaction.id)).resolves.toEqual({ success: true })
   })
 
@@ -508,16 +973,31 @@ describe('deleteTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
     })
 
     await expect(deleteTransaction('')).resolves.toEqual({ success: false, error: expect.any(String) as string })
-    await expect(deleteTransaction('invalid-uuid')).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(deleteTransaction('invalid-uuid')).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Delete transaction in closed period', async ({ task }) => {
@@ -525,11 +1005,38 @@ describe('deleteTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    const transaction = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
-    const closing = { id: randomUUID(), project_id: project.id, date: '2023-07-31', capital_account_id: account1.id, profit_account_id: account2.id, profit: 0 }
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    const transaction = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
+    const closing = {
+      id: randomUUID(),
+      project_id: project.id,
+      date: '2023-07-31',
+      capital_account_id: account1.id,
+      profit_account_id: account2.id,
+      profit: 0,
+    }
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
@@ -537,7 +1044,10 @@ describe('deleteTransaction', () => {
       await createClosing(tx, task.id, closing)
     })
 
-    await expect(deleteTransaction(transaction.id)).resolves.toEqual({ success: false, error: expect.any(String) as string })
+    await expect(deleteTransaction(transaction.id)).resolves.toEqual({
+      success: false,
+      error: expect.any(String) as string,
+    })
   })
 
   test('Delete account transaction', async ({ task }) => {
@@ -545,15 +1055,35 @@ describe('deleteTransaction', () => {
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
 
     const project = { id: randomUUID(), name: 'Test Project', owner_email: task.id, archived: false }
-    const account1 = { id: randomUUID(), project_id: project.id, name: 'Cash', type: 'Asset', archived: false } as AccountInput
-    const account2 = { id: randomUUID(), project_id: project.id, name: 'Revenue', type: 'Income', archived: false } as AccountInput
-    await transactional(async (tx) => {
+    const account1 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Cash',
+      type: 'Asset',
+      archived: false,
+    } as AccountInput
+    const account2 = {
+      id: randomUUID(),
+      project_id: project.id,
+      name: 'Revenue',
+      type: 'Income',
+      archived: false,
+    } as AccountInput
+    await transactional(async tx => {
       await createOrModifyProject(tx, project)
       await createOrModifyAccount(tx, task.id, account1)
       await createOrModifyAccount(tx, task.id, account2)
     })
 
-    const transactionInput = { id: randomUUID(), project_id: project.id, credit_account_id: account2.id, debit_account_id: account1.id, amount: 150.25, date: '2023-07-10', description: 'New transaction' }
+    const transactionInput = {
+      id: randomUUID(),
+      project_id: project.id,
+      credit_account_id: account2.id,
+      debit_account_id: account1.id,
+      amount: 150.25,
+      date: '2023-07-10',
+      description: 'New transaction',
+    }
     await saveTransaction(transactionInput)
     await deleteTransaction(transactionInput.id)
 

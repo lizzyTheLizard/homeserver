@@ -1,13 +1,13 @@
-import { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { DateTime } from '../DateTime'
 import { Checkbox } from '../../_components/form/Checkbox'
-import { ColumnDefinition } from './DataTable'
+import type { ColumnDefinition } from './DataTable'
 import style from './DataTableColumnBuilder.module.css'
 
 export interface Options<FieldType> {
   header?: string
   sort?: boolean
-  cell?: (value: FieldType, id: string) => ReactNode
+  cell?(value: FieldType, id: string): ReactNode
   style?: CSSProperties
   className?: string
 }
@@ -40,11 +40,11 @@ export function dateColumn(key: string, options?: Options<string>): ColumnDefini
   return {
     key,
     header: options?.header ?? key,
-    cell: options?.cell ?? ((value: string) => <DateTime date={value} oneLine></DateTime>),
+    cell: options?.cell ?? ((value: string) => <DateTime date={value} oneLine />),
     sort: options?.sort === false ? undefined : (a: string | undefined, b: string | undefined) => (a ?? '').localeCompare(b ?? ''),
     search: (value: string | undefined, searchTerm: string) => (value ?? '').startsWith(searchTerm),
     style: options?.style,
-    className: style.center + ' ' + (options?.className ?? ''),
+    className: `${style.center} ${options?.className ?? ''}`,
   }
 }
 
@@ -52,13 +52,11 @@ export function boolColumn(key: string, options?: Options<boolean>): ColumnDefin
   return {
     key,
     header: options?.header ?? key,
-    cell: options?.cell ?? (value => value
-      ? <Checkbox checked={true} readOnly={true} small={true} center={true} />
-      : <Checkbox checked={false} readOnly={true} small={true} center={true} />),
+    cell: options?.cell ?? (value => (value ? <Checkbox checked readOnly small center /> : <Checkbox checked={false} readOnly small center />)),
     sort: options?.sort === false ? undefined : (a: boolean | undefined, b: boolean | undefined) => (a === b ? 0 : a ? -1 : 1),
     search: () => false,
     style: options?.style,
-    className: style.center + ' ' + (options?.className ?? ''),
+    className: `${style.center} ${options?.className ?? ''}`,
   }
 }
 
@@ -70,6 +68,6 @@ export function enumColumn(key: string, _values: string[], options?: Options<str
     sort: options?.sort === false ? undefined : (a: string | undefined, b: string | undefined) => (a ?? '').localeCompare(b ?? ''),
     search: (value: string | undefined, searchTerm: string) => (value ?? '').toLowerCase().startsWith(searchTerm.toLowerCase()),
     style: options?.style,
-    className: style.center + ' ' + (options?.className ?? ''),
+    className: `${style.center} ${options?.className ?? ''}`,
   }
 }

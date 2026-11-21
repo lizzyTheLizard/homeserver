@@ -1,18 +1,24 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { createDiscussion, Discussion, DiscussionInput, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
-import { findTemplateById, findTemplatesByOwner, Template } from '../_data/Template'
+import type { Discussion, DiscussionInput } from '../_data/Discussion'
+import { createDiscussion, findDiscussionById, modifyDiscussion } from '../_data/Discussion'
+import type { Template } from '../_data/Template'
+import { findTemplateById, findTemplatesByOwner } from '../_data/Template'
 import { nontransactional, transactional } from '@/app/shared/_external/db/access'
 import notFound from './not-found'
 import { logger } from '@/app/shared/logger'
 import { logEvent } from '@/app/shared/_data/Event'
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
-import { CommandInput, CommandResult, createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES, PredefinedCommandType } from '../_data/Command'
+import type { ActionResponse } from '@/app/shared/_helper/ActionResponse'
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { CommandInput, CommandResult, PredefinedCommandType } from '../_data/Command'
+import { createCommand, findCommandsByDiscussion, PREDEFINED_COMMAND_TYPES } from '../_data/Command'
 import { validateObject } from '@/app/shared/_helper/validation'
 import { invalidInput } from '@/app/shared/_helper/BackendError'
-import { findProfileByOwnerAndLanguage, Profile } from '../_data/Profile'
-import { aiPort, AiPortInput } from '../_external/AiPort'
-import z from 'zod'
+import type { Profile } from '../_data/Profile'
+import { findProfileByOwnerAndLanguage } from '../_data/Profile'
+import type { AiPortInput } from '../_external/AiPort'
+import { aiPort } from '../_external/AiPort'
+import { z } from 'zod'
 
 export interface EditorData {
   discussion: Discussion | undefined
@@ -21,10 +27,9 @@ export interface EditorData {
 
 export async function loadEditorData(discussionId?: string): Promise<EditorData> {
   const user = await getAuthenticatedUserSession('coeditor')
-  const [discussion, templates] = await nontransactional(c => Promise.all([
-    discussionId ? findDiscussionById(c, user.email, discussionId) : Promise.resolve(undefined),
-    findTemplatesByOwner(c, user.email),
-  ]))
+  const [discussion, templates] = await nontransactional(c =>
+    Promise.all([discussionId ? findDiscussionById(c, user.email, discussionId) : Promise.resolve(undefined), findTemplatesByOwner(c, user.email)]),
+  )
   if (discussionId && !discussion) {
     logger.warn(`Discussion with id ${discussionId} not found for user ${user.email}`)
     notFound()
@@ -48,36 +53,34 @@ export interface ExecuteCommandInput {
   predefined_command?: PredefinedCommandType
 }
 export async function executeCommand(input: ExecuteCommandInput): ActionResponse<Discussion> {
-  return toResponse(transactional(async (tx) => {
-    const user = await getAuthenticatedUserSession('coeditor')
-    validateObject(input, ExecuteCommandInputSchema)
-    const template = await findTemplateById(tx, user.email, input.template_id)
-    if (!template) {
-      throw invalidInput(`Given template ${input.template_id} not found`)
-    }
-    const discussion = await findDiscussionById(tx, user.email, input.discussion_id)
-    const profile = await findProfileByOwnerAndLanguage(tx, user.email, template.language)
-    const aiPortInput = toAiPortInput(input, discussion, template, profile)
-    const pastCommands = await findCommandsByDiscussion(tx, input.discussion_id)
-    const commandResult = isNewRequestWithoutContext(input, discussion, aiPortInput.context)
-      ? { text: '', title: '' }
-      : await aiPort(aiPortInput, pastCommands)
-    const updatedDiscussion = toDiscussionInput(input, aiPortInput.context, commandResult)
-    const result = discussion
-      ? await modifyDiscussion(tx, user.email, updatedDiscussion)
-      : await createDiscussion(tx, user.email, updatedDiscussion)
-    const command = toCommand(input, aiPortInput, commandResult)
-    await createCommand(tx, user.email, command)
-    if (discussion) {
-      logger.info(`Executed command for discussion ${result.id} by user ${user.email} with template ${template.name}`)
-      await logEvent(tx, 'INFO', `Executed CoEditor command on discussion ${result.id}`)
-    }
-    else {
-      logger.info(`Created new discussion ${result.id} by user ${user.email} with template ${template.name}`)
-      await logEvent(tx, 'INFO', `Created CoEditor discussion ${result.id}`)
-    }
-    return result
-  }))
+  return toResponse(
+    transactional(async tx => {
+      const user = await getAuthenticatedUserSession('coeditor')
+      validateObject(input, ExecuteCommandInputSchema)
+      const template = await findTemplateById(tx, user.email, input.template_id)
+      if (!template) throw invalidInput(`Given template ${input.template_id} not found`)
+
+      const discussion = await findDiscussionById(tx, user.email, input.discussion_id)
+      const profile = await findProfileByOwnerAndLanguage(tx, user.email, template.language)
+      const aiPortInput = toAiPortInput(input, discussion, template, profile)
+      const pastCommands = await findCommandsByDiscussion(tx, input.discussion_id)
+      const commandResult = isNewRequestWithoutContext(input, discussion, aiPortInput.context)
+        ? { text: '', title: '' }
+        : await aiPort(aiPortInput, pastCommands)
+      const updatedDiscussion = toDiscussionInput(input, aiPortInput.context, commandResult)
+      const result = discussion ? await modifyDiscussion(tx, user.email, updatedDiscussion) : await createDiscussion(tx, user.email, updatedDiscussion)
+      const command = toCommand(input, aiPortInput, commandResult)
+      await createCommand(tx, user.email, command)
+      if (discussion) {
+        logger.info(`Executed command for discussion ${result.id} by user ${user.email} with template ${template.name}`)
+        await logEvent(tx, 'INFO', `Executed CoEditor command on discussion ${result.id}`)
+      } else {
+        logger.info(`Created new discussion ${result.id} by user ${user.email} with template ${template.name}`)
+        await logEvent(tx, 'INFO', `Created CoEditor discussion ${result.id}`)
+      }
+      return result
+    }),
+  )
 }
 
 function toAiPortInput(input: ExecuteCommandInput, discussion: Discussion | undefined, template: Template, profile: Profile | undefined): AiPortInput {
@@ -100,7 +103,7 @@ function toDiscussionInput(input: ExecuteCommandInput, context: string, commandR
     text: commandResult.text,
     title: commandResult.title,
     template_id: input.template_id,
-    context: context,
+    context,
     parameters: input.parameters,
   }
 }
@@ -109,8 +112,7 @@ function createContextString(template: Template, values: Record<string, string>)
   let result = template.text
   let offset = 0
   for (const param of template.parameters) {
-    if (!(param.name in values))
-      throw invalidInput(`Value for parameter '${param.name}' is missing`)
+    if (!(param.name in values)) throw invalidInput(`Value for parameter '${param.name}' is missing`)
     const value = values[param.name]
     result = result.substring(0, param.startPosition + offset) + value + result.substring(param.endPosition + offset)
     offset += value.length - (param.endPosition - param.startPosition)

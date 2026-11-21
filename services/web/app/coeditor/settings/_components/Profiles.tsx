@@ -1,7 +1,8 @@
 'use client'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { Profile } from '../../_data/Profile'
+import type { Profile } from '../../_data/Profile'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
@@ -9,22 +10,17 @@ import { deleteProfile, saveProfile } from '../server'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Textarea } from '@/app/shared/_components/form/Textarea'
-import { useState } from 'react'
 import { v4 as randomUUID } from 'uuid'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import style from './Profiles.module.css'
 
 export interface ProfilesProps {
   profiles?: Profile[]
-
 }
 
-const profileColumns = [
-  textColumn('language', { header: 'Language' }),
-  textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } }),
-]
+const profileColumns = [textColumn('language', { header: 'Language' }), textColumn('text', { header: 'Text', style: { whiteSpace: 'pre-wrap' } })]
 
-export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
+export function Profiles({ profiles: profilesIn = NO_PROFILES }: ProfilesProps) {
   const [profiles, addProfile, removeProfile] = useListState(profilesIn)
   const [title, setTitle] = useState<string>('New Profile')
   const [sidebarId, openSidebar] = useSidebar()
@@ -44,7 +40,13 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
 
   function renderMobile(profile: Profile): ReactNode {
     return (
-      <div key={profile.id} className={style.mobileItem} onClick={() => { showProfile(profile) }}>
+      <div
+        key={profile.id}
+        className={style.mobileItem}
+        onClick={() => {
+          showProfile(profile)
+        }}
+      >
         <div className={style.mobileTitle}>{profile.language}</div>
         <div className={style.mobileText}>{profile.text}</div>
       </div>
@@ -54,9 +56,17 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
   return (
     <>
       <h2>Profiles</h2>
-      <ActionButton onClick={() => { showProfile() }}>Add Profile</ActionButton>
+      <ActionButton
+        onClick={() => {
+          showProfile()
+        }}
+      >
+        Add Profile
+      </ActionButton>
       <DataTable
-        onRowClick={(profile) => { showProfile(profile) }}
+        onRowClick={profile => {
+          showProfile(profile)
+        }}
         columns={profileColumns}
         data={profiles}
         initialSortingOrder={[{ key: 'language', direction: 'ASC' }]}
@@ -70,11 +80,29 @@ export function Profiles({ profiles: profilesIn = [] }: ProfilesProps) {
         onAfterSave={addProfile}
         onDelete={() => deleteProfile(id)}
         noDelete={noDelete}
-        onAfterDelete={() => { removeProfile(id) }}
+        onAfterDelete={() => {
+          removeProfile(id)
+        }}
       >
-        <Input type="text" label="Language" value={language} onChange={(e) => { setLanguage(e.target.value) }} />
-        <Textarea style={{ flexGrow: 1 }} label="Text" value={text} onChange={(e) => { setText(e.target.value) }} />
+        <Input
+          type="text"
+          label="Language"
+          value={language}
+          onChange={e => {
+            setLanguage(e.target.value)
+          }}
+        />
+        <Textarea
+          style={{ flexGrow: 1 }}
+          label="Text"
+          value={text}
+          onChange={e => {
+            setText(e.target.value)
+          }}
+        />
       </Sidebar>
     </>
   )
 }
+
+const NO_PROFILES: NonNullable<ProfilesProps['profiles']> = []

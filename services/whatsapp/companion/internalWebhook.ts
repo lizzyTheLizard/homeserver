@@ -4,12 +4,12 @@ import { logger } from './logger'
 import type { Supervisor } from './supervisor'
 
 // Chats with an unarchive in flight, so concurrent webhook deliveries for the
-// same chat coalesce into a single unarchive.
+// Same chat coalesce into a single unarchive.
 const inflightUnarchive = new Set<string>()
 
 // Handles a wacli `sync --webhook` delivery: verifies the signature, parses the
-// payload, and unarchives the chat when a new incoming message lands in an
-// archived chat.
+// Payload, and unarchives the chat when a new incoming message lands in an
+// Archived chat.
 export async function handleInternalWebhook(supervisor: Supervisor, body: unknown, signatureHeader: string | undefined): Promise<void> {
   const payload = parseWebhookPayload(supervisor.getWebhookSecret(), body, signatureHeader)
   const message = isRecord(payload) ? payload : {}
@@ -18,14 +18,12 @@ export async function handleInternalWebhook(supervisor: Supervisor, body: unknow
   if (!chatId || inflightUnarchive.has(chatId)) return
   inflightUnarchive.add(chatId)
   try {
-    if (!await supervisor.isArchived(chatId)) return
+    if (!(await supervisor.isArchived(chatId))) return
     logger.info(`[${supervisor.userId}] auto-unarchive ${chatId} on incoming message`)
     await supervisor.archiveChat(chatId, false)
-  }
-  catch (err: unknown) {
+  } catch (err: unknown) {
     logger.warn(`[${supervisor.userId}] could not auto-unarchive ${chatId}`, err)
-  }
-  finally {
+  } finally {
     inflightUnarchive.delete(chatId)
   }
 }
@@ -41,11 +39,10 @@ function verifyWebhookSignature(secret: string, body: string, signatureHeader: s
 }
 
 // Verifies the signature and parses a raw webhook body, returning the parsed
-// payload. Throws on any failure so the caller can map it to an error response.
+// Payload. Throws on any failure so the caller can map it to an error response.
 function parseWebhookPayload(secret: string, body: unknown, signatureHeader: string | undefined): unknown {
   const rawBody = Buffer.isBuffer(body) ? body.toString('utf8') : typeof body === 'string' ? body : ''
-  if (!verifyWebhookSignature(secret, rawBody, signatureHeader)) {
-    throw new Error('invalid webhook signature')
-  }
+  if (!verifyWebhookSignature(secret, rawBody, signatureHeader)) throw new Error('invalid webhook signature')
+
   return JSON.parse(rawBody)
 }

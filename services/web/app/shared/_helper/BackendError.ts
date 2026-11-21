@@ -1,5 +1,10 @@
 class BackendError extends Error {
-  constructor(message: string, public readonly userMessage: string, public readonly statusCode: StatusCode, public readonly showStack: boolean) {
+  constructor(
+    message: string,
+    public readonly userMessage: string,
+    public readonly statusCode: StatusCode,
+    public readonly showStack: boolean,
+  ) {
     super(message)
     this.name = statusCodeToString(statusCode)
     Object.setPrototypeOf(this, BackendError.prototype)
@@ -11,11 +16,16 @@ type StatusCode = 400 | 401 | 403 | 404 | 500
 // oxlint-disable-next-line typescript/consistent-return
 function statusCodeToString(statusCode: StatusCode): string {
   switch (statusCode) {
-    case 400: return '400 Bad Request'
-    case 401: return '401 Unauthorized'
-    case 403: return '403 Forbidden'
-    case 404: return '404 Not Found'
-    case 500: return '500 Internal Server Error'
+    case 400:
+      return '400 Bad Request'
+    case 401:
+      return '401 Unauthorized'
+    case 403:
+      return '403 Forbidden'
+    case 404:
+      return '404 Not Found'
+    case 500:
+      return '500 Internal Server Error'
   }
 }
 

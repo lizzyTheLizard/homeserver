@@ -1,8 +1,10 @@
-import { Temporal } from '@js-temporal/polyfill'
-import { tool, ToolSet } from 'ai'
+import type { Temporal } from '@js-temporal/polyfill'
+import type { ToolSet } from 'ai'
+import { tool } from 'ai'
 import { z } from 'zod/v4'
 import type { UserSession } from '../session'
-import { getMicrosoftTodoWorker, type MicrosoftTodoTask } from '../microsoft/todo'
+import { getMicrosoftTodoWorker } from '../microsoft/todo'
+import type { MicrosoftTodoTask } from '../microsoft/todo'
 import { toInstant } from '../microsoft/graph'
 
 export default function getTools(user: UserSession): ToolSet {
@@ -60,7 +62,7 @@ export default function getTools(user: UserSession): ToolSet {
     outputSchema: todoTaskSchema,
     execute: async ({ listId, taskId, title, body, targetListId, reminderDateTime }) => {
       const reminder = reminderDateTime ? toInstant(reminderDateTime, '') : undefined
-      const updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string } = {}
+      const updates: { title?: string; body?: string; reminderDateTime?: Temporal.Instant; listId?: string } = {}
       if (title !== undefined) updates.title = title
       if (body !== undefined) updates.body = body
       if (reminder !== undefined) updates.reminderDateTime = reminder
@@ -99,7 +101,10 @@ const todoTaskSchema = z.object({
   id: z.string().describe('The task ID'),
   title: z.string().describe('The task title'),
   status: z.enum(['notStarted', 'inProgress', 'completed', 'waitingOnOthers', 'deferred']).describe('The task status'),
-  body: z.object({ content: z.string(), contentType: z.enum(['text', 'html']) }).optional().describe('The task body'),
+  body: z
+    .object({ content: z.string(), contentType: z.enum(['text', 'html']) })
+    .optional()
+    .describe('The task body'),
   dueDate: z.string().describe('The due date in ISO 8601 format (YYYY-MM-DD)').optional(),
   reminderDateTime: z.string().describe('The reminder date and time in ISO 8601 format').optional(),
   createdDateTime: z.string().describe('When the task was created in ISO 8601 format'),

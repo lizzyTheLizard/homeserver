@@ -2,11 +2,10 @@ import { describe, expect, test } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { getPrecipitationString } from './initial'
 
-function makeHourly(entries: { time: string, condition: string }[]): Record<string, Record<string, unknown>> {
+function makeHourly(entries: { time: string; condition: string }[]): Record<string, Record<string, unknown>> {
   const hourly: Record<string, Record<string, unknown>> = {}
-  for (const { time, condition } of entries) {
-    hourly[`2026-07-15T${time}:00`] = { temperature: 20, weather_condition: condition, precipitation: 0.5 }
-  }
+  for (const { time, condition } of entries) hourly[`2026-07-15T${time}:00`] = { temperature: 20, weather_condition: condition, precipitation: 0.5 }
+
   return hourly
 }
 
@@ -92,7 +91,9 @@ describe('getPrecipitationString', () => {
       { time: '20:00', condition: 'Heavy snow' },
       { time: '21:00', condition: 'Clear sky' },
     ])
-    expect(getPrecipitationString(hourly, dt('12:00'))).toBe('Light rain expected at around 13:00 until around 15:00, then moderate rain until around 18:00, heavy snow afterwards.')
+    expect(getPrecipitationString(hourly, dt('12:00'))).toBe(
+      'Light rain expected at around 13:00 until around 15:00, then moderate rain until around 18:00, heavy snow afterwards.',
+    )
   })
 
   test('reports single event with no clearing before end of data', () => {

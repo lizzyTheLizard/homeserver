@@ -16,7 +16,7 @@ export interface MicrosoftTodoTask {
   id: string
   title: string
   status: 'notStarted' | 'inProgress' | 'completed' | 'waitingOnOthers' | 'deferred'
-  body?: { content: string, contentType: 'text' | 'html' }
+  body?: { content: string; contentType: 'text' | 'html' }
   dueDate?: Temporal.PlainDate
   reminderDateTime?: Temporal.Instant
   createdDateTime: Temporal.Instant
@@ -38,7 +38,12 @@ export interface MicrosoftTodoWorker {
   getAllTasks(): MicrosoftTodoTask[]
   getStatus(): string
   createTask(user: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask>
-  updateTask(user: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask>
+  updateTask(
+    user: UserSession,
+    listId: string,
+    taskId: string,
+    updates: { title?: string; body?: string; reminderDateTime?: Temporal.Instant; listId?: string },
+  ): Promise<MicrosoftTodoTask>
   completeTask(user: UserSession, listId: string, taskId: string): Promise<void>
   deleteTask(user: UserSession, listId: string, taskId: string): Promise<void>
   touch(): void
@@ -93,11 +98,17 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
     timeout = setTimeout(close, inactivityTimeoutMs)
   }
 
-  function getTodoLists(): MicrosoftTodoList[] { return lists }
+  function getTodoLists(): MicrosoftTodoList[] {
+    return lists
+  }
 
-  function getStatus(): string { return status }
+  function getStatus(): string {
+    return status
+  }
 
-  function getTasks(listId: string): MicrosoftTodoTask[] { return tasks.get(listId) ?? [] }
+  function getTasks(listId: string): MicrosoftTodoTask[] {
+    return tasks.get(listId) ?? []
+  }
 
   function getAllTasks(): MicrosoftTodoTask[] {
     return [...tasks.values()].flatMap(t => t)
@@ -138,10 +149,19 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   function removeTaskFromMemory(taskId: string, listId: string): void {
     const listTasks = tasks.get(listId)
     if (!listTasks) return
-    tasks.set(listId, listTasks.filter(t => t.id !== taskId))
+    tasks.set(
+      listId,
+      listTasks.filter(t => t.id !== taskId),
+    )
   }
 
-  async function createTask(requestUser: UserSession, listId: string, title: string, body?: string, reminderDateTime?: Temporal.Instant): Promise<MicrosoftTodoTask> {
+  async function createTask(
+    requestUser: UserSession,
+    listId: string,
+    title: string,
+    body?: string,
+    reminderDateTime?: Temporal.Instant,
+  ): Promise<MicrosoftTodoTask> {
     try {
       const taskBody: Record<string, unknown> = { title }
       if (body) taskBody.body = { content: body, contentType: 'text' }
@@ -149,20 +169,24 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       const list = lists.find(l => l.id === listId)
       if (!list) throw new Error(`List with ID ${listId} not found`)
       logger.debug(`Create task in list ${listId} with body ${JSON.stringify(taskBody)}`)
-      const result = await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks`, async (request) => {
+      const result = await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks`, async request => {
         const response = rawTodoTaskSchema.parse(await request.post(taskBody))
         return { ...convertTask(response), listName: list.displayName }
       })
       addTaskToMemory(result, listId)
       return result
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       logger.warn(`Failed to create Microsoft Todo task "${title}"`, error)
       throw error
     }
   }
 
-  async function updateTask(requestUser: UserSession, listId: string, taskId: string, updates: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string }): Promise<MicrosoftTodoTask> {
+  async function updateTask(
+    requestUser: UserSession,
+    listId: string,
+    taskId: string,
+    updates: { title?: string; body?: string; reminderDateTime?: Temporal.Instant; listId?: string },
+  ): Promise<MicrosoftTodoTask> {
     try {
       const targetListId = updates.listId ?? listId
       const list = lists.find(l => l.id === targetListId)
@@ -172,15 +196,14 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
       if (updates.body !== undefined) patchBody.body = { content: updates.body, contentType: 'text' }
       if (updates.reminderDateTime !== undefined) patchBody.reminderDateTime = toGraphDateTime(updates.reminderDateTime)
       logger.debug(`Update task ${taskId} with ${JSON.stringify(patchBody)}`)
-      const result = await graphApiRequest(requestUser, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async (request) => {
+      const result = await graphApiRequest(requestUser, `/me/todo/lists/${targetListId}/tasks/${taskId}`, async request => {
         const response = rawTodoTaskSchema.parse(await request.patch(patchBody))
         return { ...convertTask(response), listName: list.displayName }
       })
       if (targetListId !== listId) removeTaskFromMemory(taskId, listId)
       addTaskToMemory(result, targetListId)
       return result
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       logger.warn(`Failed to update Microsoft Todo task "${taskId}"`, error)
       throw error
     }
@@ -189,7 +212,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   async function completeTask(requestUser: UserSession, listId: string, taskId: string): Promise<void> {
     try {
       logger.debug(`Complete task ${taskId}`)
-      await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
+      await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks/${taskId}`, async request => {
         await request.patch({ status: 'completed' })
       })
       const listTasks = tasks.get(listId)
@@ -197,8 +220,7 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
         const idx = listTasks.findIndex(t => t.id === taskId)
         if (idx >= 0) listTasks[idx] = { ...listTasks[idx], status: 'completed' }
       }
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       logger.warn(`Failed to complete Microsoft Todo task "${taskId}"`, error)
       throw error
     }
@@ -207,27 +229,25 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   async function deleteTask(requestUser: UserSession, listId: string, taskId: string): Promise<void> {
     try {
       logger.debug(`Delete task ${taskId}`)
-      await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks/${taskId}`, async (request) => {
+      await graphApiRequest(requestUser, `/me/todo/lists/${listId}/tasks/${taskId}`, async request => {
         await request.delete()
       })
       removeTaskFromMemory(taskId, listId)
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       logger.warn(`Failed to delete Microsoft Todo task "${taskId}"`, error)
       throw error
     }
   }
 
   async function doInitialFetch(): Promise<void> {
-    lists = await graphApiRequest(user, '/me/todo/lists', async (request) => {
+    lists = await graphApiRequest(user, '/me/todo/lists', async request => {
       const response = todoListsSchema.parse(await request.get())
       return response.value
     })
     tasks.clear()
     tasksDeltaLinks.clear()
-    for (const list of lists) {
-      await syncListTasks(list, `/me/todo/lists/${list.id}/tasks/delta`)
-    }
+    for (const list of lists) await syncListTasks(list, `/me/todo/lists/${list.id}/tasks/delta`)
+
     const listCount = lists.length
     const taskCount = getAllTasks().length
     logger.debug(`[MicrosoftTodoWorker] Initial fetch complete for user ${userId}: ${String(listCount)} lists, ${String(taskCount)} tasks`)
@@ -245,16 +265,12 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
   async function syncListTasks(list: MicrosoftTodoList, url: string): Promise<void> {
     let currentUrl: string | undefined = url
     while (currentUrl) {
-      const deltaResult: z.infer<typeof todoDeltaSchema> = await graphApiRequest(user, currentUrl, async (request) => {
-        return todoDeltaSchema.parse(await request.get())
-      })
+      const deltaResult: z.infer<typeof todoDeltaSchema> = await graphApiRequest(user, currentUrl, async request => todoDeltaSchema.parse(await request.get()))
       for (const rawTask of deltaResult.value) {
         if ('@removed' in rawTask) removeTaskFromMemory(rawTask.id, list.id)
         else addTaskToMemory({ ...convertTask(rawTask), listName: list.displayName }, list.id)
       }
-      if (deltaResult['@odata.nextLink']) {
-        currentUrl = deltaResult['@odata.nextLink']
-      }
+      if (deltaResult['@odata.nextLink']) currentUrl = deltaResult['@odata.nextLink']
       else {
         if (deltaResult['@odata.deltaLink']) tasksDeltaLinks.set(list.id, deltaResult['@odata.deltaLink'])
         currentUrl = undefined
@@ -264,27 +280,41 @@ function createMicrosoftTodoWorker(user: UserSession): MicrosoftTodoWorker {
 
   status = 'connecting'
   doInitialFetch()
-    .then(() => { status = 'connected' })
+    .then(() => {
+      status = 'connected'
+    })
     .catch((error: unknown) => {
       status = 'error'
       logger.warn(`[MicrosoftTodoWorker] Initial fetch failed for user ${userId}`, error)
     })
   interval = setInterval(() => {
-    doDeltaPoll()
-      .catch((error: unknown) => {
-        logger.warn(`[MicrosoftTodoWorker] Poll crash for user ${userId}`, error)
-        status = 'connecting'
-        doInitialFetch()
-          .then(() => { status = 'connected' })
-          .catch((refetchError: unknown) => {
-            status = 'error'
-            logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
-          })
-      })
+    doDeltaPoll().catch((error: unknown) => {
+      logger.warn(`[MicrosoftTodoWorker] Poll crash for user ${userId}`, error)
+      status = 'connecting'
+      doInitialFetch()
+        .then(() => {
+          status = 'connected'
+        })
+        .catch((refetchError: unknown) => {
+          status = 'error'
+          logger.warn(`[MicrosoftTodoWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
+        })
+    })
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
-  return { getTodoCount, getTodoLists, getTasks, getAllTasks, getStatus, createTask, updateTask, completeTask, deleteTask, touch }
+  return {
+    getTodoCount,
+    getTodoLists,
+    getTasks,
+    getAllTasks,
+    getStatus,
+    createTask,
+    updateTask,
+    completeTask,
+    deleteTask,
+    touch,
+  }
 }
 
 const dateTimeTimeZoneSchema = z.object({ dateTime: z.string(), timeZone: z.string() })
@@ -302,12 +332,14 @@ const rawTodoTaskSchema = z.object({
 })
 
 const todoListsSchema = z.object({
-  value: z.array(z.object({
-    id: z.string(),
-    displayName: z.string(),
-    isOwner: z.boolean(),
-    isShared: z.boolean(),
-  }) satisfies z.ZodType<MicrosoftTodoList>),
+  value: z.array(
+    z.object({
+      id: z.string(),
+      displayName: z.string(),
+      isOwner: z.boolean(),
+      isShared: z.boolean(),
+    }) satisfies z.ZodType<MicrosoftTodoList>,
+  ),
 })
 
 const todoDeltaSchema = deltaResponseSchema(rawTodoTaskSchema)

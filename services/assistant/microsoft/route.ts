@@ -1,27 +1,29 @@
-import { IncomingMessage, ServerResponse } from 'http'
+import type { IncomingMessage, ServerResponse } from 'http'
 import { Temporal } from '@js-temporal/polyfill'
-import { getUserSession, parseCookieHeader, UserSession } from '../session'
+import type { UserSession } from '../session'
+import { getUserSession, parseCookieHeader } from '../session'
 import { logger } from '../logger'
 import { z } from 'zod'
 import { getUserInfo, handleMicrosoftLoginCallback } from './graph'
-import { getMicrosoftMailWorker, MicrosoftMessageFull, MicrosoftMessageListItem } from './mail'
-import { getMicrosoftTodoWorker, MicrosoftTodoTask } from './todo'
-import { getMicrosoftCalendarWorker, MicrosoftCalendarEvent } from './calendar'
+import type { MicrosoftMessageFull, MicrosoftMessageListItem } from './mail'
+import { getMicrosoftMailWorker } from './mail'
+import type { MicrosoftTodoTask } from './todo'
+import { getMicrosoftTodoWorker } from './todo'
+import type { MicrosoftCalendarEvent } from './calendar'
+import { getMicrosoftCalendarWorker } from './calendar'
 import { deleteMicrosoftToken } from './data'
 import { transactional } from '../db'
-import { MicrosoftStatus, SerializedCalendarEvent, SerializedMessageFull, SerializedMessageListItem, SerializedTodoTask } from './types'
+import type { MicrosoftStatus, SerializedCalendarEvent, SerializedMessageFull, SerializedMessageListItem, SerializedTodoTask } from './types'
 
 export async function handleMicrosoftApi(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<boolean> {
   if (!pathname.startsWith('/microsoft')) return false
   try {
     const user = await authenticate(req)
     const handled = await route(user, req, res, pathname)
-    if (!handled) {
-      sendJson(res, 404, { error: 'Not found' })
-    }
+    if (!handled) sendJson(res, 404, { error: 'Not found' })
+
     return true
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unauthorized'
     logger.warn(`Microsoft API auth error: ${message}`)
     sendJson(res, 401, { error: message })
@@ -67,7 +69,11 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/mail/send' && method === 'POST') {
-    const body = await readJson(req, z.object({ to: z.array(z.string()), subject: z.string(), body: z.string() }), { to: [], subject: '', body: '' })
+    const body = await readJson(req, z.object({ to: z.array(z.string()), subject: z.string(), body: z.string() }), {
+      to: [],
+      subject: '',
+      body: '',
+    })
     const worker = await getMicrosoftMailWorker(user)
     await worker.sendMail(user, body.to, body.subject, body.body)
     sendJson(res, 200, { success: true })
@@ -98,13 +104,25 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
 
   if (pathname === '/microsoft/todo/tasks' && method === 'GET') {
     const worker = await getMicrosoftTodoWorker(user)
-    const tasks = worker.getAllTasks().filter(t => t.status !== 'completed').map(serializeTodoTask)
+    const tasks = worker
+      .getAllTasks()
+      .filter(t => t.status !== 'completed')
+      .map(serializeTodoTask)
     sendJson(res, 200, tasks)
     return true
   }
 
   if (pathname === '/microsoft/todo/tasks' && method === 'POST') {
-    const body = await readJson(req, z.object({ listId: z.string(), title: z.string(), body: z.string().optional(), reminderDateTime: z.string().optional() }), { listId: '', title: '' })
+    const body = await readJson(
+      req,
+      z.object({
+        listId: z.string(),
+        title: z.string(),
+        body: z.string().optional(),
+        reminderDateTime: z.string().optional(),
+      }),
+      { listId: '', title: '' },
+    )
     const worker = await getMicrosoftTodoWorker(user)
     const reminder = body.reminderDateTime ? Temporal.Instant.from(body.reminderDateTime) : undefined
     const result = await worker.createTask(user, body.listId, body.title, body.body, reminder)
@@ -121,7 +139,11 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/todo/tasks/update' && method === 'POST') {
-    const body = await readJson(req, z.object({ listId: z.string(), taskId: z.string(), updates: z.record(z.string(), z.unknown()) }), { listId: '', taskId: '', updates: {} })
+    const body = await readJson(req, z.object({ listId: z.string(), taskId: z.string(), updates: z.record(z.string(), z.unknown()) }), {
+      listId: '',
+      taskId: '',
+      updates: {},
+    })
     const worker = await getMicrosoftTodoWorker(user)
     const updates = parseTodoUpdates(body.updates)
     const result = await worker.updateTask(user, body.listId, body.taskId, updates)
@@ -156,7 +178,18 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/calendar/events' && method === 'POST') {
-    const body = await readJson(req, z.object({ calendarId: z.string(), subject: z.string(), startDateTime: z.string(), endDateTime: z.string(), body: z.string().optional(), location: z.string().optional() }), { calendarId: '', subject: '', startDateTime: '', endDateTime: '' })
+    const body = await readJson(
+      req,
+      z.object({
+        calendarId: z.string(),
+        subject: z.string(),
+        startDateTime: z.string(),
+        endDateTime: z.string(),
+        body: z.string().optional(),
+        location: z.string().optional(),
+      }),
+      { calendarId: '', subject: '', startDateTime: '', endDateTime: '' },
+    )
     const worker = await getMicrosoftCalendarWorker(user)
     const start = Temporal.Instant.from(body.startDateTime)
     const end = Temporal.Instant.from(body.endDateTime)
@@ -173,7 +206,7 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
   }
 
   if (pathname === '/microsoft/disconnect' && method === 'POST') {
-    await transactional(async (db) => {
+    await transactional(async db => {
       await deleteMicrosoftToken(db, user.email)
     })
     sendJson(res, 200, { success: true })
@@ -197,7 +230,17 @@ async function route(user: UserSession, req: IncomingMessage, res: ServerRespons
 
 async function loadMicrosoftStatus(user: UserSession): Promise<MicrosoftStatus> {
   const userInfo = await getUserInfo(user)
-  if (!userInfo) return { connected: false, mailStatus: 'connecting', todoStatus: 'connecting', calendarStatus: 'connecting', messages: [], todos: [], events: [] }
+  if (!userInfo) {
+    return {
+      connected: false,
+      mailStatus: 'connecting',
+      todoStatus: 'connecting',
+      calendarStatus: 'connecting',
+      messages: [],
+      todos: [],
+      events: [],
+    }
+  }
   const [mailWorker, todoWorker, calendarWorker] = await Promise.all([
     getMicrosoftMailWorker(user),
     getMicrosoftTodoWorker(user),
@@ -207,16 +250,18 @@ async function loadMicrosoftStatus(user: UserSession): Promise<MicrosoftStatus> 
   const todoStatus = todoWorker.getStatus()
   const calendarStatus = calendarWorker.getStatus()
   const allConnected = mailStatus === 'connected' && todoStatus === 'connected' && calendarStatus === 'connected'
-  if (!allConnected) {
-    return { connected: true, userInfo, mailStatus, todoStatus, calendarStatus, messages: [], todos: [], events: [] }
-  }
+  if (!allConnected) return { connected: true, userInfo, mailStatus, todoStatus, calendarStatus, messages: [], todos: [], events: [] }
+
   const messages = mailWorker.getInboxMessages().map(serializeMessageListItem)
-  const todos = todoWorker.getAllTasks().filter(t => t.status !== 'completed').map(serializeTodoTask)
+  const todos = todoWorker
+    .getAllTasks()
+    .filter(t => t.status !== 'completed')
+    .map(serializeTodoTask)
   const events = calendarWorker.getAllEvents().map(serializeCalendarEvent)
   return { connected: true, userInfo, mailStatus, todoStatus, calendarStatus, messages, todos, events }
 }
 
-async function checkMicrosoftStatus(user: UserSession): Promise<{ mailStatus: string, todoStatus: string, calendarStatus: string }> {
+async function checkMicrosoftStatus(user: UserSession): Promise<{ mailStatus: string; todoStatus: string; calendarStatus: string }> {
   const userInfo = await getUserInfo(user)
   if (!userInfo) return { mailStatus: 'connecting', todoStatus: 'connecting', calendarStatus: 'connecting' }
   const [mailStatus, todoStatus, calendarStatus] = await Promise.all([
@@ -290,8 +335,13 @@ function serializeMessageFull(msg: MicrosoftMessageFull): SerializedMessageFull 
   }
 }
 
-function parseTodoUpdates(updates: Record<string, unknown>): { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string } {
-  const result: { title?: string, body?: string, reminderDateTime?: Temporal.Instant, listId?: string } = {}
+function parseTodoUpdates(updates: Record<string, unknown>): {
+  title?: string
+  body?: string
+  reminderDateTime?: Temporal.Instant
+  listId?: string
+} {
+  const result: { title?: string; body?: string; reminderDateTime?: Temporal.Instant; listId?: string } = {}
   if (typeof updates.title === 'string') result.title = updates.title
   if (typeof updates.body === 'string') result.body = updates.body
   if (typeof updates.listId === 'string') result.listId = updates.listId
@@ -306,13 +356,14 @@ function sendJson(res: ServerResponse, status: number, data: unknown): void {
 async function readJson<S extends z.ZodType>(req: IncomingMessage, schema: S, defaults: Record<string, unknown>): Promise<z.output<S>> {
   return new Promise((resolve, reject) => {
     let body = ''
-    req.on('data', (chunk: Buffer) => { body += chunk.toString() })
+    req.on('data', (chunk: Buffer) => {
+      body += chunk.toString()
+    })
     req.on('end', () => {
       try {
         const parsed: unknown = body ? JSON.parse(body) : {}
         resolve(schema.parse({ ...defaults, ...z.record(z.string(), z.unknown()).parse(parsed) }))
-      }
-      catch (error) {
+      } catch (error) {
         reject(error instanceof Error ? error : new Error(String(error)))
       }
     })

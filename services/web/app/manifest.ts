@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Gutschi.site',
     description: 'Homeserver dashboard and applications',
     id: APP_URL,
-    start_url: APP_URL + '/pwa.html',
+    start_url: `${APP_URL}/pwa.html`,
     display: 'standalone',
     orientation: 'portrait',
     launch_handler: { client_mode: 'navigate-existing' },

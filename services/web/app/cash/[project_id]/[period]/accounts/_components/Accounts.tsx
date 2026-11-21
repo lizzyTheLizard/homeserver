@@ -1,6 +1,7 @@
 'use client'
-import { Account } from '@/app/cash/_data/Account'
-import { ACCOUNT_TYPES, AccountType, toAccountType } from '@/app/cash/_data/AccountType'
+import type { Account } from '@/app/cash/_data/Account'
+import type { AccountType } from '@/app/cash/_data/AccountType'
+import { ACCOUNT_TYPES, toAccountType } from '@/app/cash/_data/AccountType'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { v4 as randomUUID } from 'uuid'
 import { boolColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
@@ -11,11 +12,12 @@ import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { Checkbox } from '@/app/shared/_components/form/Checkbox'
-import { ReactNode, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { AccountBadge } from '@/app/cash/_components/AccountBadge'
 import style from './Accounts.module.css'
-import { AccountBadgeIconColor, AccountBadgeIcon } from '@/app/cash/_components/AccountBadgeIcons'
+import { AccountBadgeIcon, AccountBadgeIconColor } from '@/app/cash/_components/AccountBadgeIcons'
 
 export interface AccountsProps {
   accounts: Account[]
@@ -56,12 +58,21 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
 
   function renderMobile(item: Account): ReactNode {
     return (
-      <div key={item.id} className={style.mobileItem} style={{ opacity: item.archived ? 0.55 : undefined }} onClick={() => { showAccount(item) }}>
+      <div
+        key={item.id}
+        className={style.mobileItem}
+        style={{ opacity: item.archived ? 0.55 : undefined }}
+        onClick={() => {
+          showAccount(item)
+        }}
+      >
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 16 16" fill={AccountBadgeIconColor[item.type]} style={{ flexShrink: 0 }}>
           <path d={AccountBadgeIcon[item.type]} />
         </svg>
         <div className={style.mobileContent}>
-          <div className={style.mobileItemName} style={{ textDecoration: item.archived ? 'line-through' : undefined }}>{item.name}</div>
+          <div className={style.mobileItemName} style={{ textDecoration: item.archived ? 'line-through' : undefined }}>
+            {item.name}
+          </div>
           <div className={style.mobileType}>
             {item.type}
             {item.archived && <span> • archived</span>}
@@ -78,10 +89,19 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         data={accounts}
         initialSortingOrder={[{ key: 'name', direction: 'ASC' }]}
         searchLabel="Search accounts…"
-        onRowClick={(account) => { showAccount(account) }}
+        onRowClick={account => {
+          showAccount(account)
+        }}
         renderMobile={renderMobile}
       />
-      <ActionButton onClick={(e) => { showAccount(); e.stopPropagation() }}>Add Account</ActionButton>
+      <ActionButton
+        onClick={e => {
+          showAccount()
+          e.stopPropagation()
+        }}
+      >
+        Add Account
+      </ActionButton>
       <Sidebar
         id={sidebarId}
         title={title}
@@ -89,14 +109,41 @@ export function Accounts({ accounts: accountsIn, project_id }: AccountsProps) {
         onSave={() => saveAccount({ project_id, id, name, type, archived })}
         onAfterSave={addAccount}
         onDelete={() => deleteAccount(id)}
-        onAfterDelete={() => { removeAccount(id) }}
+        onAfterDelete={() => {
+          removeAccount(id)
+        }}
         noDelete={noDelete}
       >
-        <Input type="text" label="Name" required value={name} onChange={(e) => { setName(e.target.value) }} />
-        <Select label="Type" required value={type} onChange={(e) => { setType(toAccountType(e.target.value)) }}>
-          {ACCOUNT_TYPES.map(accountType => (<option key={accountType} value={accountType}>{accountType}</option>))}
+        <Input
+          type="text"
+          label="Name"
+          required
+          value={name}
+          onChange={e => {
+            setName(e.target.value)
+          }}
+        />
+        <Select
+          label="Type"
+          required
+          value={type}
+          onChange={e => {
+            setType(toAccountType(e.target.value))
+          }}
+        >
+          {ACCOUNT_TYPES.map(accountType => (
+            <option key={accountType} value={accountType}>
+              {accountType}
+            </option>
+          ))}
         </Select>
-        <Checkbox label="Archived" checked={archived} onChange={(e) => { setArchived(e.target.checked) }} />
+        <Checkbox
+          label="Archived"
+          checked={archived}
+          onChange={e => {
+            setArchived(e.target.checked)
+          }}
+        />
       </Sidebar>
     </>
   )

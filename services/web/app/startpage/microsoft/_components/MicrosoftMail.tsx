@@ -1,14 +1,14 @@
 'use client'
 import { useState } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { textColumn, boolColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { boolColumn, dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { loadMessage } from '../server'
 import { DateTime } from '@/app/shared/_components/DateTime'
 import styles from './MicrosoftMail.module.css'
-import type { SerializedMessageListItem, SerializedMessageFull } from '@assistant/microsoft/types'
+import type { SerializedMessageFull, SerializedMessageListItem } from '@assistant/microsoft/types'
 
 export function MicrosoftMail({ messages }: { messages: SerializedMessageListItem[] }) {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
@@ -20,14 +20,16 @@ export function MicrosoftMail({ messages }: { messages: SerializedMessageListIte
     setSelectedMessageId(msg.subject)
     setFullMessage(null)
     setMessageLoading(true)
-    loadMessage(msg.id).then((data) => {
-      setFullMessage(data ?? null)
-      setMessageLoading(false)
-      openEmailSidebar()
-    }).catch(() => {
-      setMessageLoading(false)
-      openEmailSidebar()
-    })
+    loadMessage(msg.id)
+      .then(data => {
+        setFullMessage(data ?? null)
+        setMessageLoading(false)
+        openEmailSidebar()
+      })
+      .catch(() => {
+        setMessageLoading(false)
+        openEmailSidebar()
+      })
   }
 
   return (

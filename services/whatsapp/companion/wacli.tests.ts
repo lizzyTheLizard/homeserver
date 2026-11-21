@@ -1,7 +1,8 @@
 import { PassThrough, Readable } from 'node:stream'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { Mock } from 'vitest'
-import { attachEventParser, runWacli, spawnWacli, type WacliEvent } from './wacli'
+import { attachEventParser, runWacli, spawnWacli } from './wacli'
+import type { WacliEvent } from './wacli'
 
 const { mockDebug, mockWarn, mockSpawn } = vi.hoisted(() => ({
   mockDebug: vi.fn<(message: string) => void>(),
@@ -123,11 +124,15 @@ describe('spawnWacli', () => {
 })
 
 async function parseEvents(lines: string[]): Promise<WacliEvent[]> {
-  const stream = Readable.from(lines.map(line => line + '\n'))
+  const stream = Readable.from(lines.map(line => `${line}\n`))
   const events: WacliEvent[] = []
-  attachEventParser(stream, (event) => { events.push(event) })
-  await new Promise<void>((resolve) => {
-    stream.on('end', () => { resolve() })
+  attachEventParser(stream, event => {
+    events.push(event)
+  })
+  await new Promise<void>(resolve => {
+    stream.on('end', () => {
+      resolve()
+    })
   })
   return events
 }
@@ -141,7 +146,7 @@ interface FakeChild {
 }
 
 // Minimal ChildProcess stand-in: stdout/stderr are real streams and `emit`
-// dispatches to the listeners runWacli registers through `on`.
+// Dispatches to the listeners runWacli registers through `on`.
 function makeFakeChild(): FakeChild {
   const listeners = new Map<string, ((...args: unknown[]) => void)[]>()
   return {

@@ -1,5 +1,5 @@
-import { Account } from '../_data/Account'
-import { AccountTransaction } from '../_data/AccountTransaction'
+import type { Account } from '../_data/Account'
+import type { AccountTransaction } from '../_data/AccountTransaction'
 import { isCreditAccount, isSummationAccount } from '../_data/AccountType'
 
 export function getTotalForAccounts(accounts: Account[], beforeTransactions: AccountTransaction[], currentTransactions: AccountTransaction[]): number {

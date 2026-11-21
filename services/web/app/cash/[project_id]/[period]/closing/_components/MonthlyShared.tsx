@@ -1,9 +1,9 @@
 'use client'
 
-import { Account } from '@/app/cash/_data/Account'
-import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import type { Account } from '@/app/cash/_data/Account'
+import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
 import { accountColumn, currencyColumn } from '@/app/cash/_helper/CashColumns'
-import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
 import { Input } from '@/app/shared/_components/form/Input'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
@@ -11,9 +11,10 @@ import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useListState } from '@/app/shared/_helper/ListState'
 import { useRouter } from 'next/navigation'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { addSharedTransactions } from '../server'
-import { SharedTransaction } from '@/app/cash/_data/Monthly'
+import type { SharedTransaction } from '@/app/cash/_data/Monthly'
 
 export interface MonthlySharedProps {
   project_id: string
@@ -26,15 +27,24 @@ export interface MonthlySharedProps {
 export function MonthlyShared({ transactions: transactionsIn, project_id, period, accounts, lastTransaction }: MonthlySharedProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
-  const [transactions, addTransaction] = useListState((transactionsIn).map(toSharedTransactionInEdit))
+  const [transactions, addTransaction] = useListState(transactionsIn.map(toSharedTransactionInEdit))
   const router = useRouter()
   const valid = transactions.every(t => t.category !== undefined)
 
   function categoryCell(value: string | undefined, id: string): ReactNode {
     const obj = transactions.find(t => t.id === id)
-    if (!obj) throw new Error('Could not find transaction for id ' + id)
+    if (!obj) throw new Error(`Could not find transaction for id ${id}`)
     return (
-      <Input className="categoryInput" small required value={value ?? ''} onChange={(e) => { addTransaction({ ...obj, category: e.target.value }) }} list={['Vormonat', 'Ferien', 'Steuern', 'Alltag']} />
+      <Input
+        className="categoryInput"
+        small
+        required
+        value={value ?? ''}
+        onChange={e => {
+          addTransaction({ ...obj, category: e.target.value })
+        }}
+        list={['Vormonat', 'Ferien', 'Steuern', 'Alltag']}
+      />
     )
   }
 
@@ -43,9 +53,9 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
     setError(undefined)
     const t = transactions.map(toSharedTransactionInput).filter(item => item !== undefined)
     addSharedTransactions(project_id, period, t)
-      .then((r) => {
+      .then(r => {
         if (r.success) router.refresh()
-        else setError('Failed to add shared transactions: ' + r.error)
+        else setError(`Failed to add shared transactions: ${r.error}`)
         setLoading(false)
       })
       .catch((e: unknown) => {
@@ -55,10 +65,14 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
       })
   }
 
-  const otherAccounts = useMemo(() => Array.from(new Set((transactionsIn).map(t => t.other_account_id)))
-    .map(accountId => accounts.find(a => a.id === accountId))
-    .filter((a): a is Account => a !== undefined)
-    .sort((a, b) => a.name.localeCompare(b.name)), [transactionsIn, accounts])
+  const otherAccounts = useMemo(
+    () =>
+      Array.from(new Set(transactionsIn.map(t => t.other_account_id)))
+        .map(accountId => accounts.find(a => a.id === accountId))
+        .filter((a): a is Account => a !== undefined)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [transactionsIn, accounts],
+  )
 
   const columns = [
     dateColumn('date', { header: 'Date', style: { width: '7rem' } }),
@@ -69,9 +83,7 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
   ]
 
   const previous = useMemo(() => {
-    const total = transactions
-      .filter(t => t.category === 'Vormonat')
-      .reduce((acc, t) => acc + t.amount, 0) + (lastTransaction?.total_balance ?? 0)
+    const total = transactions.filter(t => t.category === 'Vormonat').reduce((acc, t) => acc + t.amount, 0) + (lastTransaction?.total_balance ?? 0)
     const rounded = Math.round(100 * total) / 100
     return rounded
   }, [transactions, lastTransaction])
@@ -83,15 +95,18 @@ export function MonthlyShared({ transactions: transactionsIn, project_id, period
 
   return (
     <>
-      <ActionButton disabled={loading || !valid} onClick={() => { onSave() }}>Save</ActionButton>
+      <ActionButton
+        disabled={loading || !valid}
+        onClick={() => {
+          onSave()
+        }}
+      >
+        Save
+      </ActionButton>
       <Input disabled label="Previous" type="currency" value={previous.toString()} style={{ marginBottom: 'var(--gap-small)' }} />
-      <DataTable
-        columns={columns}
-        data={transactions}
-        initialSortingOrder={[{ key: 'date', direction: 'ASC' }]}
-      />
+      <DataTable columns={columns} data={transactions} initialSortingOrder={[{ key: 'date', direction: 'ASC' }]} />
       {error && <div className="error">{error}</div>}
-      {loading && (<LoadingSpinner />)}
+      {loading && <LoadingSpinner />}
     </>
   )
 }

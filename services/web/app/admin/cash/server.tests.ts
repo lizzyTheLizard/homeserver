@@ -16,16 +16,16 @@ vi.mock('@/app/shared/auth/auth', async () => {
 })
 
 describe('loadProjects', () => {
-  beforeAll(() => {
+  beforeAll(() =>
     // Clear all projects before starting tests
-    return transactional(async (tx) => {
+    transactional(async tx => {
       await tx.query('DELETE FROM project')
-    })
-  })
+    }),
+  )
 
   afterEach(async () => {
     // Clean up all projects after each test
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await tx.query('DELETE FROM project')
     })
   })
@@ -46,7 +46,7 @@ describe('loadProjects', () => {
     const project1 = { id: randomUUID(), name: 'Project Alpha', owner_email: task.id, archived: false }
     const project2 = { id: randomUUID(), name: 'Project Beta', owner_email: task.id, archived: false }
     const project3 = { id: randomUUID(), name: 'Project Gamma', owner_email: task.id, archived: false }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
       await createOrModifyProject(tx, project3)
@@ -65,7 +65,7 @@ describe('loadProjects', () => {
 
     const project1 = { id: randomUUID(), name: 'Active Project', owner_email: task.id, archived: false }
     const project2 = { id: randomUUID(), name: 'Archived Project', owner_email: task.id, archived: true }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
     })
@@ -83,28 +83,31 @@ describe('loadProjects', () => {
 
     const ownProject = { id: randomUUID(), name: 'My Project', owner_email: task.id, archived: false }
     const otherProject = { id: randomUUID(), name: 'Other Project', owner_email: 'other-user-id', archived: false }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, ownProject)
       await createOrModifyProject(tx, otherProject)
     })
 
     const result = await loadProjects()
 
-    expect(result).toEqual([{
-      id: ownProject.id,
-      name: ownProject.name,
-      owner_email: task.id,
-      archived: false,
-      created_at: expect.any(String) as string,
-      updated_at: expect.any(String) as string,
-    }, {
-      id: otherProject.id,
-      name: otherProject.name,
-      owner_email: 'other-user-id',
-      archived: false,
-      created_at: expect.any(String) as string,
-      updated_at: expect.any(String) as string,
-    }])
+    expect(result).toEqual([
+      {
+        id: ownProject.id,
+        name: ownProject.name,
+        owner_email: task.id,
+        archived: false,
+        created_at: expect.any(String) as string,
+        updated_at: expect.any(String) as string,
+      },
+      {
+        id: otherProject.id,
+        name: otherProject.name,
+        owner_email: 'other-user-id',
+        archived: false,
+        created_at: expect.any(String) as string,
+        updated_at: expect.any(String) as string,
+      },
+    ])
   })
 
   test('Returns all project fields', async ({ task }) => {
@@ -116,21 +119,23 @@ describe('loadProjects', () => {
 
     const result = await loadProjects()
 
-    expect(result).toEqual([{
-      id: project.id,
-      name: project.name,
-      owner_email: task.id,
-      archived: false,
-      created_at: expect.any(String) as string,
-      updated_at: expect.any(String) as string,
-    }])
+    expect(result).toEqual([
+      {
+        id: project.id,
+        name: project.name,
+        owner_email: task.id,
+        archived: false,
+        created_at: expect.any(String) as string,
+        updated_at: expect.any(String) as string,
+      },
+    ])
   })
 })
 
 describe('saveProject', () => {
   afterEach(async () => {
     // Clean up all projects after each test
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await tx.query('DELETE FROM project')
     })
   })
@@ -174,7 +179,7 @@ describe('saveProject', () => {
 describe('deleteProject', () => {
   afterEach(async () => {
     // Clean up all projects after each test
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await tx.query('DELETE FROM project')
     })
   })

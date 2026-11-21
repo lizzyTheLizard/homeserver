@@ -1,19 +1,25 @@
-import { generateText, isStepCount, ModelMessage, streamText, ToolSet } from 'ai'
+import type { ModelMessage, ToolSet } from 'ai'
+import { generateText, isStepCount, streamText } from 'ai'
 import { logger } from './logger'
-import { createGroq, GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import type { GroqLanguageModelChatOptions } from '@ai-sdk/groq'
+import { createGroq } from '@ai-sdk/groq'
 import { config } from './config'
 
 const MAX_TOOL_ITERATIONS = 10
 const provider = createGroq({ apiKey: config.AI.API_KEY, fetch: loggingFetch })
 const model = provider('openai/gpt-oss-120b')
-const groqOptions = { reasoningFormat: 'hidden', parallelToolCalls: true, reasoningEffort: 'low' } satisfies GroqLanguageModelChatOptions
+const groqOptions = {
+  reasoningFormat: 'hidden',
+  parallelToolCalls: true,
+  reasoningEffort: 'low',
+} satisfies GroqLanguageModelChatOptions
 const agentSettings = { model, temperature: 0.2, allowSystemInMessages: true, providerOptions: { groq: groqOptions } }
 
 export interface SendOptions {
   messages: ModelMessage[]
   tools?: ToolSet
-  onChunk?: (chunk: string) => void
-  onToolCall?: () => void
+  onChunk?(chunk: string): void
+  onToolCall?(): void
 }
 
 export async function send(options: SendOptions): Promise<string> {
@@ -49,9 +55,15 @@ function getConfig({ messages, tools, onToolCall }: SendOptions): Parameters<typ
     toolChoice: tools ? 'auto' : 'none',
     maxOutputTokens: 2048,
     stopWhen: isStepCount(MAX_TOOL_ITERATIONS),
-    onStepEnd: ({ toolCalls }) => { if (toolCalls.length > 0) onToolCall?.() },
-    onToolExecutionStart: ({ toolCall }) => { logger.debug(`Tool execution started: ${toolCall.toolName}`) },
-    onToolExecutionEnd: ({ toolCall }) => { logger.debug(`Tool execution ended: ${toolCall.toolName}`) },
+    onStepEnd: ({ toolCalls }) => {
+      if (toolCalls.length > 0) onToolCall?.()
+    },
+    onToolExecutionStart: ({ toolCall }) => {
+      logger.debug(`Tool execution started: ${toolCall.toolName}`)
+    },
+    onToolExecutionEnd: ({ toolCall }) => {
+      logger.debug(`Tool execution ended: ${toolCall.toolName}`)
+    },
   } satisfies Parameters<typeof generateText>[0]
 }
 
@@ -65,10 +77,10 @@ async function loggingFetch(resource: string | URL | Request, init: RequestInit 
 
 function logRequest(init: RequestInit | undefined) {
   if (!config.AI.LOG_REQUEST_RESPONSE) return
-  const bodyString = init?.body ? String(init.body) : ''// oxlint-disable-line typescript/no-base-to-string
+  const bodyString = init?.body ? String(init.body) : '' // oxlint-disable-line typescript/no-base-to-string
   const requestSize = bodyString.length
   logger.debug(`LLM request of size ${requestSize.toString()} bytes started`)
-  console.log(bodyString)
+  logger.debug(bodyString)
 }
 
 async function logResponse(res: Response, requestStartTime: number) {
@@ -100,7 +112,7 @@ function logResponseChunk(chunkText: string, first: boolean, requestStartTime: n
     const timeToFirstTokenInS = (Math.round((Date.now() - requestStartTime) / 100) / 10).toString()
     logger.debug(`LLM first response of size ${chunkText.length.toString()} bytes received in ${timeToFirstTokenInS}s`)
   }
-  console.log(chunkText)
+  logger.debug(chunkText)
 }
 
 function logResponseEnd(responseSize: number, requestStartTime: number) {

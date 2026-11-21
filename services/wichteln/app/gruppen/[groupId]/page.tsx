@@ -18,17 +18,8 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
     <>
       <div className="row">
         <div>
-          <h1>
-            Hallo
-            {' '}
-            {user.name}
-            !
-          </h1>
-          <span className="muted">
-            Gruppe:
-            {' '}
-            {group.name}
-          </span>
+          <h1>Hallo {user.name}!</h1>
+          <span className="muted">Gruppe: {group.name}</span>
         </div>
         <div className="actions">
           {groupCount > 1 && (
@@ -45,14 +36,12 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         </div>
       </div>
 
-      {group.phase === 'wishes'
-        ? <WishPhase groupId={group.id} wish={user.wish} />
-        : <SelectionPhase group={group} user={user} />}
+      {group.phase === 'wishes' ? <WishPhase groupId={group.id} wish={user.wish} /> : <SelectionPhase group={group} user={user} />}
     </>
   )
 }
 
-function WishPhase({ groupId, wish }: { groupId: string, wish: Wish | null }) {
+function WishPhase({ groupId, wish }: { groupId: string; wish: Wish | null }) {
   return (
     <section className="card">
       <div className="row">
@@ -69,7 +58,7 @@ function WishPhase({ groupId, wish }: { groupId: string, wish: Wish | null }) {
   )
 }
 
-function SelectionPhase({ group, user }: { group: Group, user: User }) {
+function SelectionPhase({ group, user }: { group: Group; user: User }) {
   const chosen = user.selectedWishOf ? group.users.find(u => u.id === user.selectedWishOf)?.wish : null
 
   if (chosen) {
@@ -85,7 +74,7 @@ function SelectionPhase({ group, user }: { group: Group, user: User }) {
     )
   }
 
-  const wishes = selectableWishOwners(group, user.id).flatMap((ownerId) => {
+  const wishes = selectableWishOwners(group, user.id).flatMap(ownerId => {
     const w = group.users.find(u => u.id === ownerId)?.wish
     if (!w) return []
     return [{ ownerId, title: w.title, description: w.description }]
@@ -99,17 +88,12 @@ function SelectionPhase({ group, user }: { group: Group, user: User }) {
           Aktualisieren
         </a>
       </div>
-      <p className="muted">
-        Wähle einen Wunsch, den du erfüllen möchtest. Sobald du ihn gewählt hast, ist er für die anderen nicht mehr
-        sichtbar.
-      </p>
-      {wishes.length > 0
-        ? (
-            <WishPicker groupId={group.id} wishes={wishes} />
-          )
-        : (
-            <div className="alert error">Momentan ist kein Wunsch verfügbar. Bitte melde dich beim Admin.</div>
-          )}
+      <p className="muted">Wähle einen Wunsch, den du erfüllen möchtest. Sobald du ihn gewählt hast, ist er für die anderen nicht mehr sichtbar.</p>
+      {wishes.length > 0 ? (
+        <WishPicker groupId={group.id} wishes={wishes} />
+      ) : (
+        <div className="alert error">Momentan ist kein Wunsch verfügbar. Bitte melde dich beim Admin.</div>
+      )}
     </section>
   )
 }

@@ -9,7 +9,7 @@ export default function Loading() {
         <h1>Cash Admin</h1>
       </ActionTitle>
       <Cash projects={[]} />
-      <LoadingSpinner></LoadingSpinner>
+      <LoadingSpinner />
     </main>
   )
 }

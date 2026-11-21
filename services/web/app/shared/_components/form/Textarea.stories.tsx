@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Textarea } from './Textarea'
 import { useState } from 'react'
-import { fn, expect } from 'storybook/test'
+import { expect, fn } from 'storybook/test'
 
 const meta = {
   title: 'Shared/Form/Textarea',
@@ -38,13 +38,16 @@ export const Filled: StoryObj<typeof meta> = {
     label: 'Filled textarea',
     onChange: fn(),
   },
-  render: (args) => {
+  render: args => {
     const [value, setValue] = useState(args.value)
     return (
       <Textarea
         {...args}
         value={value}
-        onChange={(e) => { setValue(e.target.value); args.onChange?.(e) }}
+        onChange={e => {
+          setValue(e.target.value)
+          args.onChange?.(e)
+        }}
       />
     )
   },
@@ -66,16 +69,15 @@ export const KeepSelection: StoryObj<typeof meta> = {
     const textarea = canvas.getByLabelText('Textarea with KeepSelection')
     await userEvent.click(textarea)
     await userEvent.keyboard('Hello, World!')
-    await userEvent.pointer(
-      [
-        // left click and hold at char 0
-        { target: textarea, offset: 0, keys: '[MouseLeft>]' },
-        // drag the mouse to the right 5 characters
-        { offset: 5 },
-        // release the left mouse button
-        { keys: '[/MouseLeft]' },
-      ])
-    await userEvent.tab() // blur the textarea
+    await userEvent.pointer([
+      // Left click and hold at char 0
+      { target: textarea, offset: 0, keys: '[MouseLeft>]' },
+      // Drag the mouse to the right 5 characters
+      { offset: 5 },
+      // Release the left mouse button
+      { keys: '[/MouseLeft]' },
+    ])
+    await userEvent.tab() // Blur the textarea
     await expect(args.onSelectionChange).lastCalledWith({ start: 0, end: 5, text: 'Hello' })
   },
 }

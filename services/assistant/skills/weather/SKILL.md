@@ -19,6 +19,7 @@ Trigger: user asks for "Get Todays Weather Details", "What's the weather like?",
 5. Include practical advice about clothing and activities based on the weather conditions.
 
 ## Example Output
+
 ```text
 Here's the Weather Forecast for **Berlin** on **16.07.2026**
 
@@ -32,11 +33,12 @@ In the morning it is **Partly Cloudy and 18°C**. During the day, the temperatur
 ```
 
 ## Next Actions
-If asked for the next actions after the weather details:
-   - Get Weekly Forecast for {location}
-   - Get Weather Details for {next day}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
 
+If asked for the next actions after the weather details:
+
+- Get Weekly Forecast for {location}
+- Get Weather Details for {next day}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Weather Forecast
 
@@ -49,6 +51,7 @@ Trigger: user asks for "Get Weekly Forecast", "What's the weather like next week
 5. Provide a brief summary of what to expect for the week.
 
 ## Example Output
+
 ```text
 Here's the Weekly Forecast for **Berlin** from **16.07.2026** to **22.07.2026**
 
@@ -66,11 +69,12 @@ A typical summer week with a mix of sun and occasional rain. Perfect for plannin
 ```
 
 ## Next Actions
-If asked for the next actions after the weekly forecast:
-   - Get Weather Details for Today
-   - Get Weather Details for {specificDay}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
 
+If asked for the next actions after the weekly forecast:
+
+- Get Weather Details for Today
+- Get Weather Details for {specificDay}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Important Rules
 
@@ -80,4 +84,3 @@ Return only short action commands with no explanations. Follow the output format
 - If weather data is unavailable for a location or date, inform the user clearly.
 - Provide actionable advice based on weather conditions (e.g., clothing recommendations, umbrella warnings).
 - Never make up weather data—only use data from API responses.
-

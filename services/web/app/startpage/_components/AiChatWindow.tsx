@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { AiChatMessageList, Message } from './AiChatMessageList'
+import { useEffect, useRef, useState } from 'react'
+import type { Message } from './AiChatMessageList'
+import { AiChatMessageList } from './AiChatMessageList'
 import { AiChatInput } from '@/app/shared/_components/chat/AiChatInput'
 import { Icon } from '@/app/shared/_components/Icon'
-import { AiChatWebSocket, ChatState } from './AiChatWebSocket'
+import type { ChatState } from './AiChatWebSocket'
+import { AiChatWebSocket } from './AiChatWebSocket'
 import styles from './AiChatWindow.module.css'
 import { getLocation } from '../_helper/location'
 
@@ -17,11 +19,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   const webSocketRef = useRef<AiChatWebSocket | undefined>(undefined)
 
   const canInput = state.type === 'ready'
-  const retryLabel = state.type === 'wait-for-reconnecting'
-    ? 'Retry now'
-    : state.type === 'automatic-reconnecting-exhausted'
-      ? 'Retry again'
-      : undefined
+  const retryLabel = state.type === 'wait-for-reconnecting' ? 'Retry now' : state.type === 'automatic-reconnecting-exhausted' ? 'Retry again' : undefined
 
   useEffect(() => {
     const websocket = connectWebSocket()
@@ -30,15 +28,23 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
       webSocketRef.current?.terminate()
       webSocketRef.current = undefined
     }
-  // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [])
 
   function connectWebSocket(): AiChatWebSocket {
     const websocket = new AiChatWebSocket({ location: getLocation() })
-    websocket.onNewMessage = (str) => { setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }]) }
-    websocket.onNewActions = (newActions) => { setActions(newActions) }
-    websocket.onStateChange = (newState) => { setState(newState) }
-    websocket.onIncomingMessageChange = (message) => { setIncomingMessage(message) }
+    websocket.onNewMessage = str => {
+      setMessages(prev => [...prev, { role: 'assistant', content: str, id: prev.length }])
+    }
+    websocket.onNewActions = newActions => {
+      setActions(newActions)
+    }
+    websocket.onStateChange = newState => {
+      setState(newState)
+    }
+    websocket.onIncomingMessageChange = message => {
+      setIncomingMessage(message)
+    }
     websocket.connect()
     return websocket
   }
@@ -57,7 +63,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
   }
 
   function handleRestart() {
-    console.log('Restarting websocket connection')
+    console.debug('Restarting websocket connection')
     webSocketRef.current?.terminate()
     webSocketRef.current = undefined
     setMessages(() => [])
@@ -86,13 +92,7 @@ export function AiChatWindow({ loading = false }: { loading?: boolean }) {
           Restart
         </button>
       </div>
-      <AiChatMessageList
-        messages={messages}
-        state={state}
-        incomingMessage={incomingMessage}
-        onEdit={handleEdit}
-        hasActions={actions.length > 0}
-      />
+      <AiChatMessageList messages={messages} state={state} incomingMessage={incomingMessage} onEdit={handleEdit} hasActions={actions.length > 0} />
       <AiChatInput
         value={input}
         onChange={setInput}

@@ -1,23 +1,33 @@
-import { ModelMessage, ToolSet } from 'ai'
+import type { ModelMessage, ToolSet } from 'ai'
 import { send as groqSend } from './groq'
 import type { UserSession } from './session'
 import { generateInitialMessages } from './initial'
 import { logger } from './logger'
 import { z } from 'zod'
 import { getTools } from './tools'
-import { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
+import type { Assistant, AssistantEvent, AssistantEventListener, InitialContext } from './types'
 
 export function createAssistantInstance(user: UserSession): Assistant {
   const listeners: AssistantEventListener[] = []
   const messages: ModelMessage[] = []
   let tools: ToolSet = {}
-  const onChunk = (chunk: string) => { emit({ type: 'stream_response', chunk }) }
-  const onToolCall = () => { emit({ type: 'tool_call' }) }
-  const onFinishedResponse = () => { emit({ type: 'finished_response' }) }
-  const onGotActions = (actions: string[]) => { emit({ type: 'got_actions', actions }) }
+  const onChunk = (chunk: string) => {
+    emit({ type: 'stream_response', chunk })
+  }
+  const onToolCall = () => {
+    emit({ type: 'tool_call' })
+  }
+  const onFinishedResponse = () => {
+    emit({ type: 'finished_response' })
+  }
+  const onGotActions = (actions: string[]) => {
+    emit({ type: 'got_actions', actions })
+  }
 
   function emit(event: AssistantEvent) {
-    listeners.forEach((listener) => { listener(event) })
+    listeners.forEach(listener => {
+      listener(event)
+    })
   }
 
   function on(listener: AssistantEventListener) {
@@ -48,8 +58,7 @@ export function createAssistantInstance(user: UserSession): Assistant {
     try {
       const actions = z.array(z.string()).parse(JSON.parse(actionString))
       onGotActions(actions)
-    }
-    catch (error) {
+    } catch (error) {
       logger.warn(`Failed to parse actions from assistant response: ${JSON.stringify(actionString)}`, error)
       onGotActions([])
     }

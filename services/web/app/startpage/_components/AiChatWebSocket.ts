@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import type { ChatState } from '@/app/shared/_components/chat/AiChatState'
+
 export type { ChatState } from '@/app/shared/_components/chat/AiChatState'
 
 const INTENTIONAL_CLOSE = 4100
@@ -17,32 +18,45 @@ export class AiChatWebSocket {
   #retryAttempt = 0
   #lastSentMessage: string | undefined
 
-  onNewMessage: (message: string) => void = () => { /* empty */ }
-  onNewActions: (actions: string[]) => void = () => { /* empty */ }
-  onStateChange: (state: ChatState) => void = () => { /* empty */ }
-  onIncomingMessageChange: (message: string) => void = () => { /* empty */ }
-
-  constructor(private readonly initialContext: { location: { lat: number, lon: number } }) {
+  onNewMessage: (message: string) => void = () => {
+    /* Empty */
+  }
+  onNewActions: (actions: string[]) => void = () => {
+    /* Empty */
+  }
+  onStateChange: (state: ChatState) => void = () => {
+    /* Empty */
+  }
+  onIncomingMessageChange: (message: string) => void = () => {
+    /* Empty */
   }
 
+  constructor(private readonly initialContext: { location: { lat: number; lon: number } }) {}
+
   public connect() {
-    console.log('Connecting WebSocket')
+    console.debug('Connecting WebSocket')
     if (this.#ws) throw new Error('WebSocket already connected')
     this.onStateChange({ type: 'connecting' })
     this.#ws = new WebSocket(getWebSocketUrl())
-    this.#ws.onopen = () => { this.handleWebSocketOpen() }
-    this.#ws.onmessage = (event) => { this.handleMessage(event) }
-    this.#ws.onclose = (event) => { this.handleClose(event) }
-    console.log('WebSocket connected')
+    this.#ws.onopen = () => {
+      this.handleWebSocketOpen()
+    }
+    this.#ws.onmessage = event => {
+      this.handleMessage(event)
+    }
+    this.#ws.onclose = event => {
+      this.handleClose(event)
+    }
+    console.debug('WebSocket connected')
   }
 
   private handleWebSocketOpen() {
     if (this.#connectionId) {
-      // this is a reconnection, so we need to tell the server that we are reconnecting
+      // This is a reconnection, so we need to tell the server that we are reconnecting
       this.#ws?.send(JSON.stringify({ type: 'reconnect', uuid: this.#connectionId }))
       return
     }
-    const initialContext = this.initialContext
+    const { initialContext } = this
     this.#ws?.send(JSON.stringify({ type: 'initialize', initialContext }))
   }
 
@@ -58,8 +72,7 @@ export class AiChatWebSocket {
       else if (data.type === 'got_actions') this.onGotActions(data.actions ?? [])
       else if (data.type === 'finished_response') this.onFinishedResponse()
       else this.onError('Got an invalid message from server', new Error(raw))
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       this.onError(`Failed to parse server message`, error instanceof Error ? error : new Error(String(error)))
     }
   }
@@ -104,7 +117,7 @@ export class AiChatWebSocket {
     this.#messageBuffer = ''
     this.onIncomingMessageChange(this.#messageBuffer)
     this.onStateChange({ type: 'ready' })
-    console.warn('Web socket error ' + message, error)
+    console.warn(`Web socket error ${message}`, error)
     this.onNewMessage(message)
   }
 
@@ -129,7 +142,7 @@ export class AiChatWebSocket {
     }
     if (event.code === INTENTIONAL_CLOSE) {
       // This is an intentional close, so we don't want to retry
-      console.log('WebSocket closed intentionally, no retry')
+      console.debug('WebSocket closed intentionally, no retry')
       this.onStateChange({ type: 'terminated' })
       return
     }
@@ -144,12 +157,12 @@ export class AiChatWebSocket {
       return
     }
     const nextAttempt = this.#retryAttempt + 1
-    let inSeconds = Math.pow(2, nextAttempt)
+    let inSeconds = 2 ** nextAttempt
     console.warn(`WebSocket closed unexpectedly, attempt retry ${nextAttempt.toString()} in ${inSeconds.toString()} seconds`, event.code, event.reason)
     this.onStateChange({ type: 'wait-for-reconnecting', nextAttempt, maxAttempts: MAX_RECONNECT_ATTEMPTS, inSeconds })
     this.#reconnectionInterval = setInterval(() => {
       inSeconds--
-      console.log(`Attempt retry ${nextAttempt.toString()} in ${inSeconds.toString()} seconds`)
+      console.debug(`Attempt retry ${nextAttempt.toString()} in ${inSeconds.toString()} seconds`)
       this.onStateChange({ type: 'wait-for-reconnecting', nextAttempt, maxAttempts: MAX_RECONNECT_ATTEMPTS, inSeconds })
       if (inSeconds > 0) return
       this.retry(nextAttempt)
@@ -171,25 +184,35 @@ export class AiChatWebSocket {
   }
 
   public terminate() {
-    console.log('Terminating WebSocket')
+    console.debug('Terminating WebSocket')
     if (!this.#ws) throw new Error('WebSocket not connected')
     this.#ws.close(INTENTIONAL_CLOSE)
     this.#ws = undefined
     this.#retryAttempt = 0
     this.clearStalledTimer()
     this.clearReconnectionInterval()
-    this.onError = () => { /* empty */ }
-    this.onNewMessage = () => { /* empty */ }
-    this.onNewActions = () => { /* empty */ }
-    this.onStateChange = () => { /* empty */ }
-    this.onIncomingMessageChange = () => { /* empty */ }
-    console.log('WebSocket terminated')
+    this.onError = () => {
+      /* Empty */
+    }
+    this.onNewMessage = () => {
+      /* Empty */
+    }
+    this.onNewActions = () => {
+      /* Empty */
+    }
+    this.onStateChange = () => {
+      /* Empty */
+    }
+    this.onIncomingMessageChange = () => {
+      /* Empty */
+    }
+    console.debug('WebSocket terminated')
   }
 
   public forceReconnect() {
     this.clearReconnectionInterval()
     const nextAttempt = this.#retryAttempt + 1
-    console.log('Forcing reconnect ' + (nextAttempt.toString()))
+    console.debug(`Forcing reconnect ${nextAttempt.toString()}`)
     this.retry(nextAttempt)
   }
 

@@ -1,15 +1,17 @@
 'use client'
-import { Account } from '@/app/cash/_data/Account'
-import { Monthly, NeonTransaction } from '@/app/cash/_data/Monthly'
+import type { Account } from '@/app/cash/_data/Account'
+import type { Monthly, NeonTransaction } from '@/app/cash/_data/Monthly'
 import { currencyColumn } from '@/app/cash/_helper/CashColumns'
-import { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
+import type { MonthlyPeriod } from '@/app/cash/_helper/MonthlyPeriod'
 import { Input } from '@/app/shared/_components/form/Input'
 import { Select } from '@/app/shared/_components/form/Select'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useListState } from '@/app/shared/_helper/ListState'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
-import { addNeonTransactions, NeonTransactionInput } from '../server'
+import type { ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { NeonTransactionInput } from '../server'
+import { addNeonTransactions } from '../server'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/app/shared/_components/LoadingSpinner'
 import { ActionButton } from '@/app/shared/_components/ActionButton'
@@ -24,17 +26,26 @@ export interface MonthlyNeonProps {
 export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNeonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
-  const [transactions, addTransaction] = useListState((monthly.neon_transactions).map(toNeonTransactionInEdit))
+  const [transactions, addTransaction] = useListState(monthly.neon_transactions.map(toNeonTransactionInEdit))
   const router = useRouter()
   const valid = transactions.every(t => t.accountId === undefined || t.comment !== undefined)
 
   function accountCell(value: string, id: string): ReactNode {
     const obj = transactions.find(t => t.id === id)
-    if (!obj) throw new Error('Could not find transaction for id ' + id)
+    if (!obj) throw new Error(`Could not find transaction for id ${id}`)
     return (
-      <Select className="accountInput" small value={value} onChange={(e) => { setAccount(obj, e.target.value) }}>
+      <Select
+        className="accountInput"
+        small
+        value={value}
+        onChange={e => {
+          setAccount(obj, e.target.value)
+        }}
+      >
         {accounts.map(a => (
-          <option key={a.id} value={a.id}>{a.name}</option>
+          <option key={a.id} value={a.id}>
+            {a.name}
+          </option>
         ))}
       </Select>
     )
@@ -42,15 +53,23 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
 
   function commentCell(value: string | undefined, id: string): ReactNode {
     const obj = transactions.find(t => t.id === id)
-    if (!obj) throw new Error('Could not find transaction for id ' + id)
+    if (!obj) throw new Error(`Could not find transaction for id ${id}`)
     return (
-      <Input small required disabled={obj.accountId === undefined} value={value ?? ''} onChange={(e) => { addTransaction({ ...obj, comment: e.target.value }) }} />
+      <Input
+        small
+        required
+        disabled={obj.accountId === undefined}
+        value={value ?? ''}
+        onChange={e => {
+          addTransaction({ ...obj, comment: e.target.value })
+        }}
+      />
     )
   }
 
   function setAccount(obj: NeonTransactionInEdit, value: string) {
     const accountId = value === '' ? undefined : value
-    const comment = accountId === undefined ? undefined : (obj.accountId ? obj.comment : (obj.subject ?? (obj.description ?? '')))
+    const comment = accountId === undefined ? undefined : obj.accountId ? obj.comment : (obj.subject ?? obj.description ?? '')
     addTransaction({ ...obj, accountId, comment })
   }
 
@@ -59,9 +78,9 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
     setLoading(true)
     setError(undefined)
     addNeonTransactions(project_id, period, t)
-      .then((r) => {
+      .then(r => {
         if (r.success) router.refresh()
-        else setError('Failed to add neon transactions: ' + r.error)
+        else setError(`Failed to add neon transactions: ${r.error}`)
         setLoading(false)
       })
       .catch((e: unknown) => {
@@ -94,15 +113,18 @@ export function MonthlyNeon({ monthly, period, accounts, project_id }: MonthlyNe
 
   return (
     <>
-      <ActionButton disabled={loading || !valid} onClick={() => { onSave() }}>Save</ActionButton>
+      <ActionButton
+        disabled={loading || !valid}
+        onClick={() => {
+          onSave()
+        }}
+      >
+        Save
+      </ActionButton>
       {error && <div className="error">{error}</div>}
-      {loading && (<LoadingSpinner />)}
+      {loading && <LoadingSpinner />}
       <Input disabled label="Not assigned total" type="currency" value={notAssigned.toString()} style={{ marginBottom: 'var(--gap-small)' }} />
-      <DataTable
-        columns={columns}
-        data={transactions}
-        initialSortingOrder={[{ key: 'amount', direction: 'DESC' }]}
-      />
+      <DataTable columns={columns} data={transactions} initialSortingOrder={[{ key: 'amount', direction: 'DESC' }]} />
     </>
   )
 }

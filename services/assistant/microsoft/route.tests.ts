@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { EventEmitter } from 'events'
 import { Temporal } from '@js-temporal/polyfill'
 import { handleMicrosoftApi } from './route'
@@ -14,7 +14,7 @@ const { mockGetSession, mockGetUserInfo, mockGetMicrosoftMailWorker, mockGetMicr
 
 const mockUser: UserSession = { name: 'Test', email: 'test@test.com', applications: ['startpage'] }
 
-vi.mock('../session', async (importOriginal) => {
+vi.mock('../session', async importOriginal => {
   const actual = await importOriginal<typeof import('../session')>()
   return {
     ...actual,
@@ -40,7 +40,11 @@ vi.mock('./calendar', () => ({
 }))
 
 function createRequest(method: string, url: string, body?: unknown, cookie?: string): EventEmitter {
-  const req = new EventEmitter() as EventEmitter & { method: string, url: string, headers: Record<string, string | undefined> }
+  const req = new EventEmitter() as EventEmitter & {
+    method: string
+    url: string
+    headers: Record<string, string | undefined>
+  }
   req.method = method
   req.url = url
   req.headers = cookie ? { cookie } : {}
@@ -49,15 +53,24 @@ function createRequest(method: string, url: string, body?: unknown, cookie?: str
       req.emit('data', Buffer.from(JSON.stringify(body)))
       req.emit('end')
     })
-  }
-  else {
-    process.nextTick(() => { req.emit('end') })
+  } else {
+    process.nextTick(() => {
+      req.emit('end')
+    })
   }
   return req
 }
 
-function createResponse(): EventEmitter & { writeHead: ReturnType<typeof vi.fn>, end: ReturnType<typeof vi.fn>, statusCode?: number } {
-  const res = new EventEmitter() as EventEmitter & { writeHead: ReturnType<typeof vi.fn>, end: ReturnType<typeof vi.fn>, statusCode?: number }
+function createResponse(): EventEmitter & {
+  writeHead: ReturnType<typeof vi.fn>
+  end: ReturnType<typeof vi.fn>
+  statusCode?: number
+} {
+  const res = new EventEmitter() as EventEmitter & {
+    writeHead: ReturnType<typeof vi.fn>
+    end: ReturnType<typeof vi.fn>
+    statusCode?: number
+  }
   res.writeHead = vi.fn().mockReturnValue(res)
   res.end = vi.fn().mockReturnValue(res)
   return res
@@ -86,10 +99,48 @@ describe('handleMicrosoftApi', () => {
   })
 
   test('GET /microsoft/status returns status', async () => {
-    mockGetUserInfo.mockResolvedValue({ id: '1', userPrincipalName: 'test@test.com', displayName: 'Test', mail: 'test@test.com' })
-    mockGetMicrosoftMailWorker.mockResolvedValue({ getStatus: () => 'connected', getInboxMessages: () => [], getInboxCount: () => ({ focused: 0, focusedUnread: 0, other: 0, otherUnread: 0 }), getMessage: () => Promise.resolve(undefined), sendMail: () => Promise.resolve(), archiveMessage: () => Promise.resolve(), archiveMessagesFromSender: () => Promise.resolve(0), touch: () => { /* mock */ } })
-    mockGetMicrosoftTodoWorker.mockResolvedValue({ getStatus: () => 'connected', getTodoCount: () => ({ tasksDueToday: 0, tasksDueRestOfWeek: 0, tasksWithoutDate: 0 }), getTodoLists: () => [], getTasks: () => [], getAllTasks: () => [], createTask: () => Promise.reject(new Error('not implemented')), updateTask: () => Promise.reject(new Error('not implemented')), completeTask: () => Promise.resolve(), deleteTask: () => Promise.resolve(), touch: () => { /* mock */ } })
-    mockGetMicrosoftCalendarWorker.mockResolvedValue({ getStatus: () => 'connected', getCalendars: () => [], getAllEvents: () => [], getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }), createEvent: () => Promise.reject(new Error('not implemented')), touch: () => { /* mock */ } })
+    mockGetUserInfo.mockResolvedValue({
+      id: '1',
+      userPrincipalName: 'test@test.com',
+      displayName: 'Test',
+      mail: 'test@test.com',
+    })
+    mockGetMicrosoftMailWorker.mockResolvedValue({
+      getStatus: () => 'connected',
+      getInboxMessages: () => [],
+      getInboxCount: () => ({ focused: 0, focusedUnread: 0, other: 0, otherUnread: 0 }),
+      getMessage: () => Promise.resolve(undefined),
+      sendMail: () => Promise.resolve(),
+      archiveMessage: () => Promise.resolve(),
+      archiveMessagesFromSender: () => Promise.resolve(0),
+      touch: () => {
+        /* Mock */
+      },
+    })
+    mockGetMicrosoftTodoWorker.mockResolvedValue({
+      getStatus: () => 'connected',
+      getTodoCount: () => ({ tasksDueToday: 0, tasksDueRestOfWeek: 0, tasksWithoutDate: 0 }),
+      getTodoLists: () => [],
+      getTasks: () => [],
+      getAllTasks: () => [],
+      createTask: () => Promise.reject(new Error('not implemented')),
+      updateTask: () => Promise.reject(new Error('not implemented')),
+      completeTask: () => Promise.resolve(),
+      deleteTask: () => Promise.resolve(),
+      touch: () => {
+        /* Mock */
+      },
+    })
+    mockGetMicrosoftCalendarWorker.mockResolvedValue({
+      getStatus: () => 'connected',
+      getCalendars: () => [],
+      getAllEvents: () => [],
+      getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }),
+      createEvent: () => Promise.reject(new Error('not implemented')),
+      touch: () => {
+        /* Mock */
+      },
+    })
 
     const req = createRequest('GET', '/microsoft/status')
     const res = createResponse()
@@ -101,7 +152,18 @@ describe('handleMicrosoftApi', () => {
 
   test('POST /microsoft/mail/send sends mail', async () => {
     const sendMail = vi.fn().mockResolvedValue(undefined)
-    mockGetMicrosoftMailWorker.mockResolvedValue({ getStatus: () => 'connected', sendMail, getInboxMessages: () => [], getInboxCount: () => ({ focused: 0, focusedUnread: 0, other: 0, otherUnread: 0 }), getMessage: () => Promise.resolve(undefined), archiveMessage: () => Promise.resolve(), archiveMessagesFromSender: () => Promise.resolve(0), touch: () => { /* mock */ } })
+    mockGetMicrosoftMailWorker.mockResolvedValue({
+      getStatus: () => 'connected',
+      sendMail,
+      getInboxMessages: () => [],
+      getInboxCount: () => ({ focused: 0, focusedUnread: 0, other: 0, otherUnread: 0 }),
+      getMessage: () => Promise.resolve(undefined),
+      archiveMessage: () => Promise.resolve(),
+      archiveMessagesFromSender: () => Promise.resolve(0),
+      touch: () => {
+        /* Mock */
+      },
+    })
 
     const req = createRequest('POST', '/microsoft/mail/send', { to: ['to@example.com'], subject: 'Hi', body: 'Hello' })
     const res = createResponse()
@@ -132,9 +194,23 @@ describe('handleMicrosoftApi', () => {
       organizer: { emailAddress: { name: '', address: '' } },
     }
     const createEvent = vi.fn().mockResolvedValue(createdEvent)
-    mockGetMicrosoftCalendarWorker.mockResolvedValue({ getStatus: () => 'connected', createEvent, getCalendars: () => [], getAllEvents: () => [], getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }), touch: () => { /* mock */ } })
+    mockGetMicrosoftCalendarWorker.mockResolvedValue({
+      getStatus: () => 'connected',
+      createEvent,
+      getCalendars: () => [],
+      getAllEvents: () => [],
+      getEventCount: () => ({ eventsToday: 0, eventsThisWeek: 0 }),
+      touch: () => {
+        /* Mock */
+      },
+    })
 
-    const req = createRequest('POST', '/microsoft/calendar/events', { calendarId: 'cal-1', subject: 'Meeting', startDateTime: start.toString(), endDateTime: end.toString() })
+    const req = createRequest('POST', '/microsoft/calendar/events', {
+      calendarId: 'cal-1',
+      subject: 'Meeting',
+      startDateTime: start.toString(),
+      endDateTime: end.toString(),
+    })
     const res = createResponse()
     await handleMicrosoftApi(req as never, res as never, '/microsoft/calendar/events')
 

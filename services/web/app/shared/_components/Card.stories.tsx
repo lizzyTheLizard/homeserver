@@ -7,19 +7,22 @@ const meta = {
   component: Card,
   tags: ['autodocs'],
   argTypes: {
-    href: { control: 'text', description: 'If provided, the card will be rendered as a link to this URL', optional: true },
+    href: {
+      control: 'text',
+      description: 'If provided, the card will be rendered as a link to this URL',
+      optional: true,
+    },
   },
 } satisfies Meta<typeof Card>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const WithContent: StoryObj<typeof meta> = {
   argTypes: {},
   render: () => (
     <Card>
-      <Icon name="cash" style={{ width: '5rem', height: '5rem' }}></Icon>
+      <Icon name="cash" style={{ width: '5rem', height: '5rem' }} />
       <h2>Cash</h2>
       <span>This is some text</span>
     </Card>
@@ -30,7 +33,7 @@ export const WithLink: StoryObj<typeof meta> = {
   argTypes: {},
   render: () => (
     <Card href="#">
-      <Icon name="cash" style={{ width: '5rem', height: '5rem' }}></Icon>
+      <Icon name="cash" style={{ width: '5rem', height: '5rem' }} />
       <h2>Cash</h2>
       <span>This is some text</span>
     </Card>

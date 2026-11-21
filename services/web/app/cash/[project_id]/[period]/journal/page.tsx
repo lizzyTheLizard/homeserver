@@ -22,7 +22,7 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
   return serverPageFunction(metadata.title, async () => {
     const period = fromUrlString((await params).period)
     const projectId = (await params).project_id
-    const accountId = (await searchParams).accountId
+    const { accountId } = await searchParams
     if (accountId) {
       const journalData = await loadAccountJournal(period, projectId, accountId)
       return (
@@ -34,8 +34,7 @@ export default async function Page({ params, searchParams }: JournalPageProps) {
           <AccountJournal {...journalData} period={period} project_id={projectId} />
         </main>
       )
-    }
-    else {
+    } else {
       const journalData = await loadJournal(period, projectId)
       return (
         <main>

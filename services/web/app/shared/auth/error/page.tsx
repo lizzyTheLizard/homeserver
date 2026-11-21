@@ -6,7 +6,5 @@ export const metadata = {
 }
 
 export default function Page() {
-  return serverPageFunction(metadata.title, () => (
-    <ErrorPage name="Authentication Failed" message="The authentication process failed. Please try again." />
-  ))
+  return serverPageFunction(metadata.title, () => <ErrorPage name="Authentication Failed" message="The authentication process failed. Please try again." />)
 }

@@ -1,11 +1,12 @@
-import { describe, expect, test, beforeAll } from 'vitest'
+import { beforeAll, describe, expect, test } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '../db'
 import { setMicrosoftToken } from './data'
-import { getMicrosoftTodoWorker, type MicrosoftTodoWorker } from './todo'
+import { getMicrosoftTodoWorker } from './todo'
+import type { MicrosoftTodoWorker } from './todo'
 import type { UserSession } from '../session'
 
-const TEST_MICROSOFT_REFRESH_TOKEN = process.env.TEST_MICROSOFT_REFRESH_TOKEN
+const { TEST_MICROSOFT_REFRESH_TOKEN } = process.env
 
 async function waitForData(worker: MicrosoftTodoWorker): Promise<void> {
   for (let i = 0; i < 20; i++) {
@@ -15,17 +16,19 @@ async function waitForData(worker: MicrosoftTodoWorker): Promise<void> {
 }
 
 describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
-  const token = TEST_MICROSOFT_REFRESH_TOKEN!  // oxlint-disable-line
+  const token = TEST_MICROSOFT_REFRESH_TOKEN! // oxlint-disable-line
   let user: UserSession
   let worker: MicrosoftTodoWorker
 
   beforeAll(async () => {
     user = { name: 'Test', email: 'todo-test@test.com', applications: ['startpage'] }
-    await transactional(db => setMicrosoftToken(db, user.email, {
-      access_token: '',
-      refresh_token: token,
-      expires_at: 0,
-    }))
+    await transactional(db =>
+      setMicrosoftToken(db, user.email, {
+        access_token: '',
+        refresh_token: token,
+        expires_at: 0,
+      }),
+    )
     worker = await getMicrosoftTodoWorker(user)
     await waitForData(worker)
   })
@@ -55,9 +58,7 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
     const tasks = worker.getAllTasks()
 
     expect(Array.isArray(tasks)).toBe(true)
-    if (tasks.length > 0) {
-      expect(tasks[0]).toHaveProperty('listName')
-    }
+    if (tasks.length > 0) expect(tasks[0]).toHaveProperty('listName')
   })
 
   test('getTodoCount returns counts', () => {
@@ -81,28 +82,22 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-todo', () => {
       const tasksAfterCreate = worker.getTasks(listId)
       const found = tasksAfterCreate.find(t => t.id === created.id)
       expect(found).toBeDefined()
-      if (found) {
-        expect(found.title).toBe(uniqueTitle)
-      }
+      if (found) expect(found.title).toBe(uniqueTitle)
 
-      const updated = await worker.updateTask(user, listId, created.id, { title: uniqueTitle + ' (updated)' })
-      expect(updated.title).toBe(uniqueTitle + ' (updated)')
+      const updated = await worker.updateTask(user, listId, created.id, { title: `${uniqueTitle} (updated)` })
+      expect(updated.title).toBe(`${uniqueTitle} (updated)`)
 
       const tasksAfterUpdate = worker.getTasks(listId)
       const foundUpdated = tasksAfterUpdate.find(t => t.id === created.id)
       expect(foundUpdated).toBeDefined()
-      if (foundUpdated) {
-        expect(foundUpdated.title).toBe(uniqueTitle + ' (updated)')
-      }
+      if (foundUpdated) expect(foundUpdated.title).toBe(`${uniqueTitle} (updated)`)
 
       await worker.completeTask(user, listId, created.id)
 
       const tasksAfterComplete = worker.getTasks(listId)
       const foundComplete = tasksAfterComplete.find(t => t.id === created.id)
       expect(foundComplete).toBeDefined()
-      if (foundComplete) {
-        expect(foundComplete.status).toBe('completed')
-      }
+      if (foundComplete) expect(foundComplete.status).toBe('completed')
 
       await worker.deleteTask(user, listId, created.id)
 

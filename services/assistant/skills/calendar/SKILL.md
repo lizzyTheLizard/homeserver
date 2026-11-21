@@ -13,6 +13,7 @@ Trigger: user asks to see their calendar, schedule, or "Show Calendar Overview".
 4. Do not use tables.
 
 ## Example Output
+
 ```text
 Here is your calendar:
 
@@ -21,9 +22,11 @@ Here is your calendar:
 ```
 
 ## Next Actions
+
 If asked for the next actions after the overview, return at most one action per day with events:
-   - Details for {day of week}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Details for {day of week}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Calendar Details
 
@@ -34,10 +37,12 @@ Trigger: user asks to inspect a specific day or a specific event.
 3. If the event is not in the current results, call `list_calendar_events` with a wider date range.
 
 ## Next Actions
+
 If asked for the next actions after viewing details, return these actions:
-   - Show Weekly Overview
-   - Add an Event
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Show Weekly Overview
+- Add an Event
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Adding an Event
 
@@ -51,6 +56,7 @@ Trigger: user asks to add, create, schedule, or plan an event.
 6. Confirm the event was created and show the details.
 
 ## Example
+
 ```text
 User: Schedule a dentist appointment next Tuesday at 14:00 for 1 hour
 Assistant: I'll create "Dentist appointment" on Tuesday 16.07.2025 from 14:00 to 15:00 in your default calendar. Shall I proceed?
@@ -59,10 +65,12 @@ Assistant: Created "Dentist appointment" on Tuesday 16.07.2025 from 14:00 to 15:
 ```
 
 ## Next Actions
+
 If asked for the next actions after adding an event, return these actions:
-   - Show Weekly Overview
-   - Add another Event
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Show Weekly Overview
+- Add another Event
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Important Rules
 

@@ -18,6 +18,7 @@ Trigger: user asks for "Get Outlook Overview" or asks for an email overview with
 Do not mark emails as read automatically.
 
 ## Example Output
+
 ```text
 Here is your email overview:
 - John Smith (john@example.com): 3 emails — "Q3 Report" (today) requests your review by Friday, "Meeting Notes" (yesterday) summarizes the client call, and "Lunch?" (2 days ago) asks about availability next week.
@@ -25,12 +26,15 @@ Here is your email overview:
 ```
 
 ## Next Actions
+
 If asked for the next actions after the overview, return these actions:
-   - Summarize emails from {senderName}
-   - Archive emails from {senderName}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Summarize emails from {senderName}
+- Archive emails from {senderName}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Composing and Sending Emails
+
 Trigger: user asks to send an email or reply to an email.
 
 1. Gather the recipient(s), subject, and body. For replies, use `Re: {original subject}` as the subject and address the original sender.
@@ -39,7 +43,7 @@ Trigger: user asks to send an email or reply to an email.
    ```
    To: {recipients}
    Subject: {subject}
-   
+
    ~~~
    Draft email body here
    ~~~
@@ -52,12 +56,15 @@ Trigger: user asks to send an email or reply to an email.
 Never send an email without explicit confirmation.
 
 ## Next Actions
+
 If asked for the next actions after drafting an email, return these actions:
-   - Send Now
-   - Edit Draft
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Send Now
+- Edit Draft
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Summarize Emails from a Sender
+
 Trigger: user asks to summarize emails from a specific sender.
 
 1. Call `get_outlook_mails_from_sender` with the sender's email address to get all inbox emails from that sender.
@@ -65,12 +72,15 @@ Trigger: user asks to summarize emails from a specific sender.
 3. Do not propose next actions unless the user explicitly asks for actions.
 
 ## Next Actions
+
 If asked for the next actions after the summary, return these actions:
-   - Archive emails from {senderName}
-   - Read email {subject}
-Return only short action commands with no explanations. Follow the output format requested by the caller.
+
+- Archive emails from {senderName}
+- Read email {subject}
+  Return only short action commands with no explanations. Follow the output format requested by the caller.
 
 # Archiving Emails from a Sender
+
 Trigger: user asks to archive emails from a specific sender.
 
 1. First, call `get_outlook_mails_from_sender` with the sender's email address to see how many emails exist.
@@ -79,6 +89,7 @@ Trigger: user asks to archive emails from a specific sender.
 4. Confirm the result to the user.
 
 # Searching Archived Emails
+
 Trigger: user asks to search through archived emails.
 
 1. Use `search_outlook_archive` with the user's query.
@@ -86,6 +97,7 @@ Trigger: user asks to search through archived emails.
 3. The user can then select an email to read it.
 
 # Reading an Email
+
 Trigger: user selects an email to read.
 
 1. Use `get_outlook_mail` with the email's ID to fetch the full content.

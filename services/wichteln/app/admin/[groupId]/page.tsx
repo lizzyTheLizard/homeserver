@@ -43,10 +43,7 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         <div className="row">
           <h2>{inWishes ? 'Wünsche eingetragen' : 'Wunsch gewählt'}</h2>
           <span className="muted">
-            {done}
-            {' '}
-            /
-            {total}
+            {done} /{total}
           </span>
         </div>
         <div className="progress">
@@ -54,8 +51,8 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         </div>
 
         <ul className="list">
-          {group.users.map((u) => {
-            const ok = inWishes ? !!u.wish : !!u.selectedWishOf
+          {group.users.map(u => {
+            const ok = inWishes ? Boolean(u.wish) : Boolean(u.selectedWishOf)
             return (
               <li key={u.id}>
                 <div className="participant">
@@ -82,8 +79,7 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         {total === 0 && <p className="muted">Noch niemand hat sich registriert.</p>}
         {total > 0 && (
           <p className="muted small">
-            „Passwort zurücksetzen“ gilt für das Konto der Person, also für alle ihre Gruppen. Bei der nächsten Anmeldung
-            muss sie ein eigenes Passwort wählen.
+            „Passwort zurücksetzen“ gilt für das Konto der Person, also für alle ihre Gruppen. Bei der nächsten Anmeldung muss sie ein eigenes Passwort wählen.
           </p>
         )}
 
@@ -94,47 +90,35 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         </div>
       </section>
 
-      {inWishes
-        ? (
-            <>
-              <section className="card">
-                <h2>Phase 2 starten</h2>
-                <p className="muted">
-                  Sobald alle Teilnehmenden ihren Wunsch eingetragen haben, kannst du die Auswahlphase starten. Danach können
-                  Wünsche nicht mehr geändert werden.
-                </p>
-                <form action={startSelection.bind(null, group.id)}>
-                  <SubmitButton
-                    className="full"
-                    disabled={!canStart}
-                    confirm="Auswahlphase jetzt starten? Wünsche können danach nicht mehr geändert werden."
-                  >
-                    Auswahlphase starten
-                  </SubmitButton>
-                </form>
-                {!canStart && (
-                  <p className="muted small">
-                    {total < 2 ? 'Es braucht mindestens zwei Teilnehmende.' : `Es fehlen noch ${String(total - done)} Wünsche.`}
-                  </p>
-                )}
-              </section>
-            </>
-          )
-        : (
-            done === total && (
-              <section className="card">
-                <div className="alert ok">Alle haben einen Wunsch gewählt. Das Wichteln ist komplett verteilt! 🎉</div>
-              </section>
-            )
-          )}
+      {inWishes ? (
+        <>
+          <section className="card">
+            <h2>Phase 2 starten</h2>
+            <p className="muted">
+              Sobald alle Teilnehmenden ihren Wunsch eingetragen haben, kannst du die Auswahlphase starten. Danach können Wünsche nicht mehr geändert werden.
+            </p>
+            <form action={startSelection.bind(null, group.id)}>
+              <SubmitButton className="full" disabled={!canStart} confirm="Auswahlphase jetzt starten? Wünsche können danach nicht mehr geändert werden.">
+                Auswahlphase starten
+              </SubmitButton>
+            </form>
+            {!canStart && (
+              <p className="muted small">{total < 2 ? 'Es braucht mindestens zwei Teilnehmende.' : `Es fehlen noch ${String(total - done)} Wünsche.`}</p>
+            )}
+          </section>
+        </>
+      ) : (
+        done === total && (
+          <section className="card">
+            <div className="alert ok">Alle haben einen Wunsch gewählt. Das Wichteln ist komplett verteilt! 🎉</div>
+          </section>
+        )
+      )}
 
       <section className="card">
         <h2>Gruppe löschen</h2>
         <form action={deleteGroup.bind(null, group.id)}>
-          <SubmitButton
-            className="secondary"
-            confirm={`Gruppe „${group.name}“ mit allen Daten endgültig löschen?`}
-          >
+          <SubmitButton className="secondary" confirm={`Gruppe „${group.name}“ mit allen Daten endgültig löschen?`}>
             Gruppe löschen
           </SubmitButton>
         </form>

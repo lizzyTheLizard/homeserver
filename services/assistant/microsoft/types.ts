@@ -9,10 +9,10 @@ export interface SerializedCalendarEvent {
   id: string
   subject: string
   bodyPreview: string
-  body: { contentType: 'text' | 'html', content: string }
+  body: { contentType: 'text' | 'html'; content: string }
   start: string
   end: string
-  location: { displayName: string, uniqueIdType: string }
+  location: { displayName: string; uniqueIdType: string }
   isAllDay: boolean
   isCancelled: boolean
   showAs: 'free' | 'tentative' | 'busy' | 'oof' | 'workingElsewhere' | 'unknown'
@@ -20,7 +20,7 @@ export interface SerializedCalendarEvent {
   sensitivity: 'normal' | 'private' | 'personal' | 'confidential'
   createdDateTime: string
   lastModifiedDateTime: string
-  organizer: { emailAddress: { name: string, address: string } }
+  organizer: { emailAddress: { name: string; address: string } }
   calendarName?: string
 }
 
@@ -28,7 +28,7 @@ export interface SerializedTodoTask {
   id: string
   title: string
   status: 'notStarted' | 'inProgress' | 'completed' | 'waitingOnOthers' | 'deferred'
-  body?: { content: string, contentType: 'text' | 'html' }
+  body?: { content: string; contentType: 'text' | 'html' }
   dueDate?: string
   reminderDateTime?: string
   createdDateTime: string
@@ -40,8 +40,8 @@ export interface SerializedTodoTask {
 export interface SerializedMessageListItem {
   id: string
   subject: string
-  from: { emailAddress: { address: string, name?: string } }
-  toRecipients: { emailAddress: { address: string, name?: string } }[]
+  from: { emailAddress: { address: string; name?: string } }
+  toRecipients: { emailAddress: { address: string; name?: string } }[]
   receivedDateTime: string
   isRead: boolean
   bodyPreview: string
@@ -49,7 +49,7 @@ export interface SerializedMessageListItem {
 }
 
 export type SerializedMessageFull = SerializedMessageListItem & {
-  body: { contentType: string, content: string }
+  body: { contentType: string; content: string }
 }
 
 export interface MicrosoftConnectionStatus {

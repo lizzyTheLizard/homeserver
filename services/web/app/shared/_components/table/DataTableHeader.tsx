@@ -1,12 +1,12 @@
-import { SortingOrder } from './sortAndFilter'
+import type { SortingOrder } from './sortAndFilter'
 import style from './DataTableHeader.module.css'
 import { Icon } from '../Icon'
-import { ColumnDefinition } from './DataTable'
+import type { ColumnDefinition } from './DataTable'
 
 export interface DataTableHeaderProps<FieldType> {
   sortingOrder: SortingOrder[]
   column: ColumnDefinition<FieldType>
-  onSort: (oldSort: SortingOrder | undefined, key: string) => void
+  onSort(oldSort: SortingOrder | undefined, key: string): void
 }
 
 export function DataTableHeader<FieldType>({ column, sortingOrder, onSort }: DataTableHeaderProps<FieldType>) {
@@ -19,12 +19,16 @@ export function DataTableHeader<FieldType>({ column, sortingOrder, onSort }: Dat
       id={column.header}
       className={thClass}
       style={column.style}
-      onClick={column.sort ? () => { onSort(sort, column.key) } : undefined}
+      onClick={
+        column.sort
+          ? () => {
+              onSort(sort, column.key)
+            }
+          : undefined
+      }
     >
       {column.header}
-      {column.sort && (
-        <Icon name={icon} className={style.sortIcon} style={{ opacity: sort ? 1 : 0.4 }} />
-      )}
+      {column.sort && <Icon name={icon} className={style.sortIcon} style={{ opacity: sort ? 1 : 0.4 }} />}
     </th>
   )
 }

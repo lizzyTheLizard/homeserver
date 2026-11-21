@@ -1,13 +1,12 @@
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { LineItem } from '../_components/DashboardCard'
+import type { LineItem } from '../_components/DashboardCard'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { findNumberOfUsersWithTemplates } from '@/app/coeditor/_data/Template'
 import { findNumberOfDiscussions } from '@/app/coeditor/_data/Discussion'
-import { get24HoursAgo, getStartOfMonth, get30DaysAgo } from '@/app/cash/_helper/Dates'
+import { get24HoursAgo, get30DaysAgo, getStartOfMonth } from '@/app/cash/_helper/Dates'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfAccounts } from '@/app/cash/_data/Account'
-import { findNumberOfProjects } from '@/app/cash/_data/Project'
-import { findNumberOfUsersWithProjects } from '@/app/cash/_data/Project'
+import { findNumberOfProjects, findNumberOfUsersWithProjects } from '@/app/cash/_data/Project'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
 import { getDbPhaseTimings } from '@/app/shared/_external/db/setup'
 
@@ -16,9 +15,9 @@ function formatUptime(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60
   const parts: string[] = []
-  if (h > 0) parts.push(h.toString() + 'h')
-  if (m > 0) parts.push(m.toString() + 'm')
-  parts.push(s.toString() + 's')
+  if (h > 0) parts.push(`${h.toString()}h`)
+  if (m > 0) parts.push(`${m.toString()}m`)
+  parts.push(`${s.toString()}s`)
   return parts.join(' ')
 }
 
@@ -35,7 +34,7 @@ export async function loadGeneralMetrics(): Promise<LineItem[]> {
 
 export async function loadCoeditorMetrics(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
-  return nontransactional(async (c) => {
+  return nontransactional(async c => {
     const [users, totalDiscussions, dayDiscussions, totalCommands, dayCommands] = await Promise.all([
       findNumberOfUsersWithTemplates(c),
       findNumberOfDiscussions(c),
@@ -55,7 +54,7 @@ export async function loadCoeditorMetrics(): Promise<LineItem[]> {
 
 export async function loadCashMetrics(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
-  return nontransactional(async (c) => {
+  return nontransactional(async c => {
     const [users, projects, accounts, total, day, days30, calMonth] = await Promise.all([
       findNumberOfUsersWithProjects(c),
       findNumberOfProjects(c),

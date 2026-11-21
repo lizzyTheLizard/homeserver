@@ -31,7 +31,9 @@ describe('loadMessages', () => {
   test('logs the assistant URL when the assistant is unreachable', async ({ task }) => {
     const user: UserSession = { name: 'Test User', email: task.id, applications: ['startpage'] }
     vi.mocked(getAuthenticatedUserSession).mockResolvedValue(user)
-    vi.mocked(cookies).mockResolvedValue({ toString: () => 'homeserver-session=abc' } as unknown as ReadonlyRequestCookies)
+    vi.mocked(cookies).mockResolvedValue({
+      toString: () => 'homeserver-session=abc',
+    } as unknown as ReadonlyRequestCookies)
     const cause = new Error('connect ECONNREFUSED 127.0.0.1:8500')
     globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed', { cause }))
 

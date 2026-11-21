@@ -8,8 +8,7 @@ export async function GET() {
     getConfig()
     await query('SELECT 1')
     return Response.json({ status: 'ok' })
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Wichteln health check failed:', error)
     return Response.json({ status: 'unhealthy' }, { status: 503 })
   }

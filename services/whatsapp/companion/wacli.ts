@@ -1,12 +1,14 @@
-import { spawn, type ChildProcess } from 'node:child_process'
+import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
 import { config } from './config'
 import { isRecord } from './isRecord'
 import { logger } from './logger'
-import { Readable } from 'node:stream'
+import type { Readable } from 'node:stream'
 
-export type WacliEvent = { event: 'qr_code', data: { code: string } }
-  | { event: 'error', data: { message: string } }
-  | { event: 'warning', data: { code?: string, message: string, name?: string } }
+export type WacliEvent =
+  | { event: 'qr_code'; data: { code: string } }
+  | { event: 'error'; data: { message: string } }
+  | { event: 'warning'; data: { code?: string; message: string; name?: string } }
   | { event: 'closed' }
   | { event: 'auth_starting' }
   | { event: 'connected' }
@@ -21,21 +23,27 @@ export function spawnWacli(storeDir: string, args: string[], handleEvent: (event
     env: wacliEnv(),
     stdio: ['ignore', 'pipe', 'pipe'],
   })
-  // stdout is drained so it can never backpressure the child.
+  // Stdout is drained so it can never backpressure the child.
   child.stdout.resume()
-  child.on('error', (err) => { handleEvent({ event: 'error', data: { message: err.message } }) })
-  child.on('close', () => { handleEvent({ event: 'closed' }) })
-  attachEventParser(child.stderr, (e) => { handleEvent(e) })
+  child.on('error', err => {
+    handleEvent({ event: 'error', data: { message: err.message } })
+  })
+  child.on('close', () => {
+    handleEvent({ event: 'closed' })
+  })
+  attachEventParser(child.stderr, e => {
+    handleEvent(e)
+  })
   return child
 }
 
 // Runs a short-lived wacli command and resolves with the parsed JSON envelope
 // (or a plain success envelope for commands that do not produce JSON). Rejects
-// with WacliError when the process exits non-zero.
+// With WacliError when the process exits non-zero.
 export function runWacli(storeDir: string, args: string[], hasResult: boolean, timeoutMs?: number): Promise<unknown> {
   let stdout = ''
   let firstResult = false
-  timeoutMs = timeoutMs ?? config.WHATSAPP_CMD_TIMEOUT_MS
+  timeoutMs ??= config.WHATSAPP_CMD_TIMEOUT_MS
   const fullArgs = ['--store', storeDir, ...args]
   if (hasResult) fullArgs.push('--json')
   logger.debug(`Run ${config.WACLI_BIN} ${fullArgs.join(' ')}`)
@@ -58,10 +66,16 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
       else resolve(result)
     }
 
-    child.stdout.on('data', (chunk: Buffer) => { stdout += chunk.toString() })
-    child.stderr.on('data', (chunk: Buffer) => { logger.debug('StdError of wacli: ' + chunk.toString().trim()) })
-    child.on('error', (err: unknown) => { finish(err instanceof Error ? err : Error(String(err))) })
-    child.on('close', (code) => {
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString()
+    })
+    child.stderr.on('data', (chunk: Buffer) => {
+      logger.debug(`StdError of wacli: ${chunk.toString().trim()}`)
+    })
+    child.on('error', (err: unknown) => {
+      finish(err instanceof Error ? err : Error(String(err)))
+    })
+    child.on('close', code => {
       const trimmed = stdout.trim()
       if (code !== 0) {
         finish(new Error(`wacli exited with code ${String(code)}`))
@@ -75,8 +89,7 @@ export function runWacli(storeDir: string, args: string[], hasResult: boolean, t
         const parsed: unknown = JSON.parse(trimmed)
         if (!isRecord(parsed)) throw new Error('unexpected wacli output: not a JSON object')
         finish(parsed.data)
-      }
-      catch (err: unknown) {
+      } catch (err: unknown) {
         finish(err instanceof Error ? err : Error(String(err)))
       }
     })
@@ -101,10 +114,9 @@ export function attachEventParser(stream: Readable | null, onEvent: (event: Wacl
         const event = toWacliEvent(JSON.parse(line))
         if (!event) throw new Error('not a wacli event')
         onEvent(event)
-      }
-      catch {
+      } catch {
         // With --events wacli writes NDJSON to stderr; anything else is an
-        // error or warning worth surfacing.
+        // Error or warning worth surfacing.
         logger.warn(`${prefix}wacli stderr: ${line}`)
       }
     }
@@ -112,8 +124,8 @@ export function attachEventParser(stream: Readable | null, onEvent: (event: Wacl
 }
 
 // Environment shared by every wacli process. Device identity (the platform and
-// label WhatsApp shows for the linked device) and the storage caps are
-// forwarded so both `auth` and `sync` honour them.
+// Label WhatsApp shows for the linked device) and the storage caps are
+// Forwarded so both `auth` and `sync` honour them.
 function wacliEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env }
   env.WACLI_DEVICE_PLATFORM = config.WACLI_DEVICE_PLATFORM
@@ -124,7 +136,7 @@ function wacliEnv(): NodeJS.ProcessEnv {
 }
 
 // Narrows a parsed JSON value to a WacliEvent, or undefined when it does not
-// match one of the known event shapes.
+// Match one of the known event shapes.
 function toWacliEvent(value: unknown): WacliEvent | undefined {
   if (!isRecord(value)) return undefined
   const { event, data } = value

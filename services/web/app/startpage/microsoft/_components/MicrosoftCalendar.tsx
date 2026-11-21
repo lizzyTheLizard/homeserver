@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
-import { textColumn, dateColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
+import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { useSidebar } from '@/app/shared/_components/sidebar/SidebarContext'
 import { Sidebar } from '@/app/shared/_components/sidebar/Sidebar'
 import { DateTime } from '@/app/shared/_components/DateTime'
@@ -52,12 +52,8 @@ export function MicrosoftCalendar({ events }: { events: SerializedCalendarEvent[
               <strong>Show As: </strong>
               {selectedEvent.showAs}
             </div>
-            {selectedEvent.bodyPreview && (
-              <div className={styles.eventBodyPreview}>{selectedEvent.bodyPreview}</div>
-            )}
-            {selectedEvent.body.content && (
-              <div className={styles.eventBodyPreview}>{selectedEvent.body.content}</div>
-            )}
+            {selectedEvent.bodyPreview && <div className={styles.eventBodyPreview}>{selectedEvent.bodyPreview}</div>}
+            {selectedEvent.body.content && <div className={styles.eventBodyPreview}>{selectedEvent.body.content}</div>}
           </div>
         )}
       </Sidebar>

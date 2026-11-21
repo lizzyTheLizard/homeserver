@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 export const SERVICES = ["web", "assistant", "whatsapp", "wichteln", "dev-machine"];
 export const TARGETS = [...SERVICES, "infrastructure"];
 
-const SHARED_WORKSPACE_FILES = new Set(["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".nvmrc"]);
+const SHARED_WORKSPACE_FILES = new Set(["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".nvmrc", ".oxlintrc.json", ".oxfmtrc.json"]);
 const PIPELINE_FILES = new Set([".github/workflows/pipeline.yml", ".github/workflows/service.yml"]);
 const PIPELINE_FOLDERS = [".github/actions/", ".github/scripts/"];
 const ZERO_SHA = /^0+$/;

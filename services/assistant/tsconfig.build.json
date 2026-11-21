@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "module": "commonjs",
+    "module": "commonjs"
   },
-  "include": ["server.ts", "tools/*.ts"],
+  "include": ["server.ts", "tools/*.ts"]
 }

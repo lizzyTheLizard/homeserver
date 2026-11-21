@@ -4,18 +4,18 @@ import { useEffect, useRef, useState } from 'react'
 import { AiConnectionStatusIndicator } from './AiConnectionStatusIndicator'
 import { AiActionList } from './AiActionList'
 import { Icon } from '../Icon'
-import { ChatState } from './AiChatState'
+import type { ChatState } from './AiChatState'
 import styles from './AiChatInput.module.css'
 
 export interface AiChatInputAction {
   label: string
-  onSelect?: () => void
+  onSelect?(): void
 }
 
 export interface AiChatInputProps {
   value: string
-  onChange: (value: string) => void
-  onSubmit: (text: string) => void
+  onChange(value: string): void
+  onSubmit(text: string): void
   disabled?: boolean
   actionsDisabled?: boolean
   placeholder?: string
@@ -23,16 +23,7 @@ export interface AiChatInputProps {
   status?: ChatState
 }
 
-export function AiChatInput({
-  value,
-  onChange,
-  onSubmit,
-  disabled = false,
-  actionsDisabled = false,
-  placeholder,
-  actions,
-  status,
-}: AiChatInputProps) {
+export function AiChatInput({ value, onChange, onSubmit, disabled = false, actionsDisabled = false, placeholder, actions, status }: AiChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const sentMessagesRef = useRef<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
@@ -52,7 +43,7 @@ export function AiChatInput({
       el.setSelectionRange(caret, caret)
       scrollCaretIntoView(el)
     }
-  // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [value, textareaRef])
 
   function submit(text: string) {
@@ -97,20 +88,18 @@ export function AiChatInput({
     const el = textareaRef.current
     if (e.key === 'ArrowUp') {
       // Entering history mode requires the caret at the start; once navigating the history,
-      // further presses keep navigating so scrolling through entries needs no extra presses.
+      // Further presses keep navigating so scrolling through entries needs no extra presses.
       if (historyIndex === -1 && (el?.selectionStart !== 0 || el.selectionEnd !== 0)) return
       e.preventDefault()
       const history = sentMessagesRef.current
       if (history.length === 0) return
-      if (historyIndex === -1) {
-        editedHistoryRef.current = value
-      }
+      if (historyIndex === -1) editedHistoryRef.current = value
+
       const nextIndex = Math.min(historyIndex + 1, history.length - 1)
       setHistoryIndex(nextIndex)
       pendingCaretRef.current = 0
       onChange(history[history.length - 1 - nextIndex])
-    }
-    else if (e.key === 'ArrowDown') {
+    } else if (e.key === 'ArrowDown') {
       if (historyIndex === -1 && (el?.selectionStart !== value.length || el.selectionEnd !== value.length)) return
       e.preventDefault()
       if (historyIndex === -1) return
@@ -119,8 +108,7 @@ export function AiChatInput({
         pendingCaretRef.current = 0
         onChange(editedHistoryRef.current ?? '')
         editedHistoryRef.current = null
-      }
-      else {
+      } else {
         const nextIndex = historyIndex - 1
         setHistoryIndex(nextIndex)
         const recalled = sentMessagesRef.current[sentMessagesRef.current.length - 1 - nextIndex]
@@ -131,12 +119,8 @@ export function AiChatInput({
   }
 
   function selectAction(action: AiChatInputAction) {
-    if (action.onSelect) {
-      action.onSelect()
-    }
-    else {
-      submit(action.label)
-    }
+    if (action.onSelect) action.onSelect()
+    else submit(action.label)
   }
 
   return (
@@ -144,7 +128,12 @@ export function AiChatInput({
       {status && <AiConnectionStatusIndicator state={status} />}
       {actions && actions.length > 0 && (
         <AiActionList
-          actions={actions.map(action => ({ label: action.label, onSelect: () => { selectAction(action) } }))}
+          actions={actions.map(action => ({
+            label: action.label,
+            onSelect: () => {
+              selectAction(action)
+            },
+          }))}
           disabled={disabled || actionsDisabled}
         />
       )}

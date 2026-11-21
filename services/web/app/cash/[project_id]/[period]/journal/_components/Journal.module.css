@@ -1,14 +1,14 @@
 .amount {
-    width: 13rem;
+  width: 13rem;
 }
 
 .date {
-    width: 13rem;
+  width: 13rem;
 }
 
 .mobileItem {
   padding: 0.7rem 1rem;
-  border-bottom: 1px solid rgba(230,230,230,1);
+  border-bottom: 1px solid rgba(230, 230, 230, 1);
   cursor: pointer;
   background: white;
 }
@@ -39,7 +39,7 @@
   justify-content: space-between;
   margin-top: 0.25rem;
   font-size: 0.8rem;
-  color: rgba(0,0,0,0.65);
+  color: rgba(0, 0, 0, 0.65);
 }
 
 .mobileAccounts {
@@ -49,51 +49,51 @@
 }
 
 .mobileArrow {
-  color: rgba(0,0,0,0.4);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 .mobileDot {
-  color: rgba(0,0,0,0.4);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 .mobileTotal {
   font-variant-numeric: tabular-nums;
-  color: rgba(0,0,0,0.5);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .mobileOpeningBalance {
   padding: 0.7rem 1rem;
-  background: rgb(250,250,250);
+  background: rgb(250, 250, 250);
   font-size: 0.85rem;
-  color: rgba(0,0,0,0.6);
+  color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: space-between;
   font-style: italic;
 }
 
 .mobileAccountTitle {
-    display: none;
+  display: none;
 }
 
 @media (max-width: 600px) {
-    .mobileAccountTitle {
-        display: block;
-        margin-bottom: var(--gap);
-        font-size: 1.5rem;
-        font-weight: 600;
-    }
+  .mobileAccountTitle {
+    display: block;
+    margin-bottom: var(--gap);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
 }
 
 @media print {
-    .amount {
-        width: 7rem;
-    }
+  .amount {
+    width: 7rem;
+  }
 
-    .date {
-        width: 5rem;
-    }
+  .date {
+    width: 5rem;
+  }
 
-    .account {
-        width: 6rem;
-    }
+  .account {
+    width: 6rem;
+  }
 }

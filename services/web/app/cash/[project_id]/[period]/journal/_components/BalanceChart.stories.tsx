@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, waitFor } from 'storybook/test'
 import { BalanceChart } from './BalanceChart'
-import { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
-import { Period } from '@/app/cash/_helper/Period'
+import type { AccountTransaction } from '@/app/cash/_data/AccountTransaction'
+import type { Period } from '@/app/cash/_helper/Period'
 
 function transaction(date: string, total_balance: number, ordering = 0): AccountTransaction {
   return {
@@ -22,11 +22,7 @@ function transaction(date: string, total_balance: number, ordering = 0): Account
 
 const period: Period = { current: false, year: 2026, month: 4 }
 
-const transactions = [
-  transaction('2026-04-05', 1200, 1),
-  transaction('2026-04-12', 1350, 2),
-  transaction('2026-04-20', 1500, 3),
-]
+const transactions = [transaction('2026-04-05', 1200, 1), transaction('2026-04-12', 1350, 2), transaction('2026-04-20', 1500, 3)]
 
 const meta = {
   title: 'Cash/BalanceChart',
@@ -84,11 +80,13 @@ export const IsNotInteractive: StoryObj<typeof meta> = {
 
     // Hovering produces no tooltip.
     const bounds = surface.getBoundingClientRect()
-    surface.dispatchEvent(new MouseEvent('mousemove', {
-      bubbles: true,
-      clientX: bounds.left + bounds.width / 2,
-      clientY: bounds.top + bounds.height / 2,
-    }))
+    surface.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: bounds.left + bounds.width / 2,
+        clientY: bounds.top + bounds.height / 2,
+      }),
+    )
     await expect(chart.querySelector('.recharts-tooltip-wrapper')).not.toBeInTheDocument()
   },
 }
@@ -105,11 +103,7 @@ export const HidesWhenEmpty: StoryObj<typeof meta> = {
 
 export const ExpenseAccountShowsBars: StoryObj<typeof meta> = {
   args: {
-    transactions: [
-      transaction('2026-04-05', 5100, 1),
-      transaction('2026-04-05', 5120, 2),
-      transaction('2026-04-12', 5300, 1),
-    ],
+    transactions: [transaction('2026-04-05', 5100, 1), transaction('2026-04-05', 5120, 2), transaction('2026-04-12', 5300, 1)],
     lastBalance: 5000,
     accountType: 'Expense',
   },
@@ -129,10 +123,7 @@ export const ExpenseAccountShowsBars: StoryObj<typeof meta> = {
 
 export const IncomeAccountShowsInvertedBars: StoryObj<typeof meta> = {
   args: {
-    transactions: [
-      transaction('2026-04-05', 5120, 1),
-      transaction('2026-04-12', 5300, 1),
-    ],
+    transactions: [transaction('2026-04-05', 5120, 1), transaction('2026-04-12', 5300, 1)],
     lastBalance: 5000,
     accountType: 'Income',
   },
@@ -158,11 +149,7 @@ export const CreditAccountInvertsBalance: StoryObj<typeof meta> = {
 
 export const ShowsOnePointPerDay: StoryObj<typeof meta> = {
   args: {
-    transactions: [
-      transaction('2026-04-05', 1000, 1),
-      transaction('2026-04-05', 1100, 2),
-      transaction('2026-04-06', 1200, 1),
-    ],
+    transactions: [transaction('2026-04-05', 1000, 1), transaction('2026-04-05', 1100, 2), transaction('2026-04-06', 1200, 1)],
     lastBalance: 900,
   },
   play: async ({ canvas }) => {
@@ -209,7 +196,7 @@ export const OnePointPerYearForAllHistory: StoryObj<typeof meta> = {
       transaction('2026-09-20', 1300, 2),
     ],
     lastBalance: undefined,
-    period: { },
+    period: {},
   },
   play: async ({ canvas }) => {
     const chart = canvas.getByTestId('balance-chart')
@@ -224,11 +211,7 @@ export const OnePointPerYearForAllHistory: StoryObj<typeof meta> = {
 
 export const XSpacingIsProportionalToDays: StoryObj<typeof meta> = {
   args: {
-    transactions: [
-      transaction('2026-04-05', 1000, 1),
-      transaction('2026-04-10', 1100, 2),
-      transaction('2026-04-30', 1200, 3),
-    ],
+    transactions: [transaction('2026-04-05', 1000, 1), transaction('2026-04-10', 1100, 2), transaction('2026-04-30', 1200, 3)],
     lastBalance: 900,
   },
   play: async ({ canvas }) => {

@@ -1,5 +1,5 @@
-import { Discussion } from '../../_data/Discussion'
-import { Template } from '../../_data/Template'
+import type { Discussion } from '../../_data/Discussion'
+import type { Template } from '../../_data/Template'
 
 export interface EditorState {
   text: string
@@ -12,34 +12,32 @@ export interface EditorState {
 }
 
 export function initialState(discussion: Discussion | undefined, templates: Template[]): EditorState {
-  const template = discussion
-    ? templates.find(t => t.id === discussion.template_id) ?? templates[0]
-    : templates[0]
+  const template = discussion ? (templates.find(t => t.id === discussion.template_id) ?? templates[0]) : templates[0]
   const parameters = discussion?.parameters ?? {}
   return {
     undoStack: [],
     redoStack: [],
-    template: template,
-    parameters: parameters,
+    template,
+    parameters,
     text: discussion?.text ?? '',
     lastText: discussion?.text ?? '',
     contextValid: isValid(template, parameters),
   }
 }
 
-export type EditorStateAction
-  = { type: 'COMMAND_EXECUTED', discussion: Discussion, restart: boolean }
-    | { type: 'TEXT_BLUR' }
-    | { type: 'TEXT_CHANGE', text: string }
-    | { type: 'TEMPLATE_CHANGE', template: Template }
-    | { type: 'PARAMETERS_CHANGE', name: string, value: string | undefined }
-    | { type: 'UNDO' }
-    | { type: 'REDO' }
+export type EditorStateAction =
+  | { type: 'COMMAND_EXECUTED'; discussion: Discussion; restart: boolean }
+  | { type: 'TEXT_BLUR' }
+  | { type: 'TEXT_CHANGE'; text: string }
+  | { type: 'TEMPLATE_CHANGE'; template: Template }
+  | { type: 'PARAMETERS_CHANGE'; name: string; value: string | undefined }
+  | { type: 'UNDO' }
+  | { type: 'REDO' }
 
 // oxlint-disable-next-line typescript/consistent-return
 export function editorStateReducer(state: EditorState, action: EditorStateAction): EditorState {
   switch (action.type) {
-    case 'COMMAND_EXECUTED':{
+    case 'COMMAND_EXECUTED': {
       return {
         ...state,
         text: action.discussion.text,
@@ -47,7 +45,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         redoStack: [],
       }
     }
-    case 'TEMPLATE_CHANGE':{
+    case 'TEMPLATE_CHANGE': {
       if (action.template === state.template) return state
       return {
         ...state,
@@ -56,7 +54,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         contextValid: isValid(action.template, {}),
       }
     }
-    case 'PARAMETERS_CHANGE':{
+    case 'PARAMETERS_CHANGE': {
       if (state.parameters[action.name] === action.value) return state
       const newParameters = updateParameter(state.parameters, action.name, action.value)
       return {
@@ -65,7 +63,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         contextValid: isValid(state.template, newParameters),
       }
     }
-    case 'TEXT_CHANGE':{
+    case 'TEXT_CHANGE': {
       if (action.text === state.text) return state
       return {
         ...state,
@@ -73,7 +71,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         redoStack: [],
       }
     }
-    case 'TEXT_BLUR':{
+    case 'TEXT_BLUR': {
       if (state.lastText === state.text) return state
       return {
         ...state,
@@ -81,7 +79,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         undoStack: [...state.undoStack, state.lastText],
       }
     }
-    case 'UNDO':{
+    case 'UNDO': {
       const prevText = state.undoStack[state.undoStack.length - 1]
       return {
         ...state,
@@ -91,7 +89,7 @@ export function editorStateReducer(state: EditorState, action: EditorStateAction
         undoStack: state.undoStack.slice(0, state.undoStack.length - 1),
       }
     }
-    case 'REDO':{
+    case 'REDO': {
       const nextText = state.redoStack[state.redoStack.length - 1]
       return {
         ...state,
@@ -114,9 +112,8 @@ function isValid(template: Template | undefined, parameters: Record<string, stri
 }
 
 function updateParameter(obj: Record<string, string>, key: string, value: string | undefined): Record<string, string> {
-  if (value === undefined) {
-    return removeKey(obj, key)
-  }
+  if (value === undefined) return removeKey(obj, key)
+
   return { ...obj, [key]: value }
 }
 

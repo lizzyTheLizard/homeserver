@@ -42,8 +42,8 @@ export function splitSql(sql: string): string[] {
     }
 
     // Single-quoted string
-    if (c === '\'') {
-      const end = readQuoted(sql, i, '\'')
+    if (c === "'") {
+      const end = readQuoted(sql, i, "'")
       buf += sql.slice(i, end)
       i = end
       continue
@@ -59,7 +59,7 @@ export function splitSql(sql: string): string[] {
 
     // Dollar-quoted string: $tag$ ... $tag$
     if (c === '$') {
-      const tagMatch = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i))
+      const tagMatch = /^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i))
       if (tagMatch) {
         const tag = tagMatch[0]
         const start = i + tag.length
@@ -95,7 +95,7 @@ function readQuoted(sql: string, start: number, quote: string): number {
   let i = start + 1
   while (i < sql.length) {
     if (sql[i] === quote) {
-      // escaped quote
+      // Escaped quote
       if (sql[i + 1] === quote) {
         i += 2
         continue

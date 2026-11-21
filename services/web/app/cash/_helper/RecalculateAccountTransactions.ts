@@ -1,18 +1,26 @@
 import { logger } from '@/app/shared/logger'
-import { findAllTransactionsByAccount, Transaction } from '../_data/Transaction'
-import { Queryable } from '@/app/shared/_external/db/access'
-import { Period, toString } from './Period'
-import { AccountTransaction, AccountTransactionInput, createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
+import type { Transaction } from '../_data/Transaction'
+import { findAllTransactionsByAccount } from '../_data/Transaction'
+import type { Queryable } from '@/app/shared/_external/db/access'
+import type { Period } from './Period'
+import { toString } from './Period'
+import type { AccountTransaction, AccountTransactionInput } from '../_data/AccountTransaction'
+import { createAccountTransaction, deleteAccountTransactions, findLatestAccountTransactionBefore } from '../_data/AccountTransaction'
 import { v4 as randomUUID } from 'uuid'
-import { Closing, findAllClosingsByAccount } from '../_data/Closing'
+import type { Closing } from '../_data/Closing'
+import { findAllClosingsByAccount } from '../_data/Closing'
 import { Temporal } from '@js-temporal/polyfill'
 
-export async function recalculateTransactions(client: Queryable, owner: string, projectId: string, from: Temporal.PlainDate, accountIds: string[]): Promise<void> {
+export async function recalculateTransactions(
+  client: Queryable,
+  owner: string,
+  projectId: string,
+  from: Temporal.PlainDate,
+  accountIds: string[],
+): Promise<void> {
   const uniqueAccountIds = Array.from(new Set(accountIds))
   const period: Period = { year: from.year, month: from.month, day: from.day, openEnded: true }
-  for (const accountId of uniqueAccountIds) {
-    await recalculateTransactionsForAccount(client, owner, projectId, accountId, period)
-  }
+  for (const accountId of uniqueAccountIds) await recalculateTransactionsForAccount(client, owner, projectId, accountId, period)
 }
 
 async function recalculateTransactionsForAccount(client: Queryable, owner: string, projectId: string, accountId: string, period: Period): Promise<void> {
@@ -29,10 +37,8 @@ async function recalculateTransactionsForAccount(client: Queryable, owner: strin
 }
 
 async function recalculateSingleTransaction(c: Context): Promise<AccountTransaction> {
-  const item = c.item
-  const details = 'credit_account_id' in item
-    ? getTransactionDetails({ ...c, item })
-    : getClosingDetails({ ...c, item })
+  const { item } = c
+  const details = 'credit_account_id' in item ? getTransactionDetails({ ...c, item }) : getClosingDetails({ ...c, item })
 
   const accountTransaction: AccountTransactionInput = {
     id: randomUUID(),
@@ -49,7 +55,7 @@ function getTransactionDetails(c: Context<Transaction>) {
   const sameAccountTransaction = c.item.credit_account_id === c.item.debit_account_id
   const isCredit = c.item.credit_account_id === c.accountId
   const other_account_id = isCredit ? c.item.debit_account_id : c.item.credit_account_id
-  const amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.amount : c.item.amount)
+  const amount = sameAccountTransaction ? 0 : isCredit ? -c.item.amount : c.item.amount
   const total_balance = c.previous ? c.previous.total_balance + amount : amount
 
   return {
@@ -65,9 +71,9 @@ function getClosingDetails(c: Context<Closing>) {
   const sameAccountTransaction = c.item.capital_account_id === c.item.profit_account_id
   const isCredit = c.item.capital_account_id === c.accountId
   const other_account_id = isCredit ? c.item.profit_account_id : c.item.capital_account_id
-  const amount = sameAccountTransaction ? 0 : (isCredit ? -c.item.profit : c.item.profit)
+  const amount = sameAccountTransaction ? 0 : isCredit ? -c.item.profit : c.item.profit
   const total_balance = c.previous ? c.previous.total_balance + amount : amount
-  const description = 'Closing ' + Temporal.PlainDate.from(c.item.date).toPlainYearMonth().toString()
+  const description = `Closing ${Temporal.PlainDate.from(c.item.date).toPlainYearMonth().toString()}`
   return {
     description,
     other_account_id,

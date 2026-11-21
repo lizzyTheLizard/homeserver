@@ -25,8 +25,7 @@ export async function verifyPassword(plain: string, stored: string): Promise<boo
   try {
     const key = await deriveKey(plain, parsed.salt, parsed.hash.length, parsed.options)
     return timingSafeEqual(key, parsed.hash)
-  }
-  catch {
+  } catch {
     return false
   }
 }

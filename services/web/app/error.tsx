@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function Page({ error }: { error: Error }) {
-  return ErrorPage({ error })
+  return <ErrorPage error={error} />
 }

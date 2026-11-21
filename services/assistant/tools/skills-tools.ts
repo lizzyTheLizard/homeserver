@@ -1,7 +1,8 @@
-import { tool, ToolSet } from 'ai'
+import type { ToolSet } from 'ai'
+import { tool } from 'ai'
 import fs from 'fs'
 import { join } from 'path'
-import z from 'zod'
+import { z } from 'zod'
 import { logger } from '../logger'
 
 const SKILLS_DIR = join(__dirname, '..', 'skills')
@@ -24,7 +25,11 @@ export function getSkillTools(skillDir: string): ToolSet {
       execute: skill.execute,
     })
   }
-  logger.debug(`Loaded skills ${Object.keys(skillTools).map(s => s.substring(11)).join(', ')} from ${skillDir}`)
+  logger.debug(
+    `Loaded skills ${Object.keys(skillTools)
+      .map(s => s.substring(11))
+      .join(', ')} from ${skillDir}`,
+  )
   return skillTools
 }
 
@@ -39,7 +44,7 @@ function loadSkillTool(skillDirPath: string): ParsedSkill | undefined {
   }
 }
 
-function parseMetadata(skillDirPath: string): { name: string, description: string } | undefined {
+function parseMetadata(skillDirPath: string): { name: string; description: string } | undefined {
   const files = fs.readdirSync(skillDirPath)
   const skillFile = files.find(f => f.toLowerCase() === 'skill.md')
   if (!skillFile) {
@@ -49,7 +54,7 @@ function parseMetadata(skillDirPath: string): { name: string, description: strin
   const skillFilePath = join(skillDirPath, skillFile)
   const content = fs.readFileSync(skillFilePath, 'utf-8')
 
-  const metadata = /---\r?\n([\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
+  const metadata = /---\r?\n(?<frontmatter>[\s\S]*?)\r?\n[^\S\r\n]*---/.exec(content)
   if (!metadata) {
     logger.warn(`Skill file ${skillFilePath} has invalid frontmatter, metadata is missing`)
     return undefined
@@ -94,5 +99,5 @@ async function loadSkill(name: string, skillDirPath: string): Promise<string> {
 interface ParsedSkill {
   name: string
   description: string
-  execute: () => Promise<string>
+  execute(): Promise<string>
 }

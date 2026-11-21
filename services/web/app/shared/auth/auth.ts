@@ -7,22 +7,21 @@ import { logEvent } from '@/app/shared/_data/Event'
 import { cookies as nextCookies } from 'next/headers'
 import * as client from 'openid-client'
 import { getActualUrl } from '../_helper/UrlHelper'
-import { CookieStore, getSession, UserSession } from './session'
+import type { CookieStore, UserSession } from './session'
+import { getSession } from './session'
 
 export async function getUserSession(alreadyParsedCookies?: CookieStore): Promise<UserSession | undefined> {
-  const cookiesList = alreadyParsedCookies ?? await nextCookies()
+  const cookiesList = alreadyParsedCookies ?? (await nextCookies())
   const session = await getSession(cookiesList)
   return session.userInfo
 }
 
 export async function getAuthenticatedUserSession(app?: string, alreadyParsedCookies?: CookieStore): Promise<UserSession> {
   const user = await getUserSession(alreadyParsedCookies)
-  if (!user) {
-    throw authenticationFailed(`No user session found`)
-  }
-  if (app && !user.applications.includes(app)) {
-    throw authenticationFailed(`User ${user.email} attempted to access unauthorized application ${app}`)
-  }
+  if (!user) throw authenticationFailed(`No user session found`)
+
+  if (app && !user.applications.includes(app)) throw authenticationFailed(`User ${user.email} attempted to access unauthorized application ${app}`)
+
   return user
 }
 
@@ -38,7 +37,7 @@ export async function startLogin(urlOrRequest: URL | Request, alreadyParsedCooki
     prompt: 'select_account',
   }
 
-  const session = await getSession(alreadyParsedCookies ?? await nextCookies())
+  const session = await getSession(alreadyParsedCookies ?? (await nextCookies()))
   session.userInfo = undefined
   session.code_verifier = code_verifier
   session.state = parameters.state
@@ -59,7 +58,7 @@ export async function callback(urlOrRequest: URL | Request): Promise<string> {
   })
   const claims = tokenSet.claims()
   if (!claims) throw authenticationFailed(`No claims found in token set during callback`)
-  const email = claims.email
+  const { email } = claims
   if (typeof email !== 'string' || !email) throw authenticationFailed(`No email claim found in token set during callback`)
   const name = typeof claims.given_name === 'string' ? claims.given_name : email
   const applications = await getApplications(email)
@@ -100,8 +99,7 @@ async function getApplications(email: string): Promise<string[]> {
   if (email === config.ADMIN_EMAIL) result.push('admin')
   // Only if you have a project you can access cash
   const projects = await nontransactional(c => findProjectsByOwner(c, email))
-  if (projects.length > 0) {
-    result.push('cash')
-  }
+  if (projects.length > 0) result.push('cash')
+
   return result
 }

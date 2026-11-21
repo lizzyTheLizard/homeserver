@@ -1,16 +1,18 @@
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
 import { config } from '@/app/shared/config'
 import { v4 as randomUUID } from 'uuid'
-import { LineItem } from '../_components/DashboardCard'
+import type { LineItem } from '../_components/DashboardCard'
 import { nontransactional } from '@/app/shared/_external/db/access'
 import { findNumberOfCommands } from '@/app/coeditor/_data/Command'
 import { findNumberOfTransactions } from '@/app/cash/_data/Transaction'
 import { get24HoursAgo, get30DaysAgo } from '@/app/cash/_helper/Dates'
 import { Temporal } from '@js-temporal/polyfill'
-import { Event, findRecentEvents } from '@/app/shared/_data/Event'
+import type { Event } from '@/app/shared/_data/Event'
+import { findRecentEvents } from '@/app/shared/_data/Event'
 
 const DB_CONSOLE_URL_TEMPLATE = 'https://console.scaleway.com/serverless-db/fr-par/databases/{id}/overview'
-const ENTRA_PORTAL_URL_TEMPLATE = 'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/{clientId}/isMSAApp~/false'
+const ENTRA_PORTAL_URL_TEMPLATE =
+  'https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/{clientId}/isMSAApp~/false'
 const REPO_URL = 'https://github.com/lizzyTheLizard/homeserver'
 const instanceId = randomUUID()
 
@@ -43,7 +45,6 @@ export async function loadBuildInfo(): Promise<LineItem[]> {
     { name: 'Action', value: config.GITHUB_RUN_ID, url: getActionUrl(config.GITHUB_RUN_ID) },
     { name: 'Origin', value: config.GITHUB_RUN_ID ? 'GitHub' : 'Local' },
     { name: 'Built', date: Temporal.Instant.from(config.BUILD_TIME) },
-
   ]
 }
 
@@ -76,8 +77,12 @@ export async function loadRunInfo(): Promise<LineItem[]> {
 
 function formatUptime(seconds: number): string {
   const h = Math.floor(seconds / 3600).toString()
-  const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
-  const s = Math.floor(seconds % 60).toString().padStart(2, '0')
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, '0')
+  const s = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0')
   return `${h}h ${m}m ${s}s`
 }
 
@@ -88,7 +93,7 @@ export async function loadEvents(): Promise<Event[]> {
 
 export async function loadMetricsInfo(): Promise<LineItem[]> {
   await getAuthenticatedUserSession('admin')
-  return nontransactional(async (c) => {
+  return nontransactional(async c => {
     const [coDay, co30, cashDay, cash30] = await Promise.all([
       findNumberOfCommands(c, get24HoursAgo()),
       findNumberOfCommands(c, get30DaysAgo()),

@@ -5,16 +5,20 @@ const { mockGenerateText, mockStreamText } = vi.hoisted(() => ({
   mockStreamText: vi.fn(),
 }))
 
-vi.mock('ai', async (importOriginal) => {
+vi.mock('ai', async importOriginal => {
   const actual = await importOriginal<typeof import('ai')>()
   return { ...actual, generateText: mockGenerateText, streamText: mockStreamText }
 })
 
 import { send } from './groq'
-import { type ModelMessage, tool, type ToolSet } from 'ai'
+import { tool } from 'ai'
+import type { ModelMessage, ToolSet } from 'ai'
 import { z } from 'zod/v4'
 
-const assistantMsg = (content: string): ModelMessage => ({ role: 'assistant', content: [{ type: 'text', text: content }] })
+const assistantMsg = (content: string): ModelMessage => ({
+  role: 'assistant',
+  content: [{ type: 'text', text: content }],
+})
 
 describe('send', () => {
   beforeEach(() => {
@@ -32,7 +36,10 @@ describe('send', () => {
   })
 
   test('non-streaming returns assistant response', async () => {
-    const messages: ModelMessage[] = [{ role: 'system' as const, content: 'Reply with exactly: OK' }, { role: 'user' as const, content: 'ping' }]
+    const messages: ModelMessage[] = [
+      { role: 'system' as const, content: 'Reply with exactly: OK' },
+      { role: 'user' as const, content: 'ping' },
+    ]
     mockGenerateText.mockResolvedValue({ responseMessages: [assistantMsg('OK')], toolCalls: [] })
     await send({ messages })
     const found = messages.find(m => m.role === 'assistant')
@@ -50,10 +57,15 @@ describe('send', () => {
   })
 
   test('streaming without tools', async () => {
-    const messages = [{ role: 'system' as const, content: 'Reply exactly: STREAMED' }, { role: 'user' as const, content: 'go' }]
+    const messages = [
+      { role: 'system' as const, content: 'Reply exactly: STREAMED' },
+      { role: 'user' as const, content: 'go' },
+    ]
     const chunks: string[] = []
     mockStreamText.mockReturnValue({
-      textStream: (function* () { yield 'STREAMED' })() as unknown as AsyncIterable<string>,
+      textStream: (function* textStream() {
+        yield 'STREAMED'
+      })() as unknown as AsyncIterable<string>,
       responseMessages: Promise.resolve([assistantMsg('STREAMED')]),
       toolCalls: Promise.resolve([]),
     })
@@ -66,7 +78,7 @@ describe('send', () => {
     const messages: ModelMessage[] = [{ role: 'user' as const, content: 'Get weather for Berlin' }]
     const chunks: string[] = []
     mockStreamText.mockReturnValueOnce({
-      textStream: (function* () {
+      textStream: (function* textStream() {
         yield 'Checking'
         yield 'Sunny'
         yield ' in Berlin'
@@ -96,10 +108,13 @@ describe('send', () => {
   })
 
   test('streaming calls onChunk for each chunk', async () => {
-    const messages = [{ role: 'system' as const, content: 'Reply with a long sentence about artificial intelligence' }, { role: 'user' as const, content: 'go' }]
+    const messages = [
+      { role: 'system' as const, content: 'Reply with a long sentence about artificial intelligence' },
+      { role: 'user' as const, content: 'go' },
+    ]
     let callCount = 0
     mockStreamText.mockReturnValue({
-      textStream: (function* () {
+      textStream: (function* textStream() {
         yield 'a'
         yield 'b'
         yield 'c'
@@ -107,7 +122,12 @@ describe('send', () => {
       responseMessages: Promise.resolve([assistantMsg('abc')]),
       toolCalls: Promise.resolve([]),
     })
-    await send({ messages, onChunk: () => { callCount++ } })
+    await send({
+      messages,
+      onChunk: () => {
+        callCount++
+      },
+    })
     expect(callCount).toBeGreaterThan(0)
   })
 })

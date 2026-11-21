@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { EventEmitter } from 'events'
 import { handleWhatsappApi } from './route'
 import type { UserSession } from '../session'
@@ -11,7 +11,7 @@ const { mockGetSession, mockGetWhatsappStatus, mockGetWhatsappChats } = vi.hoist
 
 const mockUser: UserSession = { name: 'Test', email: 'test@test.com', applications: ['startpage'] }
 
-vi.mock('../session', async (importOriginal) => {
+vi.mock('../session', async importOriginal => {
   const actual = await importOriginal<typeof import('../session')>()
   return {
     ...actual,
@@ -29,7 +29,11 @@ vi.mock('./whatsapp', () => ({
 }))
 
 function createRequest(method: string, url: string, body?: unknown, cookie?: string): EventEmitter {
-  const req = new EventEmitter() as EventEmitter & { method: string, url: string, headers: Record<string, string | undefined> }
+  const req = new EventEmitter() as EventEmitter & {
+    method: string
+    url: string
+    headers: Record<string, string | undefined>
+  }
   req.method = method
   req.url = url
   req.headers = cookie ? { cookie } : {}
@@ -38,15 +42,24 @@ function createRequest(method: string, url: string, body?: unknown, cookie?: str
       req.emit('data', Buffer.from(JSON.stringify(body)))
       req.emit('end')
     })
-  }
-  else {
-    process.nextTick(() => { req.emit('end') })
+  } else {
+    process.nextTick(() => {
+      req.emit('end')
+    })
   }
   return req
 }
 
-function createResponse(): EventEmitter & { writeHead: ReturnType<typeof vi.fn>, end: ReturnType<typeof vi.fn>, statusCode?: number } {
-  const res = new EventEmitter() as EventEmitter & { writeHead: ReturnType<typeof vi.fn>, end: ReturnType<typeof vi.fn>, statusCode?: number }
+function createResponse(): EventEmitter & {
+  writeHead: ReturnType<typeof vi.fn>
+  end: ReturnType<typeof vi.fn>
+  statusCode?: number
+} {
+  const res = new EventEmitter() as EventEmitter & {
+    writeHead: ReturnType<typeof vi.fn>
+    end: ReturnType<typeof vi.fn>
+    statusCode?: number
+  }
   res.writeHead = vi.fn().mockReturnValue(res)
   res.end = vi.fn().mockReturnValue(res)
   return res

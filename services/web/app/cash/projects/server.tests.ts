@@ -32,7 +32,7 @@ describe('loadProjects', () => {
     const project1 = { id: randomUUID(), name: 'Project Alpha', owner_email: task.id, archived: false }
     const project2 = { id: randomUUID(), name: 'Project Beta', owner_email: task.id, archived: false }
     const project3 = { id: randomUUID(), name: 'Project Gamma', owner_email: task.id, archived: false }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
       await createOrModifyProject(tx, project3)
@@ -51,7 +51,7 @@ describe('loadProjects', () => {
 
     const project1 = { id: randomUUID(), name: 'Active Project', owner_email: task.id, archived: false }
     const project2 = { id: randomUUID(), name: 'Archived Project', owner_email: task.id, archived: true }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
     })
@@ -69,21 +69,23 @@ describe('loadProjects', () => {
 
     const ownProject = { id: randomUUID(), name: 'My Project', owner_email: task.id, archived: false }
     const otherProject = { id: randomUUID(), name: 'Other Project', owner_email: 'other-user-id', archived: false }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, ownProject)
       await createOrModifyProject(tx, otherProject)
     })
 
     const result = await loadProjects()
 
-    expect(result).toEqual([{
-      id: ownProject.id,
-      name: 'My Project',
-      owner_email: task.id,
-      archived: false,
-      created_at: expect.any(String) as string,
-      updated_at: expect.any(String) as string,
-    }])
+    expect(result).toEqual([
+      {
+        id: ownProject.id,
+        name: 'My Project',
+        owner_email: task.id,
+        archived: false,
+        created_at: expect.any(String) as string,
+        updated_at: expect.any(String) as string,
+      },
+    ])
   })
 
   test('Returns all project fields', async ({ task }) => {
@@ -96,14 +98,16 @@ describe('loadProjects', () => {
     const result = await loadProjects()
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual(expect.objectContaining({
-      id: project.id,
-      name: project.name,
-      owner_email: task.id,
-      archived: false,
-      created_at: expect.any(String) as string,
-      updated_at: expect.any(String) as string,
-    }))
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        id: project.id,
+        name: project.name,
+        owner_email: task.id,
+        archived: false,
+        created_at: expect.any(String) as string,
+        updated_at: expect.any(String) as string,
+      }),
+    )
   })
 
   test('Multiple users have separate project lists', async ({ task }) => {
@@ -112,7 +116,7 @@ describe('loadProjects', () => {
 
     const project1 = { id: randomUUID(), name: 'User 1 Project', owner_email: task.id, archived: false }
     const project2 = { id: randomUUID(), name: 'User 2 Project', owner_email: 'user-2-id', archived: false }
-    await transactional(async (tx) => {
+    await transactional(async tx => {
       await createOrModifyProject(tx, project1)
       await createOrModifyProject(tx, project2)
     })

@@ -1,6 +1,7 @@
 'use server'
 import { getAuthenticatedUserSession } from '@/app/shared/auth/auth'
-import { ActionResponse, toResponse } from '@/app/shared/_helper/ActionResponse'
+import type { ActionResponse } from '@/app/shared/_helper/ActionResponse'
+import { toResponse } from '@/app/shared/_helper/ActionResponse'
 import { config } from '@/app/shared/config'
 import { logger } from '@/app/shared/logger'
 import { cookies } from 'next/headers'
@@ -8,20 +9,18 @@ import type { Chat, Message, SyncStatus } from '@assistant/whatsapp/types'
 import { z } from 'zod'
 import { chatsSchema, messagesSchema, syncStatusSchema } from './schemas'
 
-export async function loadData(): Promise<{ chats: Chat[], status: SyncStatus, error?: string }> {
+export async function loadData(): Promise<{ chats: Chat[]; status: SyncStatus; error?: string }> {
   await getAuthenticatedUserSession('startpage')
   let status: SyncStatus
   try {
     status = await assistantGet('/whatsapp/start', syncStatusSchema)
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     return { chats: [], status: { type: 'closed' }, error: errorMessage(error) }
   }
   if (status.type !== 'connected') return { chats: [], status }
   try {
     return { chats: await assistantGet('/whatsapp/chats', chatsSchema), status }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     return { chats: [], status, error: errorMessage(error) }
   }
 }
@@ -58,20 +57,19 @@ async function assistantGet<T>(path: string, schema: z.ZodType<T>): Promise<T> {
 async function assistantPost(path: string, body: Record<string, unknown>): Promise<unknown> {
   return assistantFetch(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Cookie': await getCookieHeader() },
+    headers: { 'Content-Type': 'application/json', Cookie: await getCookieHeader() },
     body: JSON.stringify(body),
   })
 }
 
 // Logs the target URL whenever an assistant call fails, so a refused
-// connection (ECONNREFUSED) is distinguishable from an assistant error.
+// Connection (ECONNREFUSED) is distinguishable from an assistant error.
 async function assistantFetch(path: string, init: RequestInit): Promise<unknown> {
   const url = `${config.ASSISTANT_INTERNAL_URL}${path}`
   let response: Response
   try {
     response = await fetch(url, init)
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     logger.warn(`Could not reach the assistant at ${url}: ${describeError(error)}`)
     throw error
   }
@@ -89,22 +87,21 @@ async function getCookieHeader(): Promise<string> {
 }
 
 // Node reports a fetch connection failure as "fetch failed" and puts the
-// useful part (e.g. ECONNREFUSED) into `cause`.
+// Useful part (e.g. ECONNREFUSED) into `cause`.
 function describeError(error: unknown): string {
   if (!(error instanceof Error)) return String(error)
-  const cause = error.cause
+  const { cause } = error
   return cause instanceof Error ? `${error.message}: ${cause.message}` : error.message
 }
 
 function errorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
-  const match = /^Assistant API error \d+: ([\s\S]*)$/.exec(message)
+  const match = /^Assistant API error \d+: (?<message>[\s\S]*)$/.exec(message)
   if (!match) return message
   try {
     const body = errorBodySchema.parse(JSON.parse(match[1]))
     if (typeof body.error === 'string' && body.error.length > 0) return body.error
-  }
-  catch {
+  } catch {
     // The assistant did not answer with a JSON error body, keep the raw message.
   }
   return message

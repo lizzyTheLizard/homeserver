@@ -7,13 +7,12 @@ const meta = {
   tags: ['autodocs'],
   args: {
     header: 'Click to expand',
-    children: (<p>This is the collapsible content.</p>),
+    children: <p>This is the collapsible content.</p>,
   },
 } satisfies Meta<typeof Collapse>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const Open: StoryObj<typeof meta> = {
   play: async ({ args, canvas, userEvent }) => {

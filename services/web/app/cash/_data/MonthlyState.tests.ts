@@ -1,15 +1,14 @@
 import { describe, expect, test } from 'vitest'
 import { z } from 'zod'
-import { MONTHLY_STATES, MonthlyState } from './MonthlyState'
+import type { MonthlyState } from './MonthlyState'
+import { MONTHLY_STATES } from './MonthlyState'
 
 describe('MonthlyState', () => {
   const StateSchema = z.enum(MONTHLY_STATES)
 
   test('Accepts every valid MonthlyState value', () => {
     const allKnownStates: MonthlyState[] = ['NEON', 'NEONCHECK', 'CREDITCARDCHECK', 'SHAREDCHECK', 'SHARED', 'FINISHED']
-    for (const state of allKnownStates) {
-      expect(StateSchema.parse(state)).toBe(state)
-    }
+    for (const state of allKnownStates) expect(StateSchema.parse(state)).toBe(state)
   })
 
   test('Rejects CREDITCARD — was wrongly accepted before the zod migration', () => {

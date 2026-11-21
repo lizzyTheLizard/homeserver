@@ -14,17 +14,17 @@ export interface MicrosoftCalendar {
   canEdit: boolean
   canShare: boolean
   canViewPrivateItems: boolean
-  owner: { name: string, address: string }
+  owner: { name: string; address: string }
 }
 
 export interface MicrosoftCalendarEvent {
   id: string
   subject: string
   bodyPreview: string
-  body: { contentType: 'text' | 'html', content: string }
+  body: { contentType: 'text' | 'html'; content: string }
   start: Temporal.Instant
   end: Temporal.Instant
-  location: { displayName: string, uniqueIdType: string }
+  location: { displayName: string; uniqueIdType: string }
   isAllDay: boolean
   isCancelled: boolean
   showAs: 'free' | 'tentative' | 'busy' | 'oof' | 'workingElsewhere' | 'unknown'
@@ -32,7 +32,7 @@ export interface MicrosoftCalendarEvent {
   sensitivity: 'normal' | 'private' | 'personal' | 'confidential'
   createdDateTime: Temporal.Instant
   lastModifiedDateTime: Temporal.Instant
-  organizer: { emailAddress: { name: string, address: string } }
+  organizer: { emailAddress: { name: string; address: string } }
   calendarName?: string
 }
 
@@ -46,7 +46,15 @@ export interface MicrosoftCalendarWorker {
   getAllEvents(startDateTime?: Temporal.Instant, endDateTime?: Temporal.Instant): MicrosoftCalendarEvent[]
   getEventCount(): EventCounts
   getStatus(): string
-  createEvent(user: UserSession, calendarId: string, subject: string, start: Temporal.Instant, end: Temporal.Instant, body?: string, location?: string): Promise<MicrosoftCalendarEvent>
+  createEvent(
+    user: UserSession,
+    calendarId: string,
+    subject: string,
+    start: Temporal.Instant,
+    end: Temporal.Instant,
+    body?: string,
+    location?: string,
+  ): Promise<MicrosoftCalendarEvent>
   touch(): void
 }
 
@@ -100,9 +108,13 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     timeout = setTimeout(close, inactivityTimeoutMs)
   }
 
-  function getCalendars(): MicrosoftCalendar[] { return calendars }
+  function getCalendars(): MicrosoftCalendar[] {
+    return calendars
+  }
 
-  function getStatus(): string { return status }
+  function getStatus(): string {
+    return status
+  }
 
   function getAllEvents(startDateTime?: Temporal.Instant, endDateTime?: Temporal.Instant): MicrosoftCalendarEvent[] {
     const now = Temporal.Now.instant()
@@ -110,9 +122,8 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     const start = startDateTime ?? now
     const end = endDateTime ?? windowEnd
 
-    if (Temporal.Instant.compare(end, windowEnd) > 0) {
+    if (Temporal.Instant.compare(end, windowEnd) > 0)
       throw new Error(`Cannot retrieve events beyond the next ${eventWindowMonths.toString()} months. Only events within this window are kept in memory.`)
-    }
 
     return Array.from(events.values())
       .filter(e => Temporal.Instant.compare(e.end, start) > 0 && Temporal.Instant.compare(e.start, end) < 0)
@@ -152,24 +163,22 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
       }
       if (body) eventBody.body = { contentType: 'text', content: body }
       if (location) eventBody.location = { displayName: location }
-      const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async (request) => {
-        return rawCalendarEventSchema.parse(await request.post(eventBody))
-      })
+      const response = await graphApiRequest(createUser, `/me/calendars/${calendarId}/events`, async request =>
+        rawCalendarEventSchema.parse(await request.post(eventBody)),
+      )
       const event = convertCalendarEvent(response)
       const windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
-      if (Temporal.Instant.compare(event.start, windowEnd) <= 0) {
-        events.set(event.id, event)
-      }
+      if (Temporal.Instant.compare(event.start, windowEnd) <= 0) events.set(event.id, event)
+
       return event
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       logger.warn(`Failed to create calendar event "${subject}"`, error)
       throw error
     }
   }
 
   async function doInitialFetch(): Promise<void> {
-    calendars = await graphApiRequest(user, '/me/calendars', async (request) => {
+    calendars = await graphApiRequest(user, '/me/calendars', async request => {
       const response = calendarsSchema.parse(await request.get())
       return response.value
     })
@@ -179,7 +188,10 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     const now = Temporal.Now.instant()
     const windowEnd = now.toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
 
-    await syncCalendarEvents('/me/calendarView/delta', { startDateTime: now.toString(), endDateTime: windowEnd.toString() })
+    await syncCalendarEvents('/me/calendarView/delta', {
+      startDateTime: now.toString(),
+      endDateTime: windowEnd.toString(),
+    })
 
     const calendarCount = calendars.length
     const eventCount = events.size
@@ -197,38 +209,35 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
     let queryOnFirstCall = queryParams
 
     while (currentUrl) {
-      const deltaResult: z.infer<typeof calendarDeltaSchema> = await graphApiRequest(user, currentUrl, async (request) => {
+      const deltaResult: z.infer<typeof calendarDeltaSchema> = await graphApiRequest(user, currentUrl, async request => {
         if (queryOnFirstCall) {
           const params = queryOnFirstCall
           queryOnFirstCall = undefined
-          return calendarDeltaSchema.parse(await request
-            .query(params)
-            .select('id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer')
-            .get())
+          return calendarDeltaSchema.parse(
+            await request
+              .query(params)
+              .select(
+                'id,subject,bodyPreview,body,start,end,location,isAllDay,isCancelled,showAs,importance,sensitivity,createdDateTime,lastModifiedDateTime,organizer',
+              )
+              .get(),
+          )
         }
         return calendarDeltaSchema.parse(await request.get())
       })
 
       for (const item of deltaResult.value) {
-        if ('@removed' in item) {
-          events.delete(item.id)
-        }
+        if ('@removed' in item) events.delete(item.id)
         else {
           const event = convertCalendarEvent(item)
           const windowEnd = Temporal.Now.instant().toZonedDateTimeISO('UTC').add({ months: eventWindowMonths }).toInstant()
-          if (Temporal.Instant.compare(event.start, windowEnd) <= 0) {
-            events.set(event.id, event)
-          }
+          if (Temporal.Instant.compare(event.start, windowEnd) <= 0) events.set(event.id, event)
         }
       }
 
-      if (deltaResult['@odata.nextLink']) {
-        currentUrl = deltaResult['@odata.nextLink']
-      }
+      if (deltaResult['@odata.nextLink']) currentUrl = deltaResult['@odata.nextLink']
       else {
-        if (deltaResult['@odata.deltaLink']) {
-          deltaLink = deltaResult['@odata.deltaLink']
-        }
+        if (deltaResult['@odata.deltaLink']) deltaLink = deltaResult['@odata.deltaLink']
+
         currentUrl = undefined
       }
     }
@@ -236,23 +245,26 @@ function createMicrosoftCalendarWorker(user: UserSession): MicrosoftCalendarWork
 
   status = 'connecting'
   doInitialFetch()
-    .then(() => { status = 'connected' })
+    .then(() => {
+      status = 'connected'
+    })
     .catch((error: unknown) => {
       status = 'error'
       logger.warn(`[MicrosoftCalendarWorker] Initial fetch failed for user ${userId}`, error)
     })
   interval = setInterval(() => {
-    doDeltaPoll()
-      .catch((error: unknown) => {
-        logger.warn(`[MicrosoftCalendarWorker] Poll crash for user ${userId}`, error)
-        status = 'connecting'
-        doInitialFetch()
-          .then(() => { status = 'connected' })
-          .catch((refetchError: unknown) => {
-            status = 'error'
-            logger.warn(`[MicrosoftCalendarWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
-          })
-      })
+    doDeltaPoll().catch((error: unknown) => {
+      logger.warn(`[MicrosoftCalendarWorker] Poll crash for user ${userId}`, error)
+      status = 'connecting'
+      doInitialFetch()
+        .then(() => {
+          status = 'connected'
+        })
+        .catch((refetchError: unknown) => {
+          status = 'error'
+          logger.warn(`[MicrosoftCalendarWorker] Re-fetch after poll crash failed for user ${userId}`, refetchError)
+        })
+    })
   }, deltaPollIntervalMs)
   timeout = setTimeout(close, inactivityTimeoutMs)
 
@@ -281,17 +293,19 @@ const rawCalendarEventSchema = z.object({
 })
 
 const calendarsSchema = z.object({
-  value: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string(),
-    hexColor: z.string(),
-    isDefaultCalendar: z.boolean(),
-    canEdit: z.boolean(),
-    canShare: z.boolean(),
-    canViewPrivateItems: z.boolean(),
-    owner: z.object({ name: z.string(), address: z.string() }),
-  }) satisfies z.ZodType<MicrosoftCalendar>),
+  value: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      color: z.string(),
+      hexColor: z.string(),
+      isDefaultCalendar: z.boolean(),
+      canEdit: z.boolean(),
+      canShare: z.boolean(),
+      canViewPrivateItems: z.boolean(),
+      owner: z.object({ name: z.string(), address: z.string() }),
+    }) satisfies z.ZodType<MicrosoftCalendar>,
+  ),
 })
 
 const calendarDeltaSchema = deltaResponseSchema(rawCalendarEventSchema)

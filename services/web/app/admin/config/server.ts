@@ -29,11 +29,11 @@ export async function loadConfig(): Promise<ConfigSection[]> {
   await getAuthenticatedUserSession('admin')
 
   const allKeys = Object.keys(process.env).sort()
-  const runtimeKeys = allKeys.filter(k => /^(NODE_|HOME|PORT|PWD|SHELL|USER|APP_URL)/.test(k) || ['HOSTNAME', 'RAM', 'TZ', 'PATH'].includes(k))
-  const authKeys = allKeys.filter(k => /^(CLIENT_|ISSUER|SESSION_|OID_|OPLN_|COOKIE_NAME|ADMIN_)/.test(k) || k.endsWith('_API_KEY'))
+  const runtimeKeys = allKeys.filter(k => /^(?:NODE_|HOME|PORT|PWD|SHELL|USER|APP_URL)/.test(k) || ['HOSTNAME', 'RAM', 'TZ', 'PATH'].includes(k))
+  const authKeys = allKeys.filter(k => /^(?:CLIENT_|ISSUER|SESSION_|OID_|OPLN_|COOKIE_NAME|ADMIN_)/.test(k) || k.endsWith('_API_KEY'))
   const dbKeys = allKeys.filter(k => k.startsWith('DB_'))
   const devKeys = allKeys.filter(k => k.startsWith('WSL'))
-  const nodeKeys = allKeys.filter(k => /^(npm_|NODE_|NVM_|NODE|pnpm|COREPACK|PNPM)/.test(k))
+  const nodeKeys = allKeys.filter(k => /^(?:npm_|NODE_|NVM_|NODE|pnpm|COREPACK|PNPM)/.test(k))
   const categorized = new Set([...runtimeKeys, ...authKeys, ...dbKeys, ...devKeys, ...nodeKeys])
   const appKeys = allKeys.filter(k => !categorized.has(k))
 

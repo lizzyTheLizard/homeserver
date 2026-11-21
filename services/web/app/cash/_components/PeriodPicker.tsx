@@ -1,12 +1,13 @@
 'use client'
 import { Select } from '@/app/shared/_components/form/Select'
-import { Period, toUrlString } from '../_helper/Period'
+import type { Period } from '../_helper/Period'
+import { toUrlString } from '../_helper/Period'
 import { Temporal } from '@js-temporal/polyfill'
 import { useActionTitle } from '@/app/shared/_components/ActionTitleHelpers'
 
 export interface PeriodPickerProps {
   period: Period
-  onPeriodChange?: (period: Period) => void
+  onPeriodChange?(period: Period): void
   project_id?: string
 }
 
@@ -19,24 +20,24 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
   function defaultOnPeriodChange(p: Period) {
     const split = window.location.pathname.split('/')
     const s = window.location.search
-    const href = `/cash/${project_id ?? ''}/${toUrlString(p)}/` + split.slice(4).join('/') + s
+    const href = `/cash/${project_id ?? ''}/${toUrlString(p)}/${split.slice(4).join('/')}${s}`
     window.location.href = href
   }
 
   function setYear(year: string | undefined) {
     const newYear = year ? parseInt(year) : undefined
-    const newMonth = (year === period.year?.toString()) ? period.month : undefined
+    const newMonth = year === period.year?.toString() ? period.month : undefined
     const newPeriod = { current: false, year: newYear, month: newMonth }
-    if (onPeriodChange) { onPeriodChange(newPeriod) }
-    else { defaultOnPeriodChange(newPeriod) }
+    if (onPeriodChange) onPeriodChange(newPeriod)
+    else defaultOnPeriodChange(newPeriod)
   }
 
   function setMonth(month: string | undefined) {
     const newYear = period.year
-    const newMonth = (period.year && month) ? parseInt(month) : undefined
+    const newMonth = period.year && month ? parseInt(month) : undefined
     const newPeriod = { current: false, year: newYear, month: newMonth }
-    if (onPeriodChange) { onPeriodChange(newPeriod) }
-    else { defaultOnPeriodChange(newPeriod) }
+    if (onPeriodChange) onPeriodChange(newPeriod)
+    else defaultOnPeriodChange(newPeriod)
   }
 
   const year = period.year?.toString() ?? ''
@@ -44,13 +45,38 @@ export function PeriodPicker({ period, onPeriodChange, project_id }: PeriodPicke
 
   return renderInActionTitle(
     <>
-      <Select id="year" onClick={(e) => { e.stopPropagation() }} label="Year" emptyLabel="All" value={year} onChange={(e) => { setYear(e.target.value) }}>
+      <Select
+        id="year"
+        onClick={e => {
+          e.stopPropagation()
+        }}
+        label="Year"
+        emptyLabel="All"
+        value={year}
+        onChange={e => {
+          setYear(e.target.value)
+        }}
+      >
         {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map(y => (
-          <option key={y} value={y.toString()}>{y}</option>
+          <option key={y} value={y.toString()}>
+            {y}
+          </option>
         ))}
       </Select>
 
-      <Select id="month" onClick={(e) => { e.stopPropagation() }} label="Month" emptyLabel="All" value={month} onChange={(e) => { setMonth(e.target.value) }} disabled={!period.year}>
+      <Select
+        id="month"
+        onClick={e => {
+          e.stopPropagation()
+        }}
+        label="Month"
+        emptyLabel="All"
+        value={month}
+        onChange={e => {
+          setMonth(e.target.value)
+        }}
+        disabled={!period.year}
+      >
         <option value="01">January</option>
         <option value="02">February</option>
         <option value="03">March</option>

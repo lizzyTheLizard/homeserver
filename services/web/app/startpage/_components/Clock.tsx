@@ -5,10 +5,14 @@ import { useIsClient } from '../../shared/_helper/useIsClient'
 import styles from './Clock.module.css'
 
 function useClock() {
-  const [now, setNow] = useState(new Date())
+  const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    const t = setInterval(() => { setNow(new Date()) }, 1000)
-    return () => { clearInterval(t) }
+    const t = setInterval(() => {
+      setNow(new Date())
+    }, 1000)
+    return () => {
+      clearInterval(t)
+    }
   }, [])
   return now
 }
@@ -21,12 +25,8 @@ export function Clock() {
 
   return (
     <div className={styles.clockBlock}>
-      <div className={styles.clock}>
-        {timeString}
-      </div>
-      <div className={styles.date}>
-        {dateString}
-      </div>
+      <div className={styles.clock}>{timeString}</div>
+      <div className={styles.date}>{dateString}</div>
     </div>
   )
 }

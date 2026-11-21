@@ -21,14 +21,20 @@ const meta = {
     onChange: fn(),
     onSubmit: fn(),
   },
-  render: (args) => {
+  render: args => {
     const [value, setValue] = useState(args.value)
     return (
       <AiChatInput
         {...args}
         value={value}
-        onChange={(v) => { setValue(v); args.onChange(v) }}
-        onSubmit={(text) => { args.onSubmit(text); setValue('') }}
+        onChange={v => {
+          setValue(v)
+          args.onChange(v)
+        }}
+        onSubmit={text => {
+          args.onSubmit(text)
+          setValue('')
+        }}
       />
     )
   },
@@ -198,17 +204,29 @@ export const ArrowKeysScrollThroughHistory: Story = {
     input.selectionStart = 0
     input.selectionEnd = 0
     await fireEvent.keyDown(input, { key: 'ArrowUp' })
-    await waitFor(async () => { await expect(input.value).toBe('third') })
+    await waitFor(async () => {
+      await expect(input.value).toBe('third')
+    })
     await fireEvent.keyDown(input, { key: 'ArrowUp' })
-    await waitFor(async () => { await expect(input.value).toBe('second') })
+    await waitFor(async () => {
+      await expect(input.value).toBe('second')
+    })
     await fireEvent.keyDown(input, { key: 'ArrowUp' })
-    await waitFor(async () => { await expect(input.value).toBe('first') })
+    await waitFor(async () => {
+      await expect(input.value).toBe('first')
+    })
     await fireEvent.keyDown(input, { key: 'ArrowDown' })
-    await waitFor(async () => { await expect(input.value).toBe('second') })
+    await waitFor(async () => {
+      await expect(input.value).toBe('second')
+    })
     await fireEvent.keyDown(input, { key: 'ArrowDown' })
-    await waitFor(async () => { await expect(input.value).toBe('third') })
+    await waitFor(async () => {
+      await expect(input.value).toBe('third')
+    })
     await fireEvent.keyDown(input, { key: 'ArrowDown' })
-    await waitFor(async () => { await expect(input.value).toBe('') })
+    await waitFor(async () => {
+      await expect(input.value).toBe('')
+    })
   },
 }
 
@@ -248,7 +266,10 @@ export const ActionsSubmitTheirLabel: Story = {
 
 export const ActionsWithCustomOnSelect: Story = {
   args: {
-    actions: [{ label: 'Improve', onSelect: fn() }, { label: 'Summarize', onSelect: fn() }],
+    actions: [
+      { label: 'Improve', onSelect: fn() },
+      { label: 'Summarize', onSelect: fn() },
+    ],
   },
   play: async ({ canvasElement, args }) => {
     const improveOnSelect = args.actions?.[0]?.onSelect

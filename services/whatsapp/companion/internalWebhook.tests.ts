@@ -81,8 +81,7 @@ describe('handleInternalWebhook', () => {
   test('rejects a signature computed with a different secret', async () => {
     const { supervisor } = makeSupervisor()
 
-    await expect(handleInternalWebhook(supervisor, incomingBody, sign(incomingBody, 'other-secret')))
-      .rejects.toThrow('invalid webhook signature')
+    await expect(handleInternalWebhook(supervisor, incomingBody, sign(incomingBody, 'other-secret'))).rejects.toThrow('invalid webhook signature')
   })
 
   test('rejects a missing, malformed or wrong signature', async () => {
@@ -103,10 +102,17 @@ describe('handleInternalWebhook', () => {
   test('coalesces concurrent deliveries for the same chat', async () => {
     const { supervisor, isArchived, archiveChat } = makeSupervisor()
     let resolveArchived: ((value: boolean) => void) | undefined
-    isArchived.mockImplementation(() => new Promise<boolean>((resolve) => { resolveArchived = resolve }))
+    isArchived.mockImplementation(
+      () =>
+        new Promise<boolean>(resolve => {
+          resolveArchived = resolve
+        }),
+    )
 
     const first = handleInternalWebhook(supervisor, incomingBody, sign(incomingBody))
-    await vi.waitFor(() => { expect(resolveArchived).toBeDefined() })
+    await vi.waitFor(() => {
+      expect(resolveArchived).toBeDefined()
+    })
     await handleInternalWebhook(supervisor, incomingBody, sign(incomingBody))
 
     resolveArchived?.(true)

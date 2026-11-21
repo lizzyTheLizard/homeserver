@@ -15,15 +15,8 @@ export function Checkbox({ label, small, center, ...props }: CheckboxProps) {
   const [internalValue, setInternalValue] = useState(false)
   const fallbackId = useId()
   const id = props.id ?? fallbackId
-  const inputClasses = [
-    style.input, props.className ?? '',
-    label ? '' : style.noLabel,
-    small ? style.small : '',
-  ].join(' ')
-  const containerClasses = [
-    style.container,
-    center ? style.center : '',
-  ].join(' ')
+  const inputClasses = [style.input, props.className ?? '', label ? '' : style.noLabel, small ? style.small : ''].join(' ')
+  const containerClasses = [style.container, center ? style.center : ''].join(' ')
   const value = props.checked ?? internalValue
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -33,16 +26,12 @@ export function Checkbox({ label, small, center, ...props }: CheckboxProps) {
 
   return (
     <div className={containerClasses}>
-      <input
-        {...props}
-        id={id}
-        type="checkbox"
-        className={inputClasses}
-        checked={value}
-        placeholder=""
-        onChange={handleChange}
-      />
-      { label && <label className={style.label} htmlFor={id}>{label}</label>}
+      <input {...props} id={id} type="checkbox" className={inputClasses} checked={value} placeholder="" onChange={handleChange} />
+      {label && (
+        <label className={style.label} htmlFor={id}>
+          {label}
+        </label>
+      )}
     </div>
   )
 }

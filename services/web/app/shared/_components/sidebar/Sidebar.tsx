@@ -1,5 +1,6 @@
 'use client'
-import { PropsWithChildren, useContext, useEffect, useRef, useState } from 'react'
+import type { PropsWithChildren } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { Icon } from '../Icon'
 import { createPortal } from 'react-dom'
 import { LoadingSpinner } from '../LoadingSpinner'
@@ -8,17 +9,17 @@ import containerStyle from './SidebarContainer.module.css'
 import { Button } from '../form/Button'
 import { useIsClient } from '../../_helper/useIsClient'
 import { SidebarContext } from './SidebarContext'
-import { ActionResponse } from '../../_helper/ActionResponse'
+import type { ActionResponse } from '../../_helper/ActionResponse'
 
 export interface SidebarProps<T> {
   id: string
   title: string
   type?: string
   noDelete?: boolean
-  onSave?: () => ActionResponse<T>
-  onAfterSave?: (result: T) => void
-  onDelete?: () => ActionResponse<unknown>
-  onAfterDelete?: () => void
+  onSave?(): ActionResponse<T>
+  onAfterSave?(result: T): void
+  onDelete?(): ActionResponse<unknown>
+  onAfterDelete?(): void
 }
 
 export function Sidebar<T>({ container, ...props }: PropsWithChildren<SidebarProps<T> & { container?: HTMLElement | null }>) {
@@ -39,7 +40,7 @@ function SidebarInner<T>({ children, id, title, type, onDelete, onSave, onAfterD
   const [error, setError] = useState<string | undefined>(undefined)
   const isOpen = sidebarContext?.isOpen(id) ?? false
   // Reset transient state when the sidebar closes. This uses React's "store information from previous
-  // renders" pattern to avoid an effect: https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  // Renders" pattern to avoid an effect: https://react.dev/reference/react/useState#storing-information-from-previous-renders
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
   if (prevIsOpen !== isOpen) {
     setPrevIsOpen(isOpen)
@@ -50,34 +51,43 @@ function SidebarInner<T>({ children, id, title, type, onDelete, onSave, onAfterD
   }
 
   useEffect(() => {
-    document.addEventListener('scroll', () => { adjustHeight(ref.current) })
+    document.addEventListener('scroll', () => {
+      adjustHeight(ref.current)
+    })
     adjustHeight(ref.current)
-  // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [ref, isOpen])
 
   function execute<R>(response: () => ActionResponse<R>, onSuccess: ((result: R) => void) | undefined) {
     setPending(true)
     setError(undefined)
-    response().then((result) => {
-      setPending(false)
-      if ('error' in result) {
-        setError(result.error)
-        return
-      }
-      if (onSuccess) {
-        onSuccess(result.data)
-      }
-      sidebarContext?.close()
-    }).catch((caught: unknown) => {
-      console.error(caught)
-      setPending(false)
-      setError('An unexpected error occurred.')
-    })
+    response()
+      .then(result => {
+        setPending(false)
+        if ('error' in result) {
+          setError(result.error)
+          return
+        }
+        if (onSuccess) onSuccess(result.data)
+
+        sidebarContext?.close()
+      })
+      .catch((caught: unknown) => {
+        console.error(caught)
+        setPending(false)
+        setError('An unexpected error occurred.')
+      })
   }
 
   if (!isClient) return null
   return (
-    <aside className={style.sidebar + ' ' + (isOpen ? style.open : style.closed)} ref={ref} onClick={(e) => { e.stopPropagation() }}>
+    <aside
+      className={`${style.sidebar} ${isOpen ? style.open : style.closed}`}
+      ref={ref}
+      onClick={e => {
+        e.stopPropagation()
+      }}
+    >
       <div className={style.formBody}>
         <div className={style.titlebar}>
           <h1 className={style.title}>{title}</h1>
@@ -89,17 +99,51 @@ function SidebarInner<T>({ children, id, title, type, onDelete, onSave, onAfterD
         {error && <div className="error">{error}</div>}
       </div>
       <div className={style.actionsBar}>
-        {onSave && !confirmDelete && <Button type="button" variant="primary" onClick={() => { execute(onSave, onAfterSave) }}>Save</Button>}
+        {onSave && !confirmDelete && (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => {
+              execute(onSave, onAfterSave)
+            }}
+          >
+            Save
+          </Button>
+        )}
         {!noDelete && onDelete && !confirmDelete && (
-          <Button type="button" variant="danger" onClick={() => { setConfirmDelete(true) }}>Delete</Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => {
+              setConfirmDelete(true)
+            }}
+          >
+            Delete
+          </Button>
         )}
         {onDelete && confirmDelete && (
           <>
             <div className={style.confirmPanel}>
-              <p>{(type ? `Delete ${type}` : 'Delete') + '? This cannot be undone.'}</p>
+              <p>{`${type ? `Delete ${type}` : 'Delete'}? This cannot be undone.`}</p>
             </div>
-            <Button type="button" variant="danger" onClick={() => { execute(onDelete, onAfterDelete) }}>Confirm delete</Button>
-            <Button type="button" variant="secondary" onClick={() => { sidebarContext?.close() }}>Cancel</Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                execute(onDelete, onAfterDelete)
+              }}
+            >
+              Confirm delete
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                sidebarContext?.close()
+              }}
+            >
+              Cancel
+            </Button>
           </>
         )}
       </div>
@@ -112,10 +156,9 @@ function adjustHeight(current: HTMLElement | null) {
   if (window.matchMedia('(max-width: 600px)').matches) {
     // On Mobile
     current.style.height = '100%'
-  }
-  else {
+  } else {
     // On Desktop
-    const top = current.getBoundingClientRect().top
-    current.style.height = `calc(100vh - 2* var(--gap) -  var(--gap-small) - ${top === 0 ? '0' : top.toString() + 'px'})`
+    const { top } = current.getBoundingClientRect()
+    current.style.height = `calc(100vh - 2* var(--gap) -  var(--gap-small) - ${top === 0 ? '0' : `${top.toString()}px`})`
   }
 }

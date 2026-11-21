@@ -14,11 +14,10 @@ const meta = {
       { id: '2', row1: 'Row 2, Cell 1', row2: 'Row 2, Cell 2' },
     ],
   },
-} satisfies Meta<typeof DataTable<{ id: string, row1: string, row2: string }>>
+} satisfies Meta<typeof DataTable<{ id: string; row1: string; row2: string }>>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const Empty: StoryObj<typeof meta> = {
   args: {
@@ -43,7 +42,7 @@ export const MobileEmpty: StoryObj<typeof meta> = {
 
 type ComplicatedEnum = 'A1' | 'A2' | 'A3'
 const COMPLICATED_ENUMS: ComplicatedEnum[] = ['A1', 'A2', 'A3']
-type Complicated = Meta<typeof DataTable<{ id: string, text: string, select: ComplicatedEnum, date: Temporal.PlainDate, bool: boolean }>>
+type Complicated = Meta<typeof DataTable<{ id: string; text: string; select: ComplicatedEnum; date: Temporal.PlainDate; bool: boolean }>>
 
 export const Sorting: StoryObj<Complicated> = {
   args: {
@@ -53,7 +52,13 @@ export const Sorting: StoryObj<Complicated> = {
       dateColumn('date', { header: 'Date' }),
       boolColumn('bool', { header: 'Boolean' }),
     ],
-    data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: COMPLICATED_ENUMS[i % 3], date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }), bool: i % 2 === 0 })),
+    data: [...Array(200).keys()].map(i => ({
+      id: i.toString(),
+      text: `This is text number ${i.toString()}`,
+      select: COMPLICATED_ENUMS[i % 3],
+      date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }),
+      bool: i % 2 === 0,
+    })),
   },
 }
 
@@ -65,7 +70,13 @@ export const Search: StoryObj<Complicated> = {
       dateColumn('date', { header: 'Date' }),
       boolColumn('bool', { header: 'Boolean' }),
     ],
-    data: [...Array(200).keys()].map(i => ({ id: i.toString(), text: `This is text number ${i.toString()}`, select: COMPLICATED_ENUMS[i % 3], date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }), bool: i % 2 === 0 })),
+    data: [...Array(200).keys()].map(i => ({
+      id: i.toString(),
+      text: `This is text number ${i.toString()}`,
+      select: COMPLICATED_ENUMS[i % 3],
+      date: Temporal.PlainDate.from({ year: 2020, month: 1, day: (i % 30) + 1 }),
+      bool: i % 2 === 0,
+    })),
     searchLabel: 'Search…',
   },
 }

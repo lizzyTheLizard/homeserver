@@ -9,7 +9,7 @@ The pipeline SHALL start by determining which of the web application, assistant,
 - **THEN** only that service is reported as changed
 
 #### Scenario: A change to shared workspace files
-- **WHEN** the root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc`, the shared lint configuration `.oxlintrc.json` or the shared setup action changes
+- **WHEN** the root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc`, the shared lint and format configuration (`.oxlintrc.json`, `.oxfmtrc.json`) or the shared setup action changes
 - **THEN** every service is reported as changed
 
 #### Scenario: A change to the pipeline definition
@@ -32,19 +32,19 @@ The pipeline SHALL start by determining which of the web application, assistant,
 
 ### Requirement: All packages are linted with one shared configuration
 
-The web application, assistant, WhatsApp bridge and Wichteln SHALL be linted against a single lint configuration at the repository root. Settings that apply to only some services SHALL be scoped to those services within that configuration, and no package SHALL carry its own lint configuration file.
+The web application, assistant, WhatsApp bridge and Wichteln SHALL be linted against a single lint configuration at the repository root, and no package SHALL carry its own lint configuration file.
 
 #### Scenario: Every package uses the same rules
 - **WHEN** any package is linted
 - **THEN** the shared root configuration applies, including its performance, style and curated restriction rules
 
-#### Scenario: Service-specific rules stay scoped
-- **WHEN** the assistant or the WhatsApp bridge is linted
-- **THEN** React and Storybook rules are not applied to its files
+#### Scenario: The shared configuration is a shared workspace file
+- **WHEN** the shared lint or format configuration changes
+- **THEN** every service is linted and tested
 
 ### Requirement: Linting checks code formatting
 
-The linting task SHALL check that code and style files follow the project's formatting conventions (2-space indentation, single quotes, no semicolons, a maximum line width, consistent whitespace and wrapping). Locally the linting task SHALL reformat non-conforming files; for CI it SHALL fail on them without changing files.
+The linting task SHALL check that code, style, JSON, YAML, Markdown and HTML files of the services follow the project's formatting conventions (2-space indentation, single quotes, no semicolons, a maximum line width, consistent whitespace and wrapping). Locally the linting task SHALL reformat non-conforming files; for CI it SHALL fail on them without changing files.
 
 #### Scenario: A formatting violation fails CI lint
 - **WHEN** a changed file uses double quotes or a wrong indentation and the linting task runs for CI

@@ -8,7 +8,7 @@ export interface Period {
   readonly day?: number
 }
 
-export const all: Period = { }
+export const all: Period = {}
 
 export function fromUrlString(s: string): Period {
   if (s === 'ALL') return all
@@ -28,11 +28,9 @@ export function toUrlString(period: Period): string {
 export function toString(period: Period): string {
   if (period.year === undefined) return 'ALL'
   let result = period.year.toString().padStart(4, '0')
-  if (period.month === undefined)
-    return `${result}${period.openEnded ? '+' : ''}`
+  if (period.month === undefined) return `${result}${period.openEnded ? '+' : ''}`
   result += `-${period.month.toString().padStart(2, '0')}`
-  if (period.day === undefined)
-    return `${result}${period.openEnded ? '+' : ''}`
+  if (period.day === undefined) return `${result}${period.openEnded ? '+' : ''}`
   result += `-${period.day.toString().padStart(2, '0')}`
   return `${result}${period.openEnded ? '+' : ''}`
 }
@@ -70,6 +68,6 @@ function temporalFromPeriod(period: Period): Temporal.PlainDate {
   return Temporal.PlainDate.from({
     year: period.year ?? 1,
     month: period.month ?? 1,
-    day: period.day ?? 1 },
-  )
+    day: period.day ?? 1,
+  })
 }

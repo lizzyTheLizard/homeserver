@@ -1,18 +1,21 @@
-import { createServer, IncomingMessage, ServerResponse, Server } from 'http'
+import type { IncomingMessage, Server, ServerResponse } from 'http'
+import { createServer } from 'http'
 import type { Duplex } from 'stream'
-import { WebSocketServer, WebSocket } from 'ws'
-import { getUserSession, parseCookieHeader, UserSession } from './session'
+import type { WebSocket } from 'ws'
+import { WebSocketServer } from 'ws'
+import type { UserSession } from './session'
+import { getUserSession, parseCookieHeader } from './session'
 import { logger } from './logger'
 import { createAssistantInstance } from './assistant'
-import { Assistant, AssistantEvent, InitialContext } from './types'
+import type { Assistant, AssistantEvent, InitialContext } from './types'
 import { handleMicrosoftApi } from './microsoft/route'
 import { handleWhatsappApi } from './whatsapp/route'
 import { initializeDatabase } from './db'
-import z from 'zod'
+import { z } from 'zod'
 
 interface ActiveAssistant {
   assistant: Assistant
-  listener: (event: AssistantEvent) => void
+  listener(event: AssistantEvent): void
   cleanupTimeout?: NodeJS.Timeout
   ws: WebSocket | undefined
 }
@@ -31,16 +34,14 @@ async function main() {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
       return
     }
-    const pathname = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`).pathname
+    const { pathname } = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`)
     handleMicrosoftApi(req, res, pathname)
-      .then((handled) => {
+      .then(handled => {
         if (handled) return true
         return handleWhatsappApi(req, res, pathname)
       })
-      .then((handled) => {
-        if (!handled) {
-          res.writeHead(404).end()
-        }
+      .then(handled => {
+        if (!handled) res.writeHead(404).end()
       })
       .catch((e: unknown) => {
         logger.error('Error handling assistant request', e)
@@ -69,7 +70,7 @@ async function main() {
 }
 
 async function handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buffer) {
-  const url = request.url
+  const { url } = request
   if (!url?.startsWith('/ws/assistant')) {
     socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
     socket.destroy()
@@ -77,8 +78,12 @@ async function handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buf
   }
   const user = await authenticate(request)
   const wsServer = new WebSocketServer({ noServer: true })
-  wsServer.on('connection', (ws) => { handleConnection(ws, user) })
-  wsServer.handleUpgrade(request, socket, head, (ws) => { wsServer.emit('connection', ws, request) })
+  wsServer.on('connection', ws => {
+    handleConnection(ws, user)
+  })
+  wsServer.handleUpgrade(request, socket, head, ws => {
+    wsServer.emit('connection', ws, request)
+  })
 }
 
 async function authenticate(request: IncomingMessage): Promise<UserSession> {
@@ -96,16 +101,27 @@ function handleConnection(ws: WebSocket, user: UserSession): void {
     if (msg.type === 'reconnect') currentUuid = handleReconnect(ws, msg)
     if (msg.type === 'message') handleUserMessage(ws, msg, currentUuid)
   })
-  ws.on('close', (code) => { handleConnectionClose(code, currentUuid) })
+  ws.on('close', code => {
+    handleConnectionClose(code, currentUuid)
+  })
 }
 
-function handleInitialize(ws: WebSocket, msg: { type: 'initialize', initialContext: InitialContext }, user: UserSession): string {
+function handleInitialize(ws: WebSocket, msg: { type: 'initialize'; initialContext: InitialContext }, user: UserSession): string {
   const uuid = crypto.randomUUID()
   const assistant = createAssistantInstance(user)
-  const activeAssistant = { assistant, ws, listener: (event: AssistantEvent) => { ws.send(JSON.stringify(event)) } }
+  const activeAssistant = {
+    assistant,
+    ws,
+    listener: (event: AssistantEvent) => {
+      ws.send(JSON.stringify(event))
+    },
+  }
   assistant.on(activeAssistant.listener)
-  assistant.init(msg.initialContext)
-    .then(() => { ws.send(JSON.stringify({ type: 'initialized', uuid })) })
+  assistant
+    .init(msg.initialContext)
+    .then(() => {
+      ws.send(JSON.stringify({ type: 'initialized', uuid }))
+    })
     .catch((e: unknown) => {
       ws.send(JSON.stringify({ type: 'error', message: 'Failed to initialize assistant' }))
       logger.error('Error initializing assistant', e)
@@ -114,7 +130,7 @@ function handleInitialize(ws: WebSocket, msg: { type: 'initialize', initialConte
   return uuid
 }
 
-function handleReconnect(ws: WebSocket, msg: { type: 'reconnect', uuid: string }): string | undefined {
+function handleReconnect(ws: WebSocket, msg: { type: 'reconnect'; uuid: string }): string | undefined {
   const stored = activeAssistants.get(msg.uuid)
   if (!stored) {
     ws.close(4001, 'Session has expired, cannot reconnect')
@@ -124,23 +140,24 @@ function handleReconnect(ws: WebSocket, msg: { type: 'reconnect', uuid: string }
   if (stored.cleanupTimeout) clearTimeout(stored.cleanupTimeout)
   stored.assistant.off(stored.listener)
   stored.ws = ws
-  stored.listener = (event: AssistantEvent) => { ws.send(JSON.stringify(event)) }
+  stored.listener = (event: AssistantEvent) => {
+    ws.send(JSON.stringify(event))
+  }
   stored.assistant.on(stored.listener)
   ws.send(JSON.stringify({ type: 'reconnected' }))
   return msg.uuid
 }
 
-function handleUserMessage(ws: WebSocket, msg: { type: 'message', message: string }, uuid: string | undefined): void {
+function handleUserMessage(ws: WebSocket, msg: { type: 'message'; message: string }, uuid: string | undefined): void {
   const stored = uuid ? activeAssistants.get(uuid) : undefined
   if (!stored) {
     ws.close(4003, 'No active assistant session found for this connection. Please start a new chat.')
     return
   }
-  stored.assistant.send(msg.message)
-    .catch((e: unknown) => {
-      ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message to assistant' }))
-      logger.error('Error sending message to assistant', e)
-    })
+  stored.assistant.send(msg.message).catch((e: unknown) => {
+    ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message to assistant' }))
+    logger.error('Error sending message to assistant', e)
+  })
 }
 
 function handleConnectionClose(code: number, currentUuid: string | undefined): void {
@@ -152,7 +169,9 @@ function handleConnectionClose(code: number, currentUuid: string | undefined): v
   if (!stored) return
   stored.assistant.off(stored.listener)
   stored.ws = undefined
-  setTimeout(() => { activeAssistants.delete(currentUuid) }, ASSISTANT_TTL_MS)
+  setTimeout(() => {
+    activeAssistants.delete(currentUuid)
+  }, ASSISTANT_TTL_MS)
 }
 
 function validateObject<T extends z.ZodType>(input: unknown, schema: T): z.infer<T> {
@@ -162,13 +181,16 @@ function validateObject<T extends z.ZodType>(input: unknown, schema: T): z.infer
 }
 
 const inputSchema = z.union([
-  z.object({ type: z.literal('initialize'), initialContext: z.object({ location: z.object({ lat: z.number(), lon: z.number() }) }) }),
+  z.object({
+    type: z.literal('initialize'),
+    initialContext: z.object({ location: z.object({ lat: z.number(), lon: z.number() }) }),
+  }),
   z.object({ type: z.literal('reconnect'), uuid: z.string() }),
   z.object({ type: z.literal('message'), message: z.string() }),
 ])
 
 // Logs every served request with method, path, status and duration, so a call
-// that reaches the assistant is visible even when it then fails.
+// That reaches the assistant is visible even when it then fails.
 function requestTracing(req: IncomingMessage, res: ServerResponse): void {
   const startedAt = Date.now()
   const method = req.method ?? 'GET'
@@ -179,7 +201,7 @@ function requestTracing(req: IncomingMessage, res: ServerResponse): void {
 }
 
 // The listen host may be a container hostname, so report the address the
-// socket actually bound to - that is what a client has to be able to reach.
+// Socket actually bound to - that is what a client has to be able to reach.
 function describeBoundAddress(server: Server, fallback: string): string {
   const address = server.address()
   if (address === null || typeof address === 'string') return address ?? fallback

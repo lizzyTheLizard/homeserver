@@ -11,8 +11,7 @@ const meta = {
 } satisfies Meta<typeof Button>
 export default meta
 
-export const Normal: StoryObj<typeof meta> = {
-}
+export const Normal: StoryObj<typeof meta> = {}
 
 export const Secondary: StoryObj<typeof meta> = {
   args: {

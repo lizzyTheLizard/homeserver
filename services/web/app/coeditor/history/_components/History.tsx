@@ -1,10 +1,10 @@
 'use client'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { DataTable } from '@/app/shared/_components/table/DataTable'
 import { dateColumn, textColumn } from '@/app/shared/_components/table/DataTableColumnBuilders'
 import { DateTime } from '@/app/shared/_components/DateTime'
 import { useRouter } from 'next/navigation'
-import { Discussion } from '../../_data/Discussion'
+import type { Discussion } from '../../_data/Discussion'
 import style from './History.module.css'
 
 const columns = [
@@ -18,7 +18,7 @@ export interface HistoryProps {
   discussions?: Discussion[]
 }
 
-export function History({ discussions = [] }: HistoryProps) {
+export function History({ discussions = NO_DISCUSSIONS }: HistoryProps) {
   const router = useRouter()
 
   function openDiscussion(discussion: Discussion) {
@@ -27,17 +27,17 @@ export function History({ discussions = [] }: HistoryProps) {
 
   function renderMobile(discussion: Discussion): ReactNode {
     return (
-      <div key={discussion.id} className={style.mobileItem} onClick={() => { openDiscussion(discussion) }}>
+      <div
+        key={discussion.id}
+        className={style.mobileItem}
+        onClick={() => {
+          openDiscussion(discussion)
+        }}
+      >
         <div className={style.mobileTitle}>{discussion.title}</div>
         <div className={style.mobileMeta}>
           <DateTime date={discussion.updated_at} oneLine />
-          {discussion.context && (
-            <span>
-              {' '}
-              ·
-              {discussion.context}
-            </span>
-          )}
+          {discussion.context && <span> ·{discussion.context}</span>}
         </div>
         <div className={style.mobileText}>{discussion.text}</div>
       </div>
@@ -57,3 +57,5 @@ export function History({ discussions = [] }: HistoryProps) {
     </>
   )
 }
+
+const NO_DISCUSSIONS: NonNullable<HistoryProps['discussions']> = []

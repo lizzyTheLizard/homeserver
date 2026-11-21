@@ -56,8 +56,8 @@ export const config: Config = {
 }
 
 function toNodeEnv(value: string): Config['NODE_ENV'] {
-  if(value === 'development') return value
-  if(value ==='production') return value
-  if(value === 'test') return value
+  if (value === 'development') return value
+  if (value === 'production') return value
+  if (value === 'test') return value
   throw new Error(`Invalid NODE_ENV: ${value}`)
 }

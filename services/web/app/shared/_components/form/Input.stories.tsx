@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { useState } from 'react'
-import { fn, expect } from 'storybook/test'
+import { expect, fn } from 'storybook/test'
 import { Input } from './Input'
 
 const meta = {
   title: 'Shared/Form/Input',
   component: Input,
   tags: ['autodocs'],
-  args: {
-  },
+  args: {},
 } satisfies Meta<typeof Input>
 export default meta
 
@@ -37,13 +36,16 @@ export const Filled: StoryObj<typeof meta> = {
     label: 'Filled input',
     onChange: fn(),
   },
-  render: (args) => {
+  render: args => {
     const [value, setValue] = useState(args.value)
     return (
       <Input
         {...args}
         value={value}
-        onChange={(e) => { setValue(e.target.value); args.onChange?.(e) }}
+        onChange={e => {
+          setValue(e.target.value)
+          args.onChange?.(e)
+        }}
       />
     )
   },
