@@ -426,19 +426,32 @@ only do this if you have a reason to.
   `docker compose up -d --force-recreate --remove-orphans`, so every service is
   recreated and containers of services no longer in the compose file are
   removed. Deploys on the host are serialised with `flock`.
-* **Dependency updates (Renovate):** the hosted Renovate GitHub App, installed
-  on this repository by the owner, is configured by `.github/renovate.json5`.
-  Every day before 6 a.m. (Zurich time) it opens one pull request per outdated
-  dependency (pnpm, GitHub Actions, Dockerfile and compose images) once the new
-  version is a day old. Patch and minor updates use GitHub auto-merge and merge
-  after "Quality Gate" passed; major updates stay open for manual review, and
-  `postgres` major updates are ignored (they need a data migration and a
-  matching client in `infrastructure/db-backup`). The `main` ruleset requires
-  branches to be up to date, so Renovate rebases a pull request whenever it is
-  behind `main` or conflicts with it; at most 5 pull requests are open at a time
-  to keep the re-runs after each merge small. Nothing else may push to a
-  `renovate/*` branch, or Renovate stops rebasing it. A stuck pull request is
-  rebased with the rebase checkbox in its description (or the Dependency
-  Dashboard issue), or closed so that Renovate recreates it. Merges and pushes
-  of the app start the pipeline, unlike those made with `GITHUB_TOKEN`.
+* **Dependency updates (Renovate):** the workflow `.github/workflows/renovate.yml`
+  runs Renovate with the policy in `.github/renovate.json5`. It runs every night
+  at 03:00 UTC (inside the "before 6 a.m. Zurich time" window), after every push
+  to `main` and on demand (`gh workflow run renovate.yml -f log-level=debug`,
+  then `gh run watch`; the log of each run is in the Actions tab). Outside the
+  window Renovate only updates existing pull requests and never opens new ones.
+  It opens one pull request per outdated dependency (pnpm, GitHub Actions,
+  Dockerfile and compose images) once the new version is a day old and keeps
+  the Dependency Dashboard issue. Patch and minor updates use GitHub auto-merge
+  and merge after "Quality Gate" passed; major updates stay open for manual
+  review, and `postgres` major updates are ignored (they need a data migration
+  and a matching client in `infrastructure/db-backup`). The `main` ruleset
+  requires branches to be up to date, so after every merge the run on `main`
+  rebases the remaining pull requests; at most 5 are open at a time to keep the
+  re-runs small. Nothing else may push to a `renovate/*` branch, or Renovate
+  stops rebasing it. A stuck pull request is rebased with the rebase checkbox
+  in its description (or the Dependency Dashboard issue) at the next run, so
+  dispatch the workflow to do it right away, or close it so that Renovate
+  recreates it. The workflow authenticates with the Actions secret
+  `RENOVATE_TOKEN`, not `GITHUB_TOKEN`, because pushes and merges made with
+  `GITHUB_TOKEN` start no pipeline run. The token is a fine-grained personal
+  access token limited to this repository with read/write access to contents,
+  pull requests, issues and workflows (and read access to metadata and commit
+  statuses); renew it before it expires (`gh secret set RENOVATE_TOKEN`). A
+  GitHub App installation token works too (add `actions/create-github-app-token`
+  in front of the Renovate step). The hosted Renovate GitHub App must not be
+  installed on the repository, because two Renovate instances fight over the
+  same branches.
 
