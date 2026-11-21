@@ -52,6 +52,9 @@ services:
     environment:
       NODE_ENV: production
       APP_URL: https://www.gutschi.site
+      # Unused by the current image. The previously published image still requires it at startup, so it stays
+      # For one release to let the stack start with that image; remove it in the next change.
+      ASSISTANT_INTERNAL_URL: http://localhost:8500
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
       WHATSAPP_BRIDGE_URL: http://whatsapp:8400
     depends_on:
