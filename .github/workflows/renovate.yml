@@ -1,7 +1,7 @@
 name: "Renovate"
 on:
   schedule:
-    # 03:00 UTC is 04:00 or 05:00 in Zurich, inside the "before 6am" window of .github/renovate.json5
+    # 03:00 UTC is 04:00 or 05:00 in Zurich; the timing of all runs is decided here, renovate.json5 has no schedule
     - cron: "0 3 * * *"
   push:
     # Under the strict ruleset every merge leaves the other pull requests behind main; Renovate rebases them
@@ -34,5 +34,7 @@ jobs:
         env:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_ONBOARDING: "false"
+          # An address of the owner instead of the default one of Mend (renovate@whitesourcesoftware.com)
+          RENOVATE_GIT_AUTHOR: "lizzyTheLizard <14069652+lizzyTheLizard@users.noreply.github.com>"
           RENOVATE_REQUIRE_CONFIG: required
           LOG_LEVEL: ${{ inputs.log-level || 'info' }}

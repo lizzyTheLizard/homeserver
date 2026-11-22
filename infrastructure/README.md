@@ -440,10 +440,12 @@ only do this if you have a reason to.
     removed. Deploys on the host are serialised with `flock`.
 * **Dependency updates (Renovate):** the workflow `.github/workflows/renovate.yml`
   runs Renovate with the policy in `.github/renovate.json5`. It runs every night
-  at 03:00 UTC (inside the "before 6 a.m. Zurich time" window), after every push
-  to `main` and on demand (`gh workflow run renovate.yml -f log-level=debug`,
-  then `gh run watch`; the log of each run is in the Actions tab). Outside the
-  window Renovate only updates existing pull requests and never opens new ones.
+  at 03:00 UTC, after every push to `main` and on demand
+  (`gh workflow run renovate.yml -f log-level=debug`, then `gh run watch`; the
+  log of each run is in the Actions tab). The workflow triggers are the only
+  timing, `renovate.json5` has no schedule, so every run may open and update
+  pull requests. Commits are authored as the owner's GitHub noreply address
+  (`RENOVATE_GIT_AUTHOR`) and stay unsigned.
   It opens one pull request per outdated dependency (pnpm, GitHub Actions,
   Dockerfile and compose images) once the new version is a day old and keeps
   the Dependency Dashboard issue. Patch and minor updates use GitHub auto-merge
