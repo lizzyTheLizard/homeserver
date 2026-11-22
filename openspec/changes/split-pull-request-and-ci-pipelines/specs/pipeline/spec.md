@@ -92,7 +92,7 @@ After all three images were published, the "CI" pipeline SHALL synchronise the s
 
 ### Requirement: The pull request pipeline detects what changed
 
-The "Pull request" pipeline SHALL determine which of the web application, Wichteln and development machine services changed, comparing the pull request against its base branch. Its test jobs and the image builds of its stack start SHALL act only on what this stage reports as changed. The "CI" pipeline SHALL NOT detect changes.
+The "Pull request" pipeline SHALL determine which of the web application, Wichteln and development machine services and whether the infrastructure changed, comparing the pull request against its base branch. Its test jobs, its stack start and the image builds of its stack start SHALL act only on what this stage reports as changed. The "CI" pipeline SHALL NOT detect changes.
 
 #### Scenario: A change inside a service folder
 - **WHEN** the pull request changes files under `services/<name>/` only
@@ -104,19 +104,19 @@ The "Pull request" pipeline SHALL determine which of the web application, Wichte
 
 #### Scenario: A change to the pipeline definition
 - **WHEN** either pipeline's workflow, the scripts it runs or any of its actions changes
-- **THEN** every service is reported as changed
+- **THEN** every service and the infrastructure are reported as changed
 
-#### Scenario: A change to the stack definition only
-- **WHEN** only files under `infrastructure/` change
-- **THEN** no service is reported as changed, and the stack start still runs with the changed definition
+#### Scenario: A change to the stack definition
+- **WHEN** files under `infrastructure/` change
+- **THEN** the infrastructure is reported as changed, and a service only when its own files changed
 
 #### Scenario: Nothing relevant changed
 - **WHEN** the pull request changes only files outside services, infrastructure, shared workspace files and the pipeline, for example only `openspec/`
-- **THEN** no service is reported as changed
+- **THEN** no service and no infrastructure is reported as changed
 
 ### Requirement: The pull request pipeline starts the stack with the changed images
 
-The "Pull request" pipeline SHALL start the whole docker-compose stack with `docker compose up` on a pipeline runner on every run, using placeholder configuration values. For each service reported as changed it SHALL build the image from the pull request's sources and run the stack with it; for every other service it SHALL use the published `latest` image. It SHALL NOT publish any image.
+When any service or the infrastructure is reported as changed, the "Pull request" pipeline SHALL start the whole docker-compose stack with `docker compose up` on a pipeline runner, using placeholder configuration values. For each service reported as changed it SHALL build the image from the pull request's sources and run the stack with it; for every other service it SHALL use the published `latest` image. It SHALL NOT publish any image.
 
 #### Scenario: A changed service runs with its own image
 - **WHEN** the web application is reported as changed
@@ -125,6 +125,14 @@ The "Pull request" pipeline SHALL start the whole docker-compose stack with `doc
 #### Scenario: An unchanged service uses the published image
 - **WHEN** Wichteln is not reported as changed
 - **THEN** its image is not built and the stack uses the published `latest` Wichteln image
+
+#### Scenario: A stack definition change starts the stack
+- **WHEN** only files under `infrastructure/` changed
+- **THEN** the stack starts with the changed definition and the published `latest` images
+
+#### Scenario: A documentation-only pull request skips the stack
+- **WHEN** no service and not the infrastructure is reported as changed, for example only `openspec/` changed
+- **THEN** the stack start is skipped and does not block the "Quality Gate"
 
 ### Requirement: The stack start must be healthy and runs beside the tests
 
@@ -203,9 +211,9 @@ The web application and Wichteln SHALL be linted against a single lint configura
 **Migration**: See "The pull request pipeline lints the whole repository" and "The pull request pipeline tests only changed services".
 
 ### Requirement: The pipeline first detects what changed
-**Reason**: Detection now serves only the pull request pipeline, no longer compares pushes to main and no longer reports the infrastructure.
+**Reason**: Detection now serves only the pull request pipeline and no longer compares pushes to main.
 **Migration**: See "The pull request pipeline detects what changed".
 
 ### Requirement: The stack is started in the pipeline when the infrastructure changed
-**Reason**: The stack start now runs on every pull request, builds the changed services' images itself and runs only in the pull request pipeline.
+**Reason**: The stack start now also runs for service changes, builds the changed services' images itself and runs only in the pull request pipeline.
 **Migration**: See "The pull request pipeline starts the stack with the changed images".
