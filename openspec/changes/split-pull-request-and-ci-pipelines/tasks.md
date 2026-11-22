@@ -10,6 +10,7 @@
 - [x] 2.2 Add `test-web` (three vitest projects, Playwright cache) and `test-wichteln` jobs, each `needs: changes` and conditional on its flag; verify they are skipped for an unchanged service in the PR's run.
 - [x] 2.3 Add the `stack-start` job (`needs: changes`, runs only if `web`, `wichteln`, `dev-machine` or `infrastructure` is `true`): build changed services' images with `load: true` under their `latest` tag (web with revision build args), pull only the unchanged ones, start the stack (compose keeps the locally built images) and wait for health; keep the existing port 53, placeholder env, placeholder certificate, log and teardown steps. Verify on the PR that a changed service runs the locally built image and an unchanged one the registry image, and that a documentation-only PR skips the job.
 - [x] 2.4 Add the `quality-gate` job ("Quality Gate", `if: always()`, needs every job) with the current pass/fail logic; verify the required check is reported and passes on the PR.
+- [x] 2.5 Key the web job's Playwright browser cache on the installed Playwright version instead of the lockfile hash; verify the cache key in the job log contains the version and stays the same across a run that changes other dependencies.
 
 ## 3. CI pipeline
 
