@@ -6,9 +6,8 @@ export const SERVICES = ['web', 'wichteln', 'dev-machine']
 export const TARGETS = [...SERVICES, 'infrastructure']
 
 const SHARED_WORKSPACE_FILES = new Set(['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.nvmrc', '.oxlintrc.json', '.oxfmtrc.json'])
-const PIPELINE_FILES = new Set(['.github/workflows/pipeline.yml', '.github/workflows/service.yml'])
+const PIPELINE_FILES = new Set(['.github/workflows/pull-request.yml', '.github/workflows/ci.yml'])
 const PIPELINE_FOLDERS = ['.github/actions/', '.github/scripts/']
-const ZERO_SHA = /^0+$/
 
 export function detectChanges(paths) {
   const changed = everything(false)
@@ -60,31 +59,13 @@ function resolveFromEvent(env) {
     return detectChanges(changedPaths(`${env.BASE_REF}...HEAD`))
   }
 
-  if (event === 'push') {
-    const before = env.BEFORE_SHA ?? ''
-    if (!before || ZERO_SHA.test(before) || !commitExists(before)) {
-      console.log('detect-changes: no comparable previous commit, reporting everything as changed')
-      return everything(true)
-    }
-    return detectChanges(changedPaths(`${before}..${env.GITHUB_SHA ?? 'HEAD'}`))
-  }
-
-  console.log(`detect-changes: event '${event}' reports everything as changed`)
+  console.log(`detect-changes: event '${event}' reports everything as changed, only pull requests are compared`)
   return everything(true)
 }
 
 function changedPaths(range) {
   const output = execFileSync('git', ['diff', '--name-only', range], { encoding: 'utf8' })
   return output.split('\n').filter(Boolean)
-}
-
-function commitExists(sha) {
-  try {
-    execFileSync('git', ['cat-file', '-e', `${sha}^{commit}`], { stdio: 'ignore' })
-    return true
-  } catch {
-    return false
-  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main()

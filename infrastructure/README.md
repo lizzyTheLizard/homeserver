@@ -403,36 +403,41 @@ only do this if you have a reason to.
 
 * **Repo:** https://github.com/lizzyTheLizard/homeserver
 * **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
-* **CI/CD pipeline:** one workflow, `.github/workflows/pipeline.yml`, runs for
-  every pull request (opened, updated, reopened), every push to `main` and on
-  manual dispatch; pushes to other branches do not run it. Its stages:
-  1. **Detect changes** (`.github/scripts/detect-changes.mjs`) — which of web,
-     Wichteln, dev machine and infrastructure changed,
-     against the pull request's base or, on `main`, the previous `main` commit.
-     Root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` and `.nvmrc`
-     count for every service; the pipeline's own files (`pipeline.yml`,
-     `service.yml`, `.github/actions/**`, `.github/scripts/**`) count for
-     everything. A manual run treats everything as changed.
-  2. **Checks** — for each changed service the reusable
-     `.github/workflows/service.yml` lints, tests and builds its image. On pull
-     requests the **change guard** (`.github/scripts/change-guard.mjs`) also
-     requires an archived OpenSpec change named after the branch, no in-flight
-     change folder, and every delta spec synced into `openspec/specs/`.
-  3. **Publish and deploy** (push to `main` only) — the changed images are
-     published to GHCR (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) and
-     each changed service is recreated on the server with
-     `docker compose up -d --force-recreate --remove-orphans <service>`.
-  4. **Quality Gate** — always runs and fails if any job failed or was
-     cancelled; skipped jobs count as passed. It is the only status check the
-     `main` ruleset requires.
-* **Infrastructure deploy:** when the pipeline reports the infrastructure as
-  changed on `main` (anything under `infrastructure/` or the pipeline's own
-  files), the per-service deploys are skipped and, after every changed image
-  was published, one infrastructure deploy syncs `infrastructure/` to the
-  server, pulls all images and recreates the whole stack with
-  `docker compose up -d --force-recreate --remove-orphans`, so every service is
-  recreated and containers of services no longer in the compose file are
-  removed. Deploys on the host are serialised with `flock`.
+* **CI/CD pipelines:** two workflows. Pushes to other branches run neither.
+  * **Pull request** (`.github/workflows/pull-request.yml`, every pull request
+    opened, updated or reopened; a newer push cancels the running one). These
+    jobs run:
+    1. **Lint** — `pnpm run lint:ci` from the repository root, always for every
+       package, in parallel to the next two jobs.
+    2. **Detect changes** (`.github/scripts/detect-changes.mjs`) — which of web,
+       Wichteln, dev machine and infrastructure changed against the pull
+       request's base. Root `package.json`, `pnpm-lock.yaml`,
+       `pnpm-workspace.yaml` and `.nvmrc` count for every service; the
+       pipelines' own files (`pull-request.yml`, `ci.yml`,
+       `.github/actions/**`, `.github/scripts/**`) count for everything.
+    3. **Change guard** (`.github/scripts/change-guard.mjs`) — requires an
+       archived OpenSpec change named after the branch, no in-flight change
+       folder, and every delta spec synced into `openspec/specs/`.
+    4. **Test web** / **Test Wichteln** — only for a changed service, after
+       change detection.
+    5. **Start stack** — only if a service or the infrastructure changed
+       (documentation-only pull requests skip it), after change detection and
+       in parallel to the tests. It builds the images of the changed services
+       from the pull request, uses the published `latest` images for the
+       others, and starts the whole stack with placeholder configuration until
+       every container is healthy. Nothing is published.
+    6. **Quality Gate** — always runs and fails if any job failed or was
+       cancelled; skipped jobs count as passed. It is the only status check the
+       `main` ruleset requires.
+  * **CI** (`.github/workflows/ci.yml`, every push to `main` and manual
+    dispatch; runs queue and are never cancelled). It repeats no check of the
+    pull request. It builds and publishes all three images to GHCR
+    (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) whether or not they
+    changed, then one **Deploy infrastructure** job syncs `infrastructure/` to
+    the server, pulls all images and recreates the whole stack with
+    `docker compose up -d --force-recreate --remove-orphans`, so every service
+    is recreated and containers of services no longer in the compose file are
+    removed. Deploys on the host are serialised with `flock`.
 * **Dependency updates (Renovate):** the workflow `.github/workflows/renovate.yml`
   runs Renovate with the policy in `.github/renovate.json5`. It runs every night
   at 03:00 UTC (inside the "before 6 a.m. Zurich time" window), after every push

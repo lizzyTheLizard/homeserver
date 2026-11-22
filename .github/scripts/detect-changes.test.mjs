@@ -20,10 +20,9 @@ test('shared workspace files report every service but not the infrastructure', (
 
 test('the pipeline definition reports everything', () => {
   for (const path of [
-    '.github/workflows/pipeline.yml',
-    '.github/workflows/service.yml',
+    '.github/workflows/pull-request.yml',
+    '.github/workflows/ci.yml',
     '.github/actions/setup/action.yml',
-    '.github/actions/deploy-service/action.yml',
     '.github/scripts/detect-changes.mjs',
   ])
     assert.deepEqual(detectChanges([path]), everything(true), path)
