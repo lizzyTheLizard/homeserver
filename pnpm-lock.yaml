@@ -207,7 +207,7 @@ importers:
         version: 0.5.1
       '@microsoft/microsoft-graph-client':
         specifier: ^3.0.7
-        version: 3.0.7
+        version: 3.1.0
       ai:
         specifier: ^7.0.177
         version: 7.0.179(zod@4.6.7)
@@ -1030,9 +1030,9 @@ packages:
       '@types/react': '>=16'
       react: '>=16'
 
-  '@microsoft/microsoft-graph-client@3.0.7':
-    resolution: {integrity: sha512-/AazAV/F+HK4LIywF9C+NYHcJo038zEnWkteilcxC1FM/uK/4NVGDKGrxx7nNq1ybspAroRKT4I1FHfxQzxkUw==}
-    engines: {node: '>=12.0.0'}
+  '@microsoft/microsoft-graph-client@3.1.0':
+    resolution: {integrity: sha512-LdfU+0E8B5EFmBiIM7AdpI/dhFZ+bDJCMnenwVoFl889K2fU5WDx3K0aIolsm36IrGaMkhcMyN3VFpmujzzXcA==}
+    engines: {node: '>=22.0.0'}
     peerDependencies:
       '@azure/identity': '*'
       '@azure/msal-browser': '*'
@@ -4604,7 +4604,7 @@ snapshots:
       '@types/react': 19.3.0
       react: 19.3.1
 
-  '@microsoft/microsoft-graph-client@3.0.7':
+  '@microsoft/microsoft-graph-client@3.1.0':
     dependencies:
       '@babel/runtime': 7.29.7
       tslib: 2.9.1
