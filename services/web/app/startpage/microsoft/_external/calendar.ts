@@ -292,7 +292,7 @@ const rawCalendarEventSchema = z.object({
   calendarName: z.string().optional(),
 })
 
-const calendarsSchema = z.object({
+export const calendarsSchema = z.object({
   value: z.array(
     z.object({
       id: z.string(),
@@ -303,7 +303,10 @@ const calendarsSchema = z.object({
       canEdit: z.boolean(),
       canShare: z.boolean(),
       canViewPrivateItems: z.boolean(),
-      owner: z.object({ name: z.string(), address: z.string() }),
+      owner: z
+        .object({ name: z.string(), address: z.string() })
+        .nullable()
+        .transform(owner => owner ?? { name: '', address: '' }),
     }) satisfies z.ZodType<MicrosoftCalendar>,
   ),
 })
