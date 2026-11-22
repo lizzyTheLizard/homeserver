@@ -1,8 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["config:recommended"],
-  timezone: "Europe/Zurich",
-  schedule: ["before 6am"],
   minimumReleaseAge: "1 day",
   // Every merge must be tested on top of the current main (strict ruleset), so a pull request is rebased as soon as it is behind
   rebaseWhen: "behind-base-branch",
