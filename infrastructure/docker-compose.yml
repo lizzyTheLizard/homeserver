@@ -193,7 +193,7 @@ services:
 
   bind9:
     container_name: Bind9
-    image: internetsystemsconsortium/bind9:9.20
+    image: internetsystemsconsortium/bind9:9.21
     restart: unless-stopped
     ports:
       - '53:53/udp'
