@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { Temporal } from '@js-temporal/polyfill'
 import { transactional } from '@/app/shared/_external/db/access'
 import { setMicrosoftToken } from './data'
-import { getMicrosoftCalendarWorker } from './calendar'
+import { calendarsSchema, getMicrosoftCalendarWorker } from './calendar'
 import type { UserSession } from '@/app/shared/auth/session'
 
 const { TEST_MICROSOFT_REFRESH_TOKEN } = process.env
@@ -58,5 +58,30 @@ describe.skipIf(!TEST_MICROSOFT_REFRESH_TOKEN)('microsoft-calendar', () => {
     const events = worker.getAllEvents(now, nextWeek)
 
     expect(Array.isArray(events)).toBe(true)
+  })
+})
+
+describe('calendarsSchema', () => {
+  const calendar = {
+    id: '1',
+    name: 'Calendar',
+    color: 'auto',
+    hexColor: '',
+    isDefaultCalendar: false,
+    canEdit: true,
+    canShare: true,
+    canViewPrivateItems: true,
+  }
+
+  test('accepts calendars without an owner and uses an empty owner', () => {
+    const owner = { name: 'Owner', address: 'owner@test.com' }
+    const result = calendarsSchema.parse({
+      value: [
+        { ...calendar, owner },
+        { ...calendar, id: '2', owner: null },
+      ],
+    })
+
+    expect(result.value.map(c => c.owner)).toEqual([owner, { name: '', address: '' }])
   })
 })
