@@ -29,7 +29,7 @@ The binding rules (branch invariants, commit trailers `OpenSpec-Change:` / `Agen
 
 ## Architecture
 
-Services (each its own container image in GHCR, built and deployed by the single `.github/workflows/pipeline.yml`, which detects the changed services, runs their lint/test/build via `service.yml`, deploys from `main` and ends in the one required check "Quality Gate", run on a self-hosted home server via `infrastructure/docker-compose.yml`):
+Services (each its own container image in GHCR, checked by `.github/workflows/pull-request.yml` (lint, change detection, tests of the changed services, stack start, ending in the one required check "Quality Gate") and built, published and deployed by `.github/workflows/ci.yml` on every merge to `main`, run on a self-hosted home server via `infrastructure/docker-compose.yml`):
 
 - **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer. The startpage also hosts the assistant: Microsoft logic (Graph, token, mail/todo/calendar workers) in `startpage/microsoft/_external/`, the WAHA client in `startpage/whatsapp/_external/`, and the chat (model, skills, tools, weather) in `startpage/assistant/`, served by the streaming `POST /startpage/assistant/chat` route handler (newline-delimited JSON; conversations live in web-process memory).
 - **`services/wichteln`** — separate Next.js app (port 3001 in dev) sharing the Postgres DB with `wichteln_*`-prefixed tables.
