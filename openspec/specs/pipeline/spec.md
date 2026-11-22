@@ -112,7 +112,7 @@ Every `FROM` instruction in the repository's Dockerfiles that loads an image fro
 
 ### Requirement: Renovate keeps dependencies and Docker images up to date
 
-Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily (before 6 a.m. Zurich time) and open one pull request per dependency update, only for versions at least one day old. Major-version updates of `postgres` SHALL be ignored because they need a data migration and must match the PostgreSQL client of the backup image. Dependabot SHALL NOT open version-update pull requests.
+Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily and open one pull request per dependency update, only for versions at least one day old. Major-version updates of `postgres` SHALL be ignored because they need a data migration and must match the PostgreSQL client of the backup image. Dependabot SHALL NOT open version-update pull requests.
 
 #### Scenario: Every Dockerfile is covered
 - **WHEN** a Dockerfile exists in `services/web`, `services/wichteln`, `services/dev-machine` or `infrastructure/db-backup`
@@ -152,19 +152,19 @@ Renovate pull requests for patch and minor updates SHALL be merged automatically
 
 ### Requirement: Renovate runs as a GitHub Actions workflow
 
-Renovate SHALL run as a workflow of this repository, using the repository's Renovate configuration, and no other Renovate instance (such as the hosted Renovate GitHub App) SHALL act on the repository. The workflow SHALL run every night inside the configured update window, after every push to the main branch, and when started by hand. Runs SHALL NOT overlap. The workflow SHALL authenticate with a token from the repository secret `RENOVATE_TOKEN` so that branch pushes and merges made by Renovate start the pipeline, and SHALL NOT open an onboarding pull request.
+Renovate SHALL run as a workflow of this repository, using the repository's Renovate configuration, and no other Renovate instance (such as the hosted Renovate GitHub App) SHALL act on the repository. The workflow SHALL run every night, after every push to the main branch, and when started by hand, and the repository's Renovate configuration SHALL NOT restrict when it may act. Runs SHALL NOT overlap. The workflow SHALL authenticate with a token from the repository secret `RENOVATE_TOKEN` so that branch pushes and merges made by Renovate start the pipeline, and SHALL NOT open an onboarding pull request.
 
 #### Scenario: Nightly run
 - **WHEN** the nightly schedule fires
-- **THEN** the Renovate workflow runs inside the 6 a.m. Zurich window and opens or updates pull requests for outdated dependencies
+- **THEN** the Renovate workflow runs and opens or updates pull requests for outdated dependencies
 
 #### Scenario: A merge to main triggers a run
 - **WHEN** a commit is pushed to the main branch, for example by merging a Renovate pull request
-- **THEN** the Renovate workflow runs and rebases the open Renovate pull requests that are now behind main
+- **THEN** the Renovate workflow runs and rebases the open Renovate pull requests that are now behind main, at any time of day
 
 #### Scenario: A run can be started by hand
-- **WHEN** the owner dispatches the Renovate workflow
-- **THEN** it runs immediately, optionally with a debug log level
+- **WHEN** the owner dispatches the Renovate workflow at any time of day
+- **THEN** it runs immediately, optionally with a debug log level, and opens or updates pull requests without waiting for a time window
 
 #### Scenario: Runs do not overlap
 - **WHEN** a run is in progress and another is triggered
@@ -321,3 +321,15 @@ The stack start SHALL pass only when every container is running and, where it de
 #### Scenario: The stack starts in parallel to the tests
 - **WHEN** change detection has finished
 - **THEN** the stack start begins without waiting for the test jobs
+
+### Requirement: Renovate commits are authored by the owner
+
+The Renovate workflow SHALL author its commits with the owner's GitHub noreply identity and SHALL NOT use Renovate's default author address.
+
+#### Scenario: A Renovate commit has the owner as author
+- **WHEN** Renovate creates or rebases a branch
+- **THEN** the commits have the owner's noreply address as author and not `renovate@whitesourcesoftware.com`
+
+#### Scenario: No default-author warning
+- **WHEN** a Renovate run starts
+- **THEN** its log contains no warning about the default `gitAuthor` address
