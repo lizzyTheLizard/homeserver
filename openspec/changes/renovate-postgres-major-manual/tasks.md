@@ -2,7 +2,8 @@
 
 ## 1. Renovate configuration
 
-- [ ] 1.1 In `.github/renovate.json5` delete the `postgres` major package rule (including its comment) and verify with `pnpm dlx --package renovate renovate-config-validator .github/renovate.json5` (or the validator available in the repo) that the config is valid and that no rule enables automerge for major updates
+- [x] 1.1 In `.github/renovate.json5` change the `postgres` major package rule from `enabled: false` to `automerge: false` with a `commitMessagePrefix` warning of the required data migration and a `prHeader` warning (cautioning not to merge before the migration and the backup client upgrade); verify with `renovate-config-validator` that the config is valid
+- [x] 1.2 Update the comment in `infrastructure/db-backup/Dockerfile` that says Renovate ignores Postgres major updates; verify by reading the comment
 
 ## Workflow follow-up
 

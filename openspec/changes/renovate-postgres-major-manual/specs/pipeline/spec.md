@@ -27,3 +27,7 @@ Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker im
 #### Scenario: PostgreSQL major upgrades are proposed
 - **WHEN** a new major version of `postgres` is released
 - **THEN** Renovate opens a pull request for it, which is not merged automatically
+
+#### Scenario: A PostgreSQL major upgrade warns about the data migration
+- **WHEN** Renovate opens the pull request for a new major version of `postgres`
+- **THEN** its title starts with a warning that a data migration is required and its description starts with a warning not to merge before the migration and the upgrade of the backup image's PostgreSQL client are done
