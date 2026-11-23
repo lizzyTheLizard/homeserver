@@ -9,23 +9,26 @@ The backup lives in `infrastructure/db-backup/` and is built on the server by co
 ## Goals / Non-Goals
 
 **Goals:**
-- One Dockerfile for web and Wichteln, one build stage plus one runtime stage, no per-service edits.
+- Web and Wichteln Dockerfiles that are simple (one build stage plus one runtime stage) and identical except for the service name, with a check that keeps them so.
 - The backup is a first-class workspace package: linted with the shared configuration, unit-tested, built and published by the same pipelines.
 
 **Non-Goals:**
-- No build tool other than Dockerfiles (Buildpacks, `pnpm deploy`, `dockerfile_inline` in compose) and no attempt to fit the backup into the shared Dockerfile: its runtime (root user for `crond`, `pg_dump`, no Next.js output) differs in every part that is not the base image.
+- No build tool other than Dockerfiles (Buildpacks, `pnpm deploy`, `dockerfile_inline` in compose).
+- No shared Dockerfile: each service keeps its own, as the backup must (its runtime differs in every part that is not the base image: root user for `crond`, `pg_dump`, no Next.js output).
 - `services/dev-machine` is not touched.
 - No TypeScript conversion and no rewrite of the backup scripts in another language; no change to backup behaviour, schedule or environment variables.
 
 ## Decisions
 
-**Shared root `Dockerfile` with `ARG SERVICE` for web and Wichteln.** The file lives at the repository root (it needs the root manifests and lockfile anyway, and `.dockerignore` is already there). Callers pass `SERVICE=web|wichteln`; the runtime stage sets `WORKDIR /app/services/${SERVICE}` and `CMD ["node", "server.js"]`. Alternative: keep two files and share through an include mechanism — Dockerfiles have none.
+**One Dockerfile per service, written identically.** `services/web/Dockerfile` and `services/wichteln/Dockerfile` stay where they are and keep being built with the repository root as context (`file: services/<name>/Dockerfile`), so the pipelines, change detection (`services/<name>/**`) and Renovate need no new concept. They contain the same text except for the service name in `@homeserver/<name>` and `services/<name>`. Alternative: one root `Dockerfile` with `ARG SERVICE`; rejected because the backup needs its own file anyway and a per-service file keeps each image's definition next to its service.
 
-**Single build stage.** Order: copy root `package.json`, lockfile, `pnpm-workspace.yaml` and the manifests of all workspace packages (including `services/backup/package.json`, so the frozen lockfile still matches the workspace), run `pnpm install --frozen-lockfile --filter @homeserver/${SERVICE}...`, then copy `services/${SERVICE}` and build. The layer cache behaves like the separate `deps` stage (install reruns only when manifests change) and the `COPY --from=deps` lines disappear. Alternative: keep `deps` + `builder`; rejected, the split only existed to move `node_modules` between stages. `libc6-compat` is dropped if both builds and starts pass without it.
+**Single build stage.** Order: copy root `package.json`, lockfile, `pnpm-workspace.yaml` and the manifests of all workspace packages (including `services/backup/package.json`, so the frozen lockfile still matches the workspace), run `pnpm install --frozen-lockfile --filter @homeserver/<name>...`, then copy `services/<name>` and build. The layer cache behaves like the separate `deps` stage (install reruns only when manifests change) and the `COPY --from=deps` lines disappear. Alternative: keep `deps` + `builder`; rejected, the split only existed to move `node_modules` between stages. `libc6-compat` is dropped if both builds and starts pass without it.
 
-**Revision args for both application images.** The four `ARG`/`ENV` lines are in the shared file, so Wichteln gets them too. This removes the `revision-build-args` matrix switch and the conditional step in `ci.yml`. They sit in the runtime stage after all expensive layers so changing them never invalidates the build cache.
+**Revision args in both.** The four `ARG`/`ENV` lines exist in both files, so Wichteln records its revision too. This removes the `revision-build-args` matrix switch and the conditional step in `ci.yml`. They sit in the runtime stage after all expensive layers so changing them never invalidates the build cache.
 
-**Empty `services/wichteln/public/`.** Keeps the Dockerfile free of conditionals; a `.gitkeep` makes git track the folder.
+**Empty `services/wichteln/public/`.** Keeps the two files line-for-line identical (both copy `public/`); a `.gitkeep` makes git track the folder.
+
+**A consistency check instead of a shared file.** A Node test next to the existing pipeline script tests reads both Dockerfiles, replaces the service name with a placeholder and asserts the texts are equal. It runs with the pipeline script tests and fails a pull request that changes only one of the files. Alternative: rely on review; rejected, drift is exactly what this change removes. The check is cheap to drop if it turns out to be a nuisance.
 
 **Backup as `services/backup`, own Dockerfile.** `git mv infrastructure/db-backup services/backup`, add `package.json` (`@homeserver/backup`, private, `lint`, `lint:ci`, `test` = `node --test`; no `build` or `clean` script, so `pnpm -r build` skips it) and add the package to `pnpm-workspace.yaml`. The package has no runtime dependencies, so its Dockerfile needs no pnpm: `FROM node:<exact tag>`, `apk add --no-cache postgresql16-client` (with the existing comment about keeping the major in step with the `postgres` image), `COPY` of the five scripts to `/usr/local/bin` and `chmod`, the entrypoint. It is built with `services/backup` as the build context. Script paths inside the container stay `/usr/local/bin/...`, so the restore and token commands in the READMEs and `CLAUDE.md` do not change. Alternatives considered: mounting the scripts into a stock image (still needs a Dockerfile for the client, and keeps the code outside pnpm/CI); porting the scripts to shell with `curl`/`jq` or replacing the upload with rclone (a rewrite of tested OAuth and upload logic with no behaviour gain; the user chose to keep Node.js).
 
@@ -33,11 +36,11 @@ The backup lives in `infrastructure/db-backup/` and is built on the server by co
 
 **Published backup image, pulled by compose.** `ci.yml` builds `homeserver-backup` like the other images (context `services/backup`, `file: services/backup/Dockerfile`), the deploy waits for all four, and compose uses `ghcr.io/<owner>/homeserver-backup:latest` without a `build:` section. The server no longer needs a build toolchain for the stack. Alternative: keep building on the host; rejected because it is the only image that does not follow the publish-then-pull flow and would not be covered by change detection.
 
-**Pipelines and change detection.** `detect-changes.mjs` adds `backup` to `SERVICES` (so `services/backup/**` and the shared workspace files flag it) and a small set of "application image" files (`Dockerfile`) that flags `web` and `wichteln` only: adding it to the shared workspace files would also rebuild the dev machine and the backup, which do not use it. `pull-request.yml` gets a `backup` output, a `test-backup` job (`pnpm --filter @homeserver/backup test`), a stack-start build of the backup image when it changed, and `test-backup` in the quality gate's `needs`. `ci.yml`'s matrix gains per-entry `file`, `context` and `build-args` fields.
+**Pipelines and change detection.** `detect-changes.mjs` adds `backup` to `SERVICES`, so `services/backup/**` and the shared workspace files flag it. `pull-request.yml` gets a `backup` output, a `test-backup` job (`pnpm --filter @homeserver/backup test`), a stack-start build of the backup image when it changed, and `test-backup` in the quality gate's `needs`. `ci.yml`'s matrix gains per-entry `context` and `build-args` fields (web and Wichteln pass the revision args; the backup's context is `services/backup`).
 
 ## Risks / Trade-offs
 
-- [Shared Dockerfile change affects both services] → change detection rebuilds both in the pull request and the stack start proves they run.
+- [The two Dockerfiles drift apart again] → the consistency test fails the pipeline scripts' tests when they differ by more than the service name.
 - [`pnpm install --filter` with an extra workspace package resolves differently from the full install] → verify with `docker build` of both services and a container start before the diff is reviewed; the backup manifest is copied so the lockfile stays consistent.
 - [A new first-time image `homeserver-backup` must exist in GHCR before the deploy pulls it] → the same CI run publishes it before the deploy job, and the GHCR package must allow the deploy host to pull it like the other images.
 - [Moving the folder renames paths in documentation, Renovate comment and compose] → covered by tasks; `grep -rn db-backup` must return nothing outside archived changes.
