@@ -110,9 +110,9 @@ Every `FROM` instruction in the repository's Dockerfiles that loads an image fro
 - **WHEN** a Dockerfile starts a stage from an external image such as `node` or `alpine`
 - **THEN** the tag names an exact version
 
-### Requirement: Renovate keeps dependencies and Docker images up to date
+### Requirement: Renovate opens pull requests for outdated dependencies and images
 
-Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily and open one pull request per dependency update, only for versions at least one day old. Major-version updates of `postgres` SHALL be ignored because they need a data migration and must match the PostgreSQL client of the backup image. Dependabot SHALL NOT open version-update pull requests.
+Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily and open one pull request per dependency update, only for versions at least one day old, including major versions. Dependabot SHALL NOT open version-update pull requests.
 
 #### Scenario: Every Dockerfile is covered
 - **WHEN** a Dockerfile exists in `services/web`, `services/wichteln`, `services/dev-machine` or `infrastructure/db-backup`
@@ -126,9 +126,13 @@ Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker im
 - **WHEN** several dependencies have newer versions
 - **THEN** each update has its own pull request
 
-#### Scenario: PostgreSQL major upgrades are not proposed
+#### Scenario: PostgreSQL major upgrades are proposed
 - **WHEN** a new major version of `postgres` is released
-- **THEN** Renovate does not open a pull request for it
+- **THEN** Renovate opens a pull request for it, which is not merged automatically
+
+#### Scenario: A PostgreSQL major upgrade warns about the data migration
+- **WHEN** Renovate opens the pull request for a new major version of `postgres`
+- **THEN** its title starts with a warning that a data migration is required and its description starts with a warning not to merge before the migration and the upgrade of the backup image's PostgreSQL client are done
 
 ### Requirement: Patch and minor dependency updates merge automatically and stay current with main
 
