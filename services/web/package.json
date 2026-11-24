@@ -36,7 +36,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite": "^0.6.0",
     "@storybook/addon-a11y": "^10.6.7",
     "@storybook/addon-docs": "^10.6.5",
     "@storybook/addon-vitest": "^10.6.5",
