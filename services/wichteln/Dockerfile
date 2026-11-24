@@ -1,50 +1,24 @@
-# syntax=docker.io/docker/dockerfile:1
+FROM ghcr.io/pnpm/pnpm:12.21.0 AS build
 
-FROM node:26.13.1-alpine3.24 AS base
-# Node 25+ no longer bundles corepack. Install pnpm directly; the root package.json
-# `devEngines.packageManager` range decides the exact version (pnpm downloads it if needed).
-RUN npm install -g pnpm@12
+# Install the version of .nvmrc (the same one the pipeline uses)
+COPY .nvmrc ./
+RUN pnpm runtime set node "$(sed 's/^v//' .nvmrc)" -g
 
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
+# Install dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY services/wichteln/package.json ./services/wichteln/
+RUN pnpm install --frozen-lockfile --filter @homeserver/wichteln...
 
-COPY package.json ./package.json
-COPY pnpm* ./
-COPY services/wichteln/package.json ./services/wichteln/package.json
-RUN pnpm i --frozen-lockfile
-
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/services/wichteln/node_modules ./services/wichteln/node_modules
-COPY --from=deps /app/package.json ./
-COPY --from=deps /app/pnpm* ./
-COPY ./services/wichteln ./services/wichteln
-
+# Build the app
+COPY services/wichteln ./services/wichteln
 RUN pnpm --filter @homeserver/wichteln build
 
-FROM base AS runner
-WORKDIR /app
+FROM node:26.13.1-slim
+USER node
 
-ENV NODE_ENV=production
+COPY --from=build --chown=node:node /app/services/wichteln/.next/standalone/ /app/
+COPY --from=build --chown=node:node /app/services/wichteln/.next/static /app/services/wichteln/.next/static
+COPY --from=build --chown=node:node /app/services/wichteln/db /app/services/wichteln/db
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# The standalone output ships the server entrypoint and the traced runtime
-# dependencies; the migrations live next to the server because the app reads
-# them relative to its working directory.
-COPY --from=builder --chown=nextjs:nodejs /app/services/wichteln/.next/standalone/ ./
-COPY --from=builder --chown=nextjs:nodejs /app/services/wichteln/.next/static ./services/wichteln/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/services/wichteln/db ./services/wichteln/db
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 WORKDIR /app/services/wichteln
 CMD ["node", "server.js"]

@@ -25,6 +25,7 @@ jobs:
     outputs:
       web: ${{ steps.detect.outputs.web }}
       wichteln: ${{ steps.detect.outputs.wichteln }}
+      backup: ${{ steps.detect.outputs.backup }}
       dev-machine: ${{ steps.detect.outputs['dev-machine'] }}
       infrastructure: ${{ steps.detect.outputs.infrastructure }}
     steps:
@@ -101,6 +102,21 @@ jobs:
         uses: ./.github/actions/setup
       - name: Tests
         run: pnpm test
+  test-backup:
+    name: Test backup
+    needs: changes
+    if: needs.changes.outputs.backup == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./services/backup
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Tests
+        run: pnpm test
   stack-start:
     name: Start stack
     runs-on: ubuntu-latest
@@ -109,6 +125,7 @@ jobs:
     if: >-
       ${{ needs.changes.outputs.web == 'true'
       || needs.changes.outputs.wichteln == 'true'
+      || needs.changes.outputs.backup == 'true'
       || needs.changes.outputs['dev-machine'] == 'true'
       || needs.changes.outputs.infrastructure == 'true' }}
     permissions:
@@ -155,6 +172,17 @@ jobs:
           tags: ghcr.io/lizzythelizard/homeserver-wichteln:latest
           cache-from: type=gha,scope=homeserver-wichteln
           cache-to: type=gha,mode=min,scope=homeserver-wichteln
+      - name: Build the backup image
+        if: needs.changes.outputs.backup == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/backup/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ghcr.io/lizzythelizard/homeserver-backup:latest
+          cache-from: type=gha,scope=homeserver-backup
+          cache-to: type=gha,mode=min,scope=homeserver-backup
       - name: Build the dev machine image
         if: needs.changes.outputs['dev-machine'] == 'true'
         uses: docker/build-push-action@v7
@@ -183,6 +211,11 @@ jobs:
           cp infrastructure/env.example infrastructure/.env
           # The development machine would otherwise exit without a GitHub SSH key
           echo "SKIP_GITHUB_BOOTSTRAP=1" >> infrastructure/.env
+      - name: Create the backup directory owned by the user of the backup image
+        # The backup runs as user node (uid 1000)
+        run: |
+          mkdir -p infrastructure/backup
+          sudo chown 1000:1000 infrastructure/backup
       - name: Create placeholder TLS certificates
         # nginx refuses to start without the certificates that certbot issues on the real host
         run: |
@@ -197,11 +230,13 @@ jobs:
         env:
           WEB: ${{ needs.changes.outputs.web }}
           WICHTELN: ${{ needs.changes.outputs.wichteln }}
+          BACKUP: ${{ needs.changes.outputs.backup }}
           DEV_MACHINE: ${{ needs.changes.outputs['dev-machine'] }}
         run: |
           built=""
           [ "$WEB" = true ] && built="$built applicationprod"
           [ "$WICHTELN" = true ] && built="$built wichteln"
+          [ "$BACKUP" = true ] && built="$built backup"
           [ "$DEV_MACHINE" = true ] && built="$built dev-machine"
           services=$(docker compose config --services | grep -vxF -f <(printf '%s\n' $built) || true)
           docker compose pull --ignore-buildable $services
@@ -222,7 +257,7 @@ jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    needs: [lint, changes, change-guard, test-web, test-wichteln, stack-start]
+    needs: [lint, changes, change-guard, test-web, test-wichteln, test-backup, stack-start]
     # Always runs, even when every earlier job failed, was cancelled or was skipped
     if: always()
     steps:

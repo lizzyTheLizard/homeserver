@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n web,wichteln -c blue,magenta \"pnpm dev:app\" \"pnpm dev:wichteln\"",
+    "dev": "concurrently -k -n web,wichteln,backup -c blue,magenta,green \"pnpm dev:app\" \"pnpm dev:wichteln\" \"pnpm dev:backup\"",
     "dev:app": "pnpm --filter @homeserver/web dev",
     "dev:wichteln": "pnpm --filter @homeserver/wichteln dev",
+    "dev:backup": "pnpm --filter @homeserver/backup dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "lint:ci": "pnpm -r lint:ci",

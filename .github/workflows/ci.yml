@@ -28,6 +28,10 @@ jobs:
             service: wichteln
             image: homeserver-wichteln
             revision-build-args: false
+          - name: backup
+            service: backup
+            image: homeserver-backup
+            revision-build-args: false
           - name: dev machine
             service: dev-machine
             image: homeserver-dev-machine

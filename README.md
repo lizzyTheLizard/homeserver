@@ -84,7 +84,9 @@ In production every required var must be set; the services fail fast on startup 
 
 | Command            | Description |
 |--------------------|-------------|
-| `pnpm dev`         | Run web (:3000) + wichteln (:3001) together |
+| `pnpm dev`         | Run web (:3000), wichteln (:3001) and the backup service together (the backup only runs at its schedule, against the dev database, and never uploads) |
+| `pnpm dev:backup`  | Run the backup service alone (against the dev database into `services/backup/.backups`, only at its schedule) |
+| `pnpm --filter @homeserver/backup dev:now` | Take one backup right now outside docker (dev database, never uploads) |
 | `pnpm build`       | Build all packages |
 | `pnpm test`        | Run all tests in all packages |
 | `pnpm test:watch`  | Tests in watch mode (all packages) |
@@ -93,7 +95,6 @@ In production every required var must be set; the services fail fast on startup 
 | `pnpm clean`       | Remove build artefacts in all packages |
 | `pnpm --filter @homeserver/web storybook` | Storybook on port 6006 |
 | `pnpm --filter @homeserver/web vitest run path/to/file.tests.ts` | Run a single test file |
-| `docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev\|prod> [--yes]` | Restore a database backup into the dev or prod DB (see [infrastructure/README.md](infrastructure/README.md)) |
 
 ## Development workflow
 

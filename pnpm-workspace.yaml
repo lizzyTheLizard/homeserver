@@ -1,6 +1,7 @@
 packages:
   - 'services/web'
   - 'services/wichteln'
+  - 'services/backup'
 allowBuilds:
   '@whiskeysockets/baileys': true
   esbuild: true

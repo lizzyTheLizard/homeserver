@@ -115,7 +115,7 @@ Every `FROM` instruction in the repository's Dockerfiles that loads an image fro
 Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker images referenced by every Dockerfile and by the docker-compose file daily and open one pull request per dependency update, only for versions at least one day old, including major versions. Dependabot SHALL NOT open version-update pull requests.
 
 #### Scenario: Every Dockerfile is covered
-- **WHEN** a Dockerfile exists in `services/web`, `services/wichteln`, `services/dev-machine` or `infrastructure/db-backup`
+- **WHEN** a Dockerfile exists in `services/web`, `services/wichteln`, `services/dev-machine` or `services/backup`
 - **THEN** Renovate checks its images
 
 #### Scenario: Compose images are covered
@@ -228,11 +228,15 @@ The "Pull request" pipeline SHALL lint every package of the repository with one 
 
 ### Requirement: The pull request pipeline tests only changed services
 
-For each of the web application and Wichteln reported as changed, the "Pull request" pipeline SHALL run that service's tests once change detection has finished. A service not reported as changed SHALL have its tests skipped. The development machine has no tests.
+For each of the web application, Wichteln and the backup reported as changed, the "Pull request" pipeline SHALL run that service's tests once change detection has finished. A service not reported as changed SHALL have its tests skipped. The development machine has no tests.
 
 #### Scenario: A changed service is tested
 - **WHEN** the web application is reported as changed
 - **THEN** its unit, integration and Storybook test projects run
+
+#### Scenario: The backup is tested
+- **WHEN** the backup is reported as changed
+- **THEN** its test job runs
 
 #### Scenario: An unchanged service is skipped
 - **WHEN** Wichteln is not reported as changed
@@ -244,11 +248,11 @@ For each of the web application and Wichteln reported as changed, the "Pull requ
 
 ### Requirement: The CI pipeline publishes every image
 
-The "CI" pipeline SHALL build the web application, Wichteln and development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, and SHALL publish all three to GitHub Container Registry, whether or not their service changed. It SHALL tag the web application image with the commit, branch, pipeline run and build time. It SHALL NOT lint, run tests or start the stack, since the "Pull request" pipeline did.
+The "CI" pipeline SHALL build the web application, Wichteln, the backup and the development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, and SHALL publish all four to GitHub Container Registry, whether or not their service changed. It SHALL tag the web application image with the commit, branch, pipeline run and build time. It SHALL NOT lint, run tests or start the stack, since the "Pull request" pipeline did.
 
 #### Scenario: Every image is published on a merge
 - **WHEN** a pull request that only changed Wichteln is merged to main
-- **THEN** the web application, Wichteln and development machine images are built and published
+- **THEN** the web application, Wichteln, backup and development machine images are built and published
 
 #### Scenario: The application image carries its revision
 - **WHEN** the web application image is built
@@ -260,7 +264,7 @@ The "CI" pipeline SHALL build the web application, Wichteln and development mach
 
 ### Requirement: The CI pipeline deploys the whole stack
 
-After all three images were published, the "CI" pipeline SHALL synchronise the stack definition to the server, pull the images and recreate the whole stack once. It SHALL NOT deploy when an image build or publish failed or was cancelled. Concurrent deploys on the server SHALL be serialised. There SHALL be no per-service deploy.
+After all four images were published, the "CI" pipeline SHALL synchronise the stack definition to the server, pull the images and recreate the whole stack once. It SHALL NOT deploy when an image build or publish failed or was cancelled. Concurrent deploys on the server SHALL be serialised. There SHALL be no per-service deploy.
 
 #### Scenario: A merge deploys the stack
 - **WHEN** the "CI" pipeline has published all images
@@ -280,7 +284,7 @@ After all three images were published, the "CI" pipeline SHALL synchronise the s
 
 ### Requirement: The pull request pipeline detects what changed
 
-The "Pull request" pipeline SHALL determine which of the web application, Wichteln and development machine services and whether the infrastructure changed, comparing the pull request against its base branch. Its test jobs, its stack start and the image builds of its stack start SHALL act only on what this stage reports as changed. The "CI" pipeline SHALL NOT detect changes.
+The "Pull request" pipeline SHALL determine which of the web application, Wichteln, backup and development machine services and whether the infrastructure changed, comparing the pull request against its base branch. Its test jobs, its stack start and the image builds of its stack start SHALL act only on what this stage reports as changed. The "CI" pipeline SHALL NOT detect changes.
 
 #### Scenario: A change inside a service folder
 - **WHEN** the pull request changes files under `services/<name>/` only
