@@ -4,6 +4,7 @@ import { listGroups } from '@/lib/store'
 import { getDb } from '@/lib/db'
 import { logout } from '../actions'
 import { CreateGroupForm } from '../components'
+import { createGroup } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,12 +36,12 @@ export default async function AdminPage() {
                       <strong>{g.name}</strong>
                     </Link>
                     <span className="muted small">
-                      {g.phase === 'wishes' ? 'Phase 1 · Wünsche' : 'Phase 2 · Auswahl'} ·{done}/{g.users.length}{' '}
-                      {g.phase === 'wishes' ? 'Wünsche eingetragen' : 'gewählt'}
+                      {g.phase === 'wishes' ? 'Phase 1 · Wünsche' : 'Phase 2 · Auswahl'} · {done}/{g.users.length}{' '}
+                      {g.phase === 'wishes' ? 'Wünsche eingetragen' : 'gewählt'} · {g.ownerName ? `Besitzer: ${g.ownerName}` : 'Kein Besitzer'}
                     </span>
                   </div>
                   <Link href={`/admin/${g.id}`} className="button secondary">
-                    Öffnen
+                    Verwalten
                   </Link>
                 </li>
               )
@@ -59,7 +60,7 @@ export default async function AdminPage() {
 
       <section className="card">
         <h2>Neue Gruppe erstellen</h2>
-        <CreateGroupForm />
+        <CreateGroupForm action={createGroup} />
       </section>
     </>
   )

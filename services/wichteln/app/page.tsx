@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
-import { getAccount, listAccountGroups } from '@/lib/store'
+import { getAccount, listAccountGroups, listOwnedGroups } from '@/lib/store'
 import type { Account } from '@/lib/store'
 import { getDb } from '@/lib/db'
 import { changePasswordPath } from '@/lib/continuePath'
 import { logout } from './actions'
-import { LoginForm } from './components'
+import { CreateGroupForm, LoginForm } from './components'
+import { createOwnedGroup } from './verwaltung/actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,9 +28,9 @@ export default async function StartPage() {
 
 async function GroupOverview({ account }: { account: Account }) {
   if (account.mustChangePassword) redirect(changePasswordPath('/'))
-  const groups = await listAccountGroups(await getDb(), account.id)
-  const only = groups.length === 1 ? groups[0] : undefined
-  if (only) redirect(`/gruppen/${only.id}`)
+  const db = await getDb()
+  const groups = await listAccountGroups(db, account.id)
+  const owned = await listOwnedGroups(db, account.id)
 
   return (
     <>
@@ -48,7 +49,10 @@ async function GroupOverview({ account }: { account: Account }) {
       <section className="card">
         <h2>Deine Gruppen</h2>
         {groups.length === 0 ? (
-          <p className="muted">Du bist noch in keiner Gruppe. Öffne den Einladungslink, den du erhalten hast, um einer Gruppe beizutreten.</p>
+          <p className="muted">
+            Du nimmst noch an keiner Gruppe teil. Öffne den Einladungslink, den du erhalten hast, um einer Gruppe beizutreten, oder erstelle unten eine eigene
+            Gruppe.
+          </p>
         ) : (
           <ul className="list">
             {groups.map(g => (
@@ -56,10 +60,41 @@ async function GroupOverview({ account }: { account: Account }) {
                 <Link href={`/gruppen/${g.id}`}>
                   <strong>{g.name}</strong>
                 </Link>
+                <Link href={`/gruppen/${g.id}`} className="button secondary">
+                  Öffnen
+                </Link>
               </li>
             ))}
           </ul>
         )}
+      </section>
+
+      {owned.length > 0 && (
+        <section className="card">
+          <h2>Von dir verwaltete Gruppen</h2>
+          <ul className="list">
+            {owned.map(g => (
+              <li key={g.id}>
+                <Link href={`/verwaltung/${g.id}`}>
+                  <strong>{g.name}</strong>
+                </Link>
+                <Link href={`/verwaltung/${g.id}`} className="button secondary">
+                  Verwalten
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="card">
+        <h2>Neue Gruppe erstellen</h2>
+        <p className="muted">
+          Hier erstellst du deine eigene Wichtel-Gruppe, zum Beispiel für dein Team oder deine Familie. Du verwaltest sie selbst: Du lädst die Teilnehmenden
+          über einen Einladungslink ein und startest die Auswahlphase, sobald alle ihren Wunsch eingetragen haben. Ob du selbst mitwichtelst, entscheidest du
+          später auf der Verwaltungsseite.
+        </p>
+        <CreateGroupForm action={createOwnedGroup} />
       </section>
     </>
   )

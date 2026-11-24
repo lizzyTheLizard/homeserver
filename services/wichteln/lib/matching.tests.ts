@@ -19,6 +19,8 @@ function makeGroup(users: User[], phase: Group['phase'] = 'selection'): Group {
     phase,
     inviteToken: 'token',
     createdAt: '2026-01-01T00:00:00.000Z',
+    ownerAccountId: null,
+    ownerName: null,
     users,
   }
 }
