@@ -10,12 +10,12 @@ Each service lives in its own folder under `services/` and is published as its o
 
 [`services/web`](services/web) — the Next.js portal at [www.gutschi.site](https://www.gutschi.site) (dev: `http://localhost:3000`). It bundles several apps behind a shared Microsoft Azure AD (OpenID Connect) login:
 
-| App          | Description |
-|--------------|-------------|
-| **Cash**     | Double-entry bookkeeping for private finances — projects, journals, accounts, reports, monthly closing |
-| **CoEditor** | AI-powered document editor backed by an OpenAI-compatible model |
-| **Admin**    | Administration dashboard — metrics, configuration, project management |
-| **Startpage**| Browser start page with personal favourites, the AI assistant chat, Microsoft mail/tasks/calendar and WhatsApp |
+| App           | Description                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Cash**      | Double-entry bookkeeping for private finances — projects, journals, accounts, reports, monthly closing         |
+| **CoEditor**  | AI-powered document editor backed by an OpenAI-compatible model                                                |
+| **Admin**     | Administration dashboard — metrics, configuration, project management                                          |
+| **Startpage** | Browser start page with personal favourites, the AI assistant chat, Microsoft mail/tasks/calendar and WhatsApp |
 
 ### WhatsApp (WAHA)
 
@@ -26,9 +26,9 @@ The web app talks directly to a [WAHA](https://waha.devlike.pro) container (brow
 [`services/wichteln`](services/wichteln) — a small standalone Next.js app for an anonymous Secret Santa ("Wichteln") at wichteln.gutschi.site (dev: `http://localhost:3001`). It does not use the portal's OIDC login: the admin signs in with their own credentials and creates groups, and participants register themselves through the group's invite link with a name and password that only work in that group (stored as scrypt hashes; the admin can reset them). Its data lives in `wichteln_*`-prefixed tables in the shared database.
 
 1. The **admin** signs in on the start page with `ADMIN_USER` / `ADMIN_PASSWORD`, creates a group and enters the participants' names. A password is generated for each person ("copy all credentials" to hand them out).
-2. **Phase 1:** participants sign in with name + password and enter their wish (title + description); they can change it until phase 2 starts. The admin only sees *who* has already entered a wish.
+2. **Phase 1:** participants sign in with name + password and enter their wish (title + description); they can change it until phase 2 starts. The admin only sees _who_ has already entered a wish.
 3. Once all wishes are in, the admin starts **phase 2**.
-4. Participants see the remaining unclaimed wishes of the others (without sender) and pick one. Their own wish is never offered, and only wishes are shown after which everyone left can still get someone else's wish — so nobody ends up with their own wish. The admin only sees *who* has already chosen.
+4. Participants see the remaining unclaimed wishes of the others (without sender) and pick one. Their own wish is never offered, and only wishes are shown after which everyone left can still get someone else's wish — so nobody ends up with their own wish. The admin only sees _who_ has already chosen.
 
 ### Dev machine
 
@@ -44,10 +44,10 @@ Connect to the dev machine (see [infrastructure/README.md](infrastructure/README
 for the full setup):
 
 - **Browser VS Code:** <https://dev.gutschi.site:8443> (dev auth)
-- **Claude Code (Remote Control):** the dev machine runs `claude remote-control --spawn worktree`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription). One session starts in `/home/ubuntu/workspace`; every further session gets its own git worktree under `.claude/worktrees/`, so parallel sessions can work on different branches. `services/.env` and `infrastructure/.env` are copied into each worktree (listed in `.worktreeinclude`), but `node_modules` is not, so run `pnpm install` in a new worktree first. Clean worktrees are removed when their session ends; clean up leftovers with `git worktree list` / `git worktree remove <path>` and `git worktree prune`.
-- **VS Code Remote SSH:** `ssh ubuntu@<host> -p 2222`
+- **Claude Code (Remote Control):** the dev machine runs `claude remote-control --spawn worktree`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription). One session starts in `/home/dev/workspace`; every further session gets its own git worktree under `.claude/worktrees/`, so parallel sessions can work on different branches. `services/.env` and `infrastructure/.env` are copied into each worktree (listed in `.worktreeinclude`), but `node_modules` is not, so run `pnpm install` in a new worktree first. Clean worktrees are removed when their session ends; clean up leftovers with `git worktree list` / `git worktree remove <path>` and `git worktree prune`.
+- **VS Code Remote SSH:** `ssh dev@<host> -p 2222`
 
-Inside the dev machine the repo is already cloned at `/home/ubuntu/workspace` with
+Inside the dev machine the repo is already cloned at `/home/dev/workspace` with
 `pnpm` and the dev Postgres database available:
 
 ```bash
@@ -66,35 +66,35 @@ The web app is at `http://localhost:3000`, where all routes are protected by Ope
 
 In development all services read `services/.env`; see [infrastructure/env.example](infrastructure/env.example) for the full list. The most important ones:
 
-| Variable                 | Purpose                                          |
-|--------------------------|--------------------------------------------------|
-| `APP_URL`                | Public URL of the app (used for OIDC redirect)   |
-| `DB_CONNECTION_STRING`   | `postgres://user:pass@host:port/dbname`          |
-| `ADMIN_EMAIL`            | Email allowed into the Admin app                 |
-| `CLIENT_ID`/`CLIENT_SECRET`/`LOGIN_ISSUER` | OIDC application credentials   |
-| `COOKIE_NAME`/`SESSION_PASSWORD` | iron-session cookie name + secret        |
-| `AI_API_KEY`             | AI model endpoint credentials (Groq)             |
-| `MICROSOFT_GRAPH_APPLICATION_ID`/`MICROSOFT_GRAPH_CLIENT_SECRET`/`MICROSOFT_GRAPH_ISSUER` | Microsoft Graph (Outlook) OIDC credentials |
-| `LOG_URL`                | URL to log dashboard                             |
-| `SESSION_SECRET`/`ADMIN_USER`/`ADMIN_PASSWORD` | Wichteln cookie secret (≥ 32 chars) and admin credentials; in production mapped from `WICHTELN_*` by docker-compose |
+| Variable                                                                                  | Purpose                                                                                                             |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `APP_URL`                                                                                 | Public URL of the app (used for OIDC redirect)                                                                      |
+| `DB_CONNECTION_STRING`                                                                    | `postgres://user:pass@host:port/dbname`                                                                             |
+| `ADMIN_EMAIL`                                                                             | Email allowed into the Admin app                                                                                    |
+| `CLIENT_ID`/`CLIENT_SECRET`/`LOGIN_ISSUER`                                                | OIDC application credentials                                                                                        |
+| `COOKIE_NAME`/`SESSION_PASSWORD`                                                          | iron-session cookie name + secret                                                                                   |
+| `AI_API_KEY`                                                                              | AI model endpoint credentials (Groq)                                                                                |
+| `MICROSOFT_GRAPH_APPLICATION_ID`/`MICROSOFT_GRAPH_CLIENT_SECRET`/`MICROSOFT_GRAPH_ISSUER` | Microsoft Graph (Outlook) OIDC credentials                                                                          |
+| `LOG_URL`                                                                                 | URL to log dashboard                                                                                                |
+| `SESSION_SECRET`/`ADMIN_USER`/`ADMIN_PASSWORD`                                            | Wichteln cookie secret (≥ 32 chars) and admin credentials; in production mapped from `WICHTELN_*` by docker-compose |
 
 In production every required var must be set; the services fail fast on startup otherwise (Wichteln reports `503` on `GET /api/health`).
 
 ## Commands
 
-| Command            | Description |
-|--------------------|-------------|
-| `pnpm dev`         | Run web (:3000), wichteln (:3001) and the backup service together (the backup only runs at its schedule, against the dev database, and never uploads) |
-| `pnpm dev:backup`  | Run the backup service alone (against the dev database into `services/backup/.backups`, only at its schedule) |
-| `pnpm --filter @homeserver/backup dev:now` | Take one backup right now outside docker (dev database, never uploads) |
-| `pnpm build`       | Build all packages |
-| `pnpm test`        | Run all tests in all packages |
-| `pnpm test:watch`  | Tests in watch mode (all packages) |
-| `pnpm lint`        | Lint all packages (with --fix) |
-| `pnpm lint:ci`     | Lint all packages (no --fix, for CI) |
-| `pnpm clean`       | Remove build artefacts in all packages |
-| `pnpm --filter @homeserver/web storybook` | Storybook on port 6006 |
-| `pnpm --filter @homeserver/web vitest run path/to/file.tests.ts` | Run a single test file |
+| Command                                                          | Description                                                                                                                                           |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                                       | Run web (:3000), wichteln (:3001) and the backup service together (the backup only runs at its schedule, against the dev database, and never uploads) |
+| `pnpm dev:backup`                                                | Run the backup service alone (against the dev database into `services/backup/.backups`, only at its schedule)                                         |
+| `pnpm --filter @homeserver/backup dev:now`                       | Take one backup right now outside docker (dev database, never uploads)                                                                                |
+| `pnpm build`                                                     | Build all packages                                                                                                                                    |
+| `pnpm test`                                                      | Run all tests in all packages                                                                                                                         |
+| `pnpm test:watch`                                                | Tests in watch mode (all packages)                                                                                                                    |
+| `pnpm lint`                                                      | Lint all packages (with --fix)                                                                                                                        |
+| `pnpm lint:ci`                                                   | Lint all packages (no --fix, for CI)                                                                                                                  |
+| `pnpm clean`                                                     | Remove build artefacts in all packages                                                                                                                |
+| `pnpm --filter @homeserver/web storybook`                        | Storybook on port 6006                                                                                                                                |
+| `pnpm --filter @homeserver/web vitest run path/to/file.tests.ts` | Run a single test file                                                                                                                                |
 
 ## Development workflow
 
@@ -102,12 +102,12 @@ Changes are spec-driven via [OpenSpec](https://github.com/Fission-AI/OpenSpec) a
 
 The stock OpenSpec workflows drive the lifecycle end to end:
 
-| Phase | Workflow | What happens |
-|---|---|---|
-| Explore | `openspec-explore` | Understand the problem — nothing is written |
-| Propose | `openspec-propose` | Create the `<change>` branch, then the plan; commit it to that branch |
-| Implement | `openspec-apply-change` | All tasks in one go → review of the full diff → one commit → push |
-| Ship | `openspec-archive-change` | Sync delta specs automatically, archive the change, open the PR with auto-merge, follow it until merged (fixes for failing checks are reviewed before they are committed) |
+| Phase     | Workflow                  | What happens                                                                                                                                                              |
+| --------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Explore   | `openspec-explore`        | Understand the problem — nothing is written                                                                                                                               |
+| Propose   | `openspec-propose`        | Create the `<change>` branch, then the plan; commit it to that branch                                                                                                     |
+| Implement | `openspec-apply-change`   | All tasks in one go → review of the full diff → one commit → push                                                                                                         |
+| Ship      | `openspec-archive-change` | Sync delta specs automatically, archive the change, open the PR with auto-merge, follow it until merged (fixes for failing checks are reviewed before they are committed) |
 
 The contract lives in `openspec/config.yaml` and is injected into the stock workflows: branch and commit rules in `context`/`rules`, the single-review apply flow and commit format in `operations.apply.guidance`, the spec sync, archive commit, pull request and PR follow-up in `operations.archive.guidance`.
 

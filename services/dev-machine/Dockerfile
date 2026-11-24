@@ -54,7 +54,7 @@ COPY services/dev-machine/sshd_config /etc/ssh/sshd_config
 COPY services/dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && mkdir -p /var/run/sshd
 
-# 8. Run as the base image's default non-root user "ubuntu" (uid 1000) with passwordless sudo
-RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-USER ubuntu
+# 8. Run as non-root user "dev" (uid 1234) with passwordless sudo
+RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+USER dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

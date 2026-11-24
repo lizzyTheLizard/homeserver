@@ -6,7 +6,7 @@ git config --global user.name "$GIT_USER_NAME"
 git config --global user.email "$GIT_USER_EMAIL"
 
 # 2. Add dev keys to allowed keys if not yet present
-SSH_DIR="/home/ubuntu/.ssh"
+SSH_DIR="/home/dev/.ssh"
 AUTH_KEYS="${SSH_DIR}/authorized_keys"
 echo "[DEBUG] Preparing SSH directory at: ${SSH_DIR}"
 mkdir -p "${SSH_DIR}" && chmod 700 "${SSH_DIR}"
@@ -72,7 +72,7 @@ else
         echo "    Please add the following public key to your GitHub account:"
         echo "    https://github.com/settings/keys"
         echo "------------------------------------------------------------------"
-        cat "/home/ubuntu/.ssh/id_ed25519.pub"
+        cat "/home/dev/.ssh/id_ed25519.pub"
         echo "=================================================================="
         exit 255
     fi

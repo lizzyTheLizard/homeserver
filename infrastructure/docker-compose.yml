@@ -230,7 +230,7 @@ services:
       # 1 skips the GitHub SSH check and repository clone (used by the pipeline start-up check)
       SKIP_GITHUB_BOOTSTRAP: '${SKIP_GITHUB_BOOTSTRAP:-0}'
     volumes:
-      - dev_machine_home:/home/ubuntu
+      - dev_home:/home/dev
     restart: unless-stopped
     ports:
       - '2222:2222' # SSH for VS Code Remote
@@ -268,6 +268,6 @@ services:
 volumes:
   postgres_prod_data:
   postgres_dev_data:
-  dev_machine_home:
+  dev_home:
   waha_sessions:
   waha_dev_sessions:
