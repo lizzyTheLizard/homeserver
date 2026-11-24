@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
+    libatomic1 \
     openssh-client \
     openssh-server \
     postgresql-client \
