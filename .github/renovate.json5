@@ -1,27 +1,28 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["config:recommended", "customManagers:dockerfileVersions"],
-  minimumReleaseAge: "1 day",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: ['config:recommended', 'customManagers:dockerfileVersions'],
+  minimumReleaseAge: '1 day',
+  // Open a pull request only once the release is old enough; otherwise it is opened at once and pnpm, which also refuses versions younger than a day, fails its install
+  prCreation: 'not-pending',
   // Every merge must be tested on top of the current main (strict ruleset), so a pull request is rebased as soon as it is behind
-  rebaseWhen: "behind-base-branch",
+  rebaseWhen: 'behind-base-branch',
   platformAutomerge: true,
   // Each merge makes the other open pull requests behind and they are re-tested; the limit bounds that
   prConcurrentLimit: 5,
   prHourlyLimit: 0,
   packageRules: [
     {
-      matchUpdateTypes: ["minor", "patch"],
+      matchUpdateTypes: ['minor', 'patch'],
       automerge: true,
     },
     {
       // A major upgrade needs a data migration and a matching postgresql client in infrastructure/db-backup, so it is never merged automatically
       // and its pull request carries a warning in the title and at the top of the description
-      matchPackageNames: ["postgres"],
-      matchUpdateTypes: ["major"],
+      matchPackageNames: ['postgres'],
+      matchUpdateTypes: ['major'],
       automerge: false,
-      commitMessagePrefix: "⚠️ DB MIGRATION REQUIRED:",
-      prHeader:
-        "> [!CAUTION]\n> **Do not merge before the data migration is done.** A new PostgreSQL major version cannot read the existing data directory. Migrate prod and dev first (dump with the backup service, start the new version on an empty volume, restore), and upgrade `postgresql16-client` in `infrastructure/db-backup/Dockerfile` to the same major. This pull request is never merged automatically.",
+      commitMessagePrefix: '⚠️ DB MIGRATION REQUIRED:',
+      prHeader: '> [!CAUTION]\n> **Do not merge before the data migration is done.** A new PostgreSQL major version cannot read the existing data directory. Migrate prod and dev first (dump with the backup service, start the new version on an empty volume, restore), and upgrade `postgresql16-client` in `infrastructure/db-backup/Dockerfile` to the same major. This pull request is never merged automatically.',
     },
   ],
 }
