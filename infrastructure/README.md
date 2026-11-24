@@ -21,53 +21,53 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 
 ### Components
 
-| Concern            | Container (`container_name`)     | Image                       |
-|--------------------|---------------------------------|-----------------------------|
-| App (prod)         | `applicationprod` (`Prod-Application`) | `ghcr.io/lizzythelizard/homeserver-web:latest` |
-| WhatsApp (WAHA)    | `waha` (`WAHA`), dev: `wahadev` (`DEV-WAHA`) | `devlikeapro/waha:latest-2026.10.1` (upstream image; not built by us) |
-| Wichteln app       | `wichteln` (`Wichteln`)          | `ghcr.io/lizzythelizard/homeserver-wichteln:latest` |
-| Prod database      | `postgresprod` (`Prod-Database`) | `postgres:16-alpine`       |
-| Dev database       | `postgresdev` (`Dev-Database`)   | `postgres:16-alpine`       |
-| Front TLS proxy    | `nginx` (`Nginx`)                | `nginx:alpine`             |
-| Auth proxy         | `caddy` (`Caddy`)                | `caddy:2-alpine`           |
-| DNS                | `bind9` (`Bind9`)                | `ubuntu/bind9:latest`      |
-| TLS issuance       | `certbot` (`Certbot`)            | `certbot/certbot:latest`   |
-| Backups            | `backup` (`Backup`)              | `ghcr.io/lizzythelizard/homeserver-backup:latest` |
-| Logs UI            | `dozzle` (`Dozzle`)              | `amir20/dozzle:latest`     |
-| DB UI (prod)       | `pgwebprod` (`Prod-Pgweb`)       | `sosedoff/pgweb`           |
-| Development        | `dev-machine` (`Dev`)            | `ghcr.io/lizzythelizard/homeserver-dev-machine:latest` |
+| Concern         | Container (`container_name`)                 | Image                                                                 |
+| --------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| App (prod)      | `applicationprod` (`Prod-Application`)       | `ghcr.io/lizzythelizard/homeserver-web:latest`                        |
+| WhatsApp (WAHA) | `waha` (`WAHA`), dev: `wahadev` (`DEV-WAHA`) | `devlikeapro/waha:latest-2026.10.1` (upstream image; not built by us) |
+| Wichteln app    | `wichteln` (`Wichteln`)                      | `ghcr.io/lizzythelizard/homeserver-wichteln:latest`                   |
+| Prod database   | `postgresprod` (`Prod-Database`)             | `postgres:16-alpine`                                                  |
+| Dev database    | `postgresdev` (`Dev-Database`)               | `postgres:16-alpine`                                                  |
+| Front TLS proxy | `nginx` (`Nginx`)                            | `nginx:alpine`                                                        |
+| Auth proxy      | `caddy` (`Caddy`)                            | `caddy:2-alpine`                                                      |
+| DNS             | `bind9` (`Bind9`)                            | `ubuntu/bind9:latest`                                                 |
+| TLS issuance    | `certbot` (`Certbot`)                        | `certbot/certbot:latest`                                              |
+| Backups         | `backup` (`Backup`)                          | `ghcr.io/lizzythelizard/homeserver-backup:latest`                     |
+| Logs UI         | `dozzle` (`Dozzle`)                          | `amir20/dozzle:latest`                                                |
+| DB UI (prod)    | `pgwebprod` (`Prod-Pgweb`)                   | `sosedoff/pgweb`                                                      |
+| Development     | `dev-machine` (`Dev`)                        | `ghcr.io/lizzythelizard/homeserver-dev-machine:latest`                |
 
 ### How things are reachable
 
-* **`nginx`** terminates TLS (Let's Encrypt certs) on the host and routes to
+- **`nginx`** terminates TLS (Let's Encrypt certs) on the host and routes to
   the backends. If authentication is needed, requests are sent through `caddy`,
   which performs the basic auth. The following endpoints are reachable through
   nginx:
 
-  | Public URL / port        | Basic auth | Backend              | Purpose              |
-  |--------------------------|------------|----------------------|----------------------|
-  | `www.gutschi.site:443`   | —          | `applicationprod:3000` | The application    |
-  | `wichteln.gutschi.site:443` | —       | `wichteln:3000`      | Wichteln app         |
-  | `dev.gutschi.site:443`   | —          | `dev-machine:3000`   | Dev app (when running) |
-  | `dev.gutschi.site:8443`  | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server) |
-  | `dev.gutschi.site:8445`  | dev        | `caddy` → `dev-machine:6006` | Storybook       |
-  | `logs.gutschi.site:443`  | admin      | `caddy` → `dozzle:8080` | Container logs    |
-  | `www.gutschi.site:8443`  | admin      | `caddy` → `pgwebprod:8081` | Prod DB web UI |
+  | Public URL / port           | Basic auth | Backend                      | Purpose                |
+  | --------------------------- | ---------- | ---------------------------- | ---------------------- |
+  | `www.gutschi.site:443`      | —          | `applicationprod:3000`       | The application        |
+  | `wichteln.gutschi.site:443` | —          | `wichteln:3000`              | Wichteln app           |
+  | `dev.gutschi.site:443`      | —          | `dev-machine:3000`           | Dev app (when running) |
+  | `dev.gutschi.site:8443`     | dev        | `caddy` → `dev-machine:8080` | VS Code (code-server)  |
+  | `dev.gutschi.site:8445`     | dev        | `caddy` → `dev-machine:6006` | Storybook              |
+  | `logs.gutschi.site:443`     | admin      | `caddy` → `dozzle:8080`      | Container logs         |
+  | `www.gutschi.site:8443`     | admin      | `caddy` → `pgwebprod:8081`   | Prod DB web UI         |
 
-* **`bind9`** is the authoritative DNS for `gutschi.site`, so the subdomains
+- **`bind9`** is the authoritative DNS for `gutschi.site`, so the subdomains
   (`www`, `dev`, `logs`, `wichteln`) resolve to the home server. Its zone template
   (`bind9/db.gutschi.site`) is rendered with `HOST_IP` substituted at start.
-* **`certbot`** issues and auto-renews Let's Encrypt certificates into
+- **`certbot`** issues and auto-renews Let's Encrypt certificates into
   `./certbot/conf`; nginx reloads every 6h to pick up renewed certs.
-* **`dozzle`** gives live container logs at `https://logs.gutschi.site`.
-* **`pgwebprod`** is a web UI for the prod DB at `https://www.gutschi.site:8443`
+- **`dozzle`** gives live container logs at `https://logs.gutschi.site`.
+- **`pgwebprod`** is a web UI for the prod DB at `https://www.gutschi.site:8443`
   (admin auth).
-* **`dev-machine`** is a full Linux dev environment (node:26-bookworm-slim) with Node 26,
+- **`dev-machine`** is a full Linux dev environment (node:26-bookworm-slim) with Node 26,
   pnpm, Go, the GitHub CLI, PostgreSQL client tools,
   **code-server** and **Claude Code**, managed by `supervisord`. Access:
-  * VS Code Remote SSH → `ssh dev@<host> -p 2222`
-  * Browser VS Code → `https://dev.gutschi.site:8443`
-  * Claude Code (Remote Control) → connect from <https://claude.ai/code> or the
+  - VS Code Remote SSH → `ssh dev@<host> -p 2222`
+  - Browser VS Code → `https://dev.gutschi.site:8443`
+  - Claude Code (Remote Control) → connect from <https://claude.ai/code> or the
     Claude app to the dev machine's `claude remote-control` session (requires a
     one-time `claude /login` and an eligible Claude subscription)
 
@@ -101,9 +101,9 @@ The Wichteln app shares the production database (its tables are `wichteln_*`-
 prefixed) and has its own secrets. The three `WICHTELN_*` values in
 `env.example` are mandatory:
 
-* `WICHTELN_SESSION_SECRET` — at least 32 random characters, e.g.
+- `WICHTELN_SESSION_SECRET` — at least 32 random characters, e.g.
   `openssl rand -hex 32`.
-* `WICHTELN_ADMIN_USER` / `WICHTELN_ADMIN_PASSWORD` — credentials for the
+- `WICHTELN_ADMIN_USER` / `WICHTELN_ADMIN_PASSWORD` — credentials for the
   admin area.
 
 Without them the `wichteln` container reports unhealthy and returns `503`.
@@ -136,25 +136,25 @@ data.
 
 ### Docker named volumes (managed by compose, live in the Docker data root)
 
-| Volume | Holds |
-|--------|-------|
-| `postgres_prod_data` | Prod Postgres data directory (`/var/lib/postgresql/data`) |
-| `postgres_wichteln_data` | Wichteln Postgres data directory — not yet included in the nightly backup |
-| `postgres_dev_data` | Dev Postgres data directory |
-| `dev_home` | The `dev` user's home (`/home/dev`) — git checkout, SSH keys, editor state |
+| Volume                   | Holds                                                                      |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `postgres_prod_data`     | Prod Postgres data directory (`/var/lib/postgresql/data`)                  |
+| `postgres_wichteln_data` | Wichteln Postgres data directory — not yet included in the nightly backup  |
+| `postgres_dev_data`      | Dev Postgres data directory                                                |
+| `dev_home`               | The `dev` user's home (`/home/dev`) — git checkout, SSH keys, editor state |
 
 These survive `docker compose down` / `up`. They are **only** removed by
 `docker compose down -v` or manual `docker volume rm`.
 
 ### Host bind mounts
 
-| Path on host | Mounted into | Holds |
-|--------------|--------------|-------|
-| `./certbot/conf` | `certbot:/etc/letsencrypt`, `nginx:/etc/letsencrypt:ro` | Let's Encrypt account + issued certs (`live/`, `archive/`, `renewal/`) |
-| `./certbot/www` | `certbot:/var/www/certbot`, `nginx:/var/www/certbot:ro` | ACME HTTP-01 challenge files |
-| `./backup` | `backup:/backup` | Nightly `pg_dump` dumps (`homeserver-prod-*.dump`), retained `RETENTION_DAYS` (31 in `docker-compose.yml`). The service runs as user `node` (uid 1000), so the host directory must be owned by uid 1000: `sudo chown -R 1000:1000 /opt/homeserver/backup` (the service refuses to start otherwise) |
-| `./.env` | (read by compose `env_file`) | All secrets — **back this up securely** |
-| `./nginx`, `./caddy`, `./bind9` | the respective containers | Config files (read-only) |
+| Path on host                    | Mounted into                                            | Holds                                                                                                                                                                                                                                                                                              |
+| ------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./certbot/conf`                | `certbot:/etc/letsencrypt`, `nginx:/etc/letsencrypt:ro` | Let's Encrypt account + issued certs (`live/`, `archive/`, `renewal/`)                                                                                                                                                                                                                             |
+| `./certbot/www`                 | `certbot:/var/www/certbot`, `nginx:/var/www/certbot:ro` | ACME HTTP-01 challenge files                                                                                                                                                                                                                                                                       |
+| `./backup`                      | `backup:/backup`                                        | Nightly `pg_dump` dumps (`homeserver-prod-*.dump`), retained `RETENTION_DAYS` (31 in `docker-compose.yml`). The service runs as user `node` (uid 1000), so the host directory must be owned by uid 1000: `sudo chown -R 1000:1000 /opt/homeserver/backup` (the service refuses to start otherwise) |
+| `./.env`                        | (read by compose `env_file`)                            | All secrets — **back this up securely**                                                                                                                                                                                                                                                            |
+| `./nginx`, `./caddy`, `./bind9` | the respective containers                               | Config files (read-only)                                                                                                                                                                                                                                                                           |
 
 ---
 
@@ -193,9 +193,9 @@ docker compose config                    # dry-run: validate the rendered compos
 
 ### Where to look when something is wrong
 
-* Live logs UI: **https://logs.gutschi.site** (dozzle, admin auth).
-* Container health: `docker compose ps` shows the healthcheck state.
-* Per-service logs: `docker compose logs <service>`.
+- Live logs UI: **https://logs.gutschi.site** (dozzle, admin auth).
+- Container health: `docker compose ps` shows the healthcheck state.
+- Per-service logs: `docker compose logs <service>`.
 
 ---
 
@@ -303,9 +303,9 @@ docker compose exec backup sh -c 'psql "postgres://homeserver:homeserver@postgre
 docker compose exec backup sh -c 'psql "$DB_CONNECTION_STRING" -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" && pg_restore --exit-on-error --dbname "$DB_CONNECTION_STRING" /backup/<file>'
 ```
 
-* The first command of each pair drops and recreates the `public` schema, the
+- The first command of each pair drops and recreates the `public` schema, the
   second restores the dump into it.
-* **After restoring**, restart the target application so pending migrations run:
+- **After restoring**, restart the target application so pending migrations run:
   `docker compose restart applicationprod` (or `dev-machine`).
 
 To fetch a remote dump from OneDrive for a disaster recovery, download it to
@@ -369,17 +369,17 @@ keeps the bootstrap above.
 
 The `dev_home` volume persists `authorized_keys`, so changes survive restarts.
 
-* **Add a key** (no restart needed):
+- **Add a key** (no restart needed):
   ```bash
   docker compose exec dev sh -c 'echo "<ssh-ed25519 AAAA... comment>" >> /home/dev/.ssh/authorized_keys'
   ```
-* **Rotate / replace keys** via `.env`: update `DEV_SSH_KEY_PUB` and recreate:
+- **Rotate / replace keys** via `.env`: update `DEV_SSH_KEY_PUB` and recreate:
   ```bash
   docker compose up -d --force-recreate dev-machine
   ```
   (Keys not present in `DEV_SSH_KEY_PUB` are not removed automatically — prune
   stale lines from `authorized_keys` manually if needed.)
-* **Remove a key**: edit the file inside the container:
+- **Remove a key**: edit the file inside the container:
   ```bash
   docker compose exec dev vi /home/dev/.ssh/authorized_keys
   ```
@@ -415,10 +415,10 @@ only do this if you have a reason to.
 
 ## 6. Deployment & repository
 
-* **Repo:** https://github.com/lizzyTheLizard/homeserver
-* **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
-* **CI/CD pipelines:** two workflows. Pushes to other branches run neither.
-  * **Pull request** (`.github/workflows/pull-request.yml`, every pull request
+- **Repo:** https://github.com/lizzyTheLizard/homeserver
+- **Infrastructure folder:** https://github.com/lizzyTheLizard/homeserver/tree/main/infrastructure
+- **CI/CD pipelines:** two workflows. Pushes to other branches run neither.
+  - **Pull request** (`.github/workflows/pull-request.yml`, every pull request
     opened, updated or reopened; a newer push cancels the running one). These
     jobs run:
     1. **Lint** — `pnpm run lint:ci` from the repository root, always for every
@@ -443,7 +443,7 @@ only do this if you have a reason to.
     6. **Quality Gate** — always runs and fails if any job failed or was
        cancelled; skipped jobs count as passed. It is the only status check the
        `main` ruleset requires.
-  * **CI** (`.github/workflows/ci.yml`, every push to `main` and manual
+  - **CI** (`.github/workflows/ci.yml`, every push to `main` and manual
     dispatch; runs queue and are never cancelled). It repeats no check of the
     pull request. It builds and publishes all four images to GHCR
     (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) whether or not they
@@ -452,7 +452,7 @@ only do this if you have a reason to.
     `docker compose up -d --force-recreate --remove-orphans`, so every service
     is recreated and containers of services no longer in the compose file are
     removed. Deploys on the host are serialised with `flock`.
-* **Dependency updates (Renovate):** the workflow `.github/workflows/renovate.yml`
+- **Dependency updates (Renovate):** the workflow `.github/workflows/renovate.yml`
   runs Renovate with the policy in `.github/renovate.json5`. It runs every night
   at 03:00 UTC, after every push to `main` and on demand
   (`gh workflow run renovate.yml -f log-level=debug`, then `gh run watch`; the
@@ -482,4 +482,3 @@ only do this if you have a reason to.
   in front of the Renovate step). The hosted Renovate GitHub App must not be
   installed on the repository, because two Renovate instances fight over the
   same branches.
-

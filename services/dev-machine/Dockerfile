@@ -1,66 +1,60 @@
-# Syntax=docker/dockerfile:1
-FROM node:26.13.1-bookworm-slim
+FROM ubuntu:noble-20261110.1
 
-# Prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
 
-# 1. Install base utilities, SSH server, supervisor, PostgreSQL client tools, and
-#    GitHub CLI repo dependencies
+# renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
+ARG GH_VERSION=2.105.0
+# renovate: datasource=github-releases depName=coder/code-server extractVersion=^v(?<version>.+)$
+ARG CODE_SERVER_VERSION=4.146.0
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
+ARG CLAUDE_CODE_VERSION=2.1.331
+# renovate: datasource=npm depName=@fission-ai/openspec
+ARG OPENSPEC_VERSION=2.1.1
+
+# 1. System packages
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
-    vim \
+    libatomic1 \
+    openssh-client \
     openssh-server \
     postgresql-client \
-    supervisor \
-    sudo \
-    tar \
-    gzip \
-    unzip \
-    zip \
     procps \
-    rsync \
-    net-tools \
+    sudo \
+    supervisor \
+    vim \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
 
-# 2. Install GitHub CLI (gh)
-RUN mkdir -p -m 0755 /etc/apt/keyrings \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends gh \
-    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
+# 2. Node.js in the version of .nvmrc
+COPY .nvmrc /tmp/.nvmrc
+RUN NODE_VERSION="$(cat /tmp/.nvmrc)" && curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.xz" \
+    | tar -xJ -C /usr/local --strip-components=1 --no-same-owner --exclude='*.md' --exclude='*/LICENSE'
 
-# 3. Install pnpm (Node 25+ no longer bundles corepack; the `devEngines.packageManager`
-#    range in package.json decides the exact version)
-RUN npm install -g pnpm@12
+# 3. GitHub CLI (gh)
+RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
+    | tar -xz -C /usr/local --strip-components=1 --no-same-owner --exclude='*/LICENSE'
 
-# 4. Install Playwright browser OS dependencies. The browser binaries themselves
-#    are fetched at runtime (see AGENTS.md) via `pnpm exec playwright install --with-deps`.
-RUN apt-get update \
-    && npx -y playwright@1.63.0 install-deps chromium \
-    && apt-get install -y --no-install-recommends fonts-noto-color-emoji \
-    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
+# 4. code-server (browser-based VS Code)
+RUN curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/usr/local --version="${CODE_SERVER_VERSION}"
 
+# 5. Playwright browser OS dependencies.
+RUN npx -y playwright install-deps chromium
 
-# 5. Install code-server, Claude Code and openspec
-RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN npm install -g @anthropic-ai/claude-code
-RUN npm install -g @fission-ai/openspec@latest
-
-# 6. Create dedicated non-root user "dev"
-RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# 6. pnpm in the version range of package.json, Claude Code and OpenSpec
+COPY package.json /tmp/package.json
+RUN PNPM_VERSION="$(node -p "require('/tmp/package.json').devEngines.packageManager.version")" \
+    && npm install -g "pnpm@${PNPM_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@fission-ai/openspec@${OPENSPEC_VERSION}"
 
 # 7. Copy configuration files & entrypoint script
 COPY services/dev-machine/supervisord.conf /etc/supervisor/supervisord.conf
 COPY services/dev-machine/sshd_config /etc/ssh/sshd_config
 COPY services/dev-machine/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && mkdir -p /var/run/sshd
+RUN chmod +x /usr/local/bin/entrypoint.sh && mkdir -p /var/run/sshd
+
+# 8. Run as non-root user "dev" (uid 1234) with passwordless sudo
+RUN useradd -m -s /bin/bash -u 1234 dev && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 USER dev
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
