@@ -32,7 +32,7 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 | Auth proxy         | `caddy` (`Caddy`)                | `caddy:2-alpine`           |
 | DNS                | `bind9` (`Bind9`)                | `ubuntu/bind9:latest`      |
 | TLS issuance       | `certbot` (`Certbot`)            | `certbot/certbot:latest`   |
-| Backups            | `backup` (`Backup`)              | built from `db-backup/`    |
+| Backups            | `backup` (`Backup`)              | `ghcr.io/lizzythelizard/homeserver-backup:latest` |
 | Logs UI            | `dozzle` (`Dozzle`)              | `amir20/dozzle:latest`     |
 | DB UI (prod)       | `pgwebprod` (`Prod-Pgweb`)       | `sosedoff/pgweb`           |
 | Development        | `dev-machine` (`Dev`)            | `ghcr.io/lizzythelizard/homeserver-dev-machine:latest` |
@@ -152,7 +152,7 @@ These survive `docker compose down` / `up`. They are **only** removed by
 |--------------|--------------|-------|
 | `./certbot/conf` | `certbot:/etc/letsencrypt`, `nginx:/etc/letsencrypt:ro` | Let's Encrypt account + issued certs (`live/`, `archive/`, `renewal/`) |
 | `./certbot/www` | `certbot:/var/www/certbot`, `nginx:/var/www/certbot:ro` | ACME HTTP-01 challenge files |
-| `./backup` | `backup:/backup` | Nightly `pg_dump` dumps (`homeserver-prod-*.dump`), retained `RETENTION_DAYS` (default 31) |
+| `./backup` | `backup:/backup` | Nightly `pg_dump` dumps (`homeserver-prod-*.dump`), retained `RETENTION_DAYS` (31 in `docker-compose.yml`). The service runs as user `node` (uid 1000), so the host directory must be owned by uid 1000: `sudo chown -R 1000:1000 /opt/homeserver/backup` (the service refuses to start otherwise) |
 | `./.env` | (read by compose `env_file`) | All secrets — **back this up securely** |
 | `./nginx`, `./caddy`, `./bind9` | the respective containers | Config files (read-only) |
 
@@ -188,7 +188,6 @@ docker compose down -v                  # DANGER: also deletes named volumes
 docker compose pull                      # pull the latest GHCR images for the service containers
 docker compose up -d                     # apply changed config / recreate changed services
 docker compose up -d --force-recreate    # force recreate even if nothing "changed"
-docker compose up -d --build             # rebuild the backup service image (the only image built on the host)
 docker compose config                    # dry-run: validate the rendered compose file
 ```
 
@@ -270,15 +269,18 @@ docker compose exec nginx nginx -s reload
 
 ### 5.4 Manually trigger a backup
 
-The nightly backup is a cron job inside the `backup` container. To run it on
-demand (full `pg_dump` of prod → `./backup` → upload to OneDrive):
+The `backup` container is a Node.js service that runs the nightly backup itself
+(schedule in `BACKUP_SCHEDULE`, default `0 3 * * *`). To take an additional
+backup right now (full `pg_dump` of prod → `./backup` → upload to OneDrive), start
+the service once more with `--now`; this process runs one backup, prints its log
+and exits, and does not touch the schedule of the running service:
 
 ```bash
-docker compose exec backup /usr/local/bin/backup.sh
+docker compose exec backup node dist/main.js --now
 ```
 
-This uses the same environment the cron job sources, so a successful run proves
-the backup pipeline (DB connection + OneDrive upload) is healthy.
+The exit code is 0 only if the dump and the upload succeeded, so a successful
+run proves the backup pipeline (DB connection + OneDrive upload) is healthy.
 
 List local dumps:
 
@@ -288,21 +290,21 @@ ls -lh backup/
 
 ### 5.5 Recreate a database from a backup
 
-Use the restore helper, which runs **inside** the `backup` container so it can
-reach both databases directly:
+Restore by hand with `psql` and `pg_restore` from **inside** the `backup`
+container, which has the PostgreSQL client and can reach both databases. The
+container knows the production connection string in `DB_CONNECTION_STRING` (the database
+the service dumps), the dev database has a fixed one, and the dumps are in `/backup`:
 
 ```bash
-# Restore into the DEV database (no confirmation needed):
-docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> dev
+# Restore into the DEV database:
+docker compose exec backup sh -c 'psql "postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable" -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" && pg_restore --exit-on-error --dbname "postgres://homeserver:homeserver@postgresdev:5432/homeserver?sslmode=disable" /backup/<file>'
 
-# Restore into PROD (interactive confirmation, or --yes since exec has no TTY):
-docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> prod --yes
+# Restore into PROD (replaces the production data, double-check the file first!):
+docker compose exec backup sh -c 'psql "$DB_CONNECTION_STRING" -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" && pg_restore --exit-on-error --dbname "$DB_CONNECTION_STRING" /backup/<file>'
 ```
 
-* `<file>` may be a bare filename (resolved against `/backup`) or an absolute
-  path inside the container.
-* `dev` → `postgresdev`, `prod` → `postgresprod`.
-* The script drops/recreates the `public` schema and runs `pg_restore`.
+* The first command of each pair drops and recreates the `public` schema, the
+  second restores the dump into it.
 * **After restoring**, restart the target application so pending migrations run:
   `docker compose restart applicationprod` (or `dev-machine`).
 
@@ -311,14 +313,26 @@ To fetch a remote dump from OneDrive for a disaster recovery, download it to
 
 ### 5.6 Refreshing the OneDrive backup token
 
-The delegated `ONEDRIVE_REFRESH_TOKEN` is rotated by Microsoft. When the nightly
-upload starts failing, or the token script prints a new refresh token, update
-`.env`:
+The delegated `ONEDRIVE_REFRESH_TOKEN` is rotated by Microsoft: when it is
+rotated, the service logs `New refresh token issued - update ONEDRIVE_REFRESH_TOKEN
+with: …` (`docker compose logs backup`). Put that value into `.env`, then:
 
 ```bash
-docker compose run --rm --entrypoint node backup /usr/local/bin/get-onedrive-token.mjs
-# paste the printed token into ONEDRIVE_REFRESH_TOKEN in .env, then:
 docker compose up -d --force-recreate backup
+```
+
+To get a new token from scratch (for example when the old one expired), run the
+Microsoft device-code flow for the app registration (`<app-id>` is
+`MICROSOFT_GRAPH_APPLICATION_ID`; "Allow public client flows" must be enabled
+for it):
+
+```bash
+curl -s https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode \
+  -d client_id=<app-id> --data-urlencode 'scope=https://graph.microsoft.com/Files.ReadWrite offline_access'
+# open the printed verification_uri, enter the user_code and sign in, then:
+curl -s https://login.microsoftonline.com/consumers/oauth2/v2.0/token \
+  -d client_id=<app-id> -d grant_type=urn:ietf:params:oauth:grant-type:device_code -d device_code=<device_code>
+# put the refresh_token of the response into ONEDRIVE_REFRESH_TOKEN
 ```
 
 ### 5.7 Bootstrap / re-bootstrap the dev-machine
@@ -418,8 +432,8 @@ only do this if you have a reason to.
     3. **Change guard** (`.github/scripts/change-guard.mjs`) — requires an
        archived OpenSpec change named after the branch, no in-flight change
        folder, and every delta spec synced into `openspec/specs/`.
-    4. **Test web** / **Test Wichteln** — only for a changed service, after
-       change detection.
+    4. **Test web** / **Test Wichteln** / **Test backup** — only for a changed
+       service, after change detection.
     5. **Start stack** — only if a service or the infrastructure changed
        (documentation-only pull requests skip it), after change detection and
        in parallel to the tests. It builds the images of the changed services
@@ -431,7 +445,7 @@ only do this if you have a reason to.
        `main` ruleset requires.
   * **CI** (`.github/workflows/ci.yml`, every push to `main` and manual
     dispatch; runs queue and are never cancelled). It repeats no check of the
-    pull request. It builds and publishes all three images to GHCR
+    pull request. It builds and publishes all four images to GHCR
     (`ghcr.io/lizzythelizard/homeserver-<name>:latest`) whether or not they
     changed, then one **Deploy infrastructure** job syncs `infrastructure/` to
     the server, pulls all images and recreates the whole stack with
@@ -451,7 +465,7 @@ only do this if you have a reason to.
   the Dependency Dashboard issue. Patch and minor updates use GitHub auto-merge
   and merge after "Quality Gate" passed; major updates stay open for manual
   review, and `postgres` major updates are ignored (they need a data migration
-  and a matching client in `infrastructure/db-backup`). The `main` ruleset
+  and a matching client in `services/backup/Dockerfile`). The `main` ruleset
   requires branches to be up to date, so after every merge the run on `main`
   rebases the remaining pull requests; at most 5 are open at a time to keep the
   re-runs small. Nothing else may push to a `renovate/*` branch, or Renovate

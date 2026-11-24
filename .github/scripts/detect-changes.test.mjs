@@ -9,7 +9,7 @@ test('a change inside a service folder reports only that service', () => {
 })
 
 test('every service folder maps to its own service', () => {
-  for (const service of ['web', 'wichteln', 'dev-machine'])
+  for (const service of ['web', 'wichteln', 'backup', 'dev-machine'])
     assert.deepEqual(detectChanges([`services/${service}/Dockerfile`]), { ...everything(false), [service]: true })
 })
 

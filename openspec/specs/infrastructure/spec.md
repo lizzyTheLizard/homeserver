@@ -134,58 +134,6 @@ The stack SHALL run an authoritative, non-recursive name server, from the Intern
 - **WHEN** the name server container starts and generates the zone file from its template
 - **THEN** the file is world-readable and the name server loads the zone without a permission error
 
-### Requirement: The production database is backed up nightly
-
-A backup service SHALL take a full custom-format dump of the production database on the schedule in `BACKUP_SCHEDULE` (default `0 3 * * *`), SHALL store it in the local backup directory, and SHALL delete local dumps older than `RETENTION_DAYS` (default 31) after a successful upload. It SHALL fail loudly at start-up when a required setting is missing.
-
-#### Scenario: Nightly dump is written
-- **WHEN** the configured backup schedule fires
-- **THEN** a full dump of the production database is written to the local backup directory
-
-#### Scenario: Old dumps are deleted
-- **WHEN** a dump was uploaded successfully and a local dump is older than the configured retention
-- **THEN** that local dump is deleted
-
-#### Scenario: A failed dump keeps nothing partial
-- **WHEN** the dump fails
-- **THEN** the partial file is removed and the failure is reported
-
-#### Scenario: Missing configuration stops the service
-- **WHEN** a required backup setting is missing
-- **THEN** the service fails at start-up instead of scheduling a backup that cannot run
-
-### Requirement: Backups are uploaded to OneDrive
-
-The backup service SHALL upload each dump to a personal OneDrive through the Microsoft Graph API using a delegated refresh token, SHALL target the configured folder (default `Homeserver`) and replace an existing file of the same name, and SHALL keep the local copy when the upload fails.
-
-#### Scenario: Dump is uploaded
-- **WHEN** a dump completes and OneDrive is reachable
-- **THEN** the dump is uploaded to the configured OneDrive folder, replacing any file of the same name
-
-#### Scenario: Upload failure keeps the local copy
-- **WHEN** the upload fails
-- **THEN** the local dump is kept and the failure is reported
-
-### Requirement: A backup can be restored into the development or production database
-
-The backup service SHALL be able to replace a target database from a dump file, resolving a bare file name against the local backup directory, refusing to restore when the resolved development connection is the production connection, requiring the confirmation `restore prod` before overwriting the production database, and reporting afterwards that the target application has to be restarted so migrations run.
-
-#### Scenario: Restoring into the development database
-- **WHEN** a dump is restored with the development target
-- **THEN** the development database's public schema is replaced by the dump
-
-#### Scenario: Restoring into production requires confirmation
-- **WHEN** a dump is restored with the production target without the explicit confirmation
-- **THEN** the restore does not run
-
-#### Scenario: Restoring into the wrong target is refused
-- **WHEN** the development connection resolves to the production connection
-- **THEN** the restore is refused
-
-#### Scenario: Restore reports the required restart
-- **WHEN** a restore completes
-- **THEN** the service reports that the target application must be restarted
-
 ### Requirement: The stack restarts its services automatically
 
 Every long-running service SHALL restart automatically unless it was stopped deliberately, except the certificate service, which SHALL run only its periodic renewal loop and SHALL NOT be restarted.
@@ -209,7 +157,7 @@ The stack SHALL run the Wichteln app as its own service on the shared network an
 
 ### Requirement: Application images are pulled from GHCR
 
-The web application, Wichteln and development-machine images SHALL be published to GitHub Container Registry as `ghcr.io/<owner>/homeserver-<name>:latest` and the stack SHALL pull them from the registry. The backup service's image SHALL be built on the host instead, and the remaining services, including WAHA (its upstream image), SHALL use published images.
+The web application, Wichteln, backup and development-machine images SHALL be published to GitHub Container Registry as `ghcr.io/<owner>/homeserver-<name>:latest` and the stack SHALL pull them from the registry. No image SHALL be built on the host, and the remaining services, including WAHA (its upstream image), SHALL use published images.
 
 #### Scenario: Stack pulls the application images from GHCR
 - **WHEN** the stack starts the application services
@@ -218,6 +166,10 @@ The web application, Wichteln and development-machine images SHALL be published 
 #### Scenario: An unchanged service reuses its latest image
 - **WHEN** a service's folder has not changed since its last publish
 - **THEN** the stack pulls and runs that service's existing latest image rather than a freshly built one
+
+#### Scenario: The backup image is pulled
+- **WHEN** the stack starts the backup service
+- **THEN** it pulls `ghcr.io/<owner>/homeserver-backup:latest` and builds nothing on the host
 
 ### Requirement: Wichteln stores its data in the shared database under a prefix
 

@@ -8,3 +8,6 @@ build-storybook.log
 
 # Claude Code Remote Control session worktrees
 .claude/worktrees/
+
+# Local output of `pnpm dev:backup`
+services/backup/.backups/

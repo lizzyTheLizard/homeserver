@@ -14,14 +14,14 @@
       automerge: true,
     },
     {
-      // A major upgrade needs a data migration and a matching postgresql client in infrastructure/db-backup, so it is never merged automatically
+      // A major upgrade needs a data migration and a matching postgresql client in services/backup, so it is never merged automatically
       // and its pull request carries a warning in the title and at the top of the description
       matchPackageNames: ["postgres"],
       matchUpdateTypes: ["major"],
       automerge: false,
       commitMessagePrefix: "⚠️ DB MIGRATION REQUIRED:",
       prHeader:
-        "> [!CAUTION]\n> **Do not merge before the data migration is done.** A new PostgreSQL major version cannot read the existing data directory. Migrate prod and dev first (dump with the backup service, start the new version on an empty volume, restore), and upgrade `postgresql16-client` in `infrastructure/db-backup/Dockerfile` to the same major. This pull request is never merged automatically.",
+        "> [!CAUTION]\n> **Do not merge before the data migration is done.** A new PostgreSQL major version cannot read the existing data directory. Migrate prod and dev first (dump with the backup service, start the new version on an empty volume, restore), and upgrade `postgresql16-client` in `services/backup/Dockerfile` to the same major. This pull request is never merged automatically.",
     },
   ],
 }
