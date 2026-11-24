@@ -19,7 +19,7 @@
 
 - [x] 3.1 Extend `.github/scripts/detect-changes.mjs` so `backup` is a service (a change under `services/backup/` or to shared workspace files flags it); update `detect-changes.test.mjs`. Verify `node --test .github/scripts/detect-changes.test.mjs` passes
 - [x] 3.2 Update `.github/workflows/ci.yml`: a fourth matrix entry for the backup (every image is built from its own `services/<name>/Dockerfile` with the repository root as context, so the matrix needs no context field; dev machine unchanged), `revision-build-args: true` for web only, deploy waits for all four images. Verify the YAML parses and the final matrix reads correctly
-- [x] 3.3 Update `.github/workflows/pull-request.yml`: `backup` change output, `test-backup` job, stack-start builds (web with revision args) and a build of the backup image, `test-backup` in the quality gate's `needs`. Verify the YAML parses and every job id referenced in `needs` exists
+- [x] 3.3 Update `.github/workflows/pull-request.yml`: `backup` change output, `test-backup` job, stack-start builds (web with revision args) and a build of the backup image, no pull of a locally built backup image, a backup directory owned by uid 1000 for the container, `test-backup` in the quality gate's `needs`. Verify the YAML parses and every job id referenced in `needs` exists
 
 ## 4. References and documentation
 
