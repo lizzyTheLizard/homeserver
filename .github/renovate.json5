@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["config:recommended"],
+  extends: ["config:recommended", "customManagers:dockerfileVersions"],
   minimumReleaseAge: "1 day",
   // Every merge must be tested on top of the current main (strict ruleset), so a pull request is rebased as soon as it is behind
   rebaseWhen: "behind-base-branch",

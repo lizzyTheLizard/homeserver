@@ -44,10 +44,10 @@ Connect to the dev machine (see [infrastructure/README.md](infrastructure/README
 for the full setup):
 
 - **Browser VS Code:** <https://dev.gutschi.site:8443> (dev auth)
-- **Claude Code (Remote Control):** the dev machine runs `claude remote-control --spawn worktree`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription). One session starts in `/home/dev/workspace`; every further session gets its own git worktree under `.claude/worktrees/`, so parallel sessions can work on different branches. `services/.env` and `infrastructure/.env` are copied into each worktree (listed in `.worktreeinclude`), but `node_modules` is not, so run `pnpm install` in a new worktree first. Clean worktrees are removed when their session ends; clean up leftovers with `git worktree list` / `git worktree remove <path>` and `git worktree prune`.
-- **VS Code Remote SSH:** `ssh dev@<host> -p 2222`
+- **Claude Code (Remote Control):** the dev machine runs `claude remote-control --spawn worktree`; connect from <https://claude.ai/code> or the Claude app after a one-time `claude /login` in the machine (requires an eligible Claude subscription). One session starts in `/home/ubuntu/workspace`; every further session gets its own git worktree under `.claude/worktrees/`, so parallel sessions can work on different branches. `services/.env` and `infrastructure/.env` are copied into each worktree (listed in `.worktreeinclude`), but `node_modules` is not, so run `pnpm install` in a new worktree first. Clean worktrees are removed when their session ends; clean up leftovers with `git worktree list` / `git worktree remove <path>` and `git worktree prune`.
+- **VS Code Remote SSH:** `ssh ubuntu@<host> -p 2222`
 
-Inside the dev machine the repo is already cloned at `/home/dev/workspace` with
+Inside the dev machine the repo is already cloned at `/home/ubuntu/workspace` with
 `pnpm` and the dev Postgres database available:
 
 ```bash

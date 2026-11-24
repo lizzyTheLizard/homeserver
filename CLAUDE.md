@@ -17,7 +17,7 @@ pnpm --filter @homeserver/web vitest run --project unit          # single vitest
 pnpm --filter @homeserver/web storybook                          # Storybook on :6006
 ```
 
-Development happens inside the `dev-machine` container (repo at `/home/dev/workspace`, dev Postgres already running — no local docker compose needed). All dev scripts load `services/.env`; Wichteln reads unprefixed `SESSION_SECRET`/`ADMIN_USER`/`ADMIN_PASSWORD` there (in prod they come from `WICHTELN_*` via docker-compose). Playwright OS deps are preinstalled there but browser binaries are not: before running the `storybook` test project, run `pnpm exec playwright install --with-deps` from the repo root if Chromium is missing.
+Development happens inside the `dev-machine` container (repo at `/home/ubuntu/workspace`, dev Postgres already running — no local docker compose needed). All dev scripts load `services/.env`; Wichteln reads unprefixed `SESSION_SECRET`/`ADMIN_USER`/`ADMIN_PASSWORD` there (in prod they come from `WICHTELN_*` via docker-compose). Playwright OS deps are preinstalled there but browser binaries are not: before running the `storybook` test project, run `pnpm exec playwright install --with-deps` from the repo root if Chromium is missing.
 
 ## Development workflow (OpenSpec)
 

@@ -65,7 +65,7 @@ workflows and pulled onto the server at deploy time (see [§6.8](#68-deploying--
 * **`dev-machine`** is a full Linux dev environment (node:26-bookworm-slim) with Node 26,
   pnpm, Go, the GitHub CLI, PostgreSQL client tools,
   **code-server** and **Claude Code**, managed by `supervisord`. Access:
-  * VS Code Remote SSH → `ssh dev@<host> -p 2222`
+  * VS Code Remote SSH → `ssh ubuntu@<host> -p 2222`
   * Browser VS Code → `https://dev.gutschi.site:8443`
   * Claude Code (Remote Control) → connect from <https://claude.ai/code> or the
     Claude app to the dev machine's `claude remote-control` session (requires a
@@ -141,7 +141,7 @@ data.
 | `postgres_prod_data` | Prod Postgres data directory (`/var/lib/postgresql/data`) |
 | `postgres_wichteln_data` | Wichteln Postgres data directory — not yet included in the nightly backup |
 | `postgres_dev_data` | Dev Postgres data directory |
-| `dev_home` | The `dev` user's home (`/home/dev`) — git checkout, SSH keys, editor state |
+| `dev_machine_home` | The `ubuntu` user's home (`/home/ubuntu`) — git checkout, SSH keys, editor state |
 
 These survive `docker compose down` / `up`. They are **only** removed by
 `docker compose down -v` or manual `docker volume rm`.
@@ -326,10 +326,10 @@ docker compose up -d --force-recreate backup
 On first start the `dev-machine` entrypoint (`../dev-machine/entrypoint.sh`):
 
 1. Sets the git identity from `GIT_NAME` / `GIT_MAIL`.
-2. Appends every key in `DEV_SSH_KEY_PUB` to `/home/dev/.ssh/authorized_keys`.
+2. Appends every key in `DEV_SSH_KEY_PUB` to `/home/ubuntu/.ssh/authorized_keys`.
 3. Generates `id_ed25519` / `id_sshd` SSH keys if missing.
 4. Verifies GitHub SSH auth; **if it fails it prints the public key to add**.
-5. Clones `REPO_URL` into `/home/dev/workspace` and launches `supervisord`.
+5. Clones `REPO_URL` into `/home/ubuntu/workspace` and launches `supervisord`.
 
 **First-time / new-key bootstrap flow:**
 
@@ -353,11 +353,11 @@ keeps the bootstrap above.
 
 ### 5.8 Change the dev-machine public-key auth
 
-The `dev_home` volume persists `authorized_keys`, so changes survive restarts.
+The `dev_machine_home` volume persists `authorized_keys`, so changes survive restarts.
 
 * **Add a key** (no restart needed):
   ```bash
-  docker compose exec dev sh -c 'echo "<ssh-ed25519 AAAA... comment>" >> /home/dev/.ssh/authorized_keys'
+  docker compose exec dev sh -c 'echo "<ssh-ed25519 AAAA... comment>" >> /home/ubuntu/.ssh/authorized_keys'
   ```
 * **Rotate / replace keys** via `.env`: update `DEV_SSH_KEY_PUB` and recreate:
   ```bash
@@ -367,7 +367,7 @@ The `dev_home` volume persists `authorized_keys`, so changes survive restarts.
   stale lines from `authorized_keys` manually if needed.)
 * **Remove a key**: edit the file inside the container:
   ```bash
-  docker compose exec dev vi /home/dev/.ssh/authorized_keys
+  docker compose exec dev vi /home/ubuntu/.ssh/authorized_keys
   ```
 
 ### 5.9 Change passwords
