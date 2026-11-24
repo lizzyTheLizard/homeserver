@@ -1,4 +1,4 @@
-FROM ghcr.io/pnpm/pnpm:12.21.0-alpine AS build
+FROM ghcr.io/pnpm/pnpm:12.21.0 AS build
 
 # Install the version of .nvmrc (the same one the pipeline uses)
 COPY .nvmrc ./
@@ -13,7 +13,7 @@ RUN pnpm install --frozen-lockfile --filter @homeserver/wichteln...
 COPY services/wichteln ./services/wichteln
 RUN pnpm --filter @homeserver/wichteln build
 
-FROM node:26.13.1-alpine3.24
+FROM node:26.13.1-slim
 USER node
 
 COPY --from=build --chown=node:node /app/services/wichteln/.next/standalone/ /app/

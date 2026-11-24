@@ -1,4 +1,4 @@
-FROM ghcr.io/pnpm/pnpm:12.21.0-alpine AS build
+FROM ghcr.io/pnpm/pnpm:12.21.0 AS build
 
 # Install the version of .nvmrc (the same one the pipeline uses)
 COPY .nvmrc ./
