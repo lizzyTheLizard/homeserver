@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-pnpm workspace with two packages under `services/` (plus the dev-machine image); target one with `pnpm --filter @homeserver/<web|wichteln> <script>`.
+pnpm workspace with three packages under `services/` (plus the dev-machine image); target one with `pnpm --filter @homeserver/<web|wichteln|backup> <script>`.
 
 ```bash
-pnpm dev                 # web (:3000) + wichteln (:3001) as local processes
+pnpm dev                 # web (:3000) + wichteln (:3001) + the backup service as local processes
 pnpm dev:wichteln        # wichteln alone
+pnpm dev:backup          # the backup service alone (watch mode, schedule 03:00, dev DB, never uploads)
+pnpm --filter @homeserver/backup dev:now   # one backup right now outside docker (dev DB, never uploads)
 pnpm build               # build all packages
 pnpm test                # all tests, all packages
 pnpm lint                # oxlint --fix, then oxfmt, in all packages (pnpm lint:ci = checks only, used in CI)
@@ -33,13 +35,14 @@ Services (each its own container image in GHCR, checked by `.github/workflows/pu
 
 - **`services/web`** — Next.js App Router portal (apps: `cash`, `coeditor`, `admin`, `startpage`; shared layer in `app/shared/`). React Server Components by default, `"use client"` only for interactivity. Mutations are Server Actions in a `server.ts` next to each `page.tsx` — no separate API layer. The startpage also hosts the assistant: Microsoft logic (Graph, token, mail/todo/calendar workers) in `startpage/microsoft/_external/`, the WAHA client in `startpage/whatsapp/_external/`, and the chat (model, skills, tools, weather) in `startpage/assistant/`, served by the streaming `POST /startpage/assistant/chat` route handler (newline-delimited JSON; conversations live in web-process memory).
 - **`services/wichteln`** — separate Next.js app (port 3001 in dev) sharing the Postgres DB with `wichteln_*`-prefixed tables.
+- **`services/backup`** — nightly prod DB dump and OneDrive upload (`main.ts` schedules with `croner`, `backup.ts` runs `pg_dump`, `onedrive.ts` uploads; bundled by esbuild); its own image with the PostgreSQL client.
 - **`services/dev-machine`** — development container (code-server, Claude Code Remote Control, Storybook, SSH on 2222). Remote Control runs with `--spawn worktree`: each new session gets its own git worktree under `.claude/worktrees/` with `services/.env` and `infrastructure/.env` copied in (`.worktreeinclude`); run `pnpm install` there first.
 
 **Auth** — `services/web/proxy.ts` runs before every route and validates the iron-session cookie; unauthenticated users are redirected to Azure AD OIDC via `startLogin()` in `app/shared/auth/auth.ts`, AJAX requests get 401. `/shared/auth/*`, `/shared/ping`, static assets and Next.js internals bypass auth. Row ownership is keyed on the user's email (`owner_email`, from the OIDC claim); there is no users table.
 
 **Database** — PostgreSQL via `pg`. The pool is created lazily on first use by `app/shared/_external/db/setup.ts`, which also runs the migrations from `services/web/db/` at that point (wichteln has its own `db/` migration folder). All access goes through `app/shared/_external/db/access.ts`: `transactional(fn)` (BEGIN/COMMIT/ROLLBACK) or `nontransactional(fn)`. Custom type parsers (`TYPE_MAPPINGS`) keep dates as strings and turn numerics into JS numbers.
 
-**Ops** — the `backup` service dumps the prod DB nightly and uploads to OneDrive; restore with `docker compose exec backup node /usr/local/bin/restore-backup.mjs <file> <dev|prod> [--yes]` (use `--yes` for prod, since exec has no TTY). Details in `infrastructure/README.md`.
+**Ops** — the `backup` service dumps the prod DB nightly and uploads to OneDrive; restore by hand with `psql`/`pg_restore` inside the container. Details in `infrastructure/README.md`.
 
 ## Tests (web)
 

@@ -29,5 +29,5 @@ The web application, Wichteln, backup and development-machine images SHALL be pu
 **Migration**: See the same requirement in the `backup` spec; its behaviour is unchanged.
 
 ### Requirement: A backup can be restored into the development or production database
-**Reason**: The backup is now its own service with its own capability spec.
-**Migration**: See the same requirement in the `backup` spec; its behaviour is unchanged.
+**Reason**: The restore tool was removed together with the simplification of the backup into one small Node.js service; restoring is a manual step.
+**Migration**: Restore by hand with `psql` and `pg_restore` from inside the `backup` container, as described in section 5.5 of `infrastructure/README.md`.

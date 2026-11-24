@@ -33,11 +33,13 @@ read in.
 2. **[dev-machine](dev-machine/spec.md)** — the development container: SSH, the browser-based
    development interfaces, the repository bootstrap and the toolchain.
 3. **[infrastructure](infrastructure/spec.md)** — the deployed stack: the docker-compose services,
-   the reverse proxies and TLS, DNS, and backup and restore.
-4. **[pipeline](pipeline/spec.md)** — the single GitHub pipeline: change detection, per-service
+   the reverse proxies and TLS, and DNS.
+4. **[backup](backup/spec.md)** — the backup service: the nightly production dump, its OneDrive
+   upload, the restore into the dev or prod database, and how the service is built and published.
+5. **[pipeline](pipeline/spec.md)** — the single GitHub pipeline: change detection, per-service
    linting, test suites and Docker image builds, publish and deploy from `main`, and the one
    always-running "Quality Gate" that pull requests require.
-5. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
+6. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
    which is not archived, not named after its branch, or whose spec deltas were not synced.
 
 The `wichteln` application's capability is added by its in-flight change in

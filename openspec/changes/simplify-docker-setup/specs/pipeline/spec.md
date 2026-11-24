@@ -36,7 +36,7 @@ For each of the web application, Wichteln and the backup reported as changed, th
 
 #### Scenario: The backup is tested
 - **WHEN** the backup is reported as changed
-- **THEN** its unit tests run
+- **THEN** its test job runs
 
 #### Scenario: An unchanged service is skipped
 - **WHEN** Wichteln is not reported as changed
@@ -48,14 +48,14 @@ For each of the web application, Wichteln and the backup reported as changed, th
 
 ### Requirement: The CI pipeline publishes every image
 
-The "CI" pipeline SHALL build the web application, Wichteln, the backup and the development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, and SHALL publish all four to GitHub Container Registry, whether or not their service changed. It SHALL tag the web application and Wichteln images with the commit, branch, pipeline run and build time. It SHALL NOT lint, run tests or start the stack, since the "Pull request" pipeline did.
+The "CI" pipeline SHALL build the web application, Wichteln, the backup and the development machine as `linux/amd64` images named `ghcr.io/<owner>/homeserver-<name>:latest`, each from its own service's folder and Dockerfile, and SHALL publish all four to GitHub Container Registry, whether or not their service changed. It SHALL tag the web application image with the commit, branch, pipeline run and build time. It SHALL NOT lint, run tests or start the stack, since the "Pull request" pipeline did.
 
 #### Scenario: Every image is published on a merge
 - **WHEN** a pull request that only changed Wichteln is merged to main
 - **THEN** the web application, Wichteln, backup and development machine images are built and published
 
 #### Scenario: The application image carries its revision
-- **WHEN** the web application or the Wichteln image is built
+- **WHEN** the web application image is built
 - **THEN** it records the commit, branch, pipeline run and build time that produced it
 
 #### Scenario: Main does not repeat the pull request checks
