@@ -28,6 +28,9 @@ export interface Group {
   phase: Phase
   inviteToken: string
   createdAt: string
+  /** The account that manages the group, or `null` for a group only the administrator manages. */
+  ownerAccountId: string | null
+  ownerName: string | null
   users: User[]
 }
 
@@ -72,6 +75,8 @@ interface GroupRow {
   phase: Phase
   invite_token: string
   created_at: Date | string
+  owner_account_id: string | null
+  owner_name: string | null
 }
 
 interface UserRow {
@@ -84,14 +89,15 @@ interface UserRow {
   selected_wish_of: string | null
 }
 
-const GROUP_COLUMNS = 'id, name, phase, invite_token, created_at'
+const GROUP_COLUMNS = 'g.id, g.name, g.phase, g.invite_token, g.created_at, g.owner_account_id, o.name AS owner_name'
+const GROUP_FROM = 'wichteln_groups g LEFT JOIN wichteln_accounts o ON o.id = g.owner_account_id'
 const USER_COLUMNS = 'p.id, p.group_id, p.account_id, a.name, p.wish_title, p.wish_description, p.selected_wish_of'
 const USER_FROM = 'wichteln_participants p JOIN wichteln_accounts a ON a.id = p.account_id'
 const USER_ORDER = 'p.created_at, a.name'
 const JOIN_CLOSED = 'Die Auswahlphase läuft bereits. Ein Beitritt ist nicht mehr möglich.'
 
 export async function listGroups(db: Queryable): Promise<Group[]> {
-  const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM wichteln_groups ORDER BY created_at DESC`)
+  const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM ${GROUP_FROM} ORDER BY g.created_at DESC`)
   const users = await db.query<UserRow>(`SELECT ${USER_COLUMNS} FROM ${USER_FROM} ORDER BY ${USER_ORDER}`)
   const usersByGroup = new Map<string, UserRow[]>()
 
@@ -105,14 +111,14 @@ export async function listGroups(db: Queryable): Promise<Group[]> {
 }
 
 export async function getGroup(db: Queryable, groupId: string): Promise<Group | null> {
-  const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM wichteln_groups WHERE id = $1`, [groupId])
+  const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM ${GROUP_FROM} WHERE g.id = $1`, [groupId])
   const group = groups.at(0)
   return group ? loadGroup(db, group) : null
 }
 
 export async function getGroupByInviteToken(db: Queryable, token: string): Promise<Group | null> {
   if (!token) return null
-  const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM wichteln_groups WHERE invite_token = $1`, [token])
+  const groups = await db.query<GroupRow>(`SELECT ${GROUP_COLUMNS} FROM ${GROUP_FROM} WHERE g.invite_token = $1`, [token])
   const group = groups.at(0)
   return group ? loadGroup(db, group) : null
 }
@@ -144,6 +150,20 @@ export async function listAccountGroups(db: Queryable, accountId: string): Promi
   )
 }
 
+/** Groups the account owns, ordered by name. */
+export async function listOwnedGroups(db: Queryable, accountId: string): Promise<GroupSummary[]> {
+  return db.query<GroupSummary>('SELECT id, name FROM wichteln_groups WHERE owner_account_id = $1 ORDER BY lower(name), created_at', [accountId])
+}
+
+/** Makes the account the owner of the group, replacing any owner; `null` clears the owner. */
+export async function setGroupOwner(db: Queryable, groupId: string, accountId: string | null): Promise<StoreResult> {
+  if (accountId && !(await getAccount(db, accountId))) return { ok: false, error: 'Konto nicht gefunden.' }
+
+  const rows = await db.query<{ id: string }>('UPDATE wichteln_groups SET owner_account_id = $1 WHERE id = $2 RETURNING id', [accountId, groupId])
+  if (rows.length === 0) return { ok: false, error: 'Gruppe nicht gefunden.' }
+  return { ok: true, value: undefined }
+}
+
 /** Every account with the names of its groups, ordered by name ignoring case. */
 export async function listAccounts(db: Queryable): Promise<AccountSummary[]> {
   return db.query<AccountSummary>(
@@ -171,11 +191,20 @@ export async function authenticateAccount(db: Queryable, name: string, password:
   return getAccount(db, row.id)
 }
 
-export async function createGroup(db: Queryable, name: string): Promise<StoreResult<Group>> {
+/** Creates a group in the wish phase; without `ownerAccountId` only the administrator manages it. */
+export async function createGroup(db: Queryable, name: string, ownerAccountId: string | null = null): Promise<StoreResult<Group>> {
   if (!name) return { ok: false, error: 'Bitte einen Gruppennamen eingeben.' }
 
+  if (ownerAccountId && !(await getAccount(db, ownerAccountId))) return { ok: false, error: 'Konto nicht gefunden.' }
+
   const groupId = randomUUID()
-  await db.query('INSERT INTO wichteln_groups (id, name, phase, invite_token) VALUES ($1, $2, $3, $4)', [groupId, name, 'wishes', createInviteToken(name)])
+  await db.query('INSERT INTO wichteln_groups (id, name, phase, invite_token, owner_account_id) VALUES ($1, $2, $3, $4, $5)', [
+    groupId,
+    name,
+    'wishes',
+    createInviteToken(name),
+    ownerAccountId,
+  ])
 
   const group = await getGroup(db, groupId)
   if (!group) return { ok: false, error: 'Gruppe konnte nicht erstellt werden.' }
@@ -327,6 +356,8 @@ function mapGroup(row: GroupRow, users: UserRow[]): Group {
     phase: row.phase,
     inviteToken: row.invite_token,
     createdAt: toIso(row.created_at),
+    ownerAccountId: row.owner_account_id,
+    ownerName: row.owner_name,
     users: users.map(mapUser),
   }
 }

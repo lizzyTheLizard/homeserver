@@ -1,38 +1,24 @@
 import Link from 'next/link'
 import { requireParticipant } from '@/lib/session'
 import { selectableWishOwners } from '@/lib/matching'
-import { listAccountGroups } from '@/lib/store'
 import type { Group, User, Wish } from '@/lib/store'
-import { getDb } from '@/lib/db'
-import { logout } from '../../actions'
 import { WishForm, WishPicker } from '../../components'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params
-  const { account, group, user } = await requireParticipant(groupId)
-  const groupCount = (await listAccountGroups(await getDb(), account.id)).length
+  const { group, user } = await requireParticipant(groupId)
 
   return (
     <>
+      <Link href="/" className="small">
+        ← Alle Gruppen
+      </Link>
       <div className="row">
         <div>
           <h1>Hallo {user.name}!</h1>
           <span className="muted">Gruppe: {group.name}</span>
-        </div>
-        <div className="actions">
-          {groupCount > 1 && (
-            <Link href="/" className="button secondary">
-              Alle Gruppen
-            </Link>
-          )}
-          <Link href="/passwort" className="button secondary">
-            Passwort ändern
-          </Link>
-          <form action={logout}>
-            <button className="secondary">Abmelden</button>
-          </form>
         </div>
       </div>
 

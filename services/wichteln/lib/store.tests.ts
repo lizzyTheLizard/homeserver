@@ -319,4 +319,85 @@ describe('store', () => {
     expect(await store.listAccountGroups(queryable, anna.accountId)).toEqual([])
     expect(await store.authenticateAccount(queryable, 'Anna', 'Anna-password')).not.toBeNull()
   })
+
+  test('creates a group without an owner by default', async () => {
+    const created = await store.createGroup(queryable, 'Team')
+    if (!created.ok) throw new Error(created.error)
+
+    expect(created.value.ownerAccountId).toBeNull()
+    expect(created.value.ownerName).toBeNull()
+  })
+
+  test('creates a group owned by an account that is not a participant', async () => {
+    const seed = await createTestGroup(['Anna'])
+    const anna = seed.users[0]
+    if (!anna) throw new Error('Anna is missing')
+
+    const created = await store.createGroup(queryable, 'Mine', anna.accountId)
+    if (!created.ok) throw new Error(created.error)
+
+    expect(created.value.ownerAccountId).toBe(anna.accountId)
+    expect(created.value.ownerName).toBe('Anna')
+    expect(created.value.users).toEqual([])
+    expect(await store.listOwnedGroups(queryable, anna.accountId)).toEqual([{ id: created.value.id, name: 'Mine' }])
+    expect(await store.listAccountGroups(queryable, anna.accountId)).toEqual([{ id: seed.id, name: 'Team' }])
+  })
+
+  test('refuses a group for an unknown owner account', async () => {
+    expect(await store.createGroup(queryable, 'Mine', randomUUID())).toEqual({ ok: false, error: 'Konto nicht gefunden.' })
+    expect(await store.listGroups(queryable)).toHaveLength(0)
+  })
+
+  test('lets the owner join and leave their own group while keeping ownership', async () => {
+    const seed = await createTestGroup(['Anna'])
+    const anna = seed.users[0]
+    if (!anna) throw new Error('Anna is missing')
+    const created = await store.createGroup(queryable, 'Mine', anna.accountId)
+    if (!created.ok) throw new Error(created.error)
+
+    expect(await store.joinGroup(queryable, created.value.id, anna.accountId)).toEqual({ ok: true, value: undefined })
+    const joined = await participant(created.value.id, anna.accountId)
+    expect(await store.listAccountGroups(queryable, anna.accountId)).toHaveLength(2)
+
+    await store.removeParticipant(queryable, created.value.id, joined.id)
+    expect(await store.findParticipant(queryable, created.value.id, anna.accountId)).toBeNull()
+    expect(await store.listAccountGroups(queryable, anna.accountId)).toHaveLength(1)
+    expect(await store.listOwnedGroups(queryable, anna.accountId)).toHaveLength(1)
+  })
+
+  test('assigns, replaces and clears the owner of an existing group', async () => {
+    const group = await createTestGroup(['Anna', 'Ben'])
+    const [anna, ben] = group.users
+    if (!anna || !ben) throw new Error('Participants are missing')
+
+    expect(await store.setGroupOwner(queryable, group.id, anna.accountId)).toEqual({ ok: true, value: undefined })
+    expect((await store.getGroup(queryable, group.id))?.ownerName).toBe('Anna')
+
+    expect(await store.setGroupOwner(queryable, group.id, ben.accountId)).toEqual({ ok: true, value: undefined })
+    expect(await store.listOwnedGroups(queryable, anna.accountId)).toEqual([])
+    expect(await store.listOwnedGroups(queryable, ben.accountId)).toHaveLength(1)
+
+    expect(await store.setGroupOwner(queryable, group.id, null)).toEqual({ ok: true, value: undefined })
+    expect((await store.getGroup(queryable, group.id))?.ownerAccountId).toBeNull()
+    expect((await store.getGroup(queryable, group.id))?.users).toHaveLength(2)
+  })
+
+  test('refuses an unknown owner account or group when setting the owner', async () => {
+    const group = await createTestGroup(['Anna'])
+
+    expect(await store.setGroupOwner(queryable, group.id, randomUUID())).toEqual({ ok: false, error: 'Konto nicht gefunden.' })
+    expect(await store.setGroupOwner(queryable, randomUUID(), null)).toEqual({ ok: false, error: 'Gruppe nicht gefunden.' })
+  })
+
+  test('keeps the group when its owner account disappears', async () => {
+    const seed = await createTestGroup(['Anna'])
+    const anna = seed.users[0]
+    if (!anna) throw new Error('Anna is missing')
+    const created = await store.createGroup(queryable, 'Mine', anna.accountId)
+    if (!created.ok) throw new Error(created.error)
+
+    await queryable.query('DELETE FROM wichteln_accounts WHERE id = $1', [anna.accountId])
+
+    expect((await store.getGroup(queryable, created.value.id))?.ownerAccountId).toBeNull()
+  })
 })

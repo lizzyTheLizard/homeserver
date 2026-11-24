@@ -4,7 +4,6 @@ import { useActionState, useState, useSyncExternalStore } from 'react'
 import { useFormStatus } from 'react-dom'
 import { changePassword, groupLogin, login, register, saveWish, selectWish } from './actions'
 import type { FormState } from './actions'
-import { createGroup } from './admin/actions'
 
 function Message({ state }: { state: FormState }) {
   if (state?.error) return <div className="alert error">{state.error}</div>
@@ -168,8 +167,8 @@ export function WishPicker({ groupId, wishes }: { groupId: string; wishes: { own
   )
 }
 
-export function CreateGroupForm() {
-  const [state, action] = useActionState(createGroup, undefined)
+export function CreateGroupForm({ action: createAction }: { action(prev: FormState, formData: FormData): Promise<FormState> }) {
+  const [state, action] = useActionState(createAction, undefined)
   return (
     <form action={action} className="stack">
       <div>
@@ -243,4 +242,45 @@ function subscribeNever() {
   return () => {
     /* Nothing to unsubscribe */
   }
+}
+
+export function OwnerForm({
+  accounts,
+  ownerAccountId,
+  action: boundAction,
+}: {
+  accounts: { id: string; name: string }[]
+  ownerAccountId: string | null
+  action(prev: FormState, formData: FormData): Promise<FormState>
+}) {
+  const [state, action] = useActionState(boundAction, undefined)
+  return (
+    <form action={action} className="stack">
+      <div>
+        <label htmlFor="owner">Besitzer</label>
+        <select id="owner" name="accountId" defaultValue={ownerAccountId ?? ''}>
+          <option value="">Kein Besitzer</option>
+          {accounts.map(account => (
+            <option key={account.id} value={account.id}>
+              {account.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <Message state={state} />
+      <SubmitButton className="secondary">Besitzer speichern</SubmitButton>
+    </form>
+  )
+}
+
+export function OwnParticipationForm({ participates, action: boundAction }: { participates: boolean; action(prev: FormState): Promise<FormState> }) {
+  const [state, action] = useActionState(boundAction, undefined)
+  return (
+    <form action={action} className="stack">
+      <Message state={state} />
+      <SubmitButton className="secondary" confirm={participates ? 'Wirklich aus der Gruppe austreten? Dein Wunsch wird dabei gelöscht.' : undefined}>
+        {participates ? 'Mich aus der Gruppe entfernen' : 'Mich zur Gruppe hinzufügen'}
+      </SubmitButton>
+    </form>
+  )
 }

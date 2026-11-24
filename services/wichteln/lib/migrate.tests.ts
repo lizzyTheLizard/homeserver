@@ -38,7 +38,7 @@ describe('database migrations', () => {
     expect(names).not.toContain('wichteln_users')
 
     const applied = await queryable.query<{ name: string }>('SELECT name FROM wichteln_migrations ORDER BY name')
-    expect(applied.map(row => row.name)).toEqual(['001_init.sql', '002_invite_registration.sql', '003_accounts.sql'])
+    expect(applied.map(row => row.name)).toEqual(['001_init.sql', '002_invite_registration.sql', '003_accounts.sql', '004_group_owner.sql'])
   })
 
   test('does not apply a migration twice', async () => {
@@ -49,7 +49,7 @@ describe('database migrations', () => {
     await applyMigrations(queryable)
 
     const applied = await queryable.query<{ name: string }>('SELECT name FROM wichteln_migrations')
-    expect(applied).toHaveLength(3)
+    expect(applied).toHaveLength(4)
   })
 
   test('enforces unique account names, ignoring case', async () => {
@@ -153,6 +153,40 @@ describe('database migrations', () => {
     expect(await queryable.query('SELECT id FROM wichteln_participants')).toEqual([])
     const legacy = await queryable.query("SELECT table_name FROM information_schema.tables WHERE table_name = 'wichteln_users'")
     expect(legacy).toEqual([])
+  })
+
+  test('keeps all existing data and gives existing groups no owner when adding group owners', async () => {
+    db = new PGlite()
+    const queryable = pgliteQueryable(db)
+    await applyOnly(queryable, ['001_init.sql', '002_invite_registration.sql', '003_accounts.sql'])
+
+    const groupId = await insertGroup(queryable, 'token')
+    const annaId = await insertAccount(queryable, 'Anna')
+    const benId = await insertAccount(queryable, 'Ben')
+    const annaParticipant = randomUUID()
+    const benParticipant = randomUUID()
+    await queryable.query('INSERT INTO wichteln_participants (id, group_id, account_id, wish_title, wish_description) VALUES ($1, $2, $3, $4, $5)', [
+      annaParticipant,
+      groupId,
+      annaId,
+      'Book',
+      'A good one',
+    ])
+    await queryable.query('INSERT INTO wichteln_participants (id, group_id, account_id, selected_wish_of) VALUES ($1, $2, $3, $4)', [
+      benParticipant,
+      groupId,
+      benId,
+      annaParticipant,
+    ])
+
+    await applyMigrations(queryable)
+
+    expect(await queryable.query('SELECT id, owner_account_id FROM wichteln_groups')).toEqual([{ id: groupId, owner_account_id: null }])
+    expect(await queryable.query('SELECT COUNT(*)::text AS count FROM wichteln_accounts')).toEqual([{ count: '2' }])
+    expect(await queryable.query('SELECT id, wish_title, selected_wish_of FROM wichteln_participants ORDER BY wish_title NULLS LAST')).toEqual([
+      { id: annaParticipant, wish_title: 'Book', selected_wish_of: null },
+      { id: benParticipant, wish_title: null, selected_wish_of: annaParticipant },
+    ])
   })
 })
 

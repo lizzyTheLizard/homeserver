@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation'
 import crypto from 'crypto'
 import { getConfig } from './config'
 import { getDb } from './db'
-import { findParticipant, getAccount } from './store'
+import { findParticipant, getAccount, getGroup } from './store'
+import type { Account, Group } from './store'
 import { changePasswordPath } from './continuePath'
 
 export type Session = { role: 'admin' } | { role: 'user'; accountId: string }
@@ -69,6 +70,25 @@ export async function requireParticipant(groupId: string) {
   const found = await findParticipant(await getDb(), groupId, account.id)
   if (!found) redirect('/')
   return { account, ...found }
+}
+
+/**
+ * Returns the group and the caller's role for managing it: the administrator
+ * may manage every group, an account only the groups it owns. Anyone else is
+ * sent to the start page. A pending forced password change is honoured for
+ * owners like for participants.
+ */
+export async function requireGroupManager(groupId: string): Promise<{ role: 'admin' | 'owner'; group: Group; account: Account | null }> {
+  const s = await getSession()
+  if (!s) redirect('/')
+  const account = s.role === 'user' ? await requireAccount({ continueTo: `/verwaltung/${groupId}` }) : null
+  if (!UUID.test(groupId)) redirect('/')
+
+  const group = await getGroup(await getDb(), groupId)
+  if (!group) redirect('/')
+  if (s.role === 'admin') return { role: 'admin', group, account: null }
+  if (!account || group.ownerAccountId !== account.id) redirect('/')
+  return { role: 'owner', group, account }
 }
 
 export function adminCredentials() {

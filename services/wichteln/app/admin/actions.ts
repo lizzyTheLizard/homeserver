@@ -26,21 +26,16 @@ export async function resetPassword(accountId: string): Promise<FormState> {
   return result.ok ? { ok: result.value } : { error: result.error }
 }
 
-export async function removeParticipant(groupId: string, userId: string) {
+/** Assigns the account as owner of the group; an empty account clears the owner. */
+export async function setOwner(groupId: string, _prev: FormState, formData: FormData): Promise<FormState> {
   await requireAdmin()
-  await withTransaction(db => store.removeParticipant(db, groupId, userId))
-  revalidatePath(`/admin/${groupId}`)
-}
+  const accountId = formString(formData, 'accountId')
 
-export async function startSelection(groupId: string) {
-  await requireAdmin()
-  await withTransaction(db => store.startSelection(db, groupId))
-  revalidatePath(`/admin/${groupId}`)
-}
+  const result = await withTransaction(db => store.setGroupOwner(db, groupId, accountId || null))
+  if (!result.ok) return { error: result.error }
 
-export async function deleteGroup(groupId: string) {
-  await requireAdmin()
-  await withTransaction(db => store.deleteGroup(db, groupId))
   revalidatePath('/admin')
-  redirect('/admin')
+  revalidatePath(`/admin/${groupId}`)
+  revalidatePath('/')
+  return { ok: accountId ? 'Besitzer gespeichert.' : 'Besitzer entfernt.' }
 }
