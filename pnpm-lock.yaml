@@ -256,7 +256,7 @@ importers:
         version: 0.5.0
       iron-session:
         specifier: ^9.0.1
-        version: 9.1.0
+        version: 9.1.1
       next:
         specifier: ^16.4.6
         version: 16.4.6(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -2818,8 +2818,8 @@ packages:
     resolution: {integrity: sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg==}
     engines: {node: '>=12'}
 
-  iron-session@9.1.0:
-    resolution: {integrity: sha512-ev5xEgYgRcG3tSUMlX5i9fL/AedBYqDOnojk7Ihqs/scFDQ2u4FzwZybhYkJasCSKeIong128SCQlSbvWu9s0g==}
+  iron-session@9.1.1:
+    resolution: {integrity: sha512-3lp4fCD9hJlcN65n0C4hYFF3ZPcRnQlOI4foKachDiu6fnYhNG8qWUF7UXMKV6X8N8bCprBh+FnX/0ZoSOdgMg==}
     engines: {node: '>=22.13.0'}
 
   iron-webcrypto@2.0.0:
@@ -5983,7 +5983,7 @@ snapshots:
 
   internmap@2.0.3: {}
 
-  iron-session@9.1.0:
+  iron-session@9.1.1:
     dependencies:
       cookie: 2.0.1
       iron-webcrypto: 2.0.0
