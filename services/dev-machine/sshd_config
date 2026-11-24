@@ -4,7 +4,7 @@ PermitRootLogin no
 PubkeyAuthentication yes
 PasswordAuthentication no
 KbdInteractiveAuthentication no
-AllowUsers ubuntu
+AllowUsers dev
 
 UsePAM yes
 PrintMotd no
