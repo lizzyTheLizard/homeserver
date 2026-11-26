@@ -154,6 +154,18 @@ Renovate pull requests for patch and minor updates SHALL be merged automatically
 - **WHEN** the "Quality Gate" of an update pull request fails
 - **THEN** it is not merged and stays open
 
+### Requirement: Updates waiting for their minimum age do not block other updates
+
+Renovate branches that exist only because their release is not yet old enough SHALL NOT use up the limit of open pull requests, so other updates are still proposed. The number of open pull requests SHALL stay limited.
+
+#### Scenario: Many updates wait for their minimum age
+- **WHEN** more updates are waiting for their minimum release age than the limit of open pull requests allows
+- **THEN** further updates are still proposed and are not held back as rate-limited
+
+#### Scenario: Open pull requests stay limited
+- **WHEN** more updates are ready than the limit of open pull requests allows
+- **THEN** only that many pull requests are open at once and the rest follow as they merge
+
 ### Requirement: Tool versions pinned in Dockerfiles are kept current by Renovate
 
 Tools that a Dockerfile installs from outside its base image or a package manager manifest, such as command-line tools downloaded as release archives or installed globally with npm, SHALL be pinned to an exact version in the Dockerfile in a way Renovate recognizes, so that Renovate opens a pull request when a newer version is released. A tool that is run only to look up or install operating-system packages, such as Playwright's dependency installer, MAY use its current release.

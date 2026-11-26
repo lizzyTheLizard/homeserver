@@ -9,6 +9,8 @@
   platformAutomerge: true,
   // Each merge makes the other open pull requests behind and they are re-tested; the limit bounds that
   prConcurrentLimit: 5,
+  // Branches that wait for the minimum release age have no pull request yet but count against the branch limit, which defaults to prConcurrentLimit and would hold back other updates
+  branchConcurrentLimit: 20,
   prHourlyLimit: 0,
   packageRules: [
     {
