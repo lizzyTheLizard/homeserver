@@ -24,12 +24,13 @@ operations:
   apply:
     guidance:
       - "Implement all tasks of the change in one go. Work through them in order and tick each checkbox when its task is done. Do not stop for review between tasks, and do not commit or push per task. Pause only for a real blocker or an unclear task."
-      - "After the last task, run lint and tests for the affected packages, then show the user the full diff of the change for a single review. Do not commit before they approve. If they ask for changes, make them and show the diff again."
-      - "Once the user approves, commit and push once. The commit message must follow the standard format: `<short imperative message>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Do not add an issue number."
-      - "Do not archive yourself. Ask the user to run the openspec-archive-change workflow instead."
+      - "After the last task, run lint and tests for the affected packages. Fix failures before going on."
+      - "Then commit and push once, without waiting for a local review, so the user can review the full diff on GitHub. The commit message must follow the standard format: `<short imperative message>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Do not add an issue number. Do not open a pull request yet."
+      - "Do not archive yourself. Tell the user the branch is pushed and ask them to run the openspec-archive-change workflow once their review is done."
   archive:
     guidance:
       - "Always sync the change's delta specs into `openspec/specs/` before archiving. Do not ask whether to sync."
+      - "Before archiving, check `git status --porcelain` for changes made after the apply commit (for example from the user's review). If there are any, commit them as their own commit (same message format and trailers, no `openspec/` changes mixed in) and push, so the archive commit stays isolated."
       - "Commit the archive isolated to `openspec/`: stage `-A openspec`, make sure nothing else is staged, and commit as `Archive <change>` with the `OpenSpec-Change: <change>` and `Agent: <agent>` trailers. Then push the branch."
       - "Open the pull request from the change branch to `main` with `gh pr create --body-file`: a `## Summary` heading, 2-4 bullets, an `OpenSpec-Change: <change>` line and a link to the archived proposal at `openspec/changes/archive/<date>-<change>/proposal.md`. Do not add a `Closes` line or an issue number."
       - "Arm auto-merge with `gh pr merge --auto --squash` and report the PR URL. Then follow the PR until it has merged: watch the checks with `gh pr checks --watch` and confirm with `gh pr view --json state,mergeStateStatus` that its state is `MERGED`."
