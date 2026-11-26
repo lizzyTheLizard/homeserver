@@ -234,3 +234,4 @@ The web application's container SHALL receive the language-model key, the Micros
 #### Scenario: Missing configuration fails fast
 - **WHEN** the web application starts in production without a required key or credential
 - **THEN** it reports the missing variable instead of starting with a default
+

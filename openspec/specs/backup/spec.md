@@ -64,3 +64,4 @@ The backup SHALL be its own package in the workspace under `services/backup`, SH
 #### Scenario: The image is published
 - **WHEN** the "CI" pipeline runs on main
 - **THEN** the backup image is built from the backup's folder and published with the other images
+
