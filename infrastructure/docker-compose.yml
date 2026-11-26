@@ -206,7 +206,6 @@ services:
     entrypoint: ['/bin/sh', '-c']
     command:
       - |
-        test -n "$${BREVO_CODE}" || { echo "BREVO_CODE is not set (Brevo domain verification code)" >&2; exit 1; }
         sed -e "s/__HOST_IP__/$${HOST_IP}/g" -e "s/__BREVO_CODE__/$${BREVO_CODE}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
         chmod 644 /etc/bind/db.gutschi.site
         exec named -g -c /etc/bind/named.conf

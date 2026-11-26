@@ -423,8 +423,7 @@ The `backup` service mails the outcome of every run through
    `BREVO_CODE`, an API key into `BREVO_API_KEY`, and set `MAIL_FROM` in `.env`.
 3. Compare the DKIM CNAME targets (`brevo1`/`brevo2._domainkey`) in
    `bind9/db.gutschi.site` with the ones Brevo shows; fix the file if they differ.
-4. `docker compose up -d --force-recreate bind9 backup` (`bind9` refuses to start
-   without `BREVO_CODE`), then click "Authenticate" in Brevo.
+4. `docker compose up -d --force-recreate bind9 backup`, then click "Authenticate" in Brevo.
 5. Prove it: `docker compose exec backup node dist/main.js --now`.
 
 A mail that cannot be sent is only logged; it never fails a backup.
