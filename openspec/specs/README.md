@@ -41,6 +41,8 @@ read in.
    always-running "Quality Gate" that pull requests require.
 6. **[ci/change-guard](ci/change-guard/spec.md)** — the pipeline's pull-request guard that rejects a change
    which is not archived, not named after its branch, or whose spec deltas were not synced.
+7. **[workflow](workflow/spec.md)** — how a change is reviewed on GitHub after apply and how the archive step
+   collects follow-up changes before the pull request.
 
 The `wichteln` application's capability is added by its in-flight change in
 [`openspec/changes/wichteln`](../changes/wichteln/proposal.md).
