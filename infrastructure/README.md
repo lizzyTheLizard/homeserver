@@ -411,6 +411,23 @@ used by the dev-machine. Changing it requires editing `docker-compose.yml`
 (`postgresdev` + `dev-machine` `DB_CONNECTION_STRING`) and recreating both —
 only do this if you have a reason to.
 
+### 5.10 Set up Brevo mail (backup reports)
+
+The `backup` service mails the outcome of every run through
+[Brevo](https://app.brevo.com/): always on failure, on success unless
+`BACKUP_MAIL_ON_SUCCESS=false`. Recipient: `BACKUP_MAIL_TO` (default `matthias.graf@gutschi.site`).
+
+1. In Brevo add the domain `gutschi.site` (Senders, domains & dedicated IPs) and
+   create a sender matching `MAIL_FROM`.
+2. Put the domain's verification code (the part after `brevo-code:`) into
+   `BREVO_CODE`, an API key into `BREVO_API_KEY`, and set `MAIL_FROM` in `.env`.
+3. Compare the DKIM CNAME targets (`brevo1`/`brevo2._domainkey`) in
+   `bind9/db.gutschi.site` with the ones Brevo shows; fix the file if they differ.
+4. `docker compose up -d --force-recreate bind9 backup`, then click "Authenticate" in Brevo.
+5. Prove it: `docker compose exec backup node dist/main.js --now`.
+
+A mail that cannot be sent is only logged; it never fails a backup.
+
 ---
 
 ## 6. Deployment & repository

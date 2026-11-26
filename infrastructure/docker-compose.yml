@@ -133,6 +133,7 @@ services:
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
       RETENTION_DAYS: 31
       BACKUP_SCHEDULE: 0 3 * * *
+      # Mail settings (BREVO_API_KEY, MAIL_FROM, BACKUP_MAIL_TO, BACKUP_MAIL_ON_SUCCESS) come from .env
     volumes:
       # resolves to /opt/homeserver/backup on the host (the compose project dir)
       - ./backup:/backup
@@ -205,7 +206,7 @@ services:
     entrypoint: ['/bin/sh', '-c']
     command:
       - |
-        sed "s/__HOST_IP__/$${HOST_IP}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
+        sed -e "s/__HOST_IP__/$${HOST_IP}/g" -e "s/__BREVO_CODE__/$${BREVO_CODE}/g" /etc/bind/db.gutschi.site.template > /etc/bind/db.gutschi.site
         chmod 644 /etc/bind/db.gutschi.site
         exec named -g -c /etc/bind/named.conf
 

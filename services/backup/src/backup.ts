@@ -15,8 +15,13 @@ export function ensureBackupDir(backupDir: string): void {
   accessSync(backupDir, constants.W_OK)
 }
 
+export interface BackupResult {
+  fileName: string
+  size: number
+}
+
 // One backup: dumps the production database into the backup directory, uploads the dump to OneDrive and deletes old local dumps
-export async function runBackup(config: AppConfig): Promise<void> {
+export async function runBackup(config: AppConfig): Promise<BackupResult> {
   ensureBackupDir(config.backupDir)
   const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replaceAll(':', '-')
   const fileName = `homeserver-prod-${timestamp}.dump`
@@ -31,12 +36,14 @@ export async function runBackup(config: AppConfig): Promise<void> {
     await rm(file, { force: true })
     throw error
   }
-  console.info(`Backup created: ${((await stat(file)).size / BYTES_PER_MEBIBYTE).toFixed(1)} MiB`)
+  const size = (await stat(file)).size
+  console.info(`Backup created: ${(size / BYTES_PER_MEBIBYTE).toFixed(1)} MiB`)
 
   // A failed upload keeps the local dump, and the old dumps are only deleted after a successful upload
   await uploadToOneDrive(file, config)
   console.info(`Uploaded ${fileName} to OneDrive folder '${config.onedriveBackupFolder}'`)
   await deleteExpired(config.backupDir, config.retentionDays)
+  return { fileName, size }
 }
 
 async function pgDump(file: string, config: AppConfig): Promise<void> {
