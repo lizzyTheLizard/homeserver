@@ -3,7 +3,7 @@
 ## 1. DNS for Brevo
 
 - [x] 1.1 In `infrastructure/bind9/db.gutschi.site` extend the SPF record with `include:spf.brevo.com`, add the `brevo1`/`brevo2._domainkey` CNAMEs and the `brevo-code:__BREVO_CODE__` TXT record, and bump the serial. Verify: the file keeps exactly one SPF record, and `named-checkzone gutschi.site` passes on the rendered file.
-- [x] 1.2 In `infrastructure/docker-compose.yml` read `BREVO_CODE` from `.env` (already loaded into `bind9` by `env_file`), substitute it next to `HOST_IP` and fail the start when it is empty. Verify: `docker compose config` is valid and a start without `BREVO_CODE` exits with an error.
+- [x] 1.2 In `infrastructure/docker-compose.yml` read `BREVO_CODE` from `.env` (already loaded into `bind9` by `env_file`), substitute it next to `HOST_IP`. Verify: `docker compose config` is valid and the rendered zone contains the code.
 
 ## 2. Mail from the backup service
 

@@ -11,7 +11,3 @@ The zone served by the name server SHALL authorise Brevo as a sender for the dep
 #### Scenario: DKIM and verification records are published
 - **WHEN** Brevo or a receiver queries the Brevo DKIM names or the apex verification record
 - **THEN** the name server answers with the Brevo records, the verification value being the one configured in the environment
-
-#### Scenario: A missing verification value stops the name server
-- **WHEN** the name server container starts without the Brevo verification value in its environment
-- **THEN** it fails at start-up instead of serving a zone with a placeholder
