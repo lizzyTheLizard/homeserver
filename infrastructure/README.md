@@ -415,7 +415,7 @@ only do this if you have a reason to.
 
 The `backup` service mails the outcome of every run through
 [Brevo](https://app.brevo.com/): always on failure, on success unless
-`MAIL_ON_SUCCESS=false`. Recipient: `MAIL_TO` (default `matthias.graf@gutschi.site`).
+`BACKUP_MAIL_ON_SUCCESS=false`. Recipient: `BACKUP_MAIL_TO` (default `matthias.graf@gutschi.site`).
 
 1. In Brevo add the domain `gutschi.site` (Senders, domains & dedicated IPs) and
    create a sender matching `MAIL_FROM`.

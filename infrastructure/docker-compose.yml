@@ -133,7 +133,7 @@ services:
       DB_CONNECTION_STRING: postgres://homeserver:${PROD_DB_PASSWORD}@postgresprod:5432/homeserver?sslmode=disable
       RETENTION_DAYS: 31
       BACKUP_SCHEDULE: 0 3 * * *
-      # Mail settings (BREVO_API_KEY, MAIL_FROM, MAIL_TO, MAIL_ON_SUCCESS) come from .env
+      # Mail settings (BREVO_API_KEY, MAIL_FROM, BACKUP_MAIL_TO, BACKUP_MAIL_ON_SUCCESS) come from .env
     volumes:
       # resolves to /opt/homeserver/backup on the host (the compose project dir)
       - ./backup:/backup

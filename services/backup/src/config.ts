@@ -23,8 +23,8 @@ export function getConfig(): AppConfig {
     onedriveBackupFolder: required('ONEDRIVE_BACKUP_FOLDER', 'never-uploads-in-dev'),
     brevoApiKey: required('BREVO_API_KEY', 'never-sends-in-dev'),
     mailFrom: required('MAIL_FROM', 'backup@example.com'),
-    mailTo: process.env.MAIL_TO || 'matthias.graf@gutschi.site',
-    mailOnSuccess: parseSwitch(process.env.MAIL_ON_SUCCESS, true),
+    mailTo: process.env.BACKUP_MAIL_TO || 'matthias.graf@gutschi.site',
+    mailOnSuccess: parseSwitch(process.env.BACKUP_MAIL_ON_SUCCESS, true),
   }
 }
 
