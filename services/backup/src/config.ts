@@ -6,6 +6,10 @@ export interface AppConfig {
   microsoftGraphApplicationId: string
   onedriveRefreshToken: string
   onedriveBackupFolder: string
+  brevoApiKey: string
+  mailFrom: string
+  mailTo: string
+  mailOnSuccess: boolean
 }
 
 export function getConfig(): AppConfig {
@@ -17,7 +21,18 @@ export function getConfig(): AppConfig {
     microsoftGraphApplicationId: required('MICROSOFT_GRAPH_APPLICATION_ID', 'never-uploads-in-dev'),
     onedriveRefreshToken: required('ONEDRIVE_REFRESH_TOKEN', 'never-uploads-in-dev'),
     onedriveBackupFolder: required('ONEDRIVE_BACKUP_FOLDER', 'never-uploads-in-dev'),
+    brevoApiKey: required('BREVO_API_KEY', 'never-sends-in-dev'),
+    mailFrom: required('MAIL_FROM', 'backup@example.com'),
+    mailTo: process.env.MAIL_TO || 'matthias.graf@gutschi.site',
+    mailOnSuccess: parseSwitch(process.env.MAIL_ON_SUCCESS, true),
   }
+}
+
+// 'false', '0', 'no' and 'off' switch off; unset or empty keeps the default
+export function parseSwitch(value: string | undefined, defaultValue: boolean): boolean {
+  const normalized = value?.trim().toLowerCase()
+  if (!normalized) return defaultValue
+  return !['false', '0', 'no', 'off'].includes(normalized)
 }
 
 function required(name: string, devDefault?: string): string {

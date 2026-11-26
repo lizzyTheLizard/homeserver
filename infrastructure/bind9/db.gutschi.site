@@ -1,13 +1,16 @@
 $TTL 300
 @       IN      SOA     ns.gutschi.site. noc.gutschi.site. (
-                        2026110101  ; serial
+                        2026112601  ; serial
                         3600        ; refresh
                         600         ; retry
                         604800      ; expire
                         300 )       ; minimum
 @       IN      NS      ns.gutschi.site.
 @       IN      MX      0 354054060.pamx1.hotmail.com.
-@       IN      TXT     "v=spf1 include:spf.protection.outlook.com -all"
+@       IN      TXT     "v=spf1 include:spf.protection.outlook.com include:spf.brevo.com -all"
+@       IN      TXT     "brevo-code:__BREVO_CODE__"
+brevo1._domainkey IN CNAME b1.gutschi-site.dkim.brevo.com.
+brevo2._domainkey IN CNAME b2.gutschi-site.dkim.brevo.com.
 @       IN      CAA     0 issue "letsencrypt.org"
 @       IN      CAA     0 issuewild "letsencrypt.org"
 ns      IN      A       __HOST_IP__
