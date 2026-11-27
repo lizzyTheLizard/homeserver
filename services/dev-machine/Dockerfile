@@ -1,4 +1,4 @@
-FROM ubuntu:noble-20261110.1
+FROM ubuntu:26.04
 
 ENV LANG=C.UTF-8
 
