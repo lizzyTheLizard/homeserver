@@ -7,8 +7,9 @@ Renovate creates branches for outdated dependencies but opens no pull request fo
 ## What Changes
 
 - Renovate does not create a branch for an update until the release is at least one day old (`internalChecksFilter: 'strict'`).
-- Renovate opens the pull request as soon as the branch exists (`prCreation: 'immediate'`), so it no longer waits for a check that cannot run before the pull request.
+- Renovate opens the pull request as soon as the branch exists (the default `prCreation: 'immediate'`, no longer overridden with `not-pending`), so it no longer waits for a check that cannot run before the pull request.
 - Every major update gets a commit message prefix and a pull request header saying that it is a major update and needs a manual merge (a package rule for `major`, placed before the PostgreSQL rule, which keeps its own more specific warning).
+- The settings `prCreation`, `platformAutomerge` and `prHourlyLimit` are removed; Renovate's defaults (`immediate`, `true`, 2 per hour) apply.
 - The branch limit that only existed to hold the branches waiting for their minimum age (`branchConcurrentLimit`) is removed, because such branches no longer exist.
 
 ## Capabilities

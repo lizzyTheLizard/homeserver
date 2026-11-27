@@ -17,8 +17,9 @@
 ## Decisions
 
 - **`internalChecksFilter: 'strict'`**: Renovate creates the branch only once `renovate/stability-days` would be green. This keeps the guarantee that motivated `not-pending` (no pull request on a release younger than a day) without a branch that waits.
-- **`prCreation: 'immediate'`**: with strict filtering the branch is already eligible, so the pull request is opened with it. Alternative `not-pending` with a lower `prNotPendingHours` was rejected: the age still resets on every rebase, so any value above the interval between merges has the same problem. Alternative `status-success` was rejected for the same missing-check reason.
+- **Default `prCreation: 'immediate'`** (the override is removed): with strict filtering the branch is already eligible, so the pull request is opened with it. Alternative `not-pending` with a lower `prNotPendingHours` was rejected: the age still resets on every rebase, so any value above the interval between merges has the same problem. Alternative `status-success` was rejected for the same missing-check reason.
 - **Package rule for `major` before the `postgres` rule**: sets `commitMessagePrefix: '⚠️ MAJOR UPDATE:'` and a `[!WARNING]` `prHeader` (major update, manual merge required, check the release notes). Renovate applies matching rules in order and later ones override earlier ones, so the more specific `postgres` rule placed after it keeps its own prefix and header. `automerge: false` is not repeated: automerge is only enabled for `minor` and `patch`, so a major update is already manual; the rule only labels it.
+- **Remove `platformAutomerge` and `prHourlyLimit`**: `platformAutomerge: true` is the default. The default `prHourlyLimit` of 2 only spreads out the creation of pull requests, which `prConcurrentLimit` already bounds.
 - **Remove `branchConcurrentLimit`**: it existed because branches waiting for their minimum age counted against the branch limit. With strict filtering they are not created, so the default (equal to `prConcurrentLimit`) is right again and the pull request limit still bounds the work.
 
 ## Risks / Trade-offs

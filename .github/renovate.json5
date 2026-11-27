@@ -3,15 +3,12 @@
   extends: ['config:recommended', 'customManagers:dockerfileVersions'],
   minimumReleaseAge: '1 day',
   // Create a branch only once the release is old enough (pnpm, which also refuses versions younger than a day, would fail its install otherwise)
+  // This also opens the pull request at once: the default 'not-pending' would wait 25 hours after every rebase, because the branch has no check but this internal one
   internalChecksFilter: 'strict',
-  // A branch has no status check but the internal one before its pull request exists, so 'not-pending' would wait 25 hours after every rebase; open the pull request at once
-  prCreation: 'immediate',
   // Every merge must be tested on top of the current main (strict ruleset), so a pull request is rebased as soon as it is behind
   rebaseWhen: 'behind-base-branch',
-  platformAutomerge: true,
   // Each merge makes the other open pull requests behind and they are re-tested; the limit bounds that
   prConcurrentLimit: 5,
-  prHourlyLimit: 0,
   packageRules: [
     {
       matchUpdateTypes: ['minor', 'patch'],
