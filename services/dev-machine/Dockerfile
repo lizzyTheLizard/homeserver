@@ -7,7 +7,7 @@ ARG GH_VERSION=2.105.0
 # renovate: datasource=github-releases depName=coder/code-server extractVersion=^v(?<version>.+)$
 ARG CODE_SERVER_VERSION=4.146.0
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.331
+ARG CLAUDE_CODE_VERSION=2.1.332
 # renovate: datasource=npm depName=@fission-ai/openspec
 ARG OPENSPEC_VERSION=2.1.1
 
