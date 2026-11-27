@@ -24,6 +24,14 @@ Renovate SHALL check the npm/pnpm packages, the GitHub Actions and the Docker im
 - **WHEN** Renovate opens the pull request for a new major version of `postgres`
 - **THEN** its title starts with a warning that a data migration is required and its description starts with a warning not to merge before the migration and the upgrade of the backup image's PostgreSQL client are done
 
+#### Scenario: A major update is marked for manual merge
+- **WHEN** Renovate opens the pull request for a major update other than `postgres`
+- **THEN** its title starts with a warning that it is a major update and its description starts with a warning that it is not merged automatically and needs a manual merge
+
+#### Scenario: The PostgreSQL warning stays specific
+- **WHEN** Renovate opens the pull request for a new major version of `postgres`
+- **THEN** it carries the data migration warning and not the generic major update warning
+
 #### Scenario: An old enough update gets its pull request without waiting
 - **WHEN** a release is at least one day old and merges to main keep happening
 - **THEN** the pull request for it is opened in the next Renovate run without anyone selecting it in the dependency dashboard

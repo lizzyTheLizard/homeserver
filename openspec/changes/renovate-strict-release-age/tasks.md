@@ -2,10 +2,11 @@
 
 ## 1. Renovate configuration
 
-- [ ] 1.1 In `renovate.json5` set `internalChecksFilter: 'strict'` and `prCreation: 'immediate'`, and rewrite the comment on `prCreation` to explain that the branch itself only appears once the release is old enough, so pnpm's install cannot fail
-- [ ] 1.2 Remove `branchConcurrentLimit` and its comment from `renovate.json5`
+- [x] 1.1 In `.github/renovate.json5` set `internalChecksFilter: 'strict'` and `prCreation: 'immediate'`, and rewrite the comment on `prCreation` to explain that the branch itself only appears once the release is old enough, so pnpm's install cannot fail
+- [x] 1.2 In `.github/renovate.json5` add a package rule for `matchUpdateTypes: ['major']` with `commitMessagePrefix` and `prHeader` stating a major update and the need for a manual merge, placed before the `postgres` rule
+- [x] 1.3 Remove `branchConcurrentLimit` and its comment from `.github/renovate.json5`
 
 ## 2. Verify
 
-- [ ] 2.1 Run `pnpm lint` and check that `renovate.json5` is valid (`npx --yes --package renovate renovate-config-validator renovate.json5`)
+- [x] 2.1 Run `pnpm lint` and check that `.github/renovate.json5` is valid (`npx --yes --package renovate renovate-config-validator .github/renovate.json5`)
 - [ ] 2.2 After the merge, dispatch the Renovate workflow once and confirm in the dependency dashboard and the pull request list that the waiting updates get pull requests

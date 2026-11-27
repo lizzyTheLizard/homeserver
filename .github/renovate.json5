@@ -2,20 +2,27 @@
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: ['config:recommended', 'customManagers:dockerfileVersions'],
   minimumReleaseAge: '1 day',
-  // Open a pull request only once the release is old enough; otherwise it is opened at once and pnpm, which also refuses versions younger than a day, fails its install
-  prCreation: 'not-pending',
+  // Create a branch only once the release is old enough (pnpm, which also refuses versions younger than a day, would fail its install otherwise)
+  internalChecksFilter: 'strict',
+  // A branch has no status check but the internal one before its pull request exists, so 'not-pending' would wait 25 hours after every rebase; open the pull request at once
+  prCreation: 'immediate',
   // Every merge must be tested on top of the current main (strict ruleset), so a pull request is rebased as soon as it is behind
   rebaseWhen: 'behind-base-branch',
   platformAutomerge: true,
   // Each merge makes the other open pull requests behind and they are re-tested; the limit bounds that
   prConcurrentLimit: 5,
-  // Branches that wait for the minimum release age have no pull request yet but count against the branch limit, which defaults to prConcurrentLimit and would hold back other updates
-  branchConcurrentLimit: 20,
   prHourlyLimit: 0,
   packageRules: [
     {
       matchUpdateTypes: ['minor', 'patch'],
       automerge: true,
+    },
+    {
+      // A major upgrade is never merged automatically (automerge covers minor and patch only); the title and description say so
+      // This rule comes before the more specific one for postgres, which overrides the prefix and header
+      matchUpdateTypes: ['major'],
+      commitMessagePrefix: '⚠️ MAJOR UPDATE:',
+      prHeader: '> [!WARNING]\n> **Major update, manual merge required.** This pull request is not merged automatically. Check the release notes for breaking changes before merging.',
     },
     {
       // A major upgrade needs a data migration and a matching postgresql client in services/backup, so it is never merged automatically
