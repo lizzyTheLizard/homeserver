@@ -107,7 +107,7 @@ services:
 
   postgresprod:
     container_name: Database
-    image: postgres:16.16-alpine3.24
+    image: postgres:19.0-alpine3.24
     restart: unless-stopped
     environment:
       POSTGRES_USER: homeserver
@@ -238,7 +238,7 @@ services:
 
   postgresdev:
     container_name: DEV-Database
-    image: postgres:16.16-alpine3.24
+    image: postgres:19.0-alpine3.24
     restart: unless-stopped
     environment:
       POSTGRES_USER: homeserver
