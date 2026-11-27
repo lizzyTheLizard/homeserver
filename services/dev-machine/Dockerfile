@@ -3,7 +3,7 @@ FROM ubuntu:26.04
 ENV LANG=C.UTF-8
 
 # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
-ARG GH_VERSION=2.105.0
+ARG GH_VERSION=2.106.0
 # renovate: datasource=github-releases depName=coder/code-server extractVersion=^v(?<version>.+)$
 ARG CODE_SERVER_VERSION=4.146.0
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
