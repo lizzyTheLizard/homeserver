@@ -9,7 +9,7 @@ ARG CODE_SERVER_VERSION=4.146.0
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
 ARG CLAUDE_CODE_VERSION=2.1.331
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=2.1.1
+ARG OPENSPEC_VERSION=2.2.0
 
 # 1. System packages
 ENV DEBIAN_FRONTEND=noninteractive
